@@ -1,0 +1,89 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getCurrentSession } from "@/lib/auth/session";
+import {
+  listDirectory,
+  createFolder,
+  deleteEntry,
+  moveEntry,
+} from "@/lib/fs/storage";
+
+async function requireAuth() {
+  const session = await getCurrentSession();
+  if (!session) {
+    return { error: NextResponse.json({ error: "unauthorized" }, { status: 401 }) };
+  }
+  return { session };
+}
+
+// GET /api/files?path=/some/path  → 폴더 목록
+export async function GET(req: NextRequest) {
+  const { error } = await requireAuth();
+  if (error) return error;
+
+  const rel = req.nextUrl.searchParams.get("path") || "/";
+  try {
+    const entries = await listDirectory(rel);
+    return NextResponse.json({ path: rel, entries });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    return NextResponse.json({ error: msg }, { status: 400 });
+  }
+}
+
+// POST /api/files  body: { path, name } → 새 폴더 생성
+export async function POST(req: NextRequest) {
+  const { error } = await requireAuth();
+  if (error) return error;
+
+  const body = await req.json().catch(() => null);
+  if (!body?.path || !body?.name) {
+    return NextResponse.json({ error: "path and name required" }, { status: 400 });
+  }
+  const { path: parent, name } = body as { path: string; name: string };
+  if (!/^[^/\\:*?"<>|]+$/.test(name)) {
+    return NextResponse.json({ error: "invalid folder name" }, { status: 400 });
+  }
+  const target = (parent.endsWith("/") ? parent : parent + "/") + name;
+  try {
+    await createFolder(target);
+    return NextResponse.json({ ok: true, path: target });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    return NextResponse.json({ error: msg }, { status: 400 });
+  }
+}
+
+// PATCH /api/files  body: { from, to } → 이름 변경 또는 이동
+export async function PATCH(req: NextRequest) {
+  const { error } = await requireAuth();
+  if (error) return error;
+
+  const body = await req.json().catch(() => null);
+  if (!body?.from || !body?.to) {
+    return NextResponse.json({ error: "from and to required" }, { status: 400 });
+  }
+  const { from, to } = body as { from: string; to: string };
+  try {
+    await moveEntry(from, to);
+    return NextResponse.json({ ok: true, path: to });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    return NextResponse.json({ error: msg }, { status: 400 });
+  }
+}
+
+// DELETE /api/files?path=/foo/bar  → 삭제
+export async function DELETE(req: NextRequest) {
+  const { error } = await requireAuth();
+  if (error) return error;
+
+  const rel = req.nextUrl.searchParams.get("path");
+  if (!rel) return NextResponse.json({ error: "path required" }, { status: 400 });
+  try {
+    await deleteEntry(rel);
+    return NextResponse.json({ ok: true });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    return NextResponse.json({ error: msg }, { status: 400 });
+  }
+}

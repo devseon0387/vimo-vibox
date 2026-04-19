@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VIMO Cloud — 디자인 시안</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Nanum+Myeongjo:wght@700;800&family=Noto+Serif+KR:wght@700;900&display=swap" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Pretendard', -apple-system, sans-serif; color: #111; -webkit-font-smoothing: antialiased; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; }
+  a { color: inherit; text-decoration: none; }
+
+  /* 시안 전환 */
+  .switcher {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    background: rgba(255,255,255,0.94); backdrop-filter: blur(10px);
+    border-bottom: 1px solid #e5e5e5;
+    padding: 10px 20px; display: flex; gap: 6px; align-items: center; overflow-x: auto;
+  }
+  .switcher .label { font-size: 11px; color: #888; margin-right: 10px; font-weight: 700; letter-spacing: 0.3px; }
+  .switcher button {
+    border: 1px solid #ddd; background: #fff; padding: 6px 12px; font-size: 12.5px;
+    border-radius: 16px; white-space: nowrap; transition: all 0.15s;
+  }
+  .switcher button:hover { background: #f5f5f5; }
+  .switcher button.active { background: #111; color: #fff; border-color: #111; }
+
+  .design { display: none; padding-top: 48px; min-height: 100vh; }
+  .design.active { display: block; }
+
+  /* ============================================
+     시안 1: Minimalist Utility (Linear/Vercel 풍)
+  ============================================ */
+  #d1 { background: #fff; font-family: 'Inter', 'Pretendard', sans-serif; }
+  #d1 .shell { display: grid; grid-template-columns: 240px 1fr; min-height: calc(100vh - 48px); }
+  #d1 .sidebar { background: #fafafa; border-right: 1px solid #ececec; padding: 20px 14px; }
+  #d1 .brand { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 24px; padding: 0 8px; }
+  #d1 .brand .dot { color: #2563eb; }
+  #d1 .nav-sec { font-size: 11px; font-weight: 700; color: #999; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 8px; margin: 18px 0 8px; }
+  #d1 .nav-item { display: flex; align-items: center; gap: 10px; padding: 7px 10px; font-size: 13px; color: #333; border-radius: 6px; margin-bottom: 2px; cursor: pointer; }
+  #d1 .nav-item:hover { background: #f0f0f0; }
+  #d1 .nav-item.active { background: #eef4ff; color: #2563eb; font-weight: 600; }
+  #d1 .nav-item .icon { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; }
+  #d1 .nav-item .count { margin-left: auto; font-size: 11px; color: #999; }
+  #d1 .main { padding: 24px 32px; }
+  #d1 .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+  #d1 .crumb { display: flex; gap: 6px; align-items: center; font-size: 14px; color: #555; }
+  #d1 .crumb .sep { color: #bbb; }
+  #d1 .crumb .curr { color: #111; font-weight: 600; }
+  #d1 .search { flex: 1; max-width: 360px; margin-left: auto; position: relative; }
+  #d1 .search input { width: 100%; padding: 7px 12px 7px 32px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; outline: none; font-family: inherit; }
+  #d1 .search::before { content: '⌕'; position: absolute; left: 10px; top: 6px; color: #999; }
+  #d1 .avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  #d1 .actions { display: flex; gap: 8px; margin-bottom: 20px; }
+  #d1 .btn-primary { background: #111; color: #fff; padding: 8px 14px; font-size: 13px; font-weight: 600; border-radius: 6px; }
+  #d1 .btn-primary:hover { background: #333; }
+  #d1 .btn-ghost { background: #fff; color: #333; padding: 8px 14px; font-size: 13px; font-weight: 500; border: 1px solid #ddd; border-radius: 6px; }
+  #d1 .btn-ghost:hover { background: #f7f7f7; }
+  #d1 table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  #d1 thead th { text-align: left; padding: 10px 12px; color: #666; font-weight: 600; font-size: 12px; border-bottom: 1px solid #ececec; text-transform: uppercase; letter-spacing: 0.05em; }
+  #d1 tbody tr { border-bottom: 1px solid #f5f5f5; cursor: pointer; }
+  #d1 tbody tr:hover { background: #fafafa; }
+  #d1 tbody td { padding: 10px 12px; color: #333; }
+  #d1 .file-cell { display: flex; align-items: center; gap: 10px; }
+  #d1 .file-ic { width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+  #d1 .ic-folder { background: #eef4ff; color: #2563eb; }
+  #d1 .ic-video { background: #fef2f2; color: #dc2626; }
+  #d1 .ic-doc { background: #f0fdf4; color: #16a34a; }
+  #d1 .ic-image { background: #fef3c7; color: #d97706; }
+  #d1 .ic-zip { background: #f5f3ff; color: #7c3aed; }
+
+  /* ============================================
+     시안 2: Warm Cafe (따뜻한 베이지)
+  ============================================ */
+  #d2 { background: #FFF9F0; color: #2D1810; }
+  #d2 .shell { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 48px); }
+  #d2 .sidebar { background: transparent; padding: 24px 18px; border-right: 1px solid #F0E0C8; }
+  #d2 .brand { font-family: 'Nanum Myeongjo', serif; font-size: 22px; font-weight: 800; margin-bottom: 28px; padding: 0 8px; }
+  #d2 .brand .dot { color: #E67E22; }
+  #d2 .btn-upload { width: 100%; background: #E67E22; color: #fff; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 700; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3); }
+  #d2 .btn-upload:hover { background: #C86510; }
+  #d2 .nav-sec { font-size: 11px; font-weight: 700; color: #A0855F; letter-spacing: 0.1em; text-transform: uppercase; padding: 0 8px; margin: 20px 0 8px; }
+  #d2 .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; font-size: 14px; border-radius: 10px; cursor: pointer; color: #4A2F16; }
+  #d2 .nav-item:hover { background: #FFF5E8; }
+  #d2 .nav-item.active { background: #FFE8C9; color: #C86510; font-weight: 700; }
+  #d2 .nav-item .emoji { font-size: 16px; }
+  #d2 .nav-item .count { margin-left: auto; font-size: 12px; color: #A0855F; }
+  #d2 .main { padding: 32px 40px; }
+  #d2 .topbar { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+  #d2 h1 { font-family: 'Nanum Myeongjo', serif; font-size: 32px; font-weight: 800; letter-spacing: -0.02em; }
+  #d2 .search { margin-left: auto; position: relative; }
+  #d2 .search input { width: 320px; padding: 10px 16px 10px 38px; border: 1px solid #F0E0C8; border-radius: 20px; background: #fff; font-size: 14px; font-family: inherit; outline: none; }
+  #d2 .search::before { content: '⌕'; position: absolute; left: 14px; top: 9px; color: #A0855F; }
+  #d2 .avatar { width: 36px; height: 36px; border-radius: 50%; background: #E67E22; color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+  #d2 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+  #d2 .card { background: #fff; border-radius: 18px; padding: 20px; box-shadow: 0 2px 8px rgba(180, 120, 60, 0.06); transition: all 0.2s; cursor: pointer; }
+  #d2 .card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(180, 120, 60, 0.14); }
+  #d2 .card .icon { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; font-size: 24px; margin-bottom: 14px; }
+  #d2 .c-folder { background: #FFE8C9; }
+  #d2 .c-video { background: #FFE5E5; }
+  #d2 .c-doc { background: #E8F5E9; }
+  #d2 .c-image { background: #FFF3E0; }
+  #d2 .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  #d2 .card .meta { font-size: 12px; color: #7A5738; }
+
+  /* ============================================
+     시안 3: Finder Native (3칼럼, macOS 풍)
+  ============================================ */
+  #d3 { background: #fff; font-family: 'Inter', 'Pretendard'; color: #1d1d1f; }
+  #d3 .shell { display: grid; grid-template-columns: 220px 1fr 320px; min-height: calc(100vh - 48px); }
+  #d3 .sidebar { background: #f5f5f7; border-right: 1px solid #e0e0e0; padding: 16px 0; overflow-y: auto; }
+  #d3 .brand { font-size: 13px; font-weight: 700; padding: 0 14px 16px; color: #6e6e73; letter-spacing: 0.02em; }
+  #d3 .brand .accent { color: #0066cc; }
+  #d3 .nav-sec { font-size: 10.5px; font-weight: 700; color: #86868b; padding: 4px 14px; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.06em; }
+  #d3 .nav-item { display: flex; align-items: center; gap: 8px; padding: 5px 14px; font-size: 13px; color: #1d1d1f; cursor: pointer; }
+  #d3 .nav-item:hover { background: #e8e8ed; }
+  #d3 .nav-item.active { background: #d0d0d6; }
+  #d3 .nav-item .emoji { font-size: 14px; width: 18px; }
+  #d3 .main { background: #fff; overflow: hidden; }
+  #d3 .toolbar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-bottom: 1px solid #e5e5e5; background: #fafafa; }
+  #d3 .toolbar button { padding: 4px 10px; font-size: 12px; color: #333; border: 1px solid #d0d0d0; background: #fff; border-radius: 5px; }
+  #d3 .toolbar .path { flex: 1; font-size: 13px; color: #333; font-weight: 500; margin-left: 16px; }
+  #d3 .toolbar .search input { padding: 4px 10px; border: 1px solid #d0d0d0; border-radius: 5px; font-size: 12px; width: 180px; outline: none; }
+  #d3 .list-head { display: grid; grid-template-columns: 1fr 110px 110px 80px; padding: 6px 16px; font-size: 11px; color: #86868b; font-weight: 600; border-bottom: 1px solid #e5e5e5; background: #fafafa; }
+  #d3 .list-row { display: grid; grid-template-columns: 1fr 110px 110px 80px; padding: 6px 16px; font-size: 13px; color: #1d1d1f; cursor: pointer; border-bottom: 1px solid #f5f5f5; }
+  #d3 .list-row:hover { background: #f5f5f7; }
+  #d3 .list-row.selected { background: #0066cc; color: #fff; }
+  #d3 .list-row.selected .meta-col { color: rgba(255,255,255,0.8); }
+  #d3 .row-name { display: flex; align-items: center; gap: 8px; }
+  #d3 .meta-col { color: #6e6e73; font-size: 12px; }
+  #d3 .preview { background: #fafafa; border-left: 1px solid #e5e5e5; padding: 24px 20px; overflow-y: auto; }
+  #d3 .preview .thumb { width: 100%; aspect-ratio: 16/9; border-radius: 10px; background: linear-gradient(135deg, #334155, #1e293b); display: grid; place-items: center; color: #fff; font-size: 42px; margin-bottom: 16px; }
+  #d3 .preview h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  #d3 .preview .sub { font-size: 12px; color: #86868b; margin-bottom: 18px; }
+  #d3 .info-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 12px; border-bottom: 1px solid #ececec; }
+  #d3 .info-row .k { color: #86868b; }
+  #d3 .info-row .v { color: #1d1d1f; font-weight: 500; }
+
+  /* ============================================
+     시안 4: Video Media Grid (영상 회사 최적)
+  ============================================ */
+  #d4 { background: #fafbfc; font-family: 'Inter', 'Pretendard'; }
+  #d4 .shell { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 48px); }
+  #d4 .sidebar { background: #fff; border-right: 1px solid #ededed; padding: 22px 0; }
+  #d4 .brand { font-size: 16px; font-weight: 800; padding: 0 20px 22px; letter-spacing: -0.02em; }
+  #d4 .brand .dot { color: #8b5cf6; }
+  #d4 .btn-up { margin: 0 16px 18px; padding: 11px; border-radius: 10px; background: linear-gradient(135deg, #8b5cf6, #6366f1); color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 6px 16px rgba(139, 92, 246, 0.25); width: calc(100% - 32px); }
+  #d4 .nav-sec { font-size: 11px; color: #9ca3af; padding: 14px 20px 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; }
+  #d4 .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 20px; font-size: 13.5px; color: #374151; cursor: pointer; }
+  #d4 .nav-item:hover { background: #f9fafb; }
+  #d4 .nav-item.active { color: #6366f1; font-weight: 700; background: #eef2ff; border-right: 3px solid #6366f1; }
+  #d4 .main { padding: 28px 36px; }
+  #d4 .topbar { display: flex; align-items: center; gap: 16px; margin-bottom: 26px; }
+  #d4 h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; color: #111827; }
+  #d4 .view-toggle { display: flex; margin-left: 24px; background: #f3f4f6; border-radius: 8px; padding: 3px; }
+  #d4 .view-toggle button { padding: 6px 10px; font-size: 12px; color: #6b7280; border-radius: 6px; }
+  #d4 .view-toggle button.active { background: #fff; color: #111827; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  #d4 .search { margin-left: auto; }
+  #d4 .search input { padding: 9px 14px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13.5px; background: #fff; width: 280px; outline: none; font-family: inherit; }
+  #d4 .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+  #d4 .folders-row { display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+  #d4 .folder-pill { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 13px; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.15s; }
+  #d4 .folder-pill:hover { border-color: #6366f1; color: #6366f1; }
+  #d4 .folder-pill .count { color: #9ca3af; font-weight: 400; font-size: 12px; }
+  #d4 .section-title { font-size: 14px; color: #6b7280; font-weight: 700; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.05em; }
+  #d4 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+  #d4 .vcard { background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #ededed; transition: all 0.2s; cursor: pointer; }
+  #d4 .vcard:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.08); }
+  #d4 .vcard .thumb { aspect-ratio: 16/9; position: relative; overflow: hidden; }
+  #d4 .thumb-1 { background: linear-gradient(135deg, #fbbf24, #dc2626); }
+  #d4 .thumb-2 { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+  #d4 .thumb-3 { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
+  #d4 .thumb-4 { background: linear-gradient(135deg, #10b981, #84cc16); }
+  #d4 .thumb-5 { background: linear-gradient(135deg, #f97316, #ef4444); }
+  #d4 .thumb-6 { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+  #d4 .vcard .duration { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.8); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  #d4 .vcard .play { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.9); display: grid; place-items: center; color: #111; font-size: 16px; opacity: 0; transition: opacity 0.2s; }
+  #d4 .vcard:hover .play { opacity: 1; }
+  #d4 .vcard .body { padding: 12px 14px; }
+  #d4 .vcard h3 { font-size: 13.5px; font-weight: 600; margin-bottom: 4px; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #d4 .vcard .meta { font-size: 11.5px; color: #9ca3af; }
+
+  /* ============================================
+     시안 5: Premium Bold (에디토리얼)
+  ============================================ */
+  #d5 { background: #fff; font-family: 'Inter', 'Pretendard'; color: #000; }
+  #d5 .shell { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 48px); }
+  #d5 .sidebar { padding: 36px 28px; border-right: 2px solid #000; }
+  #d5 .brand { font-size: 28px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; margin-bottom: 36px; }
+  #d5 .brand .accent { color: #ff3b30; }
+  #d5 .nav-sec { font-size: 10px; font-weight: 800; letter-spacing: 0.2em; color: #000; padding-bottom: 10px; border-bottom: 1px solid #000; margin-top: 24px; margin-bottom: 12px; }
+  #d5 .nav-item { display: flex; align-items: center; padding: 7px 0; font-size: 15px; font-weight: 600; color: #555; cursor: pointer; letter-spacing: -0.01em; }
+  #d5 .nav-item:hover { color: #000; }
+  #d5 .nav-item.active { color: #000; font-weight: 800; }
+  #d5 .nav-item .count { margin-left: auto; font-size: 12px; color: #999; font-weight: 500; }
+  #d5 .main { padding: 36px 56px; }
+  #d5 .topbar { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+  #d5 .eyebrow { font-size: 11px; font-weight: 800; letter-spacing: 0.25em; color: #ff3b30; }
+  #d5 .search input { padding: 8px 14px; border: 2px solid #000; background: #fff; font-size: 13px; width: 220px; outline: none; font-family: inherit; font-weight: 600; }
+  #d5 h1 { font-size: 64px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; margin-bottom: 8px; }
+  #d5 .subhead { font-size: 16px; color: #555; margin-bottom: 32px; max-width: 480px; }
+  #d5 .toolbar { display: flex; gap: 12px; padding-bottom: 18px; border-bottom: 2px solid #000; margin-bottom: 22px; }
+  #d5 .btn-bold { padding: 10px 18px; background: #000; color: #fff; font-size: 13px; font-weight: 700; letter-spacing: 0.02em; }
+  #d5 .btn-bold:hover { background: #ff3b30; }
+  #d5 .btn-outline { padding: 10px 18px; background: #fff; color: #000; border: 2px solid #000; font-size: 13px; font-weight: 700; }
+  #d5 .file-list { border-top: 2px solid #000; }
+  #d5 .file-row { display: grid; grid-template-columns: 40px 1fr 150px 120px 80px; padding: 14px 4px; border-bottom: 1px solid #000; align-items: center; cursor: pointer; transition: all 0.12s; }
+  #d5 .file-row:hover { background: #000; color: #fff; }
+  #d5 .file-row:hover .meta-cell { color: rgba(255,255,255,0.7); }
+  #d5 .file-row .num { font-size: 11px; font-weight: 800; color: #ff3b30; letter-spacing: 0.1em; }
+  #d5 .file-row .name-cell { display: flex; align-items: center; gap: 14px; }
+  #d5 .file-row .name-cell h3 { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+  #d5 .file-row .kind-tag { display: inline-block; padding: 2px 8px; font-size: 10px; font-weight: 800; letter-spacing: 0.1em; border: 1.5px solid currentColor; margin-left: 8px; }
+  #d5 .meta-cell { font-size: 13px; color: #666; font-weight: 500; }
+  #d5 .file-row .size { font-weight: 700; color: #000; }
+</style>
+</head>
+<body>
+
+<nav class="switcher">
+  <span class="label">DESIGNS · VIMO CLOUD</span>
+  <button class="active" data-t="d1">1. Minimalist Utility</button>
+  <button data-t="d2">2. Warm Cafe</button>
+  <button data-t="d3">3. Finder Native</button>
+  <button data-t="d4">4. Video Media Grid</button>
+  <button data-t="d5">5. Premium Bold</button>
+</nav>
+
+<!-- ======================= 시안 1: Minimalist Utility ======================= -->
+<section id="d1" class="design active">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">vimo<span class="dot">.</span>cloud</div>
+      <button class="btn-primary" style="width:100%; margin-bottom:16px;">+ 업로드</button>
+
+      <div class="nav-sec">빠른 접근</div>
+      <div class="nav-item active"><span class="icon">◉</span><span>최근 파일</span><span class="count">24</span></div>
+      <div class="nav-item"><span class="icon">★</span><span>즐겨찾기</span><span class="count">8</span></div>
+      <div class="nav-item"><span class="icon">🗑</span><span>휴지통</span></div>
+
+      <div class="nav-sec">폴더</div>
+      <div class="nav-item"><span class="icon">◻</span><span>내 파일</span></div>
+      <div class="nav-item"><span class="icon">◻</span><span>팀 공용</span></div>
+      <div class="nav-item"><span class="icon">◻</span><span>프로젝트</span><span class="count">12</span></div>
+      <div class="nav-item"><span class="icon">◻</span><span>레퍼런스</span></div>
+      <div class="nav-item"><span class="icon">◻</span><span>템플릿</span></div>
+
+      <div class="nav-sec">공유</div>
+      <div class="nav-item"><span class="icon">◇</span><span>나와 공유한 파일</span></div>
+      <div class="nav-item"><span class="icon">◇</span><span>내가 공유한 파일</span></div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="crumb">
+          <span>VIMO Cloud</span><span class="sep">/</span>
+          <span class="curr">최근 파일</span>
+        </div>
+        <div class="search"><input placeholder="파일 검색..." /></div>
+        <div class="avatar">VS</div>
+      </div>
+
+      <div class="actions">
+        <button class="btn-primary">+ 업로드</button>
+        <button class="btn-ghost">◻ 새 폴더</button>
+        <button class="btn-ghost">⇪ 정렬</button>
+        <button class="btn-ghost">⊞ 보기</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>이름</th><th>수정일</th><th>크기</th><th>소유자</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><div class="file-cell"><span class="file-ic ic-folder">▦</span>프로젝트 A — 자동차 광고</div></td><td>오늘 14:32</td><td>—</td><td>VIMO</td></tr>
+          <tr><td><div class="file-cell"><span class="file-ic ic-folder">▦</span>레퍼런스</div></td><td>어제</td><td>—</td><td>VIMO</td></tr>
+          <tr><td><div class="file-cell"><span class="file-ic ic-video">▶</span>프로젝트_A_초벌_v3.mp4</div></td><td>오늘 11:08</td><td>2.4 GB</td><td>SEON</td></tr>
+          <tr><td><div class="file-cell"><span class="file-ic ic-video">▶</span>광고_최종본_1080p.mp4</div></td><td>4월 17일</td><td>890 MB</td><td>SEON</td></tr>
+          <tr><td><div class="file-cell"><span class="file-ic ic-doc">≡</span>광고_브리프_v3.pdf</div></td><td>4월 16일</td><td>3.2 MB</td><td>JIN</td></tr>
+          <tr><td><div class="file-cell"><span class="file-ic ic-image">◈</span>썸네일_세트_v2.zip</div></td><td>4월 15일</td><td>48 MB</td><td>MIN</td></tr>
+          <tr><td><div class="file-cell"><span class="file-ic ic-doc">≡</span>촬영스케줄_2026Q2.xlsx</div></td><td>4월 14일</td><td>124 KB</td><td>SEON</td></tr>
+          <tr><td><div class="file-cell"><span class="file-ic ic-zip">▦</span>소스_아카이브.zip</div></td><td>4월 12일</td><td>12.1 GB</td><td>VIMO</td></tr>
+        </tbody>
+      </table>
+    </main>
+  </div>
+</section>
+
+<!-- ======================= 시안 2: Warm Cafe ======================= -->
+<section id="d2" class="design">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">vimo<span class="dot">.</span>cloud</div>
+      <button class="btn-upload">⬆ 파일 업로드</button>
+
+      <div class="nav-item active"><span class="emoji">🕒</span><span>최근</span><span class="count">24</span></div>
+      <div class="nav-item"><span class="emoji">⭐</span><span>즐겨찾기</span><span class="count">8</span></div>
+      <div class="nav-item"><span class="emoji">🗂</span><span>내 파일</span></div>
+      <div class="nav-item"><span class="emoji">👥</span><span>팀 공용</span></div>
+
+      <div class="nav-sec">프로젝트</div>
+      <div class="nav-item"><span class="emoji">🎬</span><span>자동차 광고</span></div>
+      <div class="nav-item"><span class="emoji">🎥</span><span>브랜드 영상</span></div>
+      <div class="nav-item"><span class="emoji">📺</span><span>유튜브 쇼츠</span></div>
+
+      <div class="nav-sec">기타</div>
+      <div class="nav-item"><span class="emoji">🔗</span><span>공유한 링크</span></div>
+      <div class="nav-item"><span class="emoji">🗑</span><span>휴지통</span></div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <h1>최근 파일</h1>
+        <div class="search"><input placeholder="파일 검색..." /></div>
+        <div class="avatar">V</div>
+      </div>
+
+      <div class="grid">
+        <div class="card"><div class="icon c-folder">📁</div><h3>프로젝트 A</h3><p class="meta">14개 파일 · 어제 수정</p></div>
+        <div class="card"><div class="icon c-folder">📁</div><h3>레퍼런스</h3><p class="meta">32개 파일 · 이번 주</p></div>
+        <div class="card"><div class="icon c-video">🎬</div><h3>프로젝트_A_초벌.mp4</h3><p class="meta">2.4 GB · 오늘 11:08</p></div>
+        <div class="card"><div class="icon c-video">🎬</div><h3>광고_최종본.mp4</h3><p class="meta">890 MB · 4월 17일</p></div>
+        <div class="card"><div class="icon c-doc">📄</div><h3>광고_브리프_v3.pdf</h3><p class="meta">3.2 MB · 4월 16일</p></div>
+        <div class="card"><div class="icon c-image">🖼</div><h3>썸네일_세트.zip</h3><p class="meta">48 MB · 4월 15일</p></div>
+        <div class="card"><div class="icon c-doc">📊</div><h3>촬영스케줄_Q2.xlsx</h3><p class="meta">124 KB · 4월 14일</p></div>
+        <div class="card"><div class="icon c-folder">📁</div><h3>BGM 컬렉션</h3><p class="meta">87개 파일 · 2주 전</p></div>
+      </div>
+    </main>
+  </div>
+</section>
+
+<!-- ======================= 시안 3: Finder Native ======================= -->
+<section id="d3" class="design">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">VIMO <span class="accent">Cloud</span></div>
+
+      <div class="nav-sec">즐겨찾기</div>
+      <div class="nav-item active"><span class="emoji">🕐</span><span>최근</span></div>
+      <div class="nav-item"><span class="emoji">⭐</span><span>즐겨찾기</span></div>
+      <div class="nav-item"><span class="emoji">📥</span><span>내가 받은 것</span></div>
+
+      <div class="nav-sec">위치</div>
+      <div class="nav-item"><span class="emoji">📁</span><span>내 파일</span></div>
+      <div class="nav-item"><span class="emoji">👥</span><span>팀 공용</span></div>
+      <div class="nav-item"><span class="emoji">🎬</span><span>프로젝트</span></div>
+
+      <div class="nav-sec">태그</div>
+      <div class="nav-item"><span class="emoji" style="color:#ff3b30">●</span><span>긴급</span></div>
+      <div class="nav-item"><span class="emoji" style="color:#ff9500">●</span><span>검토 중</span></div>
+      <div class="nav-item"><span class="emoji" style="color:#34c759">●</span><span>승인됨</span></div>
+      <div class="nav-item"><span class="emoji" style="color:#007aff">●</span><span>아카이브</span></div>
+    </aside>
+
+    <main class="main">
+      <div class="toolbar">
+        <button>‹</button><button>›</button>
+        <button>⊞</button><button>≡</button><button>▥</button>
+        <div class="path">프로젝트 › 자동차 광고 › 편집본</div>
+        <div class="search"><input placeholder="검색" /></div>
+      </div>
+
+      <div class="list-head">
+        <div>이름</div>
+        <div class="meta-col">수정일</div>
+        <div class="meta-col">크기</div>
+        <div class="meta-col">종류</div>
+      </div>
+
+      <div class="list-row selected">
+        <div class="row-name">▶ 프로젝트_A_초벌_v3.mp4</div>
+        <div class="meta-col">오늘 11:08</div>
+        <div class="meta-col">2.4 GB</div>
+        <div class="meta-col">영상</div>
+      </div>
+      <div class="list-row">
+        <div class="row-name">▶ 프로젝트_A_초벌_v2.mp4</div>
+        <div class="meta-col">4월 18일</div>
+        <div class="meta-col">2.3 GB</div>
+        <div class="meta-col">영상</div>
+      </div>
+      <div class="list-row">
+        <div class="row-name">▶ 광고_최종본_1080p.mp4</div>
+        <div class="meta-col">4월 17일</div>
+        <div class="meta-col">890 MB</div>
+        <div class="meta-col">영상</div>
+      </div>
+      <div class="list-row">
+        <div class="row-name">📄 광고_브리프_v3.pdf</div>
+        <div class="meta-col">4월 16일</div>
+        <div class="meta-col">3.2 MB</div>
+        <div class="meta-col">PDF</div>
+      </div>
+      <div class="list-row">
+        <div class="row-name">🖼 썸네일_A.jpg</div>
+        <div class="meta-col">4월 16일</div>
+        <div class="meta-col">4.1 MB</div>
+        <div class="meta-col">이미지</div>
+      </div>
+      <div class="list-row">
+        <div class="row-name">🖼 썸네일_B.jpg</div>
+        <div class="meta-col">4월 16일</div>
+        <div class="meta-col">3.8 MB</div>
+        <div class="meta-col">이미지</div>
+      </div>
+      <div class="list-row">
+        <div class="row-name">📦 소스_아카이브.zip</div>
+        <div class="meta-col">4월 12일</div>
+        <div class="meta-col">12.1 GB</div>
+        <div class="meta-col">압축</div>
+      </div>
+    </main>
+
+    <aside class="preview">
+      <div class="thumb">▶</div>
+      <h3>프로젝트_A_초벌_v3.mp4</h3>
+      <div class="sub">방금 전 · SEON · 2.4 GB</div>
+
+      <div class="info-row"><span class="k">종류</span><span class="v">MPEG-4 Movie</span></div>
+      <div class="info-row"><span class="k">해상도</span><span class="v">3840 × 2160</span></div>
+      <div class="info-row"><span class="k">길이</span><span class="v">02:48</span></div>
+      <div class="info-row"><span class="k">코덱</span><span class="v">H.264</span></div>
+      <div class="info-row"><span class="k">수정일</span><span class="v">오늘 11:08</span></div>
+      <div class="info-row"><span class="k">생성일</span><span class="v">4월 18일</span></div>
+      <div class="info-row"><span class="k">공유</span><span class="v">팀 3명</span></div>
+
+      <div style="display:flex; gap:8px; margin-top:20px;">
+        <button style="flex:1; padding:8px; background:#0066cc; color:#fff; border-radius:6px; font-weight:600; font-size:13px;">공유 링크</button>
+        <button style="flex:1; padding:8px; background:#f2f2f7; color:#000; border-radius:6px; font-weight:600; font-size:13px;">다운로드</button>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ======================= 시안 4: Video Media Grid ======================= -->
+<section id="d4" class="design">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">vimo<span class="dot">.</span>cloud</div>
+      <button class="btn-up">⬆ 새 업로드</button>
+
+      <div class="nav-sec">대시보드</div>
+      <div class="nav-item active"><span>◉</span><span>최근</span></div>
+      <div class="nav-item"><span>▶</span><span>모든 영상</span></div>
+      <div class="nav-item"><span>◨</span><span>이미지</span></div>
+      <div class="nav-item"><span>📄</span><span>문서</span></div>
+
+      <div class="nav-sec">프로젝트</div>
+      <div class="nav-item"><span>🎬</span><span>자동차 광고</span></div>
+      <div class="nav-item"><span>🎥</span><span>브랜드 영상</span></div>
+      <div class="nav-item"><span>📺</span><span>쇼츠 콘텐츠</span></div>
+
+      <div class="nav-sec">협업</div>
+      <div class="nav-item"><span>🔗</span><span>공유한 링크</span></div>
+      <div class="nav-item"><span>👥</span><span>팀원</span></div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <h1>최근 파일</h1>
+        <div class="view-toggle">
+          <button class="active">⊞ 그리드</button>
+          <button>≡ 리스트</button>
+        </div>
+        <div class="search"><input placeholder="파일 · 프로젝트 · 팀원 검색" /></div>
+        <div class="avatar">V</div>
+      </div>
+
+      <div class="folders-row">
+        <div class="folder-pill">📁 자동차 광고 <span class="count">14</span></div>
+        <div class="folder-pill">📁 레퍼런스 <span class="count">32</span></div>
+        <div class="folder-pill">📁 BGM 컬렉션 <span class="count">87</span></div>
+        <div class="folder-pill">📁 LUT 프리셋 <span class="count">24</span></div>
+        <div class="folder-pill">+ 새 폴더</div>
+      </div>
+
+      <div class="section-title">이번 주 업로드</div>
+      <div class="grid">
+        <div class="vcard">
+          <div class="thumb thumb-1">
+            <div class="play">▶</div>
+            <div class="duration">02:48</div>
+          </div>
+          <div class="body">
+            <h3>프로젝트_A_초벌_v3.mp4</h3>
+            <div class="meta">SEON · 오늘 11:08 · 2.4 GB</div>
+          </div>
+        </div>
+
+        <div class="vcard">
+          <div class="thumb thumb-2">
+            <div class="play">▶</div>
+            <div class="duration">01:30</div>
+          </div>
+          <div class="body">
+            <h3>광고_최종본_1080p.mp4</h3>
+            <div class="meta">SEON · 4월 17일 · 890 MB</div>
+          </div>
+        </div>
+
+        <div class="vcard">
+          <div class="thumb thumb-3">
+            <div class="play">▶</div>
+            <div class="duration">00:45</div>
+          </div>
+          <div class="body">
+            <h3>인서트_B롤_모음.mp4</h3>
+            <div class="meta">MIN · 4월 16일 · 1.2 GB</div>
+          </div>
+        </div>
+
+        <div class="vcard">
+          <div class="thumb thumb-4"><div class="duration">IMG</div></div>
+          <div class="body">
+            <h3>썸네일_세트_v2.zip</h3>
+            <div class="meta">MIN · 4월 15일 · 48 MB</div>
+          </div>
+        </div>
+
+        <div class="vcard">
+          <div class="thumb thumb-5">
+            <div class="play">▶</div>
+            <div class="duration">03:12</div>
+          </div>
+          <div class="body">
+            <h3>BGM_샘플_컬렉션.mp3</h3>
+            <div class="meta">JIN · 4월 15일 · 64 MB</div>
+          </div>
+        </div>
+
+        <div class="vcard">
+          <div class="thumb thumb-6"><div class="duration">PDF</div></div>
+          <div class="body">
+            <h3>광고_브리프_v3.pdf</h3>
+            <div class="meta">JIN · 4월 16일 · 3.2 MB</div>
+          </div>
+        </div>
+
+        <div class="vcard">
+          <div class="thumb thumb-1">
+            <div class="play">▶</div>
+            <div class="duration">04:56</div>
+          </div>
+          <div class="body">
+            <h3>메이킹_필름.mp4</h3>
+            <div class="meta">VIMO · 4월 14일 · 3.1 GB</div>
+          </div>
+        </div>
+
+        <div class="vcard">
+          <div class="thumb thumb-2"><div class="duration">ZIP</div></div>
+          <div class="body">
+            <h3>소스_아카이브.zip</h3>
+            <div class="meta">VIMO · 4월 12일 · 12.1 GB</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</section>
+
+<!-- ======================= 시안 5: Premium Bold ======================= -->
+<section id="d5" class="design">
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">VIMO<br/>CLOUD<span class="accent">.</span></div>
+
+      <div class="nav-sec">ACCESS</div>
+      <div class="nav-item active">최근 파일<span class="count">24</span></div>
+      <div class="nav-item">즐겨찾기<span class="count">8</span></div>
+      <div class="nav-item">나와 공유<span class="count">3</span></div>
+
+      <div class="nav-sec">FOLDERS</div>
+      <div class="nav-item">내 파일</div>
+      <div class="nav-item">팀 공용</div>
+      <div class="nav-item">프로젝트<span class="count">12</span></div>
+      <div class="nav-item">레퍼런스</div>
+      <div class="nav-item">아카이브</div>
+
+      <div class="nav-sec">TEAM</div>
+      <div class="nav-item">팀원</div>
+      <div class="nav-item">공유 링크</div>
+      <div class="nav-item">활동 로그</div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">ISSUE 04 · APRIL 2026</div>
+        </div>
+        <div class="search"><input placeholder="SEARCH" /></div>
+      </div>
+
+      <h1>Recent.</h1>
+      <p class="subhead">이번 주 팀에서 업로드한 파일 · 총 24개 · 18.7 GB</p>
+
+      <div class="toolbar">
+        <button class="btn-bold">+ UPLOAD</button>
+        <button class="btn-outline">+ NEW FOLDER</button>
+        <button class="btn-outline">SORT</button>
+        <button class="btn-outline">FILTER</button>
+      </div>
+
+      <div class="file-list">
+        <div class="file-row">
+          <div class="num">01</div>
+          <div class="name-cell"><h3>프로젝트_A_초벌_v3<span class="kind-tag">MP4</span></h3></div>
+          <div class="meta-cell">SEON</div>
+          <div class="meta-cell">오늘 11:08</div>
+          <div class="meta-cell size">2.4 GB</div>
+        </div>
+
+        <div class="file-row">
+          <div class="num">02</div>
+          <div class="name-cell"><h3>광고_최종본_1080p<span class="kind-tag">MP4</span></h3></div>
+          <div class="meta-cell">SEON</div>
+          <div class="meta-cell">4월 17일</div>
+          <div class="meta-cell size">890 MB</div>
+        </div>
+
+        <div class="file-row">
+          <div class="num">03</div>
+          <div class="name-cell"><h3>인서트_B롤_모음<span class="kind-tag">MP4</span></h3></div>
+          <div class="meta-cell">MIN</div>
+          <div class="meta-cell">4월 16일</div>
+          <div class="meta-cell size">1.2 GB</div>
+        </div>
+
+        <div class="file-row">
+          <div class="num">04</div>
+          <div class="name-cell"><h3>광고_브리프_v3<span class="kind-tag">PDF</span></h3></div>
+          <div class="meta-cell">JIN</div>
+          <div class="meta-cell">4월 16일</div>
+          <div class="meta-cell size">3.2 MB</div>
+        </div>
+
+        <div class="file-row">
+          <div class="num">05</div>
+          <div class="name-cell"><h3>썸네일_세트_v2<span class="kind-tag">ZIP</span></h3></div>
+          <div class="meta-cell">MIN</div>
+          <div class="meta-cell">4월 15일</div>
+          <div class="meta-cell size">48 MB</div>
+        </div>
+
+        <div class="file-row">
+          <div class="num">06</div>
+          <div class="name-cell"><h3>메이킹_필름<span class="kind-tag">MP4</span></h3></div>
+          <div class="meta-cell">VIMO</div>
+          <div class="meta-cell">4월 14일</div>
+          <div class="meta-cell size">3.1 GB</div>
+        </div>
+
+        <div class="file-row">
+          <div class="num">07</div>
+          <div class="name-cell"><h3>촬영스케줄_Q2<span class="kind-tag">XLSX</span></h3></div>
+          <div class="meta-cell">SEON</div>
+          <div class="meta-cell">4월 14일</div>
+          <div class="meta-cell size">124 KB</div>
+        </div>
+      </div>
+    </main>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll('.switcher button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = btn.dataset.t;
+      document.querySelectorAll('.switcher button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.design').forEach(d => d.classList.remove('active'));
+      document.getElementById(t).classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    });
+  });
+</script>
+
+</body>
+</html>
