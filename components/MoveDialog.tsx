@@ -105,7 +105,7 @@ export function MoveDialog({
             onClick={() => setPath("/")}
             className="hover:text-accent text-text-muted transition-colors"
           >
-            VIMO Cloud
+            Vibox
           </button>
           {segments.map((seg, i) => {
             const next = "/" + segments.slice(0, i + 1).join("/");

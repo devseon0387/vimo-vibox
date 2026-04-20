@@ -1,14 +1,13 @@
 import { Sidebar } from "@/components/Sidebar";
+import { AppShell } from "@/components/AppShell";
+
+// 인증 보호 + 동적 검색/경로 상태 사용 → 프리렌더 대상 아님
+export const dynamic = "force-dynamic";
 
 export default function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="flex-1 min-w-0">{children}</main>
-    </div>
-  );
+  return <AppShell sidebar={<Sidebar />}>{children}</AppShell>;
 }

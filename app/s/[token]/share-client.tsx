@@ -72,7 +72,7 @@ export function SharePageClient({
     return (
       <CenteredNarrow>
         <div className="text-[11px] font-bold tracking-wider text-text-faint uppercase mb-2">
-          VIMO CLOUD · 공유 링크
+          VIBOX · 공유 링크
         </div>
         <h1 className="text-[22px] font-bold mb-6 break-all">{filename}</h1>
 
@@ -116,7 +116,7 @@ export function SharePageClient({
         <div className="flex items-start justify-between gap-4 mb-5 flex-wrap">
           <div className="min-w-0 flex-1">
             <div className="text-[11px] font-bold tracking-wider text-text-faint uppercase mb-1.5">
-              VIMO CLOUD · 공유 링크
+              VIBOX · 공유 링크
             </div>
             <h1 className="text-[20px] font-bold text-text break-all">
               {filename}
@@ -183,7 +183,7 @@ export function SharePageClient({
 
         <div className="mt-6 text-center">
           <Link href="/" className="text-[11.5px] text-text-faint hover:text-text">
-            vimo.cloud →
+            vi.box →
           </Link>
         </div>
       </div>

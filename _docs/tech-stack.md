@@ -1,4 +1,4 @@
-# VIMO Cloud — 기술 스택 결정 문서
+# Vibox — 기술 스택 결정 문서
 
 > 내부 팀용 웹 기반 파일 공유 플랫폼. "우리만의 드롭박스"가 목표.
 
@@ -94,7 +94,7 @@
 ## 디렉터리 구조 (예상)
 
 ```
-~/Desktop/Dev/vimo-cloud/          ← 개발 리포
+~/Desktop/Dev/vibox/                ← 개발 리포
 ├── app/                           ← Next.js App Router
 │   ├── (auth)/login/
 │   ├── (app)/files/
@@ -112,12 +112,12 @@
 ├── drizzle/                        ← 마이그레이션
 ├── public/
 ├── data/
-│   └── vimo-cloud.db              ← SQLite 파일 (dev)
+│   └── vibox.db                   ← SQLite 파일 (dev)
 └── tech-stack.md
 
 실제 파일:
 /Volumes/T5 EVO/Shared/            ← 아이맥 외장 SSD (prod)
-├── .vimo-cloud/                   ← 시스템 메타 (썸네일, 임시 업로드)
+├── .vibox/                        ← 시스템 메타 (썸네일, 임시 업로드)
 ├── users/{username}/              ← 개인 폴더
 ├── team/                          ← 팀 공용
 └── projects/                      ← 프로젝트별

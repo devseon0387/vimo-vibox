@@ -3,9 +3,9 @@ import { getCurrentSession } from "@/lib/auth/session";
 import {
   listDirectory,
   createFolder,
-  deleteEntry,
   moveEntry,
 } from "@/lib/fs/storage";
+import { moveToTrash } from "@/lib/fs/trash";
 
 async function requireAuth() {
   const session = await getCurrentSession();
@@ -72,15 +72,15 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-// DELETE /api/files?path=/foo/bar  → 삭제
+// DELETE /api/files?path=/foo/bar  → 휴지통으로 이동
 export async function DELETE(req: NextRequest) {
-  const { error } = await requireAuth();
+  const { error, session } = await requireAuth();
   if (error) return error;
 
   const rel = req.nextUrl.searchParams.get("path");
   if (!rel) return NextResponse.json({ error: "path required" }, { status: 400 });
   try {
-    await deleteEntry(rel);
+    await moveToTrash(rel, session!.sub, session!.name ?? session!.username);
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "unknown";

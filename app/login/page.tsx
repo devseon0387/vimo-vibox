@@ -19,7 +19,7 @@ export default function LoginPage() {
             href="/"
             className="text-[26px] font-extrabold tracking-tight text-text inline-block"
           >
-            vimo<span className="text-accent">.</span>cloud
+            vi<span className="text-accent">.</span>box
           </Link>
           <p className="text-[13px] text-text-soft mt-2">
             VIMO 내부 팀 파일 공간
@@ -51,7 +51,7 @@ export default function LoginPage() {
                 type="text"
                 autoComplete="username"
                 required
-                placeholder="username"
+                placeholder="예: seon"
                 className="w-full pl-9 pr-3 py-2 border border-border rounded-md text-[14px] outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-all"
               />
             </div>

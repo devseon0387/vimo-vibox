@@ -6,7 +6,7 @@ import path from "node:path";
 import fs from "node:fs";
 import * as schema from "./schema";
 
-const dbPath = process.env.DATABASE_URL ?? path.join(process.cwd(), "_data", "vimo-cloud.db");
+const dbPath = process.env.DATABASE_URL ?? path.join(process.cwd(), "_data", "vibox.db");
 
 // 부모 디렉토리 보장
 const dir = path.dirname(dbPath);

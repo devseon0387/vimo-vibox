@@ -5,9 +5,11 @@ import {
   FileImage,
   FileArchive,
   FileAudio,
+  File,
   type LucideIcon,
 } from "lucide-react";
-import { FileKind } from "@/lib/mock-data";
+
+export type FileKind = "folder" | "video" | "image" | "doc" | "zip" | "audio" | "other";
 
 type Style = {
   Icon: LucideIcon;
@@ -22,6 +24,7 @@ const styleMap: Record<FileKind, Style> = {
   image: { Icon: FileImage, bg: "bg-warning-soft", text: "text-warning" },
   zip: { Icon: FileArchive, bg: "bg-purple-soft", text: "text-purple" },
   audio: { Icon: FileAudio, bg: "bg-purple-soft", text: "text-purple" },
+  other: { Icon: File, bg: "bg-hover", text: "text-text-soft" },
 };
 
 export function FileIcon({ kind }: { kind: FileKind }) {

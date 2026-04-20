@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FileIcon } from "./FileIcon";
 import type { FileEntry } from "@/lib/fs/storage";
-import { Download, Trash2, Pencil, Link as LinkIcon, MoveRight } from "lucide-react";
+import { Download, Trash2, Pencil, Link as LinkIcon, MoveRight, FolderOpen } from "lucide-react";
 import { useConfirm } from "./ConfirmDialog";
 import { usePrompt } from "./PromptDialog";
 import { PreviewModal } from "./PreviewModal";
@@ -88,15 +88,15 @@ export function FileTable({
         <>
           <span className="font-semibold text-text">{entry.name}</span>
           {entry.isFolder ? (
-            <> 폴더 안의 모든 내용이 함께 영구 삭제됩니다.</>
+            <> 폴더를 휴지통으로 옮겨요.</>
           ) : (
-            <> 파일이 영구 삭제됩니다.</>
+            <> 파일을 휴지통으로 옮겨요.</>
           )}
           <br />
-          이 작업은 되돌릴 수 없습니다.
+          30일 이내에 언제든 복원할 수 있어요.
         </>
       ),
-      confirmLabel: "삭제",
+      confirmLabel: "휴지통으로",
       variant: "danger",
     });
     if (!ok) return;
@@ -217,13 +217,22 @@ export function FileTable({
   return (
     <>
       {empty ? (
-        <div className="bg-white rounded-md p-16 text-center text-text-faint text-[13px]">
-          비어있습니다. 파일을 업로드하거나 폴더를 만들어보세요.
-          <span className="text-text-faint ml-1">(현재 경로: {basePath})</span>
+        <div className="border border-dashed border-border rounded-lg py-14 px-6 text-center bg-white">
+          <FolderOpen
+            size={32}
+            className="mx-auto text-text-faint mb-3"
+            strokeWidth={1.5}
+          />
+          <div className="text-[14px] text-text-muted">
+            {basePath === "/" ? "비어있어요" : "이 폴더가 비어있어요"}
+          </div>
+          <div className="text-[12px] text-text-faint mt-1">
+            파일을 드래그하거나 업로드 버튼을 눌러보세요
+          </div>
         </div>
       ) : (
-        <div className="bg-white rounded-md overflow-hidden">
-          <table className="w-full text-[13.5px]">
+        <div className="bg-white rounded-md overflow-x-auto">
+          <table className="w-full min-w-[680px] text-[13.5px]">
             <thead>
               <tr className="border-b border-border">
                 <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider">
@@ -251,11 +260,16 @@ export function FileTable({
                 >
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-2.5">
-                      <FileIcon kind={entry.kind === "other" ? "doc" : entry.kind} />
+                      <FileIcon kind={entry.kind} />
                       <span className="text-text">{entry.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-2.5 text-text-soft">{formatTime(entry.modifiedAt)}</td>
+                  <td
+                    className="px-4 py-2.5 text-text-soft"
+                    title={new Date(entry.modifiedAt).toLocaleString("ko-KR")}
+                  >
+                    {formatTime(entry.modifiedAt)}
+                  </td>
                   <td className="px-4 py-2.5 text-text-soft">
                     {entry.isFolder ? "—" : formatSize(entry.size)}
                   </td>

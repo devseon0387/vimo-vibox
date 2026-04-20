@@ -1,0 +1,76 @@
+"use client";
+
+import { useState, type ReactNode } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { Menu } from "lucide-react";
+import { useEffect } from "react";
+
+export function AppShell({
+  sidebar,
+  children,
+}: {
+  sidebar: ReactNode;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const params = useSearchParams();
+
+  // 경로가 바뀌면 drawer 자동 닫기
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname, params]);
+
+  // drawer 열림 동안 body 스크롤 잠금
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
+    }
+  }, [open]);
+
+  return (
+    <div className="min-h-screen md:flex">
+      <div
+        className={`
+          fixed md:sticky md:top-0
+          inset-y-0 left-0 z-50 md:z-auto
+          transition-transform duration-200 ease-out
+          ${open ? "translate-x-0 shadow-xl md:shadow-none" : "-translate-x-full md:translate-x-0"}
+        `}
+      >
+        {sidebar}
+      </div>
+
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      <main className="flex-1 min-w-0">
+        <div className="md:hidden sticky top-0 bg-white border-b border-border z-30 px-4 py-3 flex items-center gap-3">
+          <button
+            onClick={() => setOpen(true)}
+            aria-label="메뉴 열기"
+            className="p-1.5 -ml-1 rounded hover:bg-hover text-text"
+          >
+            <Menu size={20} strokeWidth={2.2} />
+          </button>
+          <Link
+            href="/"
+            className="text-[15px] font-extrabold tracking-tight text-text"
+          >
+            vi<span className="text-accent">.</span>box
+          </Link>
+        </div>
+
+        {children}
+      </main>
+    </div>
+  );
+}

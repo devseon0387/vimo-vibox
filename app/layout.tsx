@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "VIMO Cloud",
+  title: "Vibox",
   description: "VIMO 내부 팀용 파일 공유 플랫폼",
 };
 

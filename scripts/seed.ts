@@ -10,7 +10,7 @@ import { eq } from "drizzle-orm";
 async function main() {
   const rl = readline.createInterface({ input, output });
 
-  console.log("\n=== VIMO Cloud 사용자 생성 ===\n");
+  console.log("\n=== Vibox 사용자 생성 ===\n");
 
   const username = (await rl.question("사용자 ID (예: vimo): ")).trim().toLowerCase();
   if (!username) throw new Error("ID가 비어있습니다");

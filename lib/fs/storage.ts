@@ -254,7 +254,7 @@ export type ChunkUploadMeta = {
 
 /** 청크 임시 저장소 루트 (STORAGE_ROOT 안, 점으로 시작해 listDirectory에서 필터됨) */
 export function getUploadTempRoot(): string {
-  return path.join(getStorageRoot(), ".vimo-cloud", "uploads");
+  return path.join(getStorageRoot(), ".vibox", "uploads");
 }
 
 export function getUploadTempDir(fileId: string): string {

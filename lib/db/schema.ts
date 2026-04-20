@@ -28,7 +28,24 @@ export const shareLinks = sqliteTable("share_links", {
     .$defaultFn(() => new Date()),
 });
 
+export const trashItems = sqliteTable("trash_items", {
+  id: text("id").primaryKey(),
+  originalPath: text("original_path").notNull(),
+  name: text("name").notNull(),
+  isFolder: integer("is_folder", { mode: "boolean" }).notNull().default(false),
+  size: integer("size").notNull().default(0),
+  deletedBy: text("deleted_by")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  deletedByName: text("deleted_by_name").notNull(),
+  deletedAt: integer("deleted_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type ShareLink = typeof shareLinks.$inferSelect;
 export type NewShareLink = typeof shareLinks.$inferInsert;
+export type TrashItem = typeof trashItems.$inferSelect;
+export type NewTrashItem = typeof trashItems.$inferInsert;

@@ -6,6 +6,6 @@ export default {
   out: "./drizzle",
   dialect: "sqlite",
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? "./_data/vimo-cloud.db",
+    url: process.env.DATABASE_URL ?? "./_data/vibox.db",
   },
 } satisfies Config;

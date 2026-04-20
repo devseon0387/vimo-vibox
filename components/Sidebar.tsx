@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Upload, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { getCurrentSession } from "@/lib/auth/session";
 import { logoutAction } from "@/app/login/actions";
 import { SidebarNav } from "./SidebarNav";
@@ -8,18 +8,11 @@ export async function Sidebar() {
   const session = await getCurrentSession();
 
   return (
-    <aside className="w-[240px] bg-surface border-r border-border flex flex-col h-screen sticky top-0">
-      <div className="px-5 pt-6 pb-4">
+    <aside className="w-[240px] bg-surface border-r border-border flex flex-col h-screen">
+      <div className="px-5 pt-6 pb-5">
         <Link href="/" className="text-[15px] font-extrabold tracking-tight text-text">
-          vimo<span className="text-accent">.</span>cloud
+          vi<span className="text-accent">.</span>box
         </Link>
-      </div>
-
-      <div className="px-3 pb-3">
-        <button className="w-full bg-text text-white hover:bg-[#333] transition-colors px-3 py-2 rounded-md text-[13px] font-semibold flex items-center justify-center gap-1.5">
-          <Upload size={14} strokeWidth={2.5} />
-          업로드
-        </button>
       </div>
 
       <SidebarNav />
