@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>체크 애니메이션 시안</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif; }
+
+  /* 기본 체크 버튼 */
+  .check-btn {
+    width: 28px; height: 28px;
+    border-radius: 9999px;
+    border: 2.5px solid #cbd5e1;
+    background: white;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .check-btn:hover { border-color: #10b981; }
+  .check-btn.checked {
+    background: #10b981;
+    border-color: #10b981;
+  }
+  .check-btn svg {
+    color: white;
+    stroke-dasharray: 24;
+    stroke-dashoffset: 24;
+    opacity: 0;
+  }
+  .check-btn.checked svg { opacity: 1; }
+
+  /* ===== 1. Pop-in : spring bounce ===== */
+  .a1.checked {
+    animation: a1-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .a1.checked svg {
+    animation: a1-check 0.35s 0.15s ease-out forwards;
+  }
+  @keyframes a1-pop {
+    0%   { transform: scale(0.5); }
+    60%  { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+  @keyframes a1-check {
+    to { stroke-dashoffset: 0; opacity: 1; }
+  }
+
+  /* ===== 2. Jelly : rubber band wobble ===== */
+  .a2.checked {
+    animation: a2-jelly 0.6s ease-out;
+  }
+  .a2.checked svg {
+    animation: a2-draw 0.3s 0.2s ease-out forwards;
+  }
+  @keyframes a2-jelly {
+    0%   { transform: scale(1, 1); }
+    30%  { transform: scale(1.4, 0.7); }
+    50%  { transform: scale(0.85, 1.2); }
+    70%  { transform: scale(1.1, 0.9); }
+    85%  { transform: scale(0.95, 1.05); }
+    100% { transform: scale(1, 1); }
+  }
+  @keyframes a2-draw {
+    to { stroke-dashoffset: 0; opacity: 1; }
+  }
+
+  /* ===== 3. Draw stroke ===== */
+  .a3.checked {
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .a3.checked svg {
+    animation: a3-stroke 0.5s 0.1s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  }
+  @keyframes a3-stroke {
+    to { stroke-dashoffset: 0; opacity: 1; }
+  }
+
+  /* ===== 4. Splash ripple ===== */
+  .a4 { position: relative; overflow: visible; }
+  .a4.checked {
+    animation: a4-fill 0.4s ease-out;
+  }
+  .a4.checked svg {
+    animation: a4-check 0.3s 0.2s ease-out forwards;
+  }
+  .a4.checked::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    border: 2px solid #10b981;
+    opacity: 0;
+    animation: a4-ripple 0.6s 0.1s ease-out;
+  }
+  @keyframes a4-fill {
+    0%   { background: white; }
+    100% { background: #10b981; }
+  }
+  @keyframes a4-check {
+    to { stroke-dashoffset: 0; opacity: 1; }
+  }
+  @keyframes a4-ripple {
+    0%   { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+
+  /* ===== 5. Confetti burst ===== */
+  .a5 { position: relative; overflow: visible; }
+  .a5.checked { animation: a5-pop 0.4s ease-out; }
+  .a5.checked svg { animation: a5-check 0.3s 0.15s ease-out forwards; }
+  .a5-piece {
+    position: absolute;
+    width: 4px; height: 4px;
+    border-radius: 1px;
+    left: 12px; top: 12px;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .a5.checked .a5-piece {
+    animation: a5-fly 0.7s ease-out forwards;
+  }
+  .a5-piece:nth-child(1) { --tx: -18px; --ty: -20px; background: #fbbf24; animation-delay: 0.05s; }
+  .a5-piece:nth-child(2) { --tx: 22px; --ty: -14px; background: #ec4899; animation-delay: 0.07s; }
+  .a5-piece:nth-child(3) { --tx: 18px; --ty: 18px; background: #3b82f6; animation-delay: 0.1s; }
+  .a5-piece:nth-child(4) { --tx: -16px; --ty: 18px; background: #a855f7; animation-delay: 0.09s; }
+  .a5-piece:nth-child(5) { --tx: 0; --ty: -24px; background: #10b981; animation-delay: 0.06s; }
+  .a5-piece:nth-child(6) { --tx: 24px; --ty: 4px; background: #f97316; animation-delay: 0.08s; }
+  @keyframes a5-pop {
+    0% { transform: scale(0.8); } 50% { transform: scale(1.15); } 100% { transform: scale(1); }
+  }
+  @keyframes a5-check {
+    to { stroke-dashoffset: 0; opacity: 1; }
+  }
+  @keyframes a5-fly {
+    0%   { transform: translate(0, 0) scale(0); opacity: 1; }
+    30%  { opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(1.2) rotate(180deg); opacity: 0; }
+  }
+
+  /* ===== 6. Heartbeat (더블 펄스) ===== */
+  .a6.checked {
+    animation: a6-beat 0.6s ease-out;
+  }
+  .a6.checked svg {
+    animation: a6-check 0.25s 0.15s ease-out forwards;
+  }
+  @keyframes a6-beat {
+    0%   { transform: scale(1); }
+    20%  { transform: scale(1.25); }
+    35%  { transform: scale(1); }
+    55%  { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  @keyframes a6-check {
+    to { stroke-dashoffset: 0; opacity: 1; }
+  }
+
+  /* ===== 7. Rotate-check : 360 회전 ===== */
+  .a7.checked {
+    animation: a7-spin 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .a7.checked svg {
+    animation: a7-check 0.3s 0.2s ease-out forwards;
+  }
+  @keyframes a7-spin {
+    0%   { transform: rotate(0deg) scale(0.8); }
+    100% { transform: rotate(360deg) scale(1); }
+  }
+  @keyframes a7-check {
+    to { stroke-dashoffset: 0; opacity: 1; }
+  }
+
+  /* ===== 8. Squish : 쫀득 ===== */
+  .a8.checked {
+    animation: a8-squish 0.55s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  .a8.checked svg {
+    animation: a8-check 0.3s 0.3s ease-out forwards;
+  }
+  @keyframes a8-squish {
+    0%   { transform: scale(1, 1); }
+    25%  { transform: scale(0.7, 1.3); }
+    50%  { transform: scale(1.25, 0.8); }
+    75%  { transform: scale(0.92, 1.08); }
+    100% { transform: scale(1, 1); }
+  }
+  @keyframes a8-check {
+    to { stroke-dashoffset: 0; opacity: 1; }
+  }
+
+  /* ===== 9. Slide-in : 좌측에서 들어옴 ===== */
+  .a9.checked {
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .a9 { overflow: hidden; }
+  .a9.checked svg {
+    animation: a9-slide 0.35s 0.05s cubic-bezier(0.5, 1.5, 0.5, 1) forwards;
+  }
+  @keyframes a9-slide {
+    0%   { transform: translateX(-20px) rotate(-25deg); opacity: 0; stroke-dashoffset: 24; }
+    100% { transform: translateX(0) rotate(0); opacity: 1; stroke-dashoffset: 0; }
+  }
+
+  /* ===== 10. Stamp : 도장 찍는 느낌 (기울면서 내려찍기) ===== */
+  .a10.checked {
+    animation: a10-stamp 0.4s cubic-bezier(0.5, 0, 0.2, 1.8);
+  }
+  .a10.checked svg {
+    animation: a10-check 0.2s 0.2s ease-out forwards;
+  }
+  @keyframes a10-stamp {
+    0%   { transform: scale(1.8) rotate(-15deg); opacity: 0.5; }
+    60%  { transform: scale(0.85) rotate(3deg); }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  @keyframes a10-check {
+    to { stroke-dashoffset: 0; opacity: 1; }
+  }
+
+  /* ===== 카드 컨테이너 ===== */
+  .card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f172a;
+  }
+  .card-desc {
+    font-size: 11.5px;
+    color: #64748b;
+  }
+</style>
+</head>
+<body class="bg-slate-100 p-8 min-h-screen">
+
+<div class="max-w-[720px] mx-auto mb-6">
+  <h1 class="text-2xl font-bold tracking-tight mb-1">체크 애니메이션 시안 (10종)</h1>
+  <p class="text-sm text-slate-500 mb-2">각 동그라미를 클릭해보세요 · 다시 클릭하면 초기화됩니다.</p>
+  <button id="reset-all" class="text-[12px] text-slate-500 hover:text-slate-900 underline">모두 초기화</button>
+</div>
+
+<div class="max-w-[720px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-3">
+
+  <!-- 1 -->
+  <div class="card">
+    <button class="check-btn a1" data-key="a1">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12" pathLength="24"/></svg>
+    </button>
+    <div>
+      <div class="card-title">1. Pop-in</div>
+      <div class="card-desc">부드러운 스프링 바운스</div>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="card">
+    <button class="check-btn a2" data-key="a2">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12" pathLength="24"/></svg>
+    </button>
+    <div>
+      <div class="card-title">2. Jelly 🟢 쫀득</div>
+      <div class="card-desc">젤리처럼 여러 번 출렁</div>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="card">
+    <button class="check-btn a3" data-key="a3">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12" pathLength="24"/></svg>
+    </button>
+    <div>
+      <div class="card-title">3. Draw stroke</div>
+      <div class="card-desc">체크가 손으로 그려지듯</div>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="card">
+    <button class="check-btn a4" data-key="a4">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12" pathLength="24"/></svg>
+    </button>
+    <div>
+      <div class="card-title">4. Splash ripple</div>
+      <div class="card-desc">물방울 파장 퍼짐</div>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="card">
+    <button class="check-btn a5" data-key="a5">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12" pathLength="24"/></svg>
+      <span class="a5-piece"></span>
+      <span class="a5-piece"></span>
+      <span class="a5-piece"></span>
+      <span class="a5-piece"></span>
+      <span class="a5-piece"></span>
+      <span class="a5-piece"></span>
+    </button>
+    <div>
+      <div class="card-title">5. Confetti 🎉</div>
+      <div class="card-desc">6가지 색종이 파팟</div>
+    </div>
+  </div>
+
+  <!-- 6 -->
+  <div class="card">
+    <button class="check-btn a6" data-key="a6">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12" pathLength="24"/></svg>
+    </button>
+    <div>
+      <div class="card-title">6. Heartbeat 💓</div>
+      <div class="card-desc">두 번 뛰는 심장 박동</div>
+    </div>
+  </div>
+
+  <!-- 7 -->
+  <div class="card">
+    <button class="check-btn a7" data-key="a7">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12" pathLength="24"/></svg>
+    </button>
+    <div>
+      <div class="card-title">7. Rotate 360°</div>
+      <div class="card-desc">한 바퀴 회전하며 등장</div>
+    </div>
+  </div>
+
+  <!-- 8 -->
+  <div class="card">
+    <button class="check-btn a8" data-key="a8">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12" pathLength="24"/></svg>
+    </button>
+    <div>
+      <div class="card-title">8. Squish 🟢 쫀득</div>
+      <div class="card-desc">세로/가로로 눌려 펴짐</div>
+    </div>
+  </div>
+
+  <!-- 9 -->
+  <div class="card">
+    <button class="check-btn a9" data-key="a9">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12" pathLength="24"/></svg>
+    </button>
+    <div>
+      <div class="card-title">9. Slide in</div>
+      <div class="card-desc">체크가 왼쪽에서 미끄러져</div>
+    </div>
+  </div>
+
+  <!-- 10 -->
+  <div class="card">
+    <button class="check-btn a10" data-key="a10">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12" pathLength="24"/></svg>
+    </button>
+    <div>
+      <div class="card-title">10. Stamp 💥</div>
+      <div class="card-desc">도장처럼 쾅 찍기</div>
+    </div>
+  </div>
+</div>
+
+<div class="max-w-[720px] mx-auto mt-8 bg-white rounded-xl border p-5 text-[12.5px] text-slate-600 space-y-1">
+  <p><b>쫀득한 느낌 추천</b>: <b>2 (Jelly)</b> · <b>8 (Squish)</b> — 둘 다 scale x/y 조작으로 물컹한 애니메이션.</p>
+  <p><b>귀여운 느낌 추천</b>: <b>1 (Pop-in)</b> · <b>5 (Confetti)</b> · <b>10 (Stamp)</b></p>
+  <p><b>잔잔한 편</b>: <b>3 (Draw)</b> · <b>9 (Slide)</b></p>
+</div>
+
+<script>
+  document.querySelectorAll('.check-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('checked')) {
+        // 해제 시 바로 되돌리기 (애니메이션 리셋)
+        btn.classList.remove('checked');
+        // 애니메이션 중단
+        btn.style.animation = 'none';
+        const svg = btn.querySelector('svg');
+        if (svg) svg.style.animation = 'none';
+        setTimeout(() => {
+          btn.style.animation = '';
+          if (svg) svg.style.animation = '';
+        }, 10);
+      } else {
+        btn.classList.add('checked');
+      }
+    });
+  });
+  document.getElementById('reset-all').addEventListener('click', () => {
+    document.querySelectorAll('.check-btn.checked').forEach(b => {
+      b.classList.remove('checked');
+      b.style.animation = 'none';
+      const svg = b.querySelector('svg');
+      if (svg) svg.style.animation = 'none';
+      setTimeout(() => {
+        b.style.animation = '';
+        if (svg) svg.style.animation = '';
+      }, 10);
+    });
+  });
+</script>
+
+</body>
+</html>

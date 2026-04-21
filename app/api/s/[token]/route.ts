@@ -31,12 +31,27 @@ export async function GET(
     if (!ok) return new Response("wrong password", { status: 401 });
   }
 
+  // 멀티 파일 지원: ?p=/foo.mp4 로 특정 파일 선택 가능
+  const requestedPath = url.searchParams.get("p");
+  const allowedPaths: string[] = link.paths
+    ? (JSON.parse(link.paths) as string[])
+    : [link.filePath];
+  const targetPath = requestedPath && allowedPaths.includes(requestedPath)
+    ? requestedPath
+    : link.filePath;
+
+  // 다운로드 요청인데 다운로드 금지된 경우 차단
+  const isDownload = url.searchParams.get("download") === "1";
+  if (isDownload && !link.allowDownload) {
+    return new Response("download not allowed", { status: 403 });
+  }
+
   let abs: string;
   let size: number;
   try {
-    const { abs: _abs, stat } = await statPath(link.filePath);
+    const { abs: _abs, stat } = await statPath(targetPath);
     if (stat.isDirectory()) return new Response("invalid", { status: 400 });
-    resolveSafePath(link.filePath);
+    resolveSafePath(targetPath);
     abs = _abs;
     size = stat.size;
   } catch {
@@ -53,6 +68,7 @@ export async function GET(
   const filename = path.basename(abs);
   const encodedName = encodeURIComponent(filename);
   const contentType = mime(filename);
+  const disposition = isDownload ? "attachment" : "inline";
 
   const range = req.headers.get("range");
   if (range) {
@@ -76,7 +92,7 @@ export async function GET(
           "Content-Length": String(chunkSize),
           "Content-Range": `bytes ${start}-${end}/${size}`,
           "Accept-Ranges": "bytes",
-          "Content-Disposition": `inline; filename*=UTF-8''${encodedName}`,
+          "Content-Disposition": `${disposition}; filename*=UTF-8''${encodedName}`,
         },
       });
     }

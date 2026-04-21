@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>파일 카드 뷰 시안</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; background: #fafafa; }
+    .aspect-video-card { aspect-ratio: 16/10; }
+    .thumb-grad {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    }
+    .thumb-grad-2 {
+      background: linear-gradient(135deg, #2d1b4e 0%, #1a1a2e 60%, #000 100%);
+    }
+    .thumb-grad-3 {
+      background: linear-gradient(135deg, #4a2c1d 0%, #1a1a2e 50%, #0a0a0a 100%);
+    }
+    .thumb-grad-4 {
+      background: linear-gradient(135deg, #0d3b2e 0%, #0a2647 60%, #0a0a0a 100%);
+    }
+    /* Jelly check */
+    @keyframes jelly {
+      0%, 100% { transform: scale(1); }
+      30% { transform: scale(1.25); }
+      60% { transform: scale(0.95); }
+    }
+    .jelly-hover:hover .check-mark { animation: jelly 0.5s ease; }
+  </style>
+</head>
+<body class="p-10">
+  <div class="max-w-7xl mx-auto space-y-16">
+    <header>
+      <h1 class="text-3xl font-bold mb-2">파일 카드 뷰 — 3가지 시안</h1>
+      <p class="text-gray-600">현재 리스트 뷰를 카드 그리드로 전환. 댓글 수 / AI 검수 상태 / 업로더를 한눈에.</p>
+    </header>
+
+    <!-- ========== VARIANT A: 미니멀 카드 ========== -->
+    <section>
+      <h2 class="text-xl font-bold mb-1">A안 — 미니멀 카드 (Frame.io 스타일)</h2>
+      <p class="text-gray-500 text-sm mb-6">큰 썸네일 위주, 메타데이터는 하단에 작게. 깔끔하고 영상 위주 워크플로에 잘 맞음.</p>
+      <div class="grid grid-cols-4 gap-4">
+        <!-- Card 1 -->
+        <div class="group cursor-pointer">
+          <div class="aspect-video-card thumb-grad rounded-lg relative overflow-hidden mb-2.5">
+            <div class="absolute inset-0 flex items-center justify-center text-white/20 text-6xl font-black">4K</div>
+            <div class="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">
+              12:34
+            </div>
+            <!-- 댓글/검수 배지 -->
+            <div class="absolute top-2 left-2 flex gap-1">
+              <span class="bg-black/70 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                14
+              </span>
+              <span class="bg-amber-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">3 남음</span>
+            </div>
+          </div>
+          <div class="px-1">
+            <div class="text-[13px] font-medium text-gray-900 truncate">ep03_final_v4.mp4</div>
+            <div class="text-[11.5px] text-gray-500 mt-0.5">오늘 14:22 · 2.3GB</div>
+          </div>
+        </div>
+
+        <!-- Card 2 - clean -->
+        <div class="group cursor-pointer">
+          <div class="aspect-video-card thumb-grad-2 rounded-lg relative overflow-hidden mb-2.5">
+            <div class="absolute inset-0 flex items-center justify-center text-white/20 text-5xl">🎬</div>
+            <div class="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">
+              08:12
+            </div>
+            <div class="absolute top-2 left-2 flex gap-1">
+              <span class="bg-emerald-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded flex items-center gap-0.5 jelly-hover">
+                <svg class="check-mark" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                완료
+              </span>
+            </div>
+          </div>
+          <div class="px-1">
+            <div class="text-[13px] font-medium text-gray-900 truncate">teaser_30s.mov</div>
+            <div class="text-[11.5px] text-gray-500 mt-0.5">어제 · 840MB</div>
+          </div>
+        </div>
+
+        <!-- Card 3 - no scan -->
+        <div class="group cursor-pointer">
+          <div class="aspect-video-card thumb-grad-3 rounded-lg relative overflow-hidden mb-2.5">
+            <div class="absolute inset-0 flex items-center justify-center text-white/20 text-6xl font-black">HD</div>
+            <div class="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">
+              24:01
+            </div>
+          </div>
+          <div class="px-1">
+            <div class="text-[13px] font-medium text-gray-900 truncate">documentary_raw.mp4</div>
+            <div class="text-[11.5px] text-gray-500 mt-0.5">3월 12일 · 8.1GB</div>
+          </div>
+        </div>
+
+        <!-- Folder -->
+        <div class="group cursor-pointer">
+          <div class="aspect-video-card bg-gray-100 border border-gray-200 rounded-lg relative overflow-hidden mb-2.5 flex items-center justify-center">
+            <svg class="text-amber-400" width="56" height="56" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
+            </svg>
+          </div>
+          <div class="px-1">
+            <div class="text-[13px] font-medium text-gray-900 truncate">프로젝트_A_최종</div>
+            <div class="text-[11.5px] text-gray-500 mt-0.5">12개 파일</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== VARIANT B: 정보 밀집 카드 ========== -->
+    <section>
+      <h2 class="text-xl font-bold mb-1">B안 — 정보 밀집 (Dashboard 스타일)</h2>
+      <p class="text-gray-500 text-sm mb-6">한 장에 많은 정보. 업로더, 댓글 수, 스캔 진행 바까지. 제작팀 관점에서 효율적.</p>
+      <div class="grid grid-cols-3 gap-4">
+        <!-- Card 1 - with scan in progress -->
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
+          <div class="aspect-video-card thumb-grad relative">
+            <div class="absolute inset-0 flex items-center justify-center text-white/20 text-6xl font-black">4K</div>
+            <div class="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">12:34</div>
+          </div>
+          <div class="p-3">
+            <div class="flex items-start justify-between gap-2 mb-2">
+              <div class="min-w-0">
+                <div class="text-[13.5px] font-semibold text-gray-900 truncate">ep03_final_v4.mp4</div>
+                <div class="text-[11px] text-gray-500 mt-0.5">
+                  <span class="font-medium">김편집</span> · 오늘 14:22
+                </div>
+              </div>
+              <div class="text-[11px] text-gray-400 whitespace-nowrap">2.3GB</div>
+            </div>
+            <!-- Scan progress -->
+            <div class="bg-violet-50 border border-violet-200 rounded-md p-2 mb-2">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[11px] font-semibold text-violet-700">AI 검수 중</span>
+                <span class="text-[11px] text-violet-600">62%</span>
+              </div>
+              <div class="h-1 bg-violet-100 rounded-full overflow-hidden">
+                <div class="h-full bg-violet-500 rounded-full" style="width:62%"></div>
+              </div>
+            </div>
+            <!-- Footer stats -->
+            <div class="flex items-center gap-3 text-[11.5px] text-gray-600">
+              <span class="flex items-center gap-1">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                <span class="font-medium">14</span>
+              </span>
+              <span class="flex items-center gap-1 text-amber-600">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                <span class="font-medium">3 수정</span>
+              </span>
+              <span class="flex items-center gap-1 text-emerald-600">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                <span class="font-medium">11</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 - completed -->
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
+          <div class="aspect-video-card thumb-grad-2 relative">
+            <div class="absolute inset-0 flex items-center justify-center text-white/20 text-5xl">🎬</div>
+            <div class="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">08:12</div>
+          </div>
+          <div class="p-3">
+            <div class="flex items-start justify-between gap-2 mb-2">
+              <div class="min-w-0">
+                <div class="text-[13.5px] font-semibold text-gray-900 truncate">teaser_30s.mov</div>
+                <div class="text-[11px] text-gray-500 mt-0.5">
+                  <span class="font-medium">박감독</span> · 어제
+                </div>
+              </div>
+              <div class="text-[11px] text-gray-400 whitespace-nowrap">840MB</div>
+            </div>
+            <div class="bg-emerald-50 border border-emerald-200 rounded-md p-2 mb-2 flex items-center gap-1.5">
+              <svg class="text-emerald-600" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              <span class="text-[11.5px] font-semibold text-emerald-700">수정 완료</span>
+            </div>
+            <div class="flex items-center gap-3 text-[11.5px] text-gray-600">
+              <span class="flex items-center gap-1">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                <span class="font-medium">8</span>
+              </span>
+              <span class="flex items-center gap-1 text-emerald-600">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                <span class="font-medium">8</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 - no scan yet -->
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
+          <div class="aspect-video-card thumb-grad-3 relative">
+            <div class="absolute inset-0 flex items-center justify-center text-white/20 text-6xl font-black">HD</div>
+            <div class="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">24:01</div>
+          </div>
+          <div class="p-3">
+            <div class="flex items-start justify-between gap-2 mb-2">
+              <div class="min-w-0">
+                <div class="text-[13.5px] font-semibold text-gray-900 truncate">documentary_raw.mp4</div>
+                <div class="text-[11px] text-gray-500 mt-0.5">
+                  <span class="font-medium">이주연</span> · 3월 12일
+                </div>
+              </div>
+              <div class="text-[11px] text-gray-400 whitespace-nowrap">8.1GB</div>
+            </div>
+            <div class="bg-gray-50 border border-gray-200 rounded-md p-2 mb-2 flex items-center gap-1.5">
+              <svg class="text-gray-400" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+              <span class="text-[11.5px] font-medium text-gray-500">AI 검수 전</span>
+            </div>
+            <div class="flex items-center gap-3 text-[11.5px] text-gray-400">
+              <span class="italic">댓글 없음</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== VARIANT C: 하이브리드 ========== -->
+    <section>
+      <h2 class="text-xl font-bold mb-1">C안 — 하이브리드 (Dropbox + Notion)</h2>
+      <p class="text-gray-500 text-sm mb-6">썸네일 중앙에, 상태는 우측 테두리 띠로. 호버 시 더 많은 정보 펼침. 덜 번잡.</p>
+      <div class="grid grid-cols-4 gap-4">
+        <!-- Card 1 -->
+        <div class="group cursor-pointer relative">
+          <!-- Status stripe (top) -->
+          <div class="absolute top-0 left-0 right-0 h-0.5 bg-amber-500 rounded-t-xl z-10"></div>
+          <div class="bg-white rounded-xl border border-gray-200 overflow-hidden group-hover:shadow-md group-hover:border-gray-300 transition-all">
+            <div class="aspect-video-card thumb-grad relative">
+              <div class="absolute inset-0 flex items-center justify-center text-white/20 text-6xl font-black">4K</div>
+              <!-- Hover overlay -->
+              <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <button class="bg-white text-black text-[11px] font-semibold px-2.5 py-1 rounded-md">열기</button>
+                <button class="bg-white/20 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md backdrop-blur">공유</button>
+              </div>
+              <div class="absolute bottom-1.5 right-1.5 bg-black/70 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">12:34</div>
+            </div>
+            <div class="p-2.5">
+              <div class="text-[12.5px] font-medium text-gray-900 truncate">ep03_final_v4.mp4</div>
+              <div class="flex items-center justify-between mt-1">
+                <div class="text-[10.5px] text-gray-500">오늘 · 2.3GB</div>
+                <div class="flex items-center gap-1.5 text-[10.5px]">
+                  <span class="flex items-center gap-0.5 text-gray-600">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                    14
+                  </span>
+                  <span class="text-amber-600 font-semibold">3</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 - green stripe -->
+        <div class="group cursor-pointer relative">
+          <div class="absolute top-0 left-0 right-0 h-0.5 bg-emerald-500 rounded-t-xl z-10"></div>
+          <div class="bg-white rounded-xl border border-gray-200 overflow-hidden group-hover:shadow-md group-hover:border-gray-300 transition-all">
+            <div class="aspect-video-card thumb-grad-2 relative">
+              <div class="absolute inset-0 flex items-center justify-center text-white/20 text-5xl">🎬</div>
+              <div class="absolute bottom-1.5 right-1.5 bg-black/70 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">08:12</div>
+            </div>
+            <div class="p-2.5">
+              <div class="text-[12.5px] font-medium text-gray-900 truncate">teaser_30s.mov</div>
+              <div class="flex items-center justify-between mt-1">
+                <div class="text-[10.5px] text-gray-500">어제 · 840MB</div>
+                <div class="flex items-center gap-1.5 text-[10.5px]">
+                  <span class="flex items-center gap-0.5 text-gray-600">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                    8
+                  </span>
+                  <span class="text-emerald-600 font-semibold">✓</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 - no scan, gray stripe -->
+        <div class="group cursor-pointer relative">
+          <div class="absolute top-0 left-0 right-0 h-0.5 bg-gray-200 rounded-t-xl z-10"></div>
+          <div class="bg-white rounded-xl border border-gray-200 overflow-hidden group-hover:shadow-md group-hover:border-gray-300 transition-all">
+            <div class="aspect-video-card thumb-grad-3 relative">
+              <div class="absolute inset-0 flex items-center justify-center text-white/20 text-6xl font-black">HD</div>
+              <div class="absolute bottom-1.5 right-1.5 bg-black/70 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">24:01</div>
+            </div>
+            <div class="p-2.5">
+              <div class="text-[12.5px] font-medium text-gray-900 truncate">documentary_raw.mp4</div>
+              <div class="flex items-center justify-between mt-1">
+                <div class="text-[10.5px] text-gray-500">3월 12일 · 8.1GB</div>
+                <div class="flex items-center gap-1.5 text-[10.5px]">
+                  <span class="text-gray-400">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4 - image -->
+        <div class="group cursor-pointer relative">
+          <div class="absolute top-0 left-0 right-0 h-0.5 bg-transparent rounded-t-xl z-10"></div>
+          <div class="bg-white rounded-xl border border-gray-200 overflow-hidden group-hover:shadow-md group-hover:border-gray-300 transition-all">
+            <div class="aspect-video-card thumb-grad-4 relative">
+              <div class="absolute inset-0 flex items-center justify-center text-white/40 text-4xl">🌆</div>
+            </div>
+            <div class="p-2.5">
+              <div class="text-[12.5px] font-medium text-gray-900 truncate">reference_01.jpg</div>
+              <div class="flex items-center justify-between mt-1">
+                <div class="text-[10.5px] text-gray-500">어제 · 4.2MB</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 flex items-center gap-4 text-xs text-gray-500">
+        <span class="flex items-center gap-1.5"><span class="w-2 h-0.5 bg-amber-500 rounded"></span>수정 남음</span>
+        <span class="flex items-center gap-1.5"><span class="w-2 h-0.5 bg-emerald-500 rounded"></span>모두 반영</span>
+        <span class="flex items-center gap-1.5"><span class="w-2 h-0.5 bg-violet-500 rounded"></span>검수 중</span>
+        <span class="flex items-center gap-1.5"><span class="w-2 h-0.5 bg-gray-200 rounded"></span>미검수/일반 파일</span>
+      </div>
+    </section>
+
+    <!-- 비교 표 -->
+    <section class="bg-white rounded-xl border border-gray-200 p-6 mt-16">
+      <h2 class="text-lg font-bold mb-4">비교</h2>
+      <table class="w-full text-sm">
+        <thead class="text-left text-gray-500 border-b">
+          <tr>
+            <th class="pb-2 pr-4 font-semibold">기준</th>
+            <th class="pb-2 pr-4 font-semibold">A — 미니멀</th>
+            <th class="pb-2 pr-4 font-semibold">B — 정보 밀집</th>
+            <th class="pb-2 font-semibold">C — 하이브리드</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y text-gray-700">
+          <tr><td class="py-2.5 pr-4 font-medium">정보량</td><td class="pr-4">★★☆☆☆</td><td class="pr-4">★★★★★</td><td>★★★☆☆</td></tr>
+          <tr><td class="py-2.5 pr-4 font-medium">한 화면 카드 수</td><td class="pr-4">4열 (많음)</td><td class="pr-4">3열 (적음)</td><td>4열 (많음)</td></tr>
+          <tr><td class="py-2.5 pr-4 font-medium">디자인 세련도</td><td class="pr-4">★★★★★</td><td class="pr-4">★★★☆☆</td><td>★★★★☆</td></tr>
+          <tr><td class="py-2.5 pr-4 font-medium">팀 협업 생산성</td><td class="pr-4">★★★☆☆</td><td class="pr-4">★★★★★</td><td>★★★★☆</td></tr>
+          <tr><td class="py-2.5 pr-4 font-medium">AI 검수 상태 파악</td><td class="pr-4">배지 작음</td><td class="pr-4">진행 바 보임</td><td>색 띠</td></tr>
+          <tr><td class="py-2.5 pr-4 font-medium">추천 대상</td><td class="pr-4">Frame.io 느낌</td><td class="pr-4">대시보드</td><td>Dropbox+</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</body>
+</html>

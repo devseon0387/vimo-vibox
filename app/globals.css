@@ -95,6 +95,32 @@
       transform: translateY(0) scale(1);
     }
   }
+
+  /* Jelly 체크 애니메이션 */
+  @keyframes check-jelly {
+    0%   { transform: scale(1, 1); }
+    30%  { transform: scale(1.4, 0.7); }
+    50%  { transform: scale(0.85, 1.2); }
+    70%  { transform: scale(1.1, 0.9); }
+    85%  { transform: scale(0.95, 1.05); }
+    100% { transform: scale(1, 1); }
+  }
+  @keyframes check-jelly-draw {
+    to { stroke-dashoffset: 0; opacity: 1; }
+  }
+}
+
+/* 체크 버튼: Jelly 애니메이션 */
+.check-jelly svg {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  opacity: 0;
+}
+.check-jelly.checked svg {
+  animation: check-jelly-draw 0.3s 0.2s ease-out forwards;
+}
+.check-jelly.checked {
+  animation: check-jelly 0.6s ease-out;
 }
 
 * { box-sizing: border-box; }

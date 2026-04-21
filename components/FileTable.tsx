@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileIcon } from "./FileIcon";
+import { Thumbnail } from "./Thumbnail";
 import type { FileEntry } from "@/lib/fs/storage";
 import { Download, Trash2, Pencil, Link as LinkIcon, MoveRight, FolderOpen } from "lucide-react";
 import { useConfirm } from "./ConfirmDialog";
@@ -52,12 +52,18 @@ function isPreviewable(entry: FileEntry) {
   return false;
 }
 
+function isVideo(entry: FileEntry) {
+  return entry.kind === "video";
+}
+
 export function FileTable({
   entries,
   basePath,
+  session,
 }: {
   entries: FileEntry[];
   basePath: string;
+  session?: { id: string; isAdmin: boolean };
 }) {
   const router = useRouter();
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -72,10 +78,11 @@ export function FileTable({
   const onOpen = (entry: FileEntry) => {
     if (entry.isFolder) {
       router.push(`/?path=${encodeURIComponent(entry.path)}`);
+    } else if (isVideo(entry)) {
+      router.push(`/v?path=${encodeURIComponent(entry.path)}`);
     } else if (isPreviewable(entry)) {
       setPreviewEntry(entry);
     } else {
-      // 미리보기 불가 → 다운로드
       window.open(`/api/download?path=${encodeURIComponent(entry.path)}`, "_self");
     }
   };
@@ -260,7 +267,7 @@ export function FileTable({
                 >
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-2.5">
-                      <FileIcon kind={entry.kind} />
+                      <Thumbnail kind={entry.kind} path={entry.path} />
                       <span className="text-text">{entry.name}</span>
                     </div>
                   </td>

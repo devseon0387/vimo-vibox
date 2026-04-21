@@ -1,26 +1,48 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { LayoutGrid, List } from "lucide-react";
 import type { FileEntry } from "@/lib/fs/storage";
 import { ActionBar } from "./ActionBar";
 import { DropZone } from "./DropZone";
 import { FileTable } from "./FileTable";
+import { FileCardGrid } from "./FileCardGrid";
 import { UploadProgress, type UploadState } from "./UploadProgress";
 import { startUpload } from "@/lib/upload";
 import { useToast } from "./Toast";
 
+type ViewMode = "list" | "grid";
+const VIEW_MODE_KEY = "vibox:files:view";
+
 export function FilesPane({
   entries,
   currentPath,
+  session,
+  stats,
 }: {
   entries: FileEntry[];
   currentPath: string;
+  session: { id: string; isAdmin: boolean };
+  stats?: Record<string, { commentCount: number; openCount: number }>;
 }) {
   const router = useRouter();
   const toast = useToast();
   const [uploadState, setUploadState] = useState<UploadState | null>(null);
   const cancelRef = useRef<(() => void) | null>(null);
+  const [view, setView] = useState<ViewMode>("list");
+
+  useEffect(() => {
+    const saved = localStorage.getItem(VIEW_MODE_KEY);
+    if (saved === "grid" || saved === "list") setView(saved);
+  }, []);
+
+  const setViewPersist = (v: ViewMode) => {
+    setView(v);
+    try {
+      localStorage.setItem(VIEW_MODE_KEY, v);
+    } catch {}
+  };
 
   const doUpload = useCallback(
     async (files: File[]) => {
@@ -36,13 +58,13 @@ export function FilesPane({
             prev ? { ...prev, sent, total: totalBytes } : prev,
           );
         },
-        (stats) => {
+        (statsProgress) => {
           setUploadState((prev) =>
             prev
               ? {
                   ...prev,
-                  peakBytesPerSec: stats.peakBytesPerSec,
-                  chunksByShard: { ...stats.chunksByShard },
+                  peakBytesPerSec: statsProgress.peakBytesPerSec,
+                  chunksByShard: { ...statsProgress.chunksByShard },
                 }
               : prev,
           );
@@ -74,12 +96,48 @@ export function FilesPane({
 
   return (
     <>
-      <ActionBar
-        currentPath={currentPath}
-        onUpload={doUpload}
-        uploading={!!uploadState}
-      />
-      <FileTable entries={entries} basePath={currentPath} />
+      <div className="flex items-center justify-between gap-3 mb-5">
+        <ActionBar
+          currentPath={currentPath}
+          onUpload={doUpload}
+          uploading={!!uploadState}
+        />
+        <div className="flex items-center rounded-md border border-border bg-white p-0.5 shrink-0">
+          <button
+            onClick={() => setViewPersist("list")}
+            title="리스트 보기"
+            className={`px-1.5 py-1 rounded transition-colors ${
+              view === "list"
+                ? "bg-surface text-text"
+                : "text-text-soft hover:text-text"
+            }`}
+          >
+            <List size={15} strokeWidth={2} />
+          </button>
+          <button
+            onClick={() => setViewPersist("grid")}
+            title="카드 보기"
+            className={`px-1.5 py-1 rounded transition-colors ${
+              view === "grid"
+                ? "bg-surface text-text"
+                : "text-text-soft hover:text-text"
+            }`}
+          >
+            <LayoutGrid size={15} strokeWidth={2} />
+          </button>
+        </div>
+      </div>
+
+      {view === "grid" ? (
+        <FileCardGrid
+          entries={entries}
+          basePath={currentPath}
+          session={session}
+          stats={stats}
+        />
+      ) : (
+        <FileTable entries={entries} basePath={currentPath} session={session} />
+      )}
       <DropZone onFiles={doUpload} />
       <UploadProgress
         state={uploadState}

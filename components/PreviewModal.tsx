@@ -38,9 +38,16 @@ export function PreviewModal({
       </div>
     );
   } else if (isVideo(entry.kind)) {
+    const poster = `/api/thumb?path=${encodeURIComponent(entry.path)}`;
     body = (
       <div className="bg-black grid place-items-center">
-        <video src={src} controls preload="auto" className="max-w-full max-h-[75vh]" />
+        <video
+          src={src}
+          poster={poster}
+          controls
+          preload="auto"
+          className="max-w-full max-h-[75vh]"
+        />
       </div>
     );
   } else if (isAudio(entry.kind)) {

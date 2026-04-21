@@ -1,0 +1,331 @@
+import { NextRequest, NextResponse } from "next/server";
+import { spawn } from "node:child_process";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { randomUUID } from "node:crypto";
+import { and, desc, eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { comments, scanHistory } from "@/lib/db/schema";
+import { getCurrentSession } from "@/lib/auth/session";
+import { resolveSafePath } from "@/lib/fs/storage";
+import { serializeAnnotation } from "@/lib/comments/annotation";
+import {
+  createScanJob,
+  getScanJob,
+  listRunningJobsForPath,
+  publicView,
+  cancelScanJob,
+  bindProcess,
+  markDone,
+  markFailed,
+  parseStageFromOutput,
+  updateProgress,
+} from "@/lib/scan-jobs";
+
+const SCAN_SCRIPT = path.join(process.cwd(), "scripts", "subtitle-scan.sh");
+const FRAME_SCAN_SCRIPT = path.join(process.cwd(), "scripts", "frame-scan.sh");
+const AI_USER_ID = "ai-reviewer";
+const AI_USER_NAME = "AI 검수";
+const SCAN_TIMEOUT_MS = 15 * 60 * 1000;
+
+type ScanIssue = {
+  timeSec: number;
+  startSec?: number;
+  endSec?: number;
+  bbox: { x: number; y: number; w: number; h: number };
+  fullText?: string;
+  wrong?: string;
+  correct?: string;
+  original?: string;
+  issue: string;
+  suggestion: string;
+};
+type ScanResult = {
+  subtitles: unknown[];
+  issues: ScanIssue[];
+};
+
+// POST /api/videos/scan  body: { path: "/foo.mp4" }
+// → { jobId: string }
+export async function POST(req: NextRequest) {
+  const session = await getCurrentSession();
+  if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const body = await req.json().catch(() => null);
+  const filePath = body?.path;
+  if (!filePath || typeof filePath !== "string") {
+    return NextResponse.json({ error: "path required" }, { status: 400 });
+  }
+
+  // 이미 실행 중이면 해당 job 반환
+  const existing = listRunningJobsForPath(filePath);
+  if (existing.length > 0) {
+    return NextResponse.json({ jobId: existing[0].id, existing: true });
+  }
+
+  let absVideo: string;
+  try {
+    absVideo = resolveSafePath(filePath);
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "invalid path";
+    return NextResponse.json({ error: msg }, { status: 400 });
+  }
+
+  try {
+    await fs.access(absVideo);
+  } catch {
+    return NextResponse.json({ error: "file not found" }, { status: 404 });
+  }
+
+  const job = createScanJob(filePath);
+  const outFile = path.join(
+    process.env.TMPDIR || "/tmp",
+    `vibox-scan-${job.id}.json`,
+  );
+
+  // 히스토리 시작 레코드
+  await db.insert(scanHistory).values({
+    id: job.id,
+    filePath,
+    startedBy: session.sub,
+    startedByName: session.name ?? session.username,
+    status: "running",
+  });
+
+  // 비동기 실행 (응답은 즉시)
+  void runScanAsync(job.id, absVideo, outFile, filePath);
+
+  return NextResponse.json({ jobId: job.id });
+}
+
+// GET /api/videos/scan?jobId=X  → { id, status, stage, progress, ... }
+export async function GET(req: NextRequest) {
+  const session = await getCurrentSession();
+  if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const jobId = req.nextUrl.searchParams.get("jobId");
+  if (!jobId) return NextResponse.json({ error: "jobId required" }, { status: 400 });
+  const job = getScanJob(jobId);
+  if (!job) return NextResponse.json({ error: "not found" }, { status: 404 });
+  return NextResponse.json(publicView(job));
+}
+
+// DELETE /api/videos/scan?jobId=X  → 취소
+export async function DELETE(req: NextRequest) {
+  const session = await getCurrentSession();
+  if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const jobId = req.nextUrl.searchParams.get("jobId");
+  if (!jobId) return NextResponse.json({ error: "jobId required" }, { status: 400 });
+  const ok = cancelScanJob(jobId);
+  if (!ok) return NextResponse.json({ error: "cannot cancel" }, { status: 400 });
+  return NextResponse.json({ ok: true });
+}
+
+async function runScanAsync(
+  jobId: string,
+  absVideo: string,
+  outFile: string,
+  filePath: string,
+) {
+  const job = getScanJob(jobId);
+  if (!job) return;
+
+  const proc = spawn(SCAN_SCRIPT, [absVideo, outFile], {
+    stdio: ["ignore", "pipe", "pipe"],
+    env: { ...process.env, CLAUDECODE: "" },
+  });
+  bindProcess(job, proc, outFile);
+
+  let stderr = "";
+  const timer = setTimeout(() => {
+    try {
+      proc.kill("SIGKILL");
+    } catch {}
+  }, SCAN_TIMEOUT_MS);
+
+  proc.stdout.on("data", (d: Buffer) => {
+    const text = d.toString();
+    const result = parseStageFromOutput(text);
+    if (result) updateProgress(job, result);
+  });
+  proc.stderr.on("data", (d: Buffer) => {
+    stderr += d.toString();
+    // stderr도 stage 정보 포함 (Python 필터 로그)
+    const text = d.toString();
+    const result = parseStageFromOutput(text);
+    if (result) updateProgress(job, result);
+  });
+
+  proc.on("error", (err: Error) => {
+    clearTimeout(timer);
+    markFailed(job, err.message);
+  });
+
+  proc.on("exit", async (code) => {
+    clearTimeout(timer);
+    if (job.status === "cancelled") {
+      fs.rm(outFile, { force: true }).catch(() => {});
+      await db
+        .update(scanHistory)
+        .set({ status: "cancelled", finishedAt: new Date() })
+        .where(eq(scanHistory.id, job.id))
+        .catch(() => {});
+      return;
+    }
+    if (code !== 0) {
+      markFailed(job, `exit ${code}: ${stderr.slice(0, 400)}`);
+      fs.rm(outFile, { force: true }).catch(() => {});
+      await db
+        .update(scanHistory)
+        .set({
+          status: "failed",
+          finishedAt: new Date(),
+          error: `exit ${code}`,
+        })
+        .where(eq(scanHistory.id, job.id))
+        .catch(() => {});
+      return;
+    }
+    try {
+      const raw = await fs.readFile(outFile, "utf-8");
+      const result = JSON.parse(raw) as ScanResult;
+
+      // 기존 AI 댓글 삭제 (자막 + 프레임 모두 — 이번 검수로 전체 새로고침)
+      await db
+        .delete(comments)
+        .where(
+          and(
+            eq(comments.filePath, filePath),
+            eq(comments.authorId, AI_USER_ID),
+          ),
+        );
+
+      let inserted = 0;
+      for (const iss of result.issues ?? []) {
+        try {
+          const startSec =
+            typeof iss.startSec === "number" ? iss.startSec : iss.timeSec;
+          const endSec =
+            typeof iss.endSec === "number" ? iss.endSec : iss.timeSec;
+          const wrong = (iss.wrong || iss.original || "").trim().slice(0, 200);
+          const correct = (iss.correct || iss.suggestion || "").trim();
+          const annotation = serializeAnnotation({
+            bbox: iss.bbox,
+            original: wrong,
+            suggestion: correct,
+            note: iss.issue,
+            startMs: Math.max(0, Math.floor(startSec * 1000)),
+            endMs: Math.max(0, Math.floor(endSec * 1000)),
+          });
+          await db.insert(comments).values({
+            id: randomUUID(),
+            filePath,
+            authorId: AI_USER_ID,
+            authorName: AI_USER_NAME,
+            videoTimeMs: Math.max(0, Math.floor(startSec * 1000)),
+            category: "txt",
+            autoCategory: "txt",
+            kind: "feedback",
+            autoKind: "feedback",
+            annotation,
+            body: `"${wrong}" → "${correct}" · ${iss.issue}`,
+          });
+          inserted++;
+        } catch {
+          // skip malformed issue
+        }
+      }
+      // 자막 검수 완료 → 이어서 프레임 검수
+      updateProgress(job, { stage: "프레임 이상 감지", progress: 95 });
+      const frameInserted = await runFrameScan(absVideo, filePath).catch(
+        () => 0,
+      );
+      const totalInserted = inserted + frameInserted;
+
+      markDone(job, totalInserted);
+      await db
+        .update(scanHistory)
+        .set({
+          status: "done",
+          finishedAt: new Date(),
+          issuesFound: totalInserted,
+        })
+        .where(eq(scanHistory.id, job.id))
+        .catch(() => {});
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "parse error";
+      markFailed(job, msg);
+      await db
+        .update(scanHistory)
+        .set({ status: "failed", finishedAt: new Date(), error: msg })
+        .where(eq(scanHistory.id, job.id))
+        .catch(() => {});
+    } finally {
+      fs.rm(outFile, { force: true }).catch(() => {});
+    }
+  });
+}
+
+// 프레임 검수 (블랙/정지) 실행 후 cut 카테고리 댓글로 저장
+async function runFrameScan(absVideo: string, filePath: string): Promise<number> {
+  const outFile = path.join(
+    process.env.TMPDIR || "/tmp",
+    `vibox-frame-${randomUUID()}.json`,
+  );
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const proc = spawn(FRAME_SCAN_SCRIPT, [absVideo, outFile], {
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      const timer = setTimeout(() => proc.kill("SIGKILL"), 5 * 60 * 1000);
+      let err = "";
+      proc.stderr.on("data", (d) => (err += d.toString()));
+      proc.on("exit", (code) => {
+        clearTimeout(timer);
+        if (code === 0) resolve();
+        else reject(new Error(`frame-scan exit ${code}: ${err.slice(0, 200)}`));
+      });
+      proc.on("error", (e) => {
+        clearTimeout(timer);
+        reject(e);
+      });
+    });
+
+    const raw = await fs.readFile(outFile, "utf-8");
+    const data = JSON.parse(raw) as {
+      issues: Array<{
+        type: string;
+        startSec: number;
+        endSec: number;
+        duration: number;
+        title: string;
+      }>;
+    };
+
+    let inserted = 0;
+    for (const iss of data.issues ?? []) {
+      try {
+        const icon = iss.type === "black" ? "⚫" : "🧊";
+        const body = `${icon} ${iss.title} (${iss.startSec.toFixed(1)}~${iss.endSec.toFixed(1)}s)`;
+        await db.insert(comments).values({
+          id: randomUUID(),
+          filePath,
+          authorId: AI_USER_ID,
+          authorName: AI_USER_NAME,
+          videoTimeMs: Math.max(0, Math.floor(iss.startSec * 1000)),
+          category: "cut",
+          autoCategory: "cut",
+          kind: "feedback",
+          autoKind: "feedback",
+          body,
+        });
+        inserted++;
+      } catch {}
+    }
+    return inserted;
+  } finally {
+    fs.rm(outFile, { force: true }).catch(() => {});
+  }
+}
+
+export const runtime = "nodejs";
+export const maxDuration = 900;

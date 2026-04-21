@@ -14,7 +14,7 @@ export type SessionPayload = {
   sub: string; // user id
   username: string;
   name: string | null;
-  role: "admin" | "member";
+  role: "admin" | "member" | "partner";
 };
 
 export async function createSession(payload: SessionPayload): Promise<string> {

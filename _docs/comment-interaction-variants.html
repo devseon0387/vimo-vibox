@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>댓글 인터랙션 시안</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif; }
+  .variant { display: none; }
+  .variant.active { display: block; }
+  .tab.active { background: #111; color: white; }
+  .group:hover .hover-reveal { opacity: 1; transform: translateY(0); }
+  .hover-reveal { opacity: 0; transform: translateY(2px); transition: all 0.15s; }
+</style>
+</head>
+<body class="bg-slate-100 p-6 min-h-screen">
+
+<div class="max-w-[520px] mx-auto mb-5">
+  <h1 class="text-2xl font-bold tracking-tight mb-1">댓글 인터랙션 시안 (V1~V5)</h1>
+  <p class="text-sm text-slate-500 mb-4">디자인 동일 · 클릭·액션 방식만 상이</p>
+  <div class="flex gap-1 border border-slate-200 rounded-lg p-1 bg-white w-fit flex-wrap">
+    <button class="tab active px-3 py-1.5 rounded-md text-[12.5px] font-medium transition-colors" data-target="v1">V1 · 현재(펼침)</button>
+    <button class="tab px-3 py-1.5 rounded-md text-[12.5px] font-medium hover:bg-slate-50 transition-colors" data-target="v2">V2 · 체크박스</button>
+    <button class="tab px-3 py-1.5 rounded-md text-[12.5px] font-medium hover:bg-slate-50 transition-colors" data-target="v3">V3 · 호버 액션</button>
+    <button class="tab px-3 py-1.5 rounded-md text-[12.5px] font-medium hover:bg-slate-50 transition-colors" data-target="v4">V4 · 아이콘 3개</button>
+    <button class="tab px-3 py-1.5 rounded-md text-[12.5px] font-medium hover:bg-slate-50 transition-colors" data-target="v5">V5 · Split 액션</button>
+  </div>
+</div>
+
+<!-- 공통 카테고리 뱃지 스타일 -->
+<!-- 샘플 데이터 -->
+<!-- 1. 46s "3번 째" → "3번째" -->
+<!-- 2. 178s "하게된" → "하게 된" (답글 2개) -->
+<!-- 3. 612s "다같이" → "다 같이" -->
+<!-- 4. 614s "일하지말자" → "일하지 말자" (해결됨) -->
+
+<!-- =========================================================== -->
+<!-- V1 · 현재 (펼침) -->
+<!-- =========================================================== -->
+<div class="variant active" id="v1">
+  <div class="max-w-[380px] mx-auto bg-slate-50 rounded-xl p-3 space-y-2">
+    <div class="bg-white rounded-lg border border-slate-200 p-3 cursor-pointer hover:border-slate-300">
+      <div class="flex items-center gap-2 mb-1.5">
+        <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">00:46</span>
+        <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+        <span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span>
+      </div>
+      <div class="text-[13px] font-medium text-slate-900 mb-0.5">"3번 째" → <span class="text-orange-600">"3번째"</span></div>
+      <div class="text-[11px] text-slate-500">접미사 띄어쓰기</div>
+    </div>
+    <div class="bg-white rounded-lg border-2 border-slate-900 p-3 cursor-pointer">
+      <div class="flex items-center gap-2 mb-1.5">
+        <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">02:58</span>
+        <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+        <span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span>
+      </div>
+      <div class="text-[13px] font-medium text-slate-900 mb-0.5">"하게된" → <span class="text-orange-600">"하게 된"</span></div>
+      <div class="text-[11px] text-slate-500">보조용언 띄어쓰기</div>
+      <!-- 펼쳐진 상세 영역 -->
+      <div class="mt-3 pt-3 border-t border-slate-100">
+        <div class="flex items-center gap-2 mb-2">
+          <button class="text-[10.5px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded">자막 ▾</button>
+          <button class="text-[10.5px] text-slate-500 px-2 py-0.5 rounded hover:bg-slate-100 ml-auto">답글</button>
+          <button class="text-[10.5px] text-slate-500 px-2 py-0.5 rounded hover:bg-slate-100">해결</button>
+          <button class="text-[10.5px] text-slate-500 px-2 py-0.5 rounded hover:bg-slate-100">삭제</button>
+        </div>
+        <div class="text-[12px] text-slate-700">"하게된" → "하게 된" · 보조용언 띄어쓰기 오류</div>
+        <!-- 답글 -->
+        <div class="mt-2 pl-3 border-l-2 border-slate-100 text-[11.5px] text-slate-700 space-y-1">
+          <div>↳ <b>홍길동</b>: 수정했어요 <span class="text-slate-400 ml-1 text-[10.5px]">5분 전</span></div>
+          <div>↳ <b>김개발</b>: 확인 <span class="text-slate-400 ml-1 text-[10.5px]">방금</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-lg border border-slate-200 p-3 cursor-pointer hover:border-slate-300">
+      <div class="flex items-center gap-2 mb-1.5">
+        <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">10:12</span>
+        <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+        <span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span>
+      </div>
+      <div class="text-[13px] font-medium text-slate-900 mb-0.5">"다같이" → <span class="text-orange-600">"다 같이"</span></div>
+      <div class="text-[11px] text-slate-500">부사+형용사 띄어쓰기</div>
+    </div>
+    <div class="bg-white rounded-lg border border-slate-200 p-3 cursor-pointer opacity-60">
+      <div class="flex items-center gap-2 mb-1.5">
+        <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">10:14</span>
+        <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+        <span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span>
+      </div>
+      <div class="text-[13px] font-medium text-slate-900 mb-0.5 line-through">"일하지말자" → "일하지 말자"</div>
+      <div class="text-[11px] text-slate-500">✓ 해결됨 · 오늘 오후</div>
+    </div>
+  </div>
+  <div class="max-w-[380px] mx-auto mt-3 text-[12px] text-slate-500 space-y-1">
+    <div><b>V1 · 현재:</b> 카드 클릭 → 해당 시각 이동 + 상세 펼침 (카테고리 변경/답글/해결/삭제 노출)</div>
+    <div class="text-slate-400">문제: 펼칠 때마다 레이아웃 튐 · 답글 달기 전에 펼쳐야 함</div>
+  </div>
+</div>
+
+<!-- =========================================================== -->
+<!-- V2 · 체크박스 + 인라인 답글 -->
+<!-- =========================================================== -->
+<div class="variant" id="v2">
+  <div class="max-w-[380px] mx-auto bg-slate-50 rounded-xl p-3 space-y-2">
+    <div class="bg-white rounded-lg border border-slate-200 p-3 flex gap-2.5 cursor-pointer hover:border-slate-300">
+      <!-- 왼쪽 체크박스 -->
+      <button class="shrink-0 w-5 h-5 rounded-full border-2 border-slate-300 hover:border-emerald-500 transition-colors grid place-items-center mt-0.5" title="해결 처리">
+        <!-- 미해결 상태 -->
+      </button>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">00:46</span>
+          <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+          <span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span>
+        </div>
+        <div class="text-[13px] font-medium text-slate-900 mb-0.5">"3번 째" → <span class="text-orange-600">"3번째"</span></div>
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] text-slate-500">접미사 띄어쓰기</span>
+          <div class="flex items-center gap-0.5">
+            <button class="w-6 h-6 rounded grid place-items-center text-slate-400 hover:bg-slate-100 hover:text-slate-700" title="답글">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+            </button>
+            <button class="w-6 h-6 rounded grid place-items-center text-slate-400 hover:bg-slate-100 hover:text-slate-700" title="더보기">⋯</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg border border-slate-200 p-3 flex gap-2.5 cursor-pointer hover:border-slate-300">
+      <button class="shrink-0 w-5 h-5 rounded-full border-2 border-slate-300 hover:border-emerald-500 grid place-items-center mt-0.5" title="해결 처리"></button>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">02:58</span>
+          <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+          <span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span>
+        </div>
+        <div class="text-[13px] font-medium text-slate-900 mb-0.5">"하게된" → <span class="text-orange-600">"하게 된"</span></div>
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] text-slate-500">보조용언 띄어쓰기</span>
+          <div class="flex items-center gap-0.5">
+            <button class="w-6 h-6 rounded grid place-items-center text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+            </button>
+            <button class="w-6 h-6 rounded grid place-items-center text-slate-400 hover:bg-slate-100 hover:text-slate-700">⋯</button>
+          </div>
+        </div>
+        <!-- 답글 항상 표시 -->
+        <div class="mt-2 pl-2 border-l-2 border-slate-100 text-[11.5px] space-y-1">
+          <div class="text-slate-700"><b>홍길동</b>: 수정했어요 <span class="text-slate-400 ml-1 text-[10.5px]">5분 전</span></div>
+          <div class="text-slate-700"><b>김개발</b>: 확인 <span class="text-slate-400 ml-1 text-[10.5px]">방금</span></div>
+          <!-- 인라인 답글 입력 -->
+          <div class="flex items-center gap-1.5 mt-1.5">
+            <input type="text" placeholder="답글 입력..." class="flex-1 text-[11.5px] bg-slate-50 border border-slate-200 rounded px-2 py-1 outline-none focus:border-slate-400">
+            <button class="h-6 w-6 rounded bg-slate-900 text-white grid place-items-center hover:bg-slate-700 text-[11px]">↑</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg border border-slate-200 p-3 flex gap-2.5 cursor-pointer hover:border-slate-300">
+      <button class="shrink-0 w-5 h-5 rounded-full border-2 border-slate-300 hover:border-emerald-500 grid place-items-center mt-0.5"></button>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">10:12</span>
+          <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+          <span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span>
+        </div>
+        <div class="text-[13px] font-medium text-slate-900 mb-0.5">"다같이" → <span class="text-orange-600">"다 같이"</span></div>
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] text-slate-500">부사+형용사 띄어쓰기</span>
+          <div class="flex items-center gap-0.5">
+            <button class="w-6 h-6 rounded grid place-items-center text-slate-400 hover:bg-slate-100"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg></button>
+            <button class="w-6 h-6 rounded grid place-items-center text-slate-400 hover:bg-slate-100">⋯</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 해결됨 -->
+    <div class="bg-white rounded-lg border border-slate-200 p-3 flex gap-2.5 cursor-pointer opacity-60">
+      <button class="shrink-0 w-5 h-5 rounded-full bg-emerald-500 text-white grid place-items-center mt-0.5" title="해결 해제">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">10:14</span>
+          <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+          <span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span>
+        </div>
+        <div class="text-[13px] font-medium text-slate-900 line-through">"일하지말자" → "일하지 말자"</div>
+        <span class="text-[11px] text-slate-500">✓ 해결됨</span>
+      </div>
+    </div>
+  </div>
+  <div class="max-w-[380px] mx-auto mt-3 text-[12px] text-slate-500 space-y-1">
+    <div><b>V2 · 체크박스:</b> 좌측 동그라미 → 해결 토글 · 본문 클릭 → 이동만 · 답글/메뉴 아이콘 항상 노출 · 답글 있으면 카드 안에 인라인 표시</div>
+    <div class="text-slate-400">장점: 펼침 없음, 답글도 한 화면 · 단점: 답글 많으면 카드 세로로 길어짐</div>
+  </div>
+</div>
+
+<!-- =========================================================== -->
+<!-- V3 · 호버 액션 -->
+<!-- =========================================================== -->
+<div class="variant" id="v3">
+  <div class="max-w-[380px] mx-auto bg-slate-50 rounded-xl p-3 space-y-2">
+    <div class="group bg-white rounded-lg border border-slate-200 p-3 cursor-pointer hover:border-slate-300 relative">
+      <div class="flex items-center gap-2 mb-1.5">
+        <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">00:46</span>
+        <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+        <span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span>
+      </div>
+      <div class="text-[13px] font-medium text-slate-900 mb-0.5">"3번 째" → <span class="text-orange-600">"3번째"</span></div>
+      <div class="text-[11px] text-slate-500">접미사 띄어쓰기</div>
+      <!-- 호버 시 떠오르는 액션 툴바 -->
+      <div class="hover-reveal absolute top-2 right-2 flex items-center gap-0.5 bg-white border border-slate-200 rounded-md shadow-sm p-0.5">
+        <button class="w-6 h-6 rounded grid place-items-center text-emerald-600 hover:bg-emerald-50" title="해결">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+        <button class="w-6 h-6 rounded grid place-items-center text-slate-500 hover:bg-slate-100" title="답글">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+        </button>
+        <button class="w-6 h-6 rounded grid place-items-center text-slate-500 hover:bg-slate-100" title="더보기">⋯</button>
+      </div>
+    </div>
+
+    <div class="group bg-white rounded-lg border border-slate-200 p-3 cursor-pointer hover:border-slate-300 relative">
+      <div class="flex items-center gap-2 mb-1.5">
+        <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">02:58</span>
+        <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+        <span class="text-[10.5px] text-slate-400 inline-flex items-center gap-1">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+          <span class="font-semibold">2</span>
+        </span>
+        <span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span>
+      </div>
+      <div class="text-[13px] font-medium text-slate-900 mb-0.5">"하게된" → <span class="text-orange-600">"하게 된"</span></div>
+      <div class="text-[11px] text-slate-500">보조용언 띄어쓰기</div>
+      <div class="hover-reveal absolute top-2 right-2 flex items-center gap-0.5 bg-white border border-slate-200 rounded-md shadow-sm p-0.5">
+        <button class="w-6 h-6 rounded grid place-items-center text-emerald-600 hover:bg-emerald-50"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="w-6 h-6 rounded grid place-items-center text-slate-500 hover:bg-slate-100"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg></button>
+        <button class="w-6 h-6 rounded grid place-items-center text-slate-500 hover:bg-slate-100">⋯</button>
+      </div>
+    </div>
+
+    <div class="group bg-white rounded-lg border border-slate-200 p-3 cursor-pointer hover:border-slate-300 relative">
+      <div class="flex items-center gap-2 mb-1.5">
+        <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">10:12</span>
+        <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+        <span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span>
+      </div>
+      <div class="text-[13px] font-medium text-slate-900 mb-0.5">"다같이" → <span class="text-orange-600">"다 같이"</span></div>
+      <div class="text-[11px] text-slate-500">부사+형용사 띄어쓰기</div>
+      <div class="hover-reveal absolute top-2 right-2 flex items-center gap-0.5 bg-white border border-slate-200 rounded-md shadow-sm p-0.5">
+        <button class="w-6 h-6 rounded grid place-items-center text-emerald-600 hover:bg-emerald-50"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="w-6 h-6 rounded grid place-items-center text-slate-500 hover:bg-slate-100"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg></button>
+        <button class="w-6 h-6 rounded grid place-items-center text-slate-500 hover:bg-slate-100">⋯</button>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg border border-slate-200 p-3 cursor-pointer opacity-60">
+      <div class="flex items-center gap-2 mb-1.5">
+        <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">10:14</span>
+        <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+        <span class="text-[10.5px] text-slate-400 ml-auto inline-flex items-center gap-0.5">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-emerald-500"><polyline points="20 6 9 17 4 12"/></svg>
+          해결됨
+        </span>
+      </div>
+      <div class="text-[13px] font-medium text-slate-900 line-through mb-0.5">"일하지말자" → "일하지 말자"</div>
+      <div class="text-[11px] text-slate-500">보조용언 띄어쓰기</div>
+    </div>
+  </div>
+  <div class="max-w-[380px] mx-auto mt-3 text-[12px] text-slate-500 space-y-1">
+    <div><b>V3 · 호버 액션:</b> 기본 상태 깔끔 · 호버 시 우상단에 [✓][↩][⋯] 툴바 떠오름 · 답글은 숫자 뱃지로, 클릭 시 다른 영역에서 확인</div>
+    <div class="text-slate-400">장점: 평상시 화면 매우 깨끗 · 단점: 터치 기기 안 됨, 숨겨진 액션 발견 어려움</div>
+  </div>
+</div>
+
+<!-- =========================================================== -->
+<!-- V4 · 아이콘 3개 (항상 보임) -->
+<!-- =========================================================== -->
+<div class="variant" id="v4">
+  <div class="max-w-[380px] mx-auto bg-slate-50 rounded-xl p-3 space-y-2">
+    <div class="bg-white rounded-lg border border-slate-200 p-3 hover:border-slate-300">
+      <div class="flex items-center gap-2 mb-1.5">
+        <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">00:46</span>
+        <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+        <span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span>
+      </div>
+      <div class="text-[13px] font-medium text-slate-900 mb-0.5 cursor-pointer hover:underline decoration-slate-300" title="해당 시간으로 이동">"3번 째" → <span class="text-orange-600">"3번째"</span></div>
+      <div class="flex items-center mt-1">
+        <span class="text-[11px] text-slate-500">접미사 띄어쓰기</span>
+        <div class="ml-auto flex items-center gap-1">
+          <button class="inline-flex items-center gap-1 h-6 px-1.5 rounded text-[11px] font-semibold text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title="해결">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            해결
+          </button>
+          <button class="inline-flex items-center gap-1 h-6 px-1.5 rounded text-[11px] font-semibold text-slate-600 hover:bg-slate-100 transition-colors" title="답글">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+            답글
+          </button>
+          <button class="w-6 h-6 rounded grid place-items-center text-slate-400 hover:bg-slate-100" title="더보기">⋯</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg border border-slate-200 p-3 hover:border-slate-300">
+      <div class="flex items-center gap-2 mb-1.5">
+        <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">02:58</span>
+        <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+        <span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span>
+      </div>
+      <div class="text-[13px] font-medium text-slate-900 mb-0.5 cursor-pointer hover:underline decoration-slate-300">"하게된" → <span class="text-orange-600">"하게 된"</span></div>
+      <div class="flex items-center mt-1">
+        <span class="text-[11px] text-slate-500">보조용언 띄어쓰기</span>
+        <div class="ml-auto flex items-center gap-1">
+          <button class="inline-flex items-center gap-1 h-6 px-1.5 rounded text-[11px] font-semibold text-slate-600 hover:bg-emerald-50 hover:text-emerald-600"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 해결</button>
+          <button class="inline-flex items-center gap-1 h-6 px-1.5 rounded text-[11px] font-semibold text-slate-600 hover:bg-slate-100"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg> 답글 <span class="text-[10px] text-slate-400">2</span></button>
+          <button class="w-6 h-6 rounded grid place-items-center text-slate-400 hover:bg-slate-100">⋯</button>
+        </div>
+      </div>
+      <!-- 답글 항상 표시 -->
+      <div class="mt-2.5 pl-2 border-l-2 border-slate-100 text-[11.5px] space-y-1">
+        <div class="text-slate-700"><b>홍길동</b>: 수정했어요 <span class="text-slate-400 ml-1 text-[10.5px]">5분 전</span></div>
+        <div class="text-slate-700"><b>김개발</b>: 확인 <span class="text-slate-400 ml-1 text-[10.5px]">방금</span></div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg border border-slate-200 p-3 hover:border-slate-300">
+      <div class="flex items-center gap-2 mb-1.5">
+        <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">10:12</span>
+        <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+        <span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span>
+      </div>
+      <div class="text-[13px] font-medium text-slate-900 mb-0.5 cursor-pointer hover:underline decoration-slate-300">"다같이" → <span class="text-orange-600">"다 같이"</span></div>
+      <div class="flex items-center mt-1">
+        <span class="text-[11px] text-slate-500">부사+형용사 띄어쓰기</span>
+        <div class="ml-auto flex items-center gap-1">
+          <button class="inline-flex items-center gap-1 h-6 px-1.5 rounded text-[11px] font-semibold text-slate-600 hover:bg-emerald-50 hover:text-emerald-600"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> 해결</button>
+          <button class="inline-flex items-center gap-1 h-6 px-1.5 rounded text-[11px] font-semibold text-slate-600 hover:bg-slate-100"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg> 답글</button>
+          <button class="w-6 h-6 rounded grid place-items-center text-slate-400 hover:bg-slate-100">⋯</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg border border-slate-200 p-3 opacity-60">
+      <div class="flex items-center gap-2 mb-1.5">
+        <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">10:14</span>
+        <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+        <span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span>
+      </div>
+      <div class="text-[13px] font-medium text-slate-900 line-through mb-0.5">"일하지말자" → "일하지 말자"</div>
+      <div class="flex items-center mt-1">
+        <span class="text-[11px] text-emerald-600 inline-flex items-center gap-0.5 font-semibold">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          해결됨
+        </span>
+        <button class="ml-auto text-[10.5px] text-slate-400 hover:text-slate-700">복원</button>
+      </div>
+    </div>
+  </div>
+  <div class="max-w-[380px] mx-auto mt-3 text-[12px] text-slate-500 space-y-1">
+    <div><b>V4 · 아이콘 3개:</b> 카드 하단에 [✓해결] [↩답글] [⋯] 항상 노출 · 본문 클릭 → 이동 · 답글 있으면 카드 안에 표시</div>
+    <div class="text-slate-400">장점: 모든 액션 한눈에 · 터치도 OK · 단점: 카드 요소 많아 약간 복잡</div>
+  </div>
+</div>
+
+<!-- =========================================================== -->
+<!-- V5 · Split 액션 (좌: 해결, 우: 답글) -->
+<!-- =========================================================== -->
+<div class="variant" id="v5">
+  <div class="max-w-[380px] mx-auto bg-slate-50 rounded-xl p-3 space-y-2">
+    <div class="bg-white rounded-lg border border-slate-200 overflow-hidden flex hover:border-slate-300">
+      <!-- 좌측: 해결 액션 -->
+      <button class="w-8 shrink-0 bg-slate-50 hover:bg-emerald-50 border-r border-slate-200 grid place-items-center text-slate-400 hover:text-emerald-600 transition-colors" title="해결 처리">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+      <!-- 중앙 본문 (클릭 → 이동) -->
+      <button class="flex-1 p-3 text-left min-w-0">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">00:46</span>
+          <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+          <span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span>
+        </div>
+        <div class="text-[13px] font-medium text-slate-900 mb-0.5">"3번 째" → <span class="text-orange-600">"3번째"</span></div>
+        <div class="text-[11px] text-slate-500">접미사 띄어쓰기</div>
+      </button>
+      <!-- 우측: 답글/메뉴 -->
+      <div class="w-8 shrink-0 bg-slate-50 border-l border-slate-200 flex flex-col">
+        <button class="flex-1 grid place-items-center text-slate-400 hover:text-slate-900 hover:bg-slate-100" title="답글">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+        </button>
+        <button class="flex-1 grid place-items-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 border-t border-slate-200" title="더보기">⋯</button>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg border border-slate-200 overflow-hidden hover:border-slate-300">
+      <div class="flex">
+        <button class="w-8 shrink-0 bg-slate-50 hover:bg-emerald-50 border-r border-slate-200 grid place-items-center text-slate-400 hover:text-emerald-600"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="flex-1 p-3 text-left min-w-0">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">02:58</span>
+            <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+            <span class="text-[10.5px] text-slate-400 inline-flex items-center gap-0.5"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>2</span>
+            <span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span>
+          </div>
+          <div class="text-[13px] font-medium text-slate-900 mb-0.5">"하게된" → <span class="text-orange-600">"하게 된"</span></div>
+          <div class="text-[11px] text-slate-500">보조용언 띄어쓰기</div>
+        </button>
+        <div class="w-8 shrink-0 bg-slate-50 border-l border-slate-200 flex flex-col">
+          <button class="flex-1 grid place-items-center text-slate-400 hover:text-slate-900 hover:bg-slate-100"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg></button>
+          <button class="flex-1 grid place-items-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 border-t border-slate-200">⋯</button>
+        </div>
+      </div>
+      <!-- 답글 표시 -->
+      <div class="px-3 pb-2 text-[11.5px] border-t border-slate-100 bg-slate-50/50">
+        <div class="pt-2 pl-2 border-l-2 border-slate-200 space-y-1">
+          <div class="text-slate-700"><b>홍길동</b>: 수정했어요 <span class="text-slate-400 ml-1 text-[10.5px]">5분 전</span></div>
+          <div class="text-slate-700"><b>김개발</b>: 확인 <span class="text-slate-400 ml-1 text-[10.5px]">방금</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg border border-slate-200 overflow-hidden flex hover:border-slate-300">
+      <button class="w-8 shrink-0 bg-slate-50 hover:bg-emerald-50 border-r border-slate-200 grid place-items-center text-slate-400 hover:text-emerald-600"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button>
+      <button class="flex-1 p-3 text-left min-w-0">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">10:12</span>
+          <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+          <span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span>
+        </div>
+        <div class="text-[13px] font-medium text-slate-900 mb-0.5">"다같이" → <span class="text-orange-600">"다 같이"</span></div>
+        <div class="text-[11px] text-slate-500">부사+형용사 띄어쓰기</div>
+      </button>
+      <div class="w-8 shrink-0 bg-slate-50 border-l border-slate-200 flex flex-col">
+        <button class="flex-1 grid place-items-center text-slate-400 hover:text-slate-900 hover:bg-slate-100"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg></button>
+        <button class="flex-1 grid place-items-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 border-t border-slate-200">⋯</button>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg border border-slate-200 overflow-hidden flex opacity-60">
+      <button class="w-8 shrink-0 bg-emerald-500 grid place-items-center text-white" title="해결 해제"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"/></svg></button>
+      <div class="flex-1 p-3">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">10:14</span>
+          <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+          <span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span>
+        </div>
+        <div class="text-[13px] font-medium text-slate-900 line-through">"일하지말자" → "일하지 말자"</div>
+        <span class="text-[11px] text-slate-500">보조용언 띄어쓰기</span>
+      </div>
+      <div class="w-8 shrink-0 bg-slate-50 border-l border-slate-200 flex flex-col">
+        <button class="flex-1 grid place-items-center text-slate-400 hover:text-slate-900 hover:bg-slate-100"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg></button>
+        <button class="flex-1 grid place-items-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 border-t border-slate-200">⋯</button>
+      </div>
+    </div>
+  </div>
+  <div class="max-w-[380px] mx-auto mt-3 text-[12px] text-slate-500 space-y-1">
+    <div><b>V5 · Split:</b> 카드 좌(해결)/중앙(이동)/우(답글/메뉴) 3등분 · 해결 시 좌측이 초록색 bar로 채워짐</div>
+    <div class="text-slate-400">장점: 액션 영역 명확 분리 · 단점: 시각적 밀도 ↑, 좀 복잡</div>
+  </div>
+</div>
+
+<!-- Comparison -->
+<div class="max-w-[380px] mx-auto mt-8 bg-white rounded-xl border p-5">
+  <h2 class="text-[14px] font-bold mb-3">요약 비교</h2>
+  <table class="w-full text-[11.5px]">
+    <thead>
+      <tr class="border-b text-[10.5px] text-slate-500 uppercase">
+        <th class="text-left py-2 pr-2 font-medium">안</th>
+        <th class="text-left py-2 px-2 font-medium">클릭</th>
+        <th class="text-left py-2 px-2 font-medium">해결</th>
+        <th class="text-left py-2 px-2 font-medium">답글 표시</th>
+      </tr>
+    </thead>
+    <tbody class="text-slate-700">
+      <tr class="border-b"><td class="py-1.5 pr-2 font-bold">V1</td><td class="py-1.5 px-2">이동 + 펼침</td><td class="py-1.5 px-2">펼친 후 버튼</td><td class="py-1.5 px-2">펼친 후</td></tr>
+      <tr class="border-b"><td class="py-1.5 pr-2 font-bold">V2</td><td class="py-1.5 px-2">이동만</td><td class="py-1.5 px-2">좌측 원형 체크</td><td class="py-1.5 px-2">항상 인라인</td></tr>
+      <tr class="border-b"><td class="py-1.5 pr-2 font-bold">V3</td><td class="py-1.5 px-2">이동만</td><td class="py-1.5 px-2">호버 시 툴바</td><td class="py-1.5 px-2">뱃지만 (숨김)</td></tr>
+      <tr class="border-b"><td class="py-1.5 pr-2 font-bold">V4</td><td class="py-1.5 px-2">이동만 (텍스트)</td><td class="py-1.5 px-2">카드 하단 버튼</td><td class="py-1.5 px-2">항상 인라인</td></tr>
+      <tr><td class="py-1.5 pr-2 font-bold">V5</td><td class="py-1.5 px-2">이동만 (중앙)</td><td class="py-1.5 px-2">좌측 바 클릭</td><td class="py-1.5 px-2">카드 내부</td></tr>
+    </tbody>
+  </table>
+  <p class="text-[11.5px] text-slate-500 mt-4">
+    추천: <b>V2</b> 또는 <b>V4</b> — 터치·데스크톱 모두 직관적, 답글 바로 보임
+  </p>
+</div>
+
+<script>
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.variant').forEach(v => v.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.target).classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

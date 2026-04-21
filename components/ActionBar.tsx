@@ -57,7 +57,7 @@ export function ActionBar({
 
   return (
     <>
-      <div className="flex items-center gap-2 mb-5">
+      <div className="flex items-center gap-2">
         <button
           onClick={() => inputRef.current?.click()}
           disabled={uploading}

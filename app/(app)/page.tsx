@@ -4,6 +4,8 @@ import { listDirectory, searchFiles } from "@/lib/fs/storage";
 import { FilesPane } from "@/components/FilesPane";
 import { SearchBar } from "@/components/SearchBar";
 import { FileTable } from "@/components/FileTable";
+import { getCurrentSession } from "@/lib/auth/session";
+import { getFileStats } from "@/lib/db/file-stats";
 
 export default async function FilesPage({
   searchParams,
@@ -13,6 +15,10 @@ export default async function FilesPage({
   const sp = await searchParams;
   const query = sp.q?.trim() ?? "";
   const currentPath = sp.path && sp.path.startsWith("/") ? sp.path : "/";
+  const session = await getCurrentSession();
+  const sessionInfo = session
+    ? { id: session.sub, isAdmin: session.role === "admin" }
+    : { id: "", isAdmin: false };
 
   if (query) {
     const results = await searchFiles(query);
@@ -43,13 +49,21 @@ export default async function FilesPage({
             </div>
           </div>
         ) : (
-          <FileTable entries={results} basePath={currentPath} />
+          <FileTable
+            entries={results}
+            basePath={currentPath}
+            session={sessionInfo}
+          />
         )}
       </div>
     );
   }
 
   const entries = await listDirectory(currentPath);
+  const videoPaths = entries.filter((e) => !e.isFolder).map((e) => e.path);
+  const statsMap = await getFileStats(videoPaths);
+  const stats: Record<string, { commentCount: number; openCount: number }> = {};
+  for (const [p, s] of statsMap) stats[p] = s;
   const segments =
     currentPath === "/" ? [] : currentPath.split("/").filter(Boolean);
   const currentName = segments.length === 0 ? "파일" : segments[segments.length - 1];
@@ -89,7 +103,12 @@ export default async function FilesPage({
         <SearchBar />
       </div>
 
-      <FilesPane entries={entries} currentPath={currentPath} />
+      <FilesPane
+        entries={entries}
+        currentPath={currentPath}
+        session={sessionInfo}
+        stats={stats}
+      />
     </div>
   );
 }

@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vibox 댓글 밀도 리디자인 — 4 시안</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet" />
+<style>
+  :root {
+    --text: #1a1a1a;
+    --text-soft: #52525b;
+    --text-faint: #a1a1aa;
+    --border: #e4e4e7;
+    --border-soft: #f1f1f2;
+    --surface: #fafafa;
+    --hover: #f4f4f5;
+    --accent: #2563eb;
+    --danger: #dc2626;
+    --success: #16a34a;
+    --praise: #16a34a;
+    --cat-txt: #ef4444;
+    --cat-cut: #8b5cf6;
+    --cat-col: #f97316;
+    --cat-aud: #06b6d4;
+    --cat-mtn: #16a34a;
+    --cat-etc: #71717a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Pretendard Variable", Pretendard, -apple-system, sans-serif;
+    background: #eceef1;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .switcher {
+    position: sticky; top: 0; z-index: 50;
+    background: #0f1115; color: #fff;
+    padding: 14px 24px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+  }
+  .switcher .label {
+    font-size: 11px; font-weight: 800;
+    letter-spacing: 0.15em; color: #9ca3af;
+    margin-right: 10px;
+  }
+  .switcher button {
+    background: transparent; border: 1px solid #374151;
+    color: #d1d5db;
+    padding: 8px 14px; border-radius: 6px;
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .switcher button:hover { border-color: #6b7280; color: #fff; }
+  .switcher button.active {
+    background: #fff; color: #0f1115;
+    border-color: #fff; font-weight: 700;
+  }
+  .switcher .note {
+    margin-left: auto; font-size: 11px; color: #6b7280;
+  }
+
+  .design { display: none; padding: 40px 32px; }
+  .design.active { display: block; }
+
+  .concept-head {
+    max-width: 1120px; margin: 0 auto 24px;
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+  }
+  .concept-head h2 {
+    margin: 0; font-size: 22px; font-weight: 800;
+  }
+  .concept-head .sub {
+    font-size: 13.5px; color: var(--text-soft); margin-top: 6px;
+  }
+  .concept-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag {
+    font-size: 11px; padding: 3px 8px; border-radius: 99px;
+    background: #eff6ff; color: var(--accent); font-weight: 600;
+  }
+  .tag.warn { background: #fef3c7; color: #b45309; }
+  .tag.green { background: #ecfdf5; color: var(--success); }
+
+  .layout {
+    max-width: 1120px; margin: 0 auto;
+    display: grid; grid-template-columns: 420px 1fr; gap: 32px;
+    align-items: start;
+  }
+  .panel {
+    background: #fff; border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.04);
+    overflow: hidden;
+    height: 700px;
+    display: flex; flex-direction: column;
+  }
+  .panel-head {
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel-head h3 { margin: 0; font-size: 14px; font-weight: 700; }
+  .panel-head .count { color: var(--text-faint); font-size: 13px; }
+  .panel-head .filters {
+    margin-left: auto; display: flex; gap: 4px;
+    background: var(--surface); padding: 2px; border-radius: 6px;
+  }
+  .panel-head .filters button {
+    background: transparent; border: 0;
+    padding: 3px 8px; font-size: 10.5px; font-weight: 600;
+    color: var(--text-faint); cursor: pointer;
+    border-radius: 4px; font-family: inherit;
+  }
+  .panel-head .filters button.active {
+    background: #fff; color: var(--text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+  .panel-body { flex: 1; overflow-y: auto; }
+  .panel-foot {
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    background: var(--surface);
+    color: var(--text-faint); font-size: 12px;
+    text-align: center;
+  }
+
+  .notes {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+    position: sticky; top: 100px;
+  }
+  .notes h4 {
+    margin: 0 0 10px; font-size: 12px; font-weight: 800;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  .notes ul {
+    margin: 0 0 18px; padding-left: 18px;
+    font-size: 13px; line-height: 1.7; color: var(--text-soft);
+  }
+  .notes ul:last-child { margin-bottom: 0; }
+  .notes ul strong { color: var(--text); font-weight: 700; }
+  .notes .pro strong { color: var(--success); }
+  .notes .con strong { color: var(--danger); }
+
+  /* ========== 공통 아이콘 ========== */
+  .icn {
+    width: 12px; height: 12px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+    display: inline-block; vertical-align: middle;
+  }
+  .icn-sm { width: 11px; height: 11px; }
+  .icn-xs { width: 10px; height: 10px; }
+  .heart-fill { fill: currentColor; }
+
+  /* ===================================================================
+     시안 A · Hover Reveal (호버 시 액션 노출, 3px 카테고리 바)
+     =================================================================== */
+  .A .item {
+    position: relative;
+    padding: 12px 14px 12px 18px;
+    border-bottom: 1px solid var(--border-soft);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .A .item::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px; background: var(--cat-c, transparent);
+  }
+  .A .item:hover { background: var(--surface); }
+  .A .item .meta {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--text-faint);
+    margin-bottom: 3px;
+  }
+  .A .item .tc {
+    font-family: ui-monospace, monospace;
+    color: var(--text); font-weight: 600; letter-spacing: 0.02em;
+  }
+  .A .item .name { color: var(--text); font-weight: 600; }
+  .A .item .heart {
+    color: var(--praise);
+  }
+  .A .item .body {
+    font-size: 13.5px; line-height: 1.55; color: var(--text);
+  }
+  .A .item.resolved .body { opacity: 0.45; text-decoration: line-through; }
+  .A .item .actions {
+    position: absolute;
+    top: 10px; right: 12px;
+    display: flex; gap: 2px;
+    opacity: 0; transition: opacity 0.15s;
+    background: #fff;
+    padding: 2px; border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .A .item:hover .actions { opacity: 1; }
+  .A .item .actions button {
+    background: transparent; border: 0;
+    padding: 5px 6px; border-radius: 4px;
+    color: var(--text-faint); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 11px; font-family: inherit;
+  }
+  .A .item .actions button:hover {
+    background: var(--hover); color: var(--text);
+  }
+  .A .replies-line {
+    margin-top: 6px;
+    font-size: 11px; color: var(--text-faint);
+    display: inline-flex; align-items: center; gap: 3px; cursor: pointer;
+  }
+  .A .replies-line:hover { color: var(--text); }
+
+  /* ===================================================================
+     시안 B · Accordion (선택 시만 확장)
+     =================================================================== */
+  .B .item {
+    border-bottom: 1px solid var(--border-soft);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .B .item:hover { background: var(--surface); }
+  .B .item.open { background: var(--surface); }
+  .B .item .row {
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px;
+    min-height: 42px;
+  }
+  .B .item .tc {
+    font-family: ui-monospace, monospace;
+    font-size: 11.5px; font-weight: 600;
+    color: var(--cat-c);
+    min-width: 38px;
+  }
+  .B .item .cat-dot {
+    width: 6px; height: 6px; border-radius: 99px;
+    background: var(--cat-c); flex-shrink: 0;
+  }
+  .B .item .name {
+    font-size: 12px; font-weight: 600; color: var(--text);
+    flex-shrink: 0;
+  }
+  .B .item .snippet {
+    flex: 1; min-width: 0;
+    font-size: 12.5px; color: var(--text-soft);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .B .item.resolved .snippet,
+  .B .item.resolved .full {
+    opacity: 0.45; text-decoration: line-through;
+  }
+  .B .item .indicators {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 10.5px; color: var(--text-faint);
+    flex-shrink: 0;
+  }
+  .B .item .indicators .heart { color: var(--praise); }
+  .B .item .expanded {
+    display: none;
+    padding: 4px 16px 16px 52px;
+  }
+  .B .item.open .expanded { display: block; }
+  .B .item .full {
+    font-size: 13.5px; line-height: 1.55; color: var(--text);
+    margin-bottom: 10px;
+  }
+  .B .item .meta-row {
+    display: flex; gap: 8px;
+    font-size: 11px; color: var(--text-faint);
+    margin-bottom: 10px;
+  }
+  .B .item .replies {
+    border-left: 2px solid var(--border);
+    padding-left: 10px;
+    margin-bottom: 10px;
+  }
+  .B .item .reply {
+    display: flex; gap: 6px;
+    font-size: 12px; color: var(--text-soft);
+    padding: 4px 0;
+  }
+  .B .item .reply strong { color: var(--text); font-weight: 600; }
+  .B .item .reply .rt { color: var(--text-faint); font-size: 10.5px; }
+  .B .item .action-row {
+    display: flex; gap: 4px; flex-wrap: wrap;
+  }
+  .B .item .action-row button {
+    background: transparent; border: 1px solid var(--border);
+    padding: 4px 10px; border-radius: 5px;
+    color: var(--text-soft); cursor: pointer;
+    font-size: 11.5px; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .B .item .action-row button:hover {
+    background: var(--hover); color: var(--text);
+  }
+
+  /* ===================================================================
+     시안 C · Timeline Rail (좌측 수직선 + 점)
+     =================================================================== */
+  .C .list {
+    position: relative;
+    padding: 20px 0 20px 0;
+  }
+  .C .list::before {
+    content: "";
+    position: absolute;
+    left: 26px;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+  .C .item {
+    position: relative;
+    padding: 10px 16px 10px 48px;
+    cursor: pointer;
+  }
+  .C .item:hover { background: var(--surface); }
+  .C .item::before {
+    content: "";
+    position: absolute;
+    left: 20px; top: 18px;
+    width: 14px; height: 14px; border-radius: 99px;
+    background: var(--cat-c);
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 1.5px var(--cat-c);
+    z-index: 1;
+  }
+  .C .item.praise::before {
+    background: #fff;
+    /* heart drawn via svg overlay */
+  }
+  .C .item.praise .heart-overlay {
+    position: absolute;
+    left: 20px; top: 18px;
+    width: 14px; height: 14px;
+    display: grid; place-items: center;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .C .item.resolved::before {
+    background: #fff;
+  }
+  .C .item .meta {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; margin-bottom: 3px;
+  }
+  .C .item .tc {
+    font-family: ui-monospace, monospace;
+    color: var(--cat-c); font-weight: 700;
+  }
+  .C .item .name { color: var(--text); font-weight: 600; }
+  .C .item .cat-label {
+    color: var(--cat-c); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    font-size: 10px;
+  }
+  .C .item .when { color: var(--text-faint); margin-left: auto; font-size: 10.5px; }
+  .C .item .body {
+    font-size: 13px; color: var(--text); line-height: 1.55;
+  }
+  .C .item.resolved .body { opacity: 0.45; text-decoration: line-through; }
+  .C .item .replies {
+    margin-top: 6px;
+    padding-left: 10px;
+    border-left: 2px solid var(--border-soft);
+  }
+  .C .item .reply {
+    font-size: 11.5px; color: var(--text-soft);
+    line-height: 1.5;
+    padding: 3px 0;
+  }
+  .C .item .reply strong { color: var(--text); font-weight: 600; }
+
+  /* ===================================================================
+     시안 D · Flat Text (카드 없음, 대화형)
+     =================================================================== */
+  .D .list { padding: 14px 4px; }
+  .D .item {
+    padding: 10px 20px;
+    cursor: pointer;
+  }
+  .D .item:hover { background: var(--surface); }
+  .D .item .header {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11.5px; margin-bottom: 3px;
+  }
+  .D .item .header .name {
+    font-weight: 700; color: var(--text);
+  }
+  .D .item .header .tc {
+    font-family: ui-monospace, monospace;
+    color: var(--text-faint); font-weight: 500;
+  }
+  .D .item .header .cat {
+    font-size: 10px; font-weight: 600;
+    padding: 1px 6px; border-radius: 99px;
+    background: var(--cat-bg); color: var(--cat-c);
+  }
+  .D .item .header .praise-chip {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 10.5px; color: var(--praise); font-weight: 700;
+  }
+  .D .item .header .when {
+    margin-left: auto; color: var(--text-faint); font-size: 10.5px;
+  }
+  .D .item .body {
+    font-size: 13.5px; color: var(--text); line-height: 1.6;
+  }
+  .D .item.resolved .body {
+    opacity: 0.45; text-decoration: line-through;
+  }
+  .D .item .replies {
+    padding: 6px 0 4px 16px;
+    margin-top: 4px;
+  }
+  .D .item .reply {
+    padding: 4px 0;
+    display: flex; gap: 6px;
+    font-size: 12px; line-height: 1.5;
+  }
+  .D .item .reply strong {
+    color: var(--text); font-weight: 700; flex-shrink: 0;
+  }
+  .D .item .reply .rt {
+    color: var(--text-soft);
+  }
+  .D .item .reply .when {
+    margin-left: auto; color: var(--text-faint); font-size: 10px;
+  }
+
+  /* 카테고리 색 바인딩 */
+  .cat-txt    { --cat-c: var(--cat-txt);    --cat-bg: #fef2f2; }
+  .cat-cut    { --cat-c: var(--cat-cut);    --cat-bg: #f5f3ff; }
+  .cat-col    { --cat-c: var(--cat-col);    --cat-bg: #fff7ed; }
+  .cat-aud    { --cat-c: var(--cat-aud);    --cat-bg: #ecfeff; }
+  .cat-mtn    { --cat-c: var(--cat-mtn);    --cat-bg: #f0fdf4; }
+  .cat-etc    { --cat-c: var(--cat-etc);    --cat-bg: #f4f4f5; }
+</style>
+</head>
+<body>
+
+<nav class="switcher">
+  <span class="label">VIBOX · 댓글 밀도 리디자인</span>
+  <button class="active" data-t="A">A. Hover Reveal</button>
+  <button data-t="B">B. Accordion</button>
+  <button data-t="C">C. Timeline Rail</button>
+  <button data-t="D">D. Flat Text</button>
+  <span class="note">좌측: 댓글 패널 · 우측: 설계 노트</span>
+</nav>
+
+<!-- ============================================================
+     시안 A · Hover Reveal
+     ============================================================ -->
+<section id="A" class="design A active">
+  <div class="concept-head">
+    <div>
+      <h2>A · Hover Reveal</h2>
+      <p class="sub">평소엔 정보만 · 마우스 올리면 액션 슬라이드 인 · Linear / Notion 방식</p>
+    </div>
+    <div class="concept-tags">
+      <span class="tag green">기본 미니멀</span>
+      <span class="tag">기능 손실 없음</span>
+      <span class="tag">현재 구조와 호환</span>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <div class="panel-head">
+        <h3>댓글</h3>
+        <span class="count">8</span>
+        <div class="filters">
+          <button class="active">전체</button>
+          <button>수정</button>
+          <button>좋아요</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="item cat-txt">
+          <div class="meta"><span class="tc">00:12</span> · <span class="name">seon</span> · 10분 전</div>
+          <div class="body">여기 자막 오타 있어요 "프리비트" 아니라 "프리핏"</div>
+          <div class="actions">
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg></button>
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+          </div>
+        </div>
+
+        <div class="item cat-cut">
+          <div class="meta"><span class="tc">00:45</span> · <span class="name">jin</span> · 5분 전</div>
+          <div class="body">이 컷 넘길 타이밍 애매. 0.3초 정도 더 붙여도 될 듯</div>
+          <div class="replies-line">
+            <svg class="icn-xs icn" viewBox="0 0 24 24"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg>
+            답글 2
+          </div>
+          <div class="actions">
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg></button>
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+          </div>
+        </div>
+
+        <div class="item cat-aud">
+          <div class="meta"><span class="tc">01:02</span> · <span class="name">seon</span> · 5분 전</div>
+          <div class="body">BGM 볼륨 좀 낮춰야 할 듯. 내레이션이 묻혀요</div>
+          <div class="actions">
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg></button>
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+          </div>
+        </div>
+
+        <div class="item cat-col resolved">
+          <div class="meta"><span class="tc">01:58</span> · <span class="name">min</span> · ✓ 해결됨</div>
+          <div class="body">색감 톤 조정 필요</div>
+          <div class="actions">
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+          </div>
+        </div>
+
+        <div class="item cat-cut">
+          <div class="meta">
+            <span class="tc">02:30</span> · <span class="name">jin</span>
+            <span class="heart"><svg class="icn-xs icn heart-fill" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></span>
+            · 3분 전
+          </div>
+          <div class="body">이 전환 진짜 깔끔! 타이밍 완벽</div>
+          <div class="actions">
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg></button>
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+          </div>
+        </div>
+
+        <div class="item cat-etc">
+          <div class="meta"><span class="tc">03:15</span> · <span class="name">seon</span> · 방금</div>
+          <div class="body">엔드카드 로고 위치 재검토</div>
+          <div class="actions">
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg></button>
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+          </div>
+        </div>
+
+        <div class="item cat-aud">
+          <div class="meta"><span class="tc">04:00</span> · <span class="name">jin</span> · 2분 전</div>
+          <div class="body">내레이션이 살짝 웅얼거리는 느낌 — 조금 더 또렷하게 부탁드려요</div>
+          <div class="actions">
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg></button>
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+          </div>
+        </div>
+
+        <div class="item cat-txt">
+          <div class="meta"><span class="tc">05:20</span> · <span class="name">min</span> · 1분 전</div>
+          <div class="body">줄바꿈 위치 좀 어색함</div>
+          <div class="actions">
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg></button>
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>
+            <button><svg class="icn-xs icn" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="panel-foot">
+        카드 위에 마우스를 올려 액션을 보세요
+      </div>
+    </div>
+
+    <div class="notes">
+      <h4>👁 시각 요소 (카드당)</h4>
+      <ul>
+        <li>좌측 <strong>3px 색 바</strong> — 카테고리</li>
+        <li>상단 <strong>메타 한 줄</strong> — tc · 이름 · 시간</li>
+        <li>본문 1~N줄</li>
+        <li>답글 있으면 작은 "답글 2" 링크</li>
+        <li>액션: <strong>호버 시에만</strong> 우측에 떠오름</li>
+      </ul>
+      <h4>👍 장점</h4>
+      <ul class="pro">
+        <li><strong>기본 상태가 조용함</strong> — 10개 쌓여도 밀도 낮음</li>
+        <li>호버하면 바로 액션 보여서 기능 접근성 유지</li>
+        <li>카테고리 색 바가 강하지 않게 차이 전달</li>
+        <li>좋아요는 하트 아이콘 1개만 — 배경색·배지 필요 없음</li>
+      </ul>
+      <h4>👎 단점</h4>
+      <ul class="con">
+        <li><strong>터치 기기엔 호버 없음</strong> → 모바일에선 탭으로 보여주는 보조 필요</li>
+        <li>기능이 "숨어 있다"는 걸 사용자가 학습해야 함</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     시안 B · Accordion
+     ============================================================ -->
+<section id="B" class="design B">
+  <div class="concept-head">
+    <div>
+      <h2>B · Accordion</h2>
+      <p class="sub">기본은 한 줄 snippet · 클릭하면 상세 + 답글 + 액션 펼침 · 하나만 열림</p>
+    </div>
+    <div class="concept-tags">
+      <span class="tag green">최대 압축</span>
+      <span class="tag">많은 댓글에 유리</span>
+      <span class="tag warn">클릭 한 번 더</span>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <div class="panel-head">
+        <h3>댓글</h3>
+        <span class="count">8</span>
+        <div class="filters">
+          <button class="active">전체</button>
+          <button>수정</button>
+          <button>좋아요</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="item cat-txt">
+          <div class="row">
+            <span class="tc">00:12</span>
+            <span class="cat-dot"></span>
+            <span class="name">seon</span>
+            <span class="snippet">여기 자막 오타 있어요 "프리비트" 아니라 "프리핏"</span>
+            <span class="indicators">10분</span>
+          </div>
+        </div>
+
+        <div class="item cat-cut open">
+          <div class="row">
+            <span class="tc">00:45</span>
+            <span class="cat-dot"></span>
+            <span class="name">jin</span>
+            <span class="snippet">이 컷 넘길 타이밍 애매. 0.3초 더 붙여도 될 듯</span>
+            <span class="indicators">
+              <svg class="icn-xs icn" viewBox="0 0 24 24"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg>
+              2 · 5분
+            </span>
+          </div>
+          <div class="expanded">
+            <div class="full">이 컷 넘길 타이밍 애매. 0.3초 정도 더 붙여도 될 듯</div>
+            <div class="meta-row">
+              <span style="color: var(--cat-cut); font-weight:700; text-transform:uppercase; letter-spacing:0.04em; font-size:10px;">컷</span>
+              <span>5분 전</span>
+            </div>
+            <div class="replies">
+              <div class="reply"><strong>seon</strong> 맞아요, 다음 버전에서 조정할게요 <span class="rt">· 3분 전</span></div>
+              <div class="reply"><strong>jin</strong> OK 👍 <span class="rt">· 2분 전</span></div>
+            </div>
+            <div class="action-row">
+              <button><svg class="icn-xs icn" viewBox="0 0 24 24"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg> 답글</button>
+              <button><svg class="icn-xs icn" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> 해결</button>
+              <button><svg class="icn-xs icn" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg> 좋아요로</button>
+              <button style="color: var(--danger); margin-left:auto;">삭제</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="item cat-aud">
+          <div class="row">
+            <span class="tc">01:02</span>
+            <span class="cat-dot"></span>
+            <span class="name">seon</span>
+            <span class="snippet">BGM 볼륨 좀 낮춰야 할 듯. 내레이션이 묻혀요</span>
+            <span class="indicators">5분</span>
+          </div>
+        </div>
+
+        <div class="item cat-col resolved">
+          <div class="row">
+            <span class="tc">01:58</span>
+            <span class="cat-dot"></span>
+            <span class="name">min</span>
+            <span class="snippet">색감 톤 조정 필요</span>
+            <span class="indicators">✓</span>
+          </div>
+        </div>
+
+        <div class="item cat-cut">
+          <div class="row">
+            <span class="tc">02:30</span>
+            <span class="cat-dot"></span>
+            <span class="name">jin</span>
+            <span class="snippet">이 전환 진짜 깔끔! 타이밍 완벽</span>
+            <span class="indicators">
+              <span class="heart"><svg class="icn-xs icn heart-fill" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></span>
+              3분
+            </span>
+          </div>
+        </div>
+
+        <div class="item cat-etc">
+          <div class="row">
+            <span class="tc">03:15</span>
+            <span class="cat-dot"></span>
+            <span class="name">seon</span>
+            <span class="snippet">엔드카드 로고 위치 재검토</span>
+            <span class="indicators">방금</span>
+          </div>
+        </div>
+
+        <div class="item cat-aud">
+          <div class="row">
+            <span class="tc">04:00</span>
+            <span class="cat-dot"></span>
+            <span class="name">jin</span>
+            <span class="snippet">내레이션이 살짝 웅얼거리는 느낌 — 조금 더 또렷하게 부탁드려요</span>
+            <span class="indicators">2분</span>
+          </div>
+        </div>
+
+        <div class="item cat-txt">
+          <div class="row">
+            <span class="tc">05:20</span>
+            <span class="cat-dot"></span>
+            <span class="name">min</span>
+            <span class="snippet">줄바꿈 위치 좀 어색함</span>
+            <span class="indicators">1분</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel-foot">클릭하면 펼쳐집니다 · 한 번에 하나만</div>
+    </div>
+
+    <div class="notes">
+      <h4>👁 시각 요소</h4>
+      <ul>
+        <li>한 줄 <strong>snippet</strong>: tc · 카테고리 점 · 이름 · 본문 요약</li>
+        <li>우측 indicator: 답글 수 / 좋아요 하트 / 시간</li>
+        <li>선택(open) 시 아래 확장: 전체 본문 + 답글 + 4개 액션</li>
+      </ul>
+      <h4>👍 장점</h4>
+      <ul class="pro">
+        <li><strong>댓글 많을수록 효과 큼</strong> — 20개 있어도 스크롤 덜 필요</li>
+        <li>스캐닝에 최적 — 빠르게 훑고 필요할 때 파고듦</li>
+        <li>한 번에 하나만 열리니 항상 포커스 1개</li>
+      </ul>
+      <h4>👎 단점</h4>
+      <ul class="con">
+        <li><strong>긴 본문은 snippet에 잘림</strong> — 중요한 내용 놓칠 수도</li>
+        <li>답글 읽으려면 반드시 클릭 (Hover가 더 즉각적)</li>
+        <li>카테고리 점만 있으면 "뭐였더라" 인지 부담</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     시안 C · Timeline Rail
+     ============================================================ -->
+<section id="C" class="design C">
+  <div class="concept-head">
+    <div>
+      <h2>C · Timeline Rail</h2>
+      <p class="sub">좌측 수직선 + 카테고리 색 점 · 영상 흐름을 따라 읽히는 활동 로그 느낌</p>
+    </div>
+    <div class="concept-tags">
+      <span class="tag">흐름 시각화</span>
+      <span class="tag">GitHub·Git 로그 패턴</span>
+      <span class="tag warn">넓은 좌측 여백</span>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <div class="panel-head">
+        <h3>댓글</h3>
+        <span class="count">8</span>
+        <div class="filters">
+          <button class="active">전체</button>
+          <button>수정</button>
+          <button>좋아요</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="list">
+          <div class="item cat-txt">
+            <div class="meta">
+              <span class="tc">00:12</span>
+              <span class="name">seon</span>
+              <span class="cat-label">자막</span>
+              <span class="when">10분 전</span>
+            </div>
+            <div class="body">여기 자막 오타 있어요 "프리비트" 아니라 "프리핏"</div>
+          </div>
+
+          <div class="item cat-cut">
+            <div class="meta">
+              <span class="tc">00:45</span>
+              <span class="name">jin</span>
+              <span class="cat-label">컷</span>
+              <span class="when">5분 전</span>
+            </div>
+            <div class="body">이 컷 넘길 타이밍 애매. 0.3초 더 붙여도 될 듯</div>
+            <div class="replies">
+              <div class="reply"><strong>seon</strong> 맞아요, 다음 버전에서 조정할게요</div>
+              <div class="reply"><strong>jin</strong> OK 👍</div>
+            </div>
+          </div>
+
+          <div class="item cat-aud">
+            <div class="meta">
+              <span class="tc">01:02</span>
+              <span class="name">seon</span>
+              <span class="cat-label">오디오</span>
+              <span class="when">5분 전</span>
+            </div>
+            <div class="body">BGM 볼륨 좀 낮춰야 할 듯. 내레이션이 묻혀요</div>
+          </div>
+
+          <div class="item cat-col resolved">
+            <div class="meta">
+              <span class="tc">01:58</span>
+              <span class="name">min</span>
+              <span class="cat-label">색감</span>
+              <span class="when" style="color: var(--success);">✓ 해결됨</span>
+            </div>
+            <div class="body">색감 톤 조정 필요</div>
+          </div>
+
+          <div class="item cat-cut praise">
+            <div class="heart-overlay">
+              <svg class="icn icn-xs heart-fill" viewBox="0 0 24 24" style="width:8px; height:8px; color: var(--praise);"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            </div>
+            <div class="meta">
+              <span class="tc">02:30</span>
+              <span class="name">jin</span>
+              <span class="cat-label" style="color: var(--praise);">좋아요 · 컷</span>
+              <span class="when">3분 전</span>
+            </div>
+            <div class="body">이 전환 진짜 깔끔! 타이밍 완벽</div>
+          </div>
+
+          <div class="item cat-etc">
+            <div class="meta">
+              <span class="tc">03:15</span>
+              <span class="name">seon</span>
+              <span class="cat-label">기타</span>
+              <span class="when">방금</span>
+            </div>
+            <div class="body">엔드카드 로고 위치 재검토</div>
+          </div>
+
+          <div class="item cat-aud">
+            <div class="meta">
+              <span class="tc">04:00</span>
+              <span class="name">jin</span>
+              <span class="cat-label">오디오</span>
+              <span class="when">2분 전</span>
+            </div>
+            <div class="body">내레이션이 살짝 웅얼거리는 느낌 — 조금 더 또렷하게 부탁드려요</div>
+          </div>
+
+          <div class="item cat-txt">
+            <div class="meta">
+              <span class="tc">05:20</span>
+              <span class="name">min</span>
+              <span class="cat-label">자막</span>
+              <span class="when">1분 전</span>
+            </div>
+            <div class="body">줄바꿈 위치 좀 어색함</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-foot">시간 흐름대로 점이 연결됨</div>
+    </div>
+
+    <div class="notes">
+      <h4>👁 시각 요소</h4>
+      <ul>
+        <li>좌측 <strong>수직선</strong>이 모든 댓글을 연결</li>
+        <li>카테고리 색 <strong>원형 점</strong> (좋아요는 하트 아이콘 점)</li>
+        <li>해결된 항목은 빈 원 + 본문 취소선</li>
+        <li>답글은 들여쓰기 + 작은 선</li>
+      </ul>
+      <h4>👍 장점</h4>
+      <ul class="pro">
+        <li><strong>시간 흐름 직관</strong> — 영상 리뷰에 자연스러움</li>
+        <li>GitHub 커밋 로그 같은 친숙한 패턴</li>
+        <li>점 색만 훑어도 어디가 몰려있나 보임</li>
+        <li>좋아요·해결·수정이 점 모양으로 구분</li>
+      </ul>
+      <h4>👎 단점</h4>
+      <ul class="con">
+        <li><strong>좌측 48px 여백 고정</strong> — 본문 공간 줄어듦</li>
+        <li>액션 버튼 배치 애매 (우측으로 보내야)</li>
+        <li>시각 장식이 은근 많음 (선 + 점 + 색 + 텍스트)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     시안 D · Flat Text
+     ============================================================ -->
+<section id="D" class="design D">
+  <div class="concept-head">
+    <div>
+      <h2>D · Flat Text</h2>
+      <p class="sub">카드·보더 없음 · 대화 흐름처럼 텍스트만 · Medium·Substack 코멘트 느낌</p>
+    </div>
+    <div class="concept-tags">
+      <span class="tag green">가장 조용</span>
+      <span class="tag">독서 느낌</span>
+      <span class="tag warn">구조감 약함</span>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <div class="panel-head">
+        <h3>댓글</h3>
+        <span class="count">8</span>
+        <div class="filters">
+          <button class="active">전체</button>
+          <button>수정</button>
+          <button>좋아요</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="list">
+          <div class="item cat-txt">
+            <div class="header">
+              <span class="name">seon</span>
+              <span class="tc">00:12</span>
+              <span class="cat">자막</span>
+              <span class="when">10분 전</span>
+            </div>
+            <div class="body">여기 자막 오타 있어요 "프리비트" 아니라 "프리핏"</div>
+          </div>
+
+          <div class="item cat-cut">
+            <div class="header">
+              <span class="name">jin</span>
+              <span class="tc">00:45</span>
+              <span class="cat">컷</span>
+              <span class="when">5분 전</span>
+            </div>
+            <div class="body">이 컷 넘길 타이밍 애매. 0.3초 정도 더 붙여도 될 듯</div>
+            <div class="replies">
+              <div class="reply">
+                <strong>seon</strong>
+                <span class="rt">맞아요, 다음 버전에서 조정할게요</span>
+                <span class="when">3분 전</span>
+              </div>
+              <div class="reply">
+                <strong>jin</strong>
+                <span class="rt">OK 👍</span>
+                <span class="when">2분 전</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="item cat-aud">
+            <div class="header">
+              <span class="name">seon</span>
+              <span class="tc">01:02</span>
+              <span class="cat">오디오</span>
+              <span class="when">5분 전</span>
+            </div>
+            <div class="body">BGM 볼륨 좀 낮춰야 할 듯. 내레이션이 묻혀요</div>
+          </div>
+
+          <div class="item cat-col resolved">
+            <div class="header">
+              <span class="name">min</span>
+              <span class="tc">01:58</span>
+              <span class="cat">색감</span>
+              <span class="when" style="color: var(--success);">✓ 해결됨</span>
+            </div>
+            <div class="body">색감 톤 조정 필요</div>
+          </div>
+
+          <div class="item cat-cut">
+            <div class="header">
+              <span class="name">jin</span>
+              <span class="tc">02:30</span>
+              <span class="praise-chip">
+                <svg class="icn-xs icn heart-fill" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                좋아요 · 컷
+              </span>
+              <span class="when">3분 전</span>
+            </div>
+            <div class="body">이 전환 진짜 깔끔! 타이밍 완벽</div>
+          </div>
+
+          <div class="item cat-etc">
+            <div class="header">
+              <span class="name">seon</span>
+              <span class="tc">03:15</span>
+              <span class="cat">기타</span>
+              <span class="when">방금</span>
+            </div>
+            <div class="body">엔드카드 로고 위치 재검토</div>
+          </div>
+
+          <div class="item cat-aud">
+            <div class="header">
+              <span class="name">jin</span>
+              <span class="tc">04:00</span>
+              <span class="cat">오디오</span>
+              <span class="when">2분 전</span>
+            </div>
+            <div class="body">내레이션이 살짝 웅얼거리는 느낌 — 조금 더 또렷하게 부탁드려요</div>
+          </div>
+
+          <div class="item cat-txt">
+            <div class="header">
+              <span class="name">min</span>
+              <span class="tc">05:20</span>
+              <span class="cat">자막</span>
+              <span class="when">1분 전</span>
+            </div>
+            <div class="body">줄바꿈 위치 좀 어색함</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-foot">보더 없음 · 여백만으로 구분</div>
+    </div>
+
+    <div class="notes">
+      <h4>👁 시각 요소</h4>
+      <ul>
+        <li><strong>카드 없음, 보더 없음</strong> — 여백으로만 구분</li>
+        <li>헤더: 이름 · tc · 카테고리 pill (배경 있는 작은 라벨)</li>
+        <li>답글은 들여쓰기 + `이름 메시지` 대화형</li>
+        <li>좋아요는 하트 + "좋아요 · 컷" 칩</li>
+      </ul>
+      <h4>👍 장점</h4>
+      <ul class="pro">
+        <li><strong>가장 조용</strong> — 장식 없이 내용만 읽힘</li>
+        <li>긴 글 읽기에 편함 (Substack 댓글 같은 독서 느낌)</li>
+        <li>카테고리 pill 컬러로 가볍게 구분</li>
+        <li>대화 스타일 답글 → 자연스러운 읽기 흐름</li>
+      </ul>
+      <h4>👎 단점</h4>
+      <ul class="con">
+        <li><strong>구조감 약함</strong> — 빠른 스캐닝엔 A/B가 나음</li>
+        <li>선택/포커스 표현 만들기 까다로움 (보더 없어서)</li>
+        <li>액션 버튼 배치 애매 — 호버 or 숨김 필요</li>
+        <li>카테고리 구별이 pill 색에만 의존</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<script>
+  const buttons = document.querySelectorAll('.switcher button[data-t]');
+  const sections = document.querySelectorAll('.design');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.t;
+      buttons.forEach(b => b.classList.toggle('active', b === btn));
+      sections.forEach(s => s.classList.toggle('active', s.id === target));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+
+  // Accordion toggle
+  document.querySelectorAll('.B .item').forEach(item => {
+    item.addEventListener('click', () => {
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.B .item').forEach(i => i.classList.remove('open'));
+      if (!isOpen) item.classList.add('open');
+    });
+  });
+</script>
+
+</body>
+</html>

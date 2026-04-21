@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { inArray } from "drizzle-orm";
 import { getCurrentSession } from "@/lib/auth/session";
 import {
   listDirectory,
@@ -6,6 +7,8 @@ import {
   moveEntry,
 } from "@/lib/fs/storage";
 import { moveToTrash } from "@/lib/fs/trash";
+import { db } from "@/lib/db/client";
+import { fileUploads } from "@/lib/db/schema";
 
 async function requireAuth() {
   const session = await getCurrentSession();
@@ -17,12 +20,32 @@ async function requireAuth() {
 
 // GET /api/files?path=/some/path  → 폴더 목록
 export async function GET(req: NextRequest) {
-  const { error } = await requireAuth();
+  const { error, session } = await requireAuth();
   if (error) return error;
 
   const rel = req.nextUrl.searchParams.get("path") || "/";
   try {
-    const entries = await listDirectory(rel);
+    let entries = await listDirectory(rel);
+
+    // 파트너: 본인이 업로드한 파일 + 폴더만 표시
+    if (session!.role === "partner") {
+      // 이 폴더 내 모든 파일의 소유권 조회
+      const filePaths = entries
+        .filter((e) => !e.isFolder)
+        .map((e) => e.path);
+      if (filePaths.length > 0) {
+        const owned = await db
+          .select({ path: fileUploads.path })
+          .from(fileUploads)
+          .where(inArray(fileUploads.path, filePaths));
+        const ownedSet = new Set(owned.map((o) => o.path));
+        // 파트너 본인이 올린 파일만 유지, 폴더는 그대로
+        entries = entries.filter((e) => e.isFolder || ownedSet.has(e.path));
+      } else {
+        // 폴더만 있으면 그대로
+      }
+    }
+
     return NextResponse.json({ path: rel, entries });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "unknown";

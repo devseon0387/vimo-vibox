@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vibox 자막 수정 주석 — 4 시안</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet" />
+<style>
+  :root {
+    --text: #1a1a1a;
+    --text-soft: #52525b;
+    --text-faint: #a1a1aa;
+    --border: #e4e4e7;
+    --surface: #fafafa;
+    --accent: #2563eb;
+    --praise: #16a34a;
+    --danger: #dc2626;
+    --warning: #f59e0b;
+    --highlight: #fde047;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Pretendard Variable", Pretendard, -apple-system, sans-serif;
+    background: #eceef1;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .switcher {
+    position: sticky; top: 0; z-index: 50;
+    background: #0f1115; color: #fff;
+    padding: 14px 24px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+  }
+  .switcher .label {
+    font-size: 11px; font-weight: 800;
+    letter-spacing: 0.15em; color: #9ca3af;
+    margin-right: 10px;
+  }
+  .switcher button {
+    background: transparent; border: 1px solid #374151;
+    color: #d1d5db;
+    padding: 8px 14px; border-radius: 6px;
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .switcher button:hover { border-color: #6b7280; color: #fff; }
+  .switcher button.active {
+    background: #fff; color: #0f1115;
+    border-color: #fff; font-weight: 700;
+  }
+
+  .design { display: none; padding: 40px 32px; }
+  .design.active { display: block; }
+
+  .head {
+    max-width: 1200px; margin: 0 auto 24px;
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+  }
+  .head h2 { margin: 0; font-size: 22px; font-weight: 800; }
+  .head .sub {
+    font-size: 13.5px; color: var(--text-soft); margin-top: 6px;
+  }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag {
+    font-size: 11px; padding: 3px 8px; border-radius: 99px;
+    background: #eff6ff; color: var(--accent); font-weight: 600;
+  }
+  .tag.green { background: #ecfdf5; color: var(--praise); }
+  .tag.warn { background: #fef3c7; color: #b45309; }
+
+  /* ============ 영상 프레임 공통 ============ */
+  .video-stage {
+    max-width: 1200px; margin: 0 auto;
+    background: #000;
+    border-radius: 14px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+    overflow: hidden;
+    position: relative;
+  }
+  .video-frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(168,85,247,0.35), transparent 50%),
+      radial-gradient(circle at 70% 40%, rgba(236,72,153,0.3), transparent 50%),
+      linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #0f172a 100%);
+    overflow: hidden;
+  }
+  /* 가짜 인물 실루엣 */
+  .video-frame::before {
+    content: "";
+    position: absolute;
+    left: 50%; top: 40%;
+    width: 260px; height: 360px;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse 80px 120px at 50% 25%, #f9a8d4 0%, transparent 70%),
+      radial-gradient(ellipse 140px 180px at 50% 80%, #c4b5fd 0%, transparent 70%);
+    filter: blur(6px);
+    opacity: 0.75;
+  }
+  /* 빛 라인 */
+  .video-frame::after {
+    content: "";
+    position: absolute;
+    left: 10%; right: 10%; top: 20%;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, #ec4899, transparent);
+    opacity: 0.6;
+    filter: blur(2px);
+  }
+  .tc-hud {
+    position: absolute; bottom: 18px; left: 18px;
+    background: rgba(0,0,0,0.55); backdrop-filter: blur(6px);
+    color: #fff; font-family: ui-monospace, monospace; font-size: 11.5px;
+    padding: 4px 10px; border-radius: 4px; z-index: 5;
+  }
+  .subtitle {
+    position: absolute;
+    bottom: 10%; left: 50%;
+    transform: translateX(-50%);
+    color: #fff;
+    font-size: 26px; font-weight: 700;
+    text-shadow:
+      0 1px 2px rgba(0,0,0,0.9),
+      0 0 8px rgba(0,0,0,0.6);
+    letter-spacing: -0.01em;
+    text-align: center;
+    white-space: nowrap;
+    z-index: 3;
+  }
+  .subtitle .target {
+    position: relative;
+  }
+
+  /* 플레이어 하단 컨트롤 (공통 미니) */
+  .player-ctl {
+    background: #0f0f0f;
+    padding: 10px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .player-ctl .play {
+    width: 32px; height: 32px;
+    background: #fff; color: #000;
+    border: 0; border-radius: 99px;
+    display: grid; place-items: center; cursor: pointer;
+  }
+  .player-ctl .tc {
+    font-family: ui-monospace, monospace; font-size: 11px;
+    color: rgba(255,255,255,0.7);
+  }
+  .player-ctl .bar {
+    flex: 1; height: 4px; background: rgba(255,255,255,0.1);
+    border-radius: 99px; position: relative;
+  }
+  .player-ctl .bar .f {
+    position: absolute; inset: 0 auto 0 0;
+    width: 40%; background: #fff; border-radius: 99px;
+  }
+  .player-ctl .bar .marker {
+    position: absolute; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px; height: 8px; border-radius: 99px;
+    background: var(--warning);
+    border: 1.5px solid #0f0f0f;
+  }
+
+  .notes {
+    max-width: 1200px; margin: 24px auto 0;
+    background: #fff; border-radius: 12px;
+    padding: 20px 24px; border: 1px solid var(--border);
+  }
+  .notes h3 {
+    margin: 0 0 10px; font-size: 12px; font-weight: 800;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  .notes ul {
+    margin: 0 0 14px; padding-left: 18px;
+    font-size: 13.5px; line-height: 1.7; color: var(--text-soft);
+  }
+  .notes ul:last-child { margin-bottom: 0; }
+  .notes ul strong { color: var(--text); font-weight: 700; }
+  .notes .pro strong { color: var(--praise); }
+  .notes .con strong { color: var(--danger); }
+  .notes .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+  /* ==========================================================
+     시안 A · 말풍선 (Speech Bubble)
+     ========================================================== */
+  .A .bubble {
+    position: absolute;
+    padding: 8px 12px;
+    background: #fff;
+    color: var(--text);
+    border-radius: 10px;
+    font-size: 13px; font-weight: 600;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    z-index: 4;
+    animation: float-in 0.3s ease-out;
+  }
+  @keyframes float-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .A .bubble::after {
+    content: "";
+    position: absolute;
+    left: 50%; bottom: -6px;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid #fff;
+  }
+  .A .bubble .before {
+    text-decoration: line-through;
+    color: var(--text-faint);
+    font-weight: 500;
+  }
+  .A .bubble .arrow {
+    margin: 0 4px;
+    color: var(--text-faint);
+  }
+  .A .bubble .after {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .A .bubble .author {
+    margin-left: 8px;
+    font-size: 10px; font-weight: 500;
+    color: var(--text-faint);
+    padding-left: 6px;
+    border-left: 1px solid var(--border);
+  }
+  .A .highlight-box {
+    position: absolute;
+    border: 2px solid rgba(255,255,255,0.5);
+    border-radius: 3px;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.15);
+    z-index: 3;
+  }
+  .A .bubble.praise {
+    background: var(--praise);
+    color: #fff;
+  }
+  .A .bubble.praise::after {
+    border-top-color: var(--praise);
+  }
+  .A .bubble.praise .arrow,
+  .A .bubble.praise .before,
+  .A .bubble.praise .author {
+    color: rgba(255,255,255,0.8);
+  }
+
+  /* ==========================================================
+     시안 B · Border Emphasis (테두리 강조)
+     ========================================================== */
+  /* B1: Solid 두꺼운 테두리 */
+  .B1 .edit-box {
+    position: absolute;
+    border: 2.5px solid #eab308;
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.4), 0 0 12px rgba(234,179,8,0.4);
+    z-index: 3;
+  }
+  .B1 .edit-box.praise {
+    border-color: #16a34a;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.4), 0 0 12px rgba(22,163,74,0.4);
+  }
+
+  /* B2: Dashed marching-ants 느낌 */
+  .B2 .edit-box {
+    position: absolute;
+    border: 2px dashed #eab308;
+    border-radius: 4px;
+    background: rgba(253,224,71,0.08);
+    z-index: 3;
+  }
+  .B2 .edit-box.praise {
+    border-color: #16a34a;
+    background: rgba(22,163,74,0.08);
+  }
+
+  /* B3: Corner handles (select 툴 느낌) */
+  .B3 .edit-box {
+    position: absolute;
+    z-index: 3;
+  }
+  .B3 .edit-box .corner {
+    position: absolute;
+    width: 8px; height: 8px;
+    border: 2px solid #eab308;
+    background: #fff;
+  }
+  .B3 .edit-box.praise .corner {
+    border-color: #16a34a;
+  }
+  .B3 .edit-box .corner.tl { top: -4px; left: -4px; border-right: 0; border-bottom: 0; }
+  .B3 .edit-box .corner.tr { top: -4px; right: -4px; border-left: 0; border-bottom: 0; }
+  .B3 .edit-box .corner.bl { bottom: -4px; left: -4px; border-right: 0; border-top: 0; }
+  .B3 .edit-box .corner.br { bottom: -4px; right: -4px; border-left: 0; border-top: 0; }
+
+  /* 공통 diff 태그 */
+  .B-sub .diff-tag {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #fff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px; font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    z-index: 4;
+    white-space: nowrap;
+    border: 1px solid rgba(0,0,0,0.04);
+  }
+  .B-sub .diff-tag.praise {
+    background: #16a34a; color: #fff;
+  }
+  .B-sub .diff-tag.praise .del,
+  .B-sub .diff-tag.praise .arrow {
+    color: rgba(255,255,255,0.8);
+  }
+  .B-sub .diff-tag.praise .ins { color: #fff; }
+  .B-sub .diff-tag .del {
+    color: var(--danger);
+    text-decoration: line-through;
+    font-weight: 500;
+  }
+  .B-sub .diff-tag .ins {
+    color: var(--praise);
+    font-weight: 700;
+  }
+  .B-sub .diff-tag .arrow { color: var(--text-faint); margin: 0 2px; }
+  .B-sub .diff-num {
+    display: inline-grid;
+    place-items: center;
+    width: 18px; height: 18px;
+    background: #eab308;
+    color: #fff;
+    border-radius: 99px;
+    font-size: 10px; font-weight: 700;
+    margin-right: 2px;
+  }
+
+  /* 서브 탭 (B1/B2/B3) */
+  .b-sub-tabs {
+    max-width: 1200px; margin: 0 auto 16px;
+    display: flex; gap: 6px;
+    padding: 4px;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    width: fit-content;
+  }
+  .b-sub-tabs button {
+    background: transparent;
+    border: 0; padding: 8px 16px;
+    border-radius: 5px;
+    font-family: inherit; font-size: 12.5px; font-weight: 600;
+    color: var(--text-faint);
+    cursor: pointer;
+  }
+  .b-sub-tabs button.active {
+    background: #111; color: #fff;
+  }
+  .b-stage { display: none; }
+  .b-stage.active { display: block; }
+
+  /* ==========================================================
+     시안 C · 사이드 카드 + 화살표
+     ========================================================== */
+  .C .video-stage { display: flex; }
+  .C .video-wrap {
+    flex: 1; min-width: 0;
+    position: relative;
+  }
+  .C .side-panel {
+    width: 340px;
+    background: #fff;
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 10px;
+    overflow-y: auto;
+  }
+  .C .anno-mark {
+    position: absolute;
+    width: 22px; height: 22px;
+    background: var(--warning);
+    color: #fff;
+    border-radius: 99px;
+    display: grid; place-items: center;
+    font-size: 11px; font-weight: 800;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    z-index: 4;
+    cursor: pointer;
+  }
+  .C .anno-mark.praise { background: var(--praise); }
+  .C .anno-box {
+    position: absolute;
+    border: 2px dashed rgba(245,158,11,0.9);
+    border-radius: 4px;
+    background: rgba(245,158,11,0.08);
+    z-index: 3;
+  }
+  .C .anno-box.praise {
+    border-color: rgba(22,163,74,0.9);
+    background: rgba(22,163,74,0.08);
+  }
+  .C .card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 12.5px;
+    transition: border-color 0.15s;
+    cursor: pointer;
+  }
+  .C .card:hover { border-color: var(--text-soft); }
+  .C .card.active {
+    border-color: var(--warning);
+    background: #fffbeb;
+  }
+  .C .card.active.praise {
+    border-color: var(--praise);
+    background: #f0fdf4;
+  }
+  .C .card-head {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 6px;
+  }
+  .C .card-num {
+    display: inline-grid; place-items: center;
+    width: 18px; height: 18px;
+    background: var(--warning); color: #fff;
+    border-radius: 99px;
+    font-size: 10px; font-weight: 800;
+  }
+  .C .card.praise .card-num { background: var(--praise); }
+  .C .card-type {
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--warning);
+  }
+  .C .card.praise .card-type { color: var(--praise); }
+  .C .card-when {
+    margin-left: auto;
+    font-size: 10.5px; color: var(--text-faint);
+  }
+  .C .card-diff {
+    font-size: 13px; margin-bottom: 4px;
+  }
+  .C .card-diff .del {
+    color: var(--danger); text-decoration: line-through;
+    font-weight: 500;
+  }
+  .C .card-diff .arrow { color: var(--text-faint); margin: 0 4px; }
+  .C .card-diff .ins {
+    color: var(--praise); font-weight: 700;
+  }
+  .C .card-by {
+    font-size: 11px; color: var(--text-soft);
+  }
+  .C .card-note {
+    font-size: 12px; color: var(--text-soft);
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  /* ==========================================================
+     시안 D · 번호 배지 + 하단 교열 리스트
+     ========================================================== */
+  .D .video-stage {
+    max-width: 900px;
+  }
+  .D .anno-num {
+    position: absolute;
+    width: 22px; height: 22px;
+    background: var(--danger);
+    color: #fff;
+    border-radius: 4px;
+    display: grid; place-items: center;
+    font-size: 11px; font-weight: 800;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    z-index: 4;
+    transform: translateY(-28px);
+  }
+  .D .anno-num.praise { background: var(--praise); }
+  .D .anno-underline {
+    position: absolute;
+    border-bottom: 3px solid var(--danger);
+    z-index: 3;
+  }
+  .D .anno-underline.praise {
+    border-bottom-color: var(--praise);
+  }
+  .D .proof-panel {
+    max-width: 900px; margin: 20px auto 0;
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .D .proof-panel .proof-head {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px; font-weight: 800;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--text-soft);
+    background: var(--surface);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .D .proof-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 1fr 120px;
+    gap: 14px;
+    padding: 10px 16px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .D .proof-row:last-child { border-bottom: 0; }
+  .D .proof-row:hover { background: var(--surface); cursor: pointer; }
+  .D .proof-num {
+    font-family: ui-monospace, monospace;
+    font-size: 11px; font-weight: 700;
+    color: var(--text-soft);
+  }
+  .D .proof-tc {
+    color: var(--accent);
+  }
+  .D .proof-del {
+    color: var(--danger); text-decoration: line-through;
+    font-weight: 500;
+  }
+  .D .proof-arrow {
+    color: var(--text-faint); margin: 0 6px;
+  }
+  .D .proof-ins {
+    color: var(--praise); font-weight: 700;
+  }
+  .D .proof-by {
+    text-align: right;
+    font-size: 11.5px; color: var(--text-faint);
+  }
+  .D .proof-row.praise .proof-num { color: var(--praise); }
+
+  /* ==========================================================
+     인터랙션 데모 (드래그 선택 + 수정 입력)
+     ========================================================== */
+  .interaction {
+    max-width: 1200px; margin: 32px auto 0;
+  }
+  .interaction h3 {
+    font-size: 14px; font-weight: 800;
+    letter-spacing: 0.05em;
+    color: var(--text-soft);
+    margin: 0 0 14px 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .interaction h3 span {
+    font-size: 10px; letter-spacing: 0.15em;
+    color: var(--text-faint); font-weight: 700;
+  }
+  .demo-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  .demo-card {
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 16 / 9;
+  }
+  .demo-card .video-frame {
+    border-radius: 0;
+  }
+  .demo-card .caption {
+    position: absolute;
+    top: 14px; left: 14px;
+    background: rgba(0,0,0,0.6);
+    color: #fff; padding: 4px 10px;
+    border-radius: 4px; font-size: 11px; font-weight: 600;
+    z-index: 6;
+    letter-spacing: 0.03em;
+  }
+  .select-box {
+    position: absolute;
+    border: 2px dashed #fbbf24;
+    background: rgba(251,191,36,0.15);
+    z-index: 5;
+  }
+  .select-hint {
+    position: absolute;
+    bottom: -28px; left: 50%;
+    transform: translateX(-50%);
+    background: #fbbf24;
+    color: #000;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10.5px; font-weight: 700;
+    white-space: nowrap;
+  }
+  .compose-popover {
+    position: absolute;
+    width: 300px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    padding: 12px;
+    z-index: 10;
+    font-size: 12.5px;
+  }
+  .compose-popover h4 {
+    margin: 0 0 10px;
+    font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; font-weight: 800;
+    color: var(--text-faint);
+  }
+  .compose-popover .row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 8px;
+  }
+  .compose-popover .row label {
+    font-size: 11px; color: var(--text-soft);
+    font-weight: 600; min-width: 44px;
+  }
+  .compose-popover .row input {
+    flex: 1;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-family: inherit; font-size: 12.5px;
+    outline: none;
+  }
+  .compose-popover .row input:focus {
+    border-color: var(--accent);
+  }
+  .compose-popover .row input.ocr {
+    background: #fef3c7;
+    color: var(--text);
+    font-weight: 700;
+  }
+  .compose-popover .ocr-note {
+    font-size: 10.5px; color: var(--warning);
+    margin-left: 52px; margin-top: -4px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .compose-popover .actions {
+    display: flex; gap: 6px; justify-content: flex-end;
+    margin-top: 10px;
+  }
+  .compose-popover .actions button {
+    background: transparent; border: 1px solid var(--border);
+    padding: 5px 12px; border-radius: 5px;
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    cursor: pointer; color: var(--text-soft);
+  }
+  .compose-popover .actions button.primary {
+    background: #111; color: #fff; border-color: #111;
+  }
+</style>
+</head>
+<body>
+
+<nav class="switcher">
+  <span class="label">VIBOX · 자막 수정 주석</span>
+  <button class="active" data-t="A">A. 말풍선</button>
+  <button data-t="B">B. Track Changes</button>
+  <button data-t="C">C. 사이드 카드</button>
+  <button data-t="D">D. 번호 + 교열 리스트</button>
+</nav>
+
+<!-- ============================================================
+     시안 A · 말풍선
+     ============================================================ -->
+<section id="A" class="design A active">
+  <div class="head">
+    <div>
+      <h2>A · 말풍선 (Speech Bubble)</h2>
+      <p class="sub">bbox 위에 둥근 말풍선으로 "원본 → 수정안" 노출 · 가장 친근하고 직관적</p>
+    </div>
+    <div class="tags">
+      <span class="tag green">직관적</span>
+      <span class="tag">Figma 코멘트 패턴</span>
+      <span class="tag">한눈에 보임</span>
+    </div>
+  </div>
+
+  <div class="video-stage">
+    <div class="video-frame">
+      <div class="tc-hud">02:15 / 07:03</div>
+      <div class="subtitle">
+        여기서 에이전트 모드를 선택할 수 있습니다
+      </div>
+
+      <!-- 하이라이트 박스 (에이전트) -->
+      <div class="highlight-box" style="left: 40.5%; top: 72%; width: 12%; height: 7%;"></div>
+      <!-- 말풍선 (에이전트 → agent) -->
+      <div class="bubble" style="left: 34%; top: 62%;">
+        <span class="before">에이전트</span>
+        <span class="arrow">→</span>
+        <span class="after">agent</span>
+        <span class="author">seon</span>
+      </div>
+
+      <!-- 하이라이트 박스 (모드) -->
+      <div class="highlight-box" style="left: 52.5%; top: 72%; width: 7%; height: 7%;"></div>
+      <!-- 말풍선 (모드 → mode) -->
+      <div class="bubble" style="left: 48%; top: 62%; background: #fff7ed;">
+        <span class="before">모드</span>
+        <span class="arrow">→</span>
+        <span class="after" style="color: #ea580c;">mode</span>
+        <span class="author">jin</span>
+      </div>
+
+      <!-- 좋아요 말풍선 (전체 구간에 대한 칭찬) -->
+      <div class="bubble praise" style="right: 5%; top: 12%;">
+        <span style="font-weight: 700;">이 구간 색감 완벽!</span>
+        <span class="author">min</span>
+      </div>
+    </div>
+    <div class="player-ctl">
+      <button class="play">▶</button>
+      <span class="tc">02:15 / 07:03</span>
+      <div class="bar">
+        <div class="f"></div>
+        <div class="marker" style="left: 30%; background: var(--warning);"></div>
+        <div class="marker" style="left: 30.5%; background: var(--warning);"></div>
+        <div class="marker" style="left: 30.8%; background: var(--praise);"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div class="grid">
+      <div>
+        <h3>👍 장점</h3>
+        <ul class="pro">
+          <li><strong>한눈에 의도 파악</strong> — "뭘 뭘로 바꾸라"가 명시적</li>
+          <li>Figma/Google Docs 코멘트 익숙한 패턴</li>
+          <li>좋아요는 다른 색 (녹색)으로 구별</li>
+          <li>말풍선 꼬리가 위치 지시 — 공간 효율</li>
+        </ul>
+      </div>
+      <div>
+        <h3>👎 단점</h3>
+        <ul class="con">
+          <li>주석 많으면 <strong>말풍선끼리 겹침</strong></li>
+          <li>영상 위에 떠 있어서 재생 시 거슬릴 수 있음 (토글 필요)</li>
+          <li>좁은 영역에 긴 수정안은 화면 차지</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     시안 B · Track Changes
+     ============================================================ -->
+<section id="B" class="design B B-sub">
+  <div class="head">
+    <div>
+      <h2>B · 테두리 강조 (Border Emphasis)</h2>
+      <p class="sub">하이라이트 대신 <strong>테두리</strong>로 텍스트 영역 지시 · 원본 자막 가독성 유지 · 3가지 테두리 스타일 비교</p>
+    </div>
+    <div class="tags">
+      <span class="tag green">자막 가독성 ↑</span>
+      <span class="tag">교정 패턴</span>
+      <span class="tag">명시적 Before/After</span>
+    </div>
+  </div>
+
+  <div class="b-sub-tabs">
+    <button class="active" data-b="B1">B1 · Solid 두꺼운</button>
+    <button data-b="B2">B2 · Dashed 점선</button>
+    <button data-b="B3">B3 · Corner 핸들</button>
+  </div>
+
+  <!-- B1: Solid 두꺼운 -->
+  <div class="b-stage active B1" id="B1">
+    <div class="video-stage">
+      <div class="video-frame">
+        <div class="tc-hud">02:15 / 07:03</div>
+        <div class="subtitle">
+          여기서 에이전트 모드를 선택할 수 있습니다
+        </div>
+
+        <div class="edit-box" style="left: 40.2%; top: 72.5%; width: 12.4%; height: 7%;"></div>
+        <div class="diff-tag" style="left: 28%; top: 82%;">
+          <span class="diff-num">1</span>
+          <span class="del">에이전트</span>
+          <span class="arrow">→</span>
+          <span class="ins">agent</span>
+        </div>
+
+        <div class="edit-box" style="left: 52.3%; top: 72.5%; width: 7.4%; height: 7%;"></div>
+        <div class="diff-tag" style="left: 61%; top: 82%;">
+          <span class="diff-num">2</span>
+          <span class="del">모드</span>
+          <span class="arrow">→</span>
+          <span class="ins">mode</span>
+        </div>
+
+        <!-- 좋아요: 구간 전체 -->
+        <div class="edit-box praise" style="left: 15%; top: 18%; width: 70%; height: 35%;"></div>
+        <div class="diff-tag praise" style="right: 5%; top: 12%;">
+          <span style="font-weight: 700;">이 구간 색감 완벽!</span>
+        </div>
+      </div>
+      <div class="player-ctl">
+        <button class="play">▶</button>
+        <span class="tc">02:15 / 07:03</span>
+        <div class="bar">
+          <div class="f"></div>
+          <div class="marker" style="left: 30%;"></div>
+          <div class="marker" style="left: 30.5%;"></div>
+          <div class="marker" style="left: 30.2%; background: var(--praise);"></div>
+        </div>
+      </div>
+    </div>
+    <div class="notes" style="max-width: 1200px; margin: 24px auto 0;">
+      <div class="grid">
+        <div>
+          <h3>👍 장점</h3>
+          <ul class="pro">
+            <li><strong>자막 가독성 유지</strong> — 하이라이트 배경 없이 자막 그대로 읽힘</li>
+            <li>2.5px 솔리드 + 외곽 글로우 → 어두운 영상에서도 선명</li>
+            <li>수정(앰버) vs 좋아요(녹색) 색 구분 명확</li>
+            <li>격자 정렬 느낌으로 프로페셔널</li>
+          </ul>
+        </div>
+        <div>
+          <h3>👎 단점</h3>
+          <ul class="con">
+            <li>테두리가 다소 '딱딱한' 느낌</li>
+            <li>글로우가 영상 tone에 따라 튈 수 있음</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B2: Dashed -->
+  <div class="b-stage B2" id="B2">
+    <div class="video-stage">
+      <div class="video-frame">
+        <div class="tc-hud">02:15 / 07:03</div>
+        <div class="subtitle">
+          여기서 에이전트 모드를 선택할 수 있습니다
+        </div>
+
+        <div class="edit-box" style="left: 40.2%; top: 72.5%; width: 12.4%; height: 7%;"></div>
+        <div class="diff-tag" style="left: 28%; top: 82%;">
+          <span class="diff-num">1</span>
+          <span class="del">에이전트</span>
+          <span class="arrow">→</span>
+          <span class="ins">agent</span>
+        </div>
+
+        <div class="edit-box" style="left: 52.3%; top: 72.5%; width: 7.4%; height: 7%;"></div>
+        <div class="diff-tag" style="left: 61%; top: 82%;">
+          <span class="diff-num">2</span>
+          <span class="del">모드</span>
+          <span class="arrow">→</span>
+          <span class="ins">mode</span>
+        </div>
+
+        <div class="edit-box praise" style="left: 15%; top: 18%; width: 70%; height: 35%;"></div>
+        <div class="diff-tag praise" style="right: 5%; top: 12%;">
+          <span style="font-weight: 700;">이 구간 색감 완벽!</span>
+        </div>
+      </div>
+      <div class="player-ctl">
+        <button class="play">▶</button>
+        <span class="tc">02:15 / 07:03</span>
+        <div class="bar">
+          <div class="f"></div>
+          <div class="marker" style="left: 30%;"></div>
+          <div class="marker" style="left: 30.5%;"></div>
+          <div class="marker" style="left: 30.2%; background: var(--praise);"></div>
+        </div>
+      </div>
+    </div>
+    <div class="notes" style="max-width: 1200px; margin: 24px auto 0;">
+      <div class="grid">
+        <div>
+          <h3>👍 장점</h3>
+          <ul class="pro">
+            <li>점선 + 얕은 배경 → <strong>"선택 중" 느낌</strong> 자연스러움</li>
+            <li>Solid보다 <strong>덜 무겁고</strong> 부드러움</li>
+            <li>Figma/Illustrator 주석 패턴 친숙</li>
+          </ul>
+        </div>
+        <div>
+          <h3>👎 단점</h3>
+          <ul class="con">
+            <li>배경 깔림 → 자막 가독성 <strong>미세하게 떨어짐</strong></li>
+            <li>점선이 많아지면 시각적 노이즈</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B3: Corner handles -->
+  <div class="b-stage B3" id="B3">
+    <div class="video-stage">
+      <div class="video-frame">
+        <div class="tc-hud">02:15 / 07:03</div>
+        <div class="subtitle">
+          여기서 에이전트 모드를 선택할 수 있습니다
+        </div>
+
+        <div class="edit-box" style="left: 40.2%; top: 72.5%; width: 12.4%; height: 7%;">
+          <span class="corner tl"></span>
+          <span class="corner tr"></span>
+          <span class="corner bl"></span>
+          <span class="corner br"></span>
+        </div>
+        <div class="diff-tag" style="left: 28%; top: 82%;">
+          <span class="diff-num">1</span>
+          <span class="del">에이전트</span>
+          <span class="arrow">→</span>
+          <span class="ins">agent</span>
+        </div>
+
+        <div class="edit-box" style="left: 52.3%; top: 72.5%; width: 7.4%; height: 7%;">
+          <span class="corner tl"></span>
+          <span class="corner tr"></span>
+          <span class="corner bl"></span>
+          <span class="corner br"></span>
+        </div>
+        <div class="diff-tag" style="left: 61%; top: 82%;">
+          <span class="diff-num">2</span>
+          <span class="del">모드</span>
+          <span class="arrow">→</span>
+          <span class="ins">mode</span>
+        </div>
+
+        <div class="edit-box praise" style="left: 15%; top: 18%; width: 70%; height: 35%;">
+          <span class="corner tl"></span>
+          <span class="corner tr"></span>
+          <span class="corner bl"></span>
+          <span class="corner br"></span>
+        </div>
+        <div class="diff-tag praise" style="right: 5%; top: 12%;">
+          <span style="font-weight: 700;">이 구간 색감 완벽!</span>
+        </div>
+      </div>
+      <div class="player-ctl">
+        <button class="play">▶</button>
+        <span class="tc">02:15 / 07:03</span>
+        <div class="bar">
+          <div class="f"></div>
+          <div class="marker" style="left: 30%;"></div>
+          <div class="marker" style="left: 30.5%;"></div>
+          <div class="marker" style="left: 30.2%; background: var(--praise);"></div>
+        </div>
+      </div>
+    </div>
+    <div class="notes" style="max-width: 1200px; margin: 24px auto 0;">
+      <div class="grid">
+        <div>
+          <h3>👍 장점</h3>
+          <ul class="pro">
+            <li><strong>가장 가벼움</strong> — 네 모서리만 → 영상 가림 최소</li>
+            <li>Photoshop/Figma의 select 툴 느낌 → "이거 영역 선택됨"이 직관</li>
+            <li>테두리 면 자체가 없어서 배경 질감/색에 영향 안 받음</li>
+          </ul>
+        </div>
+        <div>
+          <h3>👎 단점</h3>
+          <ul class="con">
+            <li>작은 영역(글자 2~3자)엔 코너가 서로 가까워져 지저분</li>
+            <li>영역 전체 감각이 덜함 — "여기 안" 인식 약함</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     시안 C · 사이드 카드 + 연결
+     ============================================================ -->
+<section id="C" class="design C">
+  <div class="head">
+    <div>
+      <h2>C · 사이드 카드</h2>
+      <p class="sub">영상엔 번호·박스만 · 디테일은 우측 카드에서 · 정보 많을 때 유리</p>
+    </div>
+    <div class="tags">
+      <span class="tag">영상 가림 최소</span>
+      <span class="tag">디테일 풍부</span>
+      <span class="tag">CAD 드로잉 패턴</span>
+    </div>
+  </div>
+
+  <div class="video-stage">
+    <div class="video-wrap">
+      <div class="video-frame">
+        <div class="tc-hud">02:15 / 07:03</div>
+        <div class="subtitle">
+          여기서 에이전트 모드를 선택할 수 있습니다
+        </div>
+
+        <!-- 주석 1: 에이전트 -->
+        <div class="anno-box" style="left: 40.5%; top: 73%; width: 12%; height: 7%;"></div>
+        <div class="anno-mark" style="left: 40%; top: 68%;">1</div>
+
+        <!-- 주석 2: 모드 -->
+        <div class="anno-box" style="left: 52.5%; top: 73%; width: 7%; height: 7%;"></div>
+        <div class="anno-mark" style="left: 52%; top: 68%;">2</div>
+
+        <!-- 주석 3: 좋아요 (전체) -->
+        <div class="anno-box praise" style="left: 20%; top: 20%; width: 60%; height: 30%;"></div>
+        <div class="anno-mark praise" style="left: 79%; top: 22%;">3</div>
+      </div>
+      <div class="player-ctl">
+        <button class="play">▶</button>
+        <span class="tc">02:15 / 07:03</span>
+        <div class="bar">
+          <div class="f"></div>
+          <div class="marker" style="left: 30%;"></div>
+          <div class="marker" style="left: 30.5%;"></div>
+          <div class="marker" style="left: 30.2%; background: var(--praise);"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-panel">
+      <div style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); font-weight: 800; margin-bottom: 4px;">
+        주석 · 3
+      </div>
+
+      <div class="card active">
+        <div class="card-head">
+          <span class="card-num">1</span>
+          <span class="card-type">자막 수정</span>
+          <span class="card-when">방금</span>
+        </div>
+        <div class="card-diff">
+          <span class="del">에이전트</span>
+          <span class="arrow">→</span>
+          <span class="ins">agent</span>
+        </div>
+        <div class="card-by">seon · 영문 통일</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-num">2</span>
+          <span class="card-type">자막 수정</span>
+          <span class="card-when">1분 전</span>
+        </div>
+        <div class="card-diff">
+          <span class="del">모드</span>
+          <span class="arrow">→</span>
+          <span class="ins">mode</span>
+        </div>
+        <div class="card-by">jin</div>
+      </div>
+
+      <div class="card praise">
+        <div class="card-head">
+          <span class="card-num">3</span>
+          <span class="card-type">좋아요</span>
+          <span class="card-when">3분 전</span>
+        </div>
+        <div class="card-diff" style="color: var(--praise); font-weight: 600;">
+          이 구간 색감 완벽!
+        </div>
+        <div class="card-by">min</div>
+      </div>
+
+      <div style="margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border);">
+        <button style="width: 100%; background: #111; color: #fff; border: 0; padding: 8px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">+ 자막 영역 수정 요청</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div class="grid">
+      <div>
+        <h3>👍 장점</h3>
+        <ul class="pro">
+          <li>영상 가림 <strong>최소</strong> — 번호 + 얇은 박스만</li>
+          <li>디테일 풍부 (작성자, 이유, 시간)</li>
+          <li>주석 많아도 <strong>겹침 거의 없음</strong></li>
+          <li>좋아요처럼 긴 메시지도 카드에 들어감</li>
+        </ul>
+      </div>
+      <div>
+        <h3>👎 단점</h3>
+        <ul class="con">
+          <li>영상 ↔ 카드 <strong>눈 왕복</strong> 필요</li>
+          <li>폭 340px 고정 → 모바일/좁은 화면 어려움</li>
+          <li>"뭘 바꿀까" 직관성은 A보다 낮음</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     시안 D · 번호 배지 + 하단 교열 리스트
+     ============================================================ -->
+<section id="D" class="design D">
+  <div class="head">
+    <div>
+      <h2>D · 번호 + 교열 리스트</h2>
+      <p class="sub">신문 교열 표시 스타일 · 영상엔 번호만 · 하단 표로 체계적 출력 · 많을 때 최강</p>
+    </div>
+    <div class="tags">
+      <span class="tag">대량 수정에 최적</span>
+      <span class="tag">프린트/문서화 친화</span>
+      <span class="tag">신문 교열 패턴</span>
+    </div>
+  </div>
+
+  <div class="video-stage">
+    <div class="video-frame">
+      <div class="tc-hud">02:15 / 07:03</div>
+      <div class="subtitle">
+        여기서 에이전트 모드를 선택할 수 있습니다
+      </div>
+
+      <!-- 번호 배지 + 언더라인 -->
+      <div class="anno-num" style="left: 41%; top: 73%;">1</div>
+      <div class="anno-underline" style="left: 40.5%; top: 79%; width: 12%;"></div>
+
+      <div class="anno-num" style="left: 53.5%; top: 73%;">2</div>
+      <div class="anno-underline" style="left: 52.5%; top: 79%; width: 7%;"></div>
+
+      <div class="anno-num praise" style="right: 15%; top: 20%;">3</div>
+    </div>
+    <div class="player-ctl">
+      <button class="play">▶</button>
+      <span class="tc">02:15 / 07:03</span>
+      <div class="bar">
+        <div class="f"></div>
+        <div class="marker" style="left: 30%;"></div>
+        <div class="marker" style="left: 30.5%;"></div>
+        <div class="marker" style="left: 30.2%; background: var(--praise);"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="proof-panel">
+    <div class="proof-head">
+      <span>📝 교열 리스트 · 02:15 시점</span>
+      <span style="margin-left: auto; font-size: 10.5px; color: var(--text-faint); letter-spacing: 0;">클릭하면 영상 해당 부분으로 이동</span>
+    </div>
+    <div class="proof-row">
+      <span class="proof-num">1</span>
+      <span><span class="proof-del">에이전트</span><span class="proof-arrow">→</span><span class="proof-ins">agent</span></span>
+      <span style="font-size: 12px; color: var(--text-soft);">영문 통일</span>
+      <span class="proof-by">seon · 방금</span>
+    </div>
+    <div class="proof-row">
+      <span class="proof-num">2</span>
+      <span><span class="proof-del">모드</span><span class="proof-arrow">→</span><span class="proof-ins">mode</span></span>
+      <span style="font-size: 12px; color: var(--text-soft);">영문 통일</span>
+      <span class="proof-by">jin · 1분 전</span>
+    </div>
+    <div class="proof-row praise">
+      <span class="proof-num">3</span>
+      <span style="color: var(--praise); font-weight: 600;">이 구간 색감 완벽 ❤</span>
+      <span style="font-size: 12px; color: var(--text-soft);">좋아요</span>
+      <span class="proof-by">min · 3분 전</span>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div class="grid">
+      <div>
+        <h3>👍 장점</h3>
+        <ul class="pro">
+          <li>대량 수정 (50건+)에도 <strong>정돈되어 보임</strong></li>
+          <li>표 형태라 <strong>CSV/문서 출력</strong>에 그대로 활용 가능</li>
+          <li>편집자에게 "해야 할 일 리스트" 명확히 전달</li>
+          <li>영상 위는 번호만 → 가림 거의 없음</li>
+        </ul>
+      </div>
+      <div>
+        <h3>👎 단점</h3>
+        <ul class="con">
+          <li>시간 흐름 시각적 감각 부족 (한 시점의 정지 상태 중심)</li>
+          <li>영상 재생 중엔 리스트가 같이 안 바뀜 (필터링 로직 필요)</li>
+          <li>화면 아래 공간 필요 — 긴 영상 플레이어엔 어울리지 않을 수도</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     인터랙션 데모: 드래그 선택 + 수정 입력
+     ============================================================ -->
+<section id="A" class="design A active" style="display: none;" data-keep></section>
+
+<script>
+  const buttons = document.querySelectorAll('.switcher button[data-t]');
+  const sections = document.querySelectorAll('.design');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.t;
+      buttons.forEach(b => b.classList.toggle('active', b === btn));
+      sections.forEach(s => s.classList.toggle('active', s.id === target));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+
+  // B 서브 탭
+  document.querySelectorAll('.b-sub-tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.b;
+      document.querySelectorAll('.b-sub-tabs button').forEach(b => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.b-stage').forEach(s => s.classList.toggle('active', s.id === target));
+    });
+  });
+</script>
+
+</body>
+</html>

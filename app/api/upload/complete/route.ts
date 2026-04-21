@@ -5,6 +5,10 @@ import {
   getChunkSession,
   abortChunkUpload,
 } from "@/lib/fs/storage";
+import { generateThumbInBackground, isVideoPath } from "@/lib/fs/thumbnail";
+import { db } from "@/lib/db/client";
+import { fileUploads } from "@/lib/db/schema";
+import { sql } from "drizzle-orm";
 
 // POST /api/upload/complete  body: { fileId, action?: "complete" | "abort" }
 export async function POST(req: NextRequest) {
@@ -36,6 +40,27 @@ export async function POST(req: NextRequest) {
 
   try {
     const saved = await finalizeChunkUpload(fileId);
+    // 파일 소유권 DB 기록 (partner 가시성 용도) — upsert
+    await db
+      .insert(fileUploads)
+      .values({
+        path: saved.path,
+        uploadedBy: session.sub,
+        uploadedByName: session.name ?? session.username,
+      })
+      .onConflictDoUpdate({
+        target: fileUploads.path,
+        set: {
+          uploadedBy: session.sub,
+          uploadedByName: session.name ?? session.username,
+          uploadedAt: sql`(unixepoch() * 1000)`,
+        },
+      })
+      .catch(() => {});
+    // 영상이면 백그라운드로 썸네일 생성 (응답 지연 안 됨)
+    if (isVideoPath(saved.path)) {
+      generateThumbInBackground(saved.path);
+    }
     return Response.json({ ok: true, saved });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "unknown";

@@ -1,0 +1,4595 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vibox 피드백 와이어프레임 — 3 시안</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #fafafa;
+    --hover: #f3f4f6;
+    --border: #e7e7e7;
+    --border-soft: #f1f1f1;
+    --text: #1a1a1a;
+    --text-soft: #555;
+    --text-faint: #999;
+    --accent: #2563eb;
+    --accent-soft: #eff6ff;
+    --accent-hover: #1d4ed8;
+    --warn: #f59e0b;
+    --danger: #dc2626;
+    --danger-soft: #fef2f2;
+    --success: #16a34a;
+    --green-soft: #ecfdf5;
+    --purple: #7c3aed;
+    --purple-soft: #f3f0ff;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Pretendard Variable", Pretendard, -apple-system, sans-serif;
+    background: #eceef1;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ========== 스위처 ========== */
+  .switcher {
+    position: sticky;
+    top: 0;
+    background: #0f1115;
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 100;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+  }
+  .switcher .label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    color: #9ca3af;
+    margin-right: 10px;
+  }
+  .switcher button {
+    background: transparent;
+    border: 1px solid #374151;
+    color: #d1d5db;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .switcher button:hover {
+    border-color: #6b7280;
+    color: #fff;
+  }
+  .switcher button.active {
+    background: #fff;
+    color: #0f1115;
+    border-color: #fff;
+    font-weight: 700;
+  }
+  .switcher .note {
+    margin-left: auto;
+    font-size: 11px;
+    color: #6b7280;
+  }
+
+  /* ========== 시안 공통 ========== */
+  .design { display: none; padding: 32px; min-height: calc(100vh - 60px); }
+  .design.active { display: block; }
+
+  .concept-header {
+    max-width: 1400px;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .concept-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+  }
+  .concept-sub {
+    font-size: 13px;
+    color: var(--text-soft);
+  }
+  .concept-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .tag {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 99px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .tag.warn { background: #fef3c7; color: #b45309; }
+  .tag.green { background: var(--green-soft); color: var(--success); }
+
+  .shell {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: var(--bg);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  /* video placeholder */
+  .vid-ph {
+    background: linear-gradient(135deg, #2a1a3e 0%, #7c3aed 50%, #ec4899 100%);
+    display: grid;
+    place-items: center;
+    color: rgba(255,255,255,0.6);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    position: relative;
+  }
+  .vid-ph::before {
+    content: "▶";
+    font-size: 56px;
+    color: rgba(255,255,255,0.25);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .vid-ph .tc {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    background: rgba(0,0,0,0.5);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: ui-monospace, monospace;
+    color: #fff;
+    letter-spacing: 0;
+  }
+
+  /* timeline bar */
+  .tl-bar {
+    height: 8px;
+    background: var(--border);
+    border-radius: 99px;
+    position: relative;
+  }
+  .tl-bar .tl-filled {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 32%;
+    background: var(--accent);
+    border-radius: 99px;
+  }
+  .tl-bar .tl-head {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 14px;
+    height: 14px;
+    background: #fff;
+    border: 2px solid var(--accent);
+    border-radius: 99px;
+    left: 32%;
+  }
+  .tl-bar .marker {
+    position: absolute;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 99px;
+    background: var(--warn);
+    transform: translate(-50%, -50%);
+    border: 2px solid #fff;
+    cursor: pointer;
+  }
+  .tl-bar .marker.resolved { background: var(--success); }
+  .tl-bar .marker.mine { background: var(--accent); }
+
+  /* avatar */
+  .avatar {
+    width: 28px; height: 28px;
+    border-radius: 99px;
+    display: grid; place-items: center;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .avatar.sm { width: 24px; height: 24px; font-size: 10px; }
+  .av-seon { background: linear-gradient(135deg, #2563eb, #7c3aed); }
+  .av-jin  { background: linear-gradient(135deg, #ec4899, #f59e0b); }
+  .av-min  { background: linear-gradient(135deg, #16a34a, #06b6d4); }
+
+  /* tc badge */
+  .tc-badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: var(--accent);
+    color: #fff;
+    letter-spacing: 0;
+  }
+  .tc-badge.amber { background: var(--warn); }
+  .tc-badge.green { background: var(--success); }
+  .tc-badge.muted { background: var(--hover); color: var(--text-soft); }
+
+  /* ===================================================================
+     시안 1 · Split Panel (Pro / Dense)
+     =================================================================== */
+  .d1 .topbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .d1 .topbar .fname {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .d1 .topbar .vers {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .d1 .topbar .vers button {
+    background: transparent;
+    border: 0;
+    padding: 5px 12px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-soft);
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .d1 .topbar .vers button.current {
+    background: #fff;
+    color: var(--text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+  .d1 .topbar .vers button .ver-date {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-faint);
+    margin-left: 4px;
+  }
+  .d1 .topbar .right {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .d1 .topbar button.ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-soft);
+    font-family: inherit;
+  }
+
+  .d1 .body { display: flex; min-height: 640px; }
+  .d1 .left { flex: 1; display: flex; flex-direction: column; }
+  .d1 .vid-wrap { aspect-ratio: 16 / 9; background: #0a0a0a; }
+  .d1 .vid-wrap .vid-ph { width: 100%; height: 100%; }
+  .d1 .controls {
+    padding: 14px 18px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .d1 .tl-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .d1 .tl-row .tc-text {
+    font-family: ui-monospace, monospace;
+    font-size: 12px;
+    color: var(--text-soft);
+    min-width: 95px;
+  }
+  .d1 .tl-row .tl-bar { flex: 1; }
+  .d1 .ctl-btns {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .d1 .ctl-btns .play {
+    width: 36px; height: 36px;
+    border-radius: 99px;
+    border: 0;
+    background: var(--text);
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .d1 .ctl-btns .ibtn {
+    width: 30px; height: 30px;
+    border-radius: 6px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-soft);
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .d1 .ctl-btns .speed {
+    padding: 0 10px;
+    height: 30px;
+    border-radius: 6px;
+    background: transparent;
+    border: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-soft);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .d1 .ctl-btns .spacer { flex: 1; }
+  .d1 .ctl-btns .add-here {
+    background: var(--accent);
+    color: #fff;
+    border: 0;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .d1 .right-pane {
+    width: 380px;
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+  .d1 .pane-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .d1 .pane-head h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .d1 .pane-head .count {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 99px;
+  }
+  .d1 .pane-head .filters {
+    margin-left: auto;
+    display: flex;
+    gap: 4px;
+  }
+  .d1 .pane-head .filters button {
+    background: transparent;
+    border: 0;
+    font-size: 11px;
+    padding: 3px 7px;
+    border-radius: 4px;
+    color: var(--text-faint);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .d1 .pane-head .filters button.active {
+    background: var(--hover);
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .d1 .comments { flex: 1; overflow-y: auto; padding: 8px 0; }
+  .d1 .cmt {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border-soft);
+    cursor: pointer;
+  }
+  .d1 .cmt:hover { background: var(--surface); }
+  .d1 .cmt.playing { background: var(--accent-soft); border-left: 3px solid var(--accent); padding-left: 15px; }
+  .d1 .cmt-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .d1 .cmt-head .name {
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .d1 .cmt-head .time {
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-left: auto;
+  }
+  .d1 .cmt-body {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+    margin-left: 36px;
+  }
+  .d1 .cmt-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    margin-left: 36px;
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+  .d1 .cmt-actions span { cursor: pointer; }
+  .d1 .cmt-actions span:hover { color: var(--text); }
+
+  .d1 .reply {
+    margin-left: 36px;
+    margin-top: 10px;
+    padding-left: 12px;
+    border-left: 2px solid var(--border);
+    font-size: 12.5px;
+    color: var(--text-soft);
+  }
+  .d1 .reply .rep-head {
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-bottom: 3px;
+  }
+  .d1 .reply .rep-head strong { color: var(--text); font-weight: 700; }
+
+  .d1 .compose {
+    border-top: 1px solid var(--border);
+    padding: 14px 18px;
+    background: var(--surface);
+  }
+  .d1 .compose .current-tc {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-bottom: 8px;
+  }
+  .d1 .compose textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    min-height: 48px;
+    background: #fff;
+  }
+  .d1 .compose textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .d1 .compose .compose-btns {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .d1 .compose .tool-btns {
+    display: flex;
+    gap: 4px;
+  }
+  .d1 .compose .tool-btns button {
+    width: 28px; height: 28px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: #fff;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text-soft);
+  }
+  .d1 .compose .submit {
+    margin-left: auto;
+    background: var(--accent);
+    color: #fff;
+    border: 0;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  /* ===================================================================
+     시안 2 · Timeline Theater (Cinematic / Spatial)
+     =================================================================== */
+  .d2 .shell { background: #0a0a0a; color: #e5e7eb; }
+  .d2 .top-meta {
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border-bottom: 1px solid #1f2937;
+  }
+  .d2 .top-meta .fname { font-size: 14px; font-weight: 700; color: #fff; }
+  .d2 .top-meta .file-dim { font-size: 12px; color: #9ca3af; }
+  .d2 .top-meta .right { margin-left: auto; display: flex; gap: 8px; }
+  .d2 .top-meta button {
+    background: #1f2937;
+    color: #d1d5db;
+    border: 0;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .d2 .top-meta button.primary { background: #fff; color: #0a0a0a; font-weight: 600; }
+
+  .d2 .body { display: flex; gap: 0; }
+  .d2 .vrail {
+    width: 140px;
+    background: #0f1115;
+    border-right: 1px solid #1f2937;
+    padding: 20px 12px;
+  }
+  .d2 .vrail h4 {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: #6b7280;
+    margin: 0 0 12px 4px;
+    font-weight: 700;
+  }
+  .d2 .vrail .ver-card {
+    display: block;
+    background: #1f2937;
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .d2 .vrail .ver-card.current { border-color: var(--accent); background: #1e3a8a33; }
+  .d2 .vrail .ver-card .thumb {
+    width: 100%; aspect-ratio: 16/9;
+    background: linear-gradient(135deg, #4338ca, #7c3aed);
+    border-radius: 5px;
+    margin-bottom: 6px;
+  }
+  .d2 .vrail .ver-card.v1 .thumb { background: linear-gradient(135deg, #0891b2, #06b6d4); }
+  .d2 .vrail .ver-card.v3 .thumb { background: linear-gradient(135deg, #b91c1c, #ea580c); filter: grayscale(0.3); opacity: 0.6; }
+  .d2 .vrail .ver-card .label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .d2 .vrail .ver-card .date { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+  .d2 .vrail .ver-card .n {
+    font-size: 10px;
+    color: var(--warn);
+    margin-top: 3px;
+  }
+
+  .d2 .center { flex: 1; display: flex; flex-direction: column; }
+  .d2 .stage {
+    background: #000;
+    padding: 24px;
+    aspect-ratio: 16/9;
+    max-height: 520px;
+  }
+  .d2 .stage .vid-ph {
+    width: 100%; height: 100%; border-radius: 8px;
+  }
+
+  .d2 .spatial-tl {
+    background: #0f1115;
+    padding: 20px 24px 16px;
+    border-top: 1px solid #1f2937;
+    position: relative;
+  }
+  .d2 .now-time {
+    font-family: ui-monospace, monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 14px;
+  }
+  .d2 .now-time .total { color: #6b7280; font-size: 14px; margin-left: 6px; }
+  .d2 .st-bar {
+    position: relative;
+    height: 48px;
+  }
+  .d2 .st-bar .base {
+    position: absolute;
+    top: 20px;
+    left: 0; right: 0;
+    height: 4px;
+    background: #1f2937;
+    border-radius: 99px;
+  }
+  .d2 .st-bar .progress {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    width: 32%;
+    height: 4px;
+    background: var(--accent);
+    border-radius: 99px;
+  }
+  .d2 .st-bar .chip {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    background: #1f2937;
+    border: 1px solid #374151;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .d2 .st-bar .chip .cdot {
+    width: 6px; height: 6px; border-radius: 99px;
+    background: var(--warn);
+  }
+  .d2 .st-bar .chip.mine .cdot { background: var(--accent); }
+  .d2 .st-bar .chip.resolved .cdot { background: var(--success); }
+  .d2 .st-bar .chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: translateX(-50%) scale(1.1);
+  }
+  .d2 .st-bar .chip.below { top: 32px; }
+
+  .d2 .bottom-actions {
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #0a0a0a;
+    border-top: 1px solid #1f2937;
+  }
+  .d2 .play-big {
+    width: 44px; height: 44px;
+    border-radius: 99px;
+    background: #fff;
+    color: #0a0a0a;
+    border: 0;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .d2 .add-comment-big {
+    flex: 1;
+    background: #1f2937;
+    border: 1px solid #374151;
+    color: #9ca3af;
+    padding: 10px 16px;
+    border-radius: 8px;
+    text-align: left;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .d2 .add-comment-big .hint {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: 6px;
+  }
+
+  .d2 .right-detail {
+    width: 360px;
+    background: #0f1115;
+    border-left: 1px solid #1f2937;
+    display: flex;
+    flex-direction: column;
+  }
+  .d2 .rd-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid #1f2937;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: #6b7280;
+    font-weight: 700;
+  }
+  .d2 .rd-body { padding: 18px; flex: 1; }
+  .d2 .selected-tc {
+    font-family: ui-monospace, monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--warn);
+    margin-bottom: 12px;
+  }
+  .d2 .rd-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .d2 .rd-author .name { color: #fff; font-weight: 700; font-size: 13px; }
+  .d2 .rd-author .when { color: #6b7280; font-size: 11px; margin-left: auto; }
+  .d2 .rd-msg {
+    color: #e5e7eb;
+    font-size: 14px;
+    line-height: 1.55;
+    margin-bottom: 18px;
+  }
+  .d2 .rd-replies {
+    border-top: 1px solid #1f2937;
+    padding-top: 14px;
+  }
+  .d2 .rd-rep {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .d2 .rd-rep .msg { font-size: 12.5px; color: #d1d5db; line-height: 1.5; }
+  .d2 .rd-rep .nm { font-weight: 600; color: #fff; font-size: 11.5px; margin-bottom: 2px; }
+  .d2 .rd-rep .tm { color: #6b7280; font-size: 10px; }
+  .d2 .rd-reply-input {
+    margin-top: 14px;
+    background: #1f2937;
+    border: 1px solid #374151;
+    color: #e5e7eb;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: inherit;
+  }
+
+  /* ===================================================================
+     시안 3 · Chat Mode (Familiar / Easy)
+     =================================================================== */
+  .d3 .topbar {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .d3 .topbar .fname { font-size: 14px; font-weight: 700; }
+  .d3 .topbar .ver-dropdown {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    background: var(--accent-soft);
+    border-radius: 99px;
+    color: var(--accent);
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .d3 .topbar .ver-dropdown::after { content: "▾"; font-size: 9px; }
+  .d3 .topbar .right { margin-left: auto; font-size: 12px; color: var(--text-faint); }
+
+  .d3 .body { display: flex; min-height: 600px; }
+  .d3 .video-col {
+    flex: 1;
+    background: #0a0a0a;
+    display: flex;
+    flex-direction: column;
+  }
+  .d3 .vid-wrap { aspect-ratio: 16/9; }
+  .d3 .vid-wrap .vid-ph { width: 100%; height: 100%; }
+  .d3 .mini-ctl {
+    padding: 12px 16px;
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .d3 .mini-ctl .play {
+    width: 32px; height: 32px;
+    border-radius: 99px;
+    background: #fff;
+    border: 0;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .d3 .mini-ctl .tc-disp {
+    font-family: ui-monospace, monospace;
+    font-size: 12px;
+    color: #d1d5db;
+  }
+  .d3 .mini-ctl .tl-thin {
+    flex: 1;
+    height: 6px;
+    background: #374151;
+    border-radius: 99px;
+    position: relative;
+  }
+  .d3 .mini-ctl .tl-thin .f {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 32%;
+    background: var(--accent);
+    border-radius: 99px;
+  }
+  .d3 .mini-ctl .tl-thin .marker {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px; height: 8px;
+    border-radius: 99px;
+    background: var(--warn);
+    border: 1.5px solid #fff;
+  }
+
+  .d3 .chat-col {
+    width: 420px;
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    background: #fbfbfc;
+  }
+  .d3 .chat-head {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+  }
+  .d3 .chat-head h3 { margin: 0; font-size: 14px; font-weight: 700; }
+  .d3 .chat-head .viewers {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .d3 .chat-head .viewers .avatar {
+    width: 22px; height: 22px; font-size: 9px;
+    border: 2px solid #fff;
+    margin-left: -6px;
+  }
+
+  .d3 .chat-stream {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .d3 .msg-group { display: flex; gap: 10px; }
+  .d3 .msg-group.mine { flex-direction: row-reverse; }
+  .d3 .msg-group .msg-content { flex: 1; min-width: 0; }
+  .d3 .msg-group.mine .msg-content { display: flex; flex-direction: column; align-items: flex-end; }
+  .d3 .msg-meta {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-bottom: 3px;
+  }
+  .d3 .msg-meta strong { color: var(--text); font-weight: 700; font-size: 11.5px; }
+  .d3 .msg-bubble {
+    display: inline-block;
+    background: #fff;
+    border: 1px solid var(--border);
+    padding: 9px 12px;
+    border-radius: 14px;
+    border-top-left-radius: 4px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+    max-width: 100%;
+  }
+  .d3 .msg-group.mine .msg-bubble {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    border-top-left-radius: 14px;
+    border-top-right-radius: 4px;
+  }
+  .d3 .msg-bubble .tc-inline {
+    display: inline-block;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-family: ui-monospace, monospace;
+    font-size: 10.5px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: 6px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .d3 .msg-group.mine .msg-bubble .tc-inline {
+    background: rgba(255,255,255,0.25);
+    color: #fff;
+  }
+  .d3 .msg-bubble.resolved {
+    background: var(--green-soft);
+    border-color: #bbf7d0;
+    color: var(--text-soft);
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+  .d3 .msg-bubble.resolved .tc-inline { background: var(--green-soft); color: var(--success); }
+
+  .d3 .replies {
+    margin-top: 6px;
+    margin-left: 12px;
+    padding-left: 10px;
+    border-left: 2px solid var(--border);
+  }
+  .d3 .replies .msg-group { margin-bottom: 8px; }
+  .d3 .replies .msg-bubble { font-size: 12px; padding: 7px 10px; }
+
+  .d3 .msg-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+  .d3 .msg-actions span { cursor: pointer; }
+
+  .d3 .system-msg {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-faint);
+    padding: 4px 12px;
+    margin: 4px auto;
+    background: var(--hover);
+    border-radius: 99px;
+    width: fit-content;
+  }
+
+  .d3 .chat-input {
+    border-top: 1px solid var(--border);
+    padding: 10px 12px;
+    background: #fff;
+  }
+  .d3 .chat-input .now-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 3px 8px;
+    border-radius: 99px;
+    font-size: 10.5px;
+    font-weight: 700;
+    font-family: ui-monospace, monospace;
+    margin-bottom: 6px;
+    cursor: pointer;
+  }
+  .d3 .chat-input .ibox {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  .d3 .chat-input .ibox textarea {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 8px 14px;
+    resize: none;
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    min-height: 36px;
+    max-height: 80px;
+  }
+  .d3 .chat-input .ibox textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .d3 .chat-input .ibox .send {
+    background: var(--accent);
+    color: #fff;
+    border: 0;
+    width: 36px; height: 36px;
+    border-radius: 99px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .d3 .chat-input .tools-row {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+  }
+  .d3 .chat-input .tools-row button {
+    background: transparent;
+    border: 0;
+    color: var(--text-faint);
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .d3 .chat-input .tools-row button:hover { background: var(--hover); color: var(--text); }
+
+  /* ========== 공통 푸터 설명 ========== */
+  .concept-notes {
+    max-width: 1400px;
+    margin: 24px auto 0;
+    padding: 20px 24px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  .concept-notes h4 {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: 0.02em;
+  }
+  .concept-notes ul {
+    margin: 0 0 14px;
+    padding-left: 18px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-soft);
+  }
+  .concept-notes ul:last-child { margin-bottom: 0; }
+  .concept-notes .pro { color: var(--success); font-weight: 700; }
+  .concept-notes .con { color: var(--danger); font-weight: 700; }
+
+  .notes-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  /* ========== 공통 아이콘 ========== */
+  .icn {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+    display: inline-block;
+    vertical-align: middle;
+  }
+  .icn-sm { width: 12px; height: 12px; }
+  .icn-lg { width: 18px; height: 18px; }
+  .icn-xl { width: 24px; height: 24px; }
+
+  /* ========== 카테고리 색상 시스템 ========== */
+  .cat-txt   { --cat-c: #dc2626; --cat-bg: #fef2f2; }
+  .cat-cut   { --cat-c: #7c3aed; --cat-bg: #f3f0ff; }
+  .cat-color { --cat-c: #ea580c; --cat-bg: #fff7ed; }
+  .cat-audio { --cat-c: #0891b2; --cat-bg: #ecfeff; }
+  .cat-motion{ --cat-c: #16a34a; --cat-bg: #ecfdf5; }
+  .cat-etc   { --cat-c: #6b7280; --cat-bg: #f3f4f6; }
+
+  .cat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--cat-c);
+    background: var(--cat-bg);
+    border: 1px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .cat-chip.active { border-color: var(--cat-c); }
+  .cat-chip .n { font-weight: 700; opacity: 0.7; }
+
+  /* ===================================================================
+     시안 4 · Swim Lanes (카테고리별 가로 트랙)
+     =================================================================== */
+  .d4 .topbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .d4 .topbar .fname { font-size: 14px; font-weight: 700; }
+  .d4 .topbar .vers {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .d4 .topbar .vers button {
+    background: transparent; border: 0;
+    padding: 5px 12px;
+    font-family: inherit;
+    font-size: 12px; font-weight: 600;
+    color: var(--text-soft);
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .d4 .topbar .vers button.current {
+    background: #fff; color: var(--text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+  .d4 .topbar .right { margin-left: auto; display: flex; gap: 8px; }
+  .d4 .topbar button.ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    font-size: 12px; font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-soft);
+    font-family: inherit;
+  }
+
+  .d4 .body { display: flex; min-height: 600px; }
+  .d4 .left { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .d4 .vid-wrap { aspect-ratio: 16 / 9; background: #0a0a0a; max-height: 420px; }
+  .d4 .vid-wrap .vid-ph { width: 100%; height: 100%; }
+
+  .d4 .playbar {
+    background: var(--surface);
+    padding: 8px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .d4 .playbar .play {
+    width: 32px; height: 32px;
+    border-radius: 99px;
+    background: var(--text); color: #fff;
+    border: 0; cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .d4 .playbar .tc-text {
+    font-family: ui-monospace, monospace;
+    font-size: 12px;
+    color: var(--text-soft);
+    min-width: 110px;
+  }
+  .d4 .playbar .add-here {
+    margin-left: auto;
+    background: var(--accent);
+    color: #fff;
+    border: 0;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .d4 .lanes-wrap {
+    border-top: 1px solid var(--border);
+    padding: 14px 16px;
+    background: #fff;
+    position: relative;
+  }
+  .d4 .lanes-head {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 10px;
+  }
+  .d4 .lanes-head h4 {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--text-faint);
+  }
+  .d4 .lanes-head .legend-note {
+    font-size: 11px; color: var(--text-faint); margin-left: auto;
+  }
+
+  .d4 .lane {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 34px;
+  }
+  .d4 .lane .lbl {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 130px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--cat-c);
+    cursor: pointer;
+  }
+  .d4 .lane .lbl .tag-ico {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    background: var(--cat-bg);
+    display: grid; place-items: center;
+  }
+  .d4 .lane .lbl .n { color: var(--text-faint); font-weight: 500; margin-left: auto; font-size: 11px; }
+  .d4 .lane .track {
+    flex: 1;
+    height: 24px;
+    background: var(--surface);
+    border-radius: 4px;
+    position: relative;
+  }
+  .d4 .lane .track .m {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px; height: 10px;
+    background: var(--cat-c);
+    border-radius: 99px;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px var(--cat-c);
+    cursor: pointer;
+  }
+  .d4 .lane .track .m.resolved {
+    background: transparent;
+    box-shadow: 0 0 0 1.5px var(--cat-c);
+  }
+  .d4 .lane .track .m.active {
+    transform: translate(-50%, -50%) scale(1.3);
+    z-index: 2;
+  }
+  .d4 .lane.dim { opacity: 0.45; }
+  .d4 .lane.dim .track { background: #fcfcfc; }
+
+  .d4 .playhead-line {
+    position: absolute;
+    top: 38px;
+    bottom: 0;
+    width: 2px;
+    background: var(--accent);
+    pointer-events: none;
+  }
+  .d4 .playhead-line::before {
+    content: "";
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px; height: 10px;
+    background: var(--accent);
+    border-radius: 99px;
+    border: 2px solid #fff;
+  }
+  .d4 .time-axis {
+    display: flex;
+    justify-content: space-between;
+    font-family: ui-monospace, monospace;
+    font-size: 10px;
+    color: var(--text-faint);
+    padding: 6px 0 0 142px;
+    margin-top: 2px;
+  }
+
+  .d4 .right-pane {
+    width: 340px;
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+  }
+  .d4 .rp-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: #fff;
+  }
+  .d4 .rp-head .cat-ind {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--cat-bg);
+    color: var(--cat-c);
+    padding: 3px 9px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .d4 .rp-head .seek-tc {
+    font-family: ui-monospace, monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .d4 .rp-head .meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--text-soft);
+  }
+  .d4 .rp-body { flex: 1; padding: 18px; overflow-y: auto; }
+  .d4 .rp-msg { font-size: 13.5px; line-height: 1.55; color: var(--text); margin-bottom: 14px; }
+  .d4 .rp-replies { border-top: 1px solid var(--border); padding-top: 12px; }
+  .d4 .rp-rep { display: flex; gap: 8px; margin-bottom: 10px; }
+  .d4 .rp-rep .body { font-size: 12.5px; color: var(--text-soft); line-height: 1.5; display: block; min-height: 0; }
+  .d4 .rp-rep .h { font-size: 11px; color: var(--text-faint); margin-bottom: 2px; }
+  .d4 .rp-rep .h strong { color: var(--text); font-weight: 700; }
+  .d4 .rp-foot {
+    padding: 12px 18px;
+    border-top: 1px solid var(--border);
+    background: #fff;
+    display: flex;
+    gap: 8px;
+  }
+  .d4 .rp-foot .btn-resolve {
+    flex: 1;
+    background: var(--success);
+    color: #fff;
+    border: 0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+  .d4 .rp-foot .btn-reply {
+    flex: 1;
+    background: #fff;
+    color: var(--text-soft);
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* ===================================================================
+     시안 5 · Thumbnail Strip (장면 중심)
+     =================================================================== */
+  .d5 .topbar {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .d5 .topbar .fname { font-size: 14px; font-weight: 700; }
+  .d5 .topbar .ver-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 3px 9px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .d5 .topbar .right { margin-left: auto; display: flex; gap: 8px; }
+  .d5 .topbar button.ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    font-size: 12px; font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-soft);
+    font-family: inherit;
+  }
+
+  .d5 .body { display: flex; min-height: 600px; }
+  .d5 .left { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+  .d5 .vid-wrap { aspect-ratio: 16 / 9; background: #0a0a0a; max-height: 420px; }
+  .d5 .vid-wrap .vid-ph { width: 100%; height: 100%; }
+
+  .d5 .scrub {
+    padding: 10px 16px 6px;
+    background: #fafafa;
+    border-top: 1px solid var(--border);
+  }
+  .d5 .scrub-bar {
+    height: 5px;
+    background: var(--border);
+    border-radius: 99px;
+    position: relative;
+  }
+  .d5 .scrub-bar .f {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 32%; background: var(--accent); border-radius: 99px;
+  }
+  .d5 .scrub-bar .hd {
+    position: absolute; top: 50%; left: 32%;
+    transform: translate(-50%, -50%);
+    width: 12px; height: 12px;
+    background: #fff;
+    border: 2px solid var(--accent);
+    border-radius: 99px;
+  }
+
+  .d5 .thumb-strip {
+    background: #fff;
+    border-top: 1px solid var(--border);
+    padding: 14px 14px 18px;
+    overflow-x: auto;
+  }
+  .d5 .thumb-strip .ts-row {
+    display: flex;
+    gap: 8px;
+  }
+  .d5 .tb {
+    flex-shrink: 0;
+    width: 110px;
+    cursor: pointer;
+    position: relative;
+  }
+  .d5 .tb .img {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: linear-gradient(135deg, #1e3a8a, #7c3aed);
+    border-radius: 6px;
+    border: 2px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .d5 .tb.current .img { border-color: var(--accent); }
+  .d5 .tb:nth-child(2) .img { background: linear-gradient(135deg, #0891b2, #7c3aed); }
+  .d5 .tb:nth-child(3) .img { background: linear-gradient(135deg, #7c3aed, #ec4899); }
+  .d5 .tb:nth-child(4) .img { background: linear-gradient(135deg, #ec4899, #f59e0b); }
+  .d5 .tb:nth-child(5) .img { background: linear-gradient(135deg, #f59e0b, #16a34a); }
+  .d5 .tb:nth-child(6) .img { background: linear-gradient(135deg, #16a34a, #0891b2); }
+  .d5 .tb:nth-child(7) .img { background: linear-gradient(135deg, #0891b2, #1e3a8a); }
+  .d5 .tb:nth-child(8) .img { background: linear-gradient(135deg, #1e3a8a, #ec4899); }
+  .d5 .tb:nth-child(9) .img { background: linear-gradient(135deg, #ec4899, #7c3aed); }
+  .d5 .tb:nth-child(10) .img { background: linear-gradient(135deg, #7c3aed, #1e3a8a); }
+
+  .d5 .tb .tc {
+    font-family: ui-monospace, monospace;
+    font-size: 10px;
+    color: var(--text-faint);
+    margin-top: 4px;
+    display: block;
+    text-align: center;
+  }
+  .d5 .tb.current .tc { color: var(--accent); font-weight: 700; }
+
+  .d5 .tb .badges {
+    position: absolute;
+    top: 4px; right: 4px;
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap-reverse;
+    justify-content: flex-end;
+    max-width: 90px;
+  }
+  .d5 .tb .bdg {
+    width: 18px; height: 18px;
+    border-radius: 99px;
+    background: var(--cat-c);
+    display: grid; place-items: center;
+    color: #fff;
+    border: 1.5px solid #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  }
+  .d5 .tb .bdg.count {
+    width: auto; min-width: 18px; padding: 0 5px;
+    font-size: 10px; font-weight: 700;
+    border-radius: 9px;
+  }
+  .d5 .tb:hover .img { transform: scale(1.03); transition: transform 0.15s; }
+
+  .d5 .cat-legend {
+    display: flex;
+    gap: 6px;
+    padding: 10px 16px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .d5 .side {
+    width: 360px;
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+  .d5 .side-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .d5 .side-head h3 { margin: 0; font-size: 14px; font-weight: 700; }
+  .d5 .side-head .mini-filter {
+    margin-left: auto;
+    background: transparent;
+    border: 0;
+    color: var(--text-faint);
+    font-size: 12px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-family: inherit;
+  }
+  .d5 .side-head .mini-filter:hover { background: var(--hover); color: var(--text); }
+
+  .d5 .cmt-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+  .d5 .cmt-item {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border-soft);
+    cursor: pointer;
+    display: flex;
+    gap: 10px;
+  }
+  .d5 .cmt-item:hover { background: var(--surface); }
+  .d5 .cmt-item.selected { background: var(--accent-soft); border-left: 3px solid var(--accent); padding-left: 15px; }
+  .d5 .cmt-item .cat-ico {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    background: var(--cat-bg);
+    color: var(--cat-c);
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .d5 .cmt-item .body { flex: 1; min-width: 0; display: block; min-height: 0; }
+  .d5 .cmt-item .body .top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    margin-bottom: 4px;
+  }
+  .d5 .cmt-item .body .top .tc {
+    font-family: ui-monospace, monospace;
+    color: var(--cat-c);
+    font-weight: 700;
+  }
+  .d5 .cmt-item .body .top .name { color: var(--text); font-weight: 600; }
+  .d5 .cmt-item .body .top .when { color: var(--text-faint); margin-left: auto; }
+  .d5 .cmt-item .body .txt { font-size: 12.5px; line-height: 1.5; color: var(--text-soft); }
+  .d5 .cmt-item.resolved .body .txt { text-decoration: line-through; opacity: 0.6; }
+  .d5 .cmt-item .body .rep-n {
+    font-size: 11px; color: var(--text-faint); margin-top: 4px;
+    display: inline-flex; gap: 4px; align-items: center;
+  }
+
+  .d5 .side-foot {
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .d5 .side-foot .quick-add {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 12px;
+    color: var(--text-faint);
+    cursor: pointer;
+  }
+  .d5 .side-foot .quick-add .now {
+    font-family: ui-monospace, monospace;
+    background: var(--accent);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10.5px;
+    font-weight: 700;
+  }
+
+  /* ===================================================================
+     시안 6 · Smart Heatmap (카테고리 필터 + 밀도 밴드)
+     =================================================================== */
+  .d6 .topbar {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .d6 .topbar .fname { font-size: 14px; font-weight: 700; }
+  .d6 .topbar .vbtns {
+    display: flex;
+    gap: 2px;
+    margin-left: 8px;
+  }
+  .d6 .topbar .vbtns button {
+    background: transparent; border: 0;
+    padding: 4px 10px;
+    font-family: inherit;
+    font-size: 12px; font-weight: 600;
+    color: var(--text-faint);
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .d6 .topbar .vbtns button.current {
+    background: var(--text);
+    color: #fff;
+  }
+
+  .d6 .filter-bar {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .d6 .filter-bar .flabel {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--text-faint);
+    margin-right: 4px;
+  }
+  .d6 .filter-bar .divider {
+    width: 1px;
+    height: 18px;
+    background: var(--border);
+    margin: 0 6px;
+  }
+  .d6 .filter-bar .toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    border-radius: 99px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-soft);
+    background: #fff;
+    border: 1px solid var(--border);
+  }
+  .d6 .filter-bar .toggle.on {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .d6 .body { display: flex; min-height: 580px; }
+  .d6 .left { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .d6 .vid-wrap { aspect-ratio: 16/9; background: #0a0a0a; max-height: 440px; }
+  .d6 .vid-wrap .vid-ph { width: 100%; height: 100%; }
+
+  .d6 .hmap-wrap {
+    padding: 14px 20px;
+    background: #fff;
+    border-top: 1px solid var(--border);
+  }
+  .d6 .hmap-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .d6 .hmap-head .tc-big {
+    font-family: ui-monospace, monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .d6 .hmap-head .tc-big .total {
+    color: var(--text-faint);
+    font-size: 13px;
+    font-weight: 500;
+    margin-left: 4px;
+  }
+  .d6 .hmap-head .summary {
+    font-size: 11.5px;
+    color: var(--text-faint);
+  }
+  .d6 .hmap-head .summary strong { color: var(--text); font-weight: 700; }
+
+  .d6 .hmap {
+    height: 40px;
+    position: relative;
+    background: var(--surface);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+  .d6 .hmap .bar {
+    position: absolute;
+    bottom: 0;
+    border-radius: 2px 2px 0 0;
+    opacity: 0.85;
+  }
+  .d6 .hmap .playhead {
+    position: absolute;
+    top: -4px; bottom: -4px;
+    width: 2px;
+    background: var(--text);
+    z-index: 3;
+  }
+  .d6 .hmap .playhead::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px; height: 12px;
+    background: var(--text);
+    border-radius: 99px;
+    border: 2px solid #fff;
+  }
+
+  .d6 .axis {
+    display: flex;
+    justify-content: space-between;
+    font-family: ui-monospace, monospace;
+    font-size: 10px;
+    color: var(--text-faint);
+    margin-top: 4px;
+  }
+
+  .d6 .play-ctl {
+    padding: 12px 20px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .d6 .play-ctl .play {
+    width: 36px; height: 36px;
+    background: var(--text); color: #fff;
+    border: 0; border-radius: 99px;
+    cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .d6 .play-ctl .add-here {
+    margin-left: auto;
+    background: var(--accent);
+    color: #fff;
+    border: 0;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .d6 .side {
+    width: 360px;
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+  .d6 .side-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .d6 .side-head h3 { margin: 0; font-size: 14px; font-weight: 700; }
+  .d6 .side-head .n {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 99px;
+  }
+
+  .d6 .cmts { flex: 1; overflow-y: auto; padding: 6px 0; }
+  .d6 .cmt {
+    display: flex;
+    gap: 10px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border-soft);
+    cursor: pointer;
+  }
+  .d6 .cmt:hover { background: var(--surface); }
+  .d6 .cmt .ci {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--cat-bg);
+    color: var(--cat-c);
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .d6 .cmt .b { flex: 1; min-width: 0; }
+  .d6 .cmt .h {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11.5px; margin-bottom: 4px;
+  }
+  .d6 .cmt .h .tc {
+    background: var(--cat-c); color: #fff;
+    font-family: ui-monospace, monospace;
+    font-size: 10.5px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-weight: 700;
+  }
+  .d6 .cmt .h .nm { font-weight: 700; }
+  .d6 .cmt .h .when { color: var(--text-faint); margin-left: auto; }
+  .d6 .cmt .msg { font-size: 13px; line-height: 1.5; color: var(--text); }
+  .d6 .cmt .foot {
+    display: flex; gap: 10px; margin-top: 6px;
+    font-size: 11px; color: var(--text-faint);
+  }
+  .d6 .cmt.resolved .msg { opacity: 0.55; text-decoration: line-through; }
+  .d6 .cmt.hidden { display: none; }
+
+  .d6 .empty-note {
+    padding: 16px 18px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  /* ===================================================================
+     5A · LINEAR MONO — 미니멀, 모노톤, 카테고리는 작은 점으로만
+     =================================================================== */
+  .d5a .shell {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 8px 40px rgba(0,0,0,0.03);
+  }
+  .d5a .topbar {
+    padding: 18px 22px;
+    border-bottom: 1px solid #f1f1f2;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .d5a .topbar .fname {
+    font-size: 14px; font-weight: 600; letter-spacing: -0.01em; color: #09090b;
+  }
+  .d5a .vpill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #fafafa;
+    border: 1px solid #e4e4e7;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #52525b;
+    cursor: pointer;
+  }
+  .d5a .right-actions {
+    margin-left: auto; display: flex; gap: 6px;
+  }
+  .d5a .right-actions button {
+    background: transparent; border: 0;
+    padding: 6px 10px;
+    font-family: inherit; font-size: 12px; font-weight: 500;
+    color: #71717a; cursor: pointer;
+    border-radius: 6px;
+  }
+  .d5a .right-actions button:hover { background: #fafafa; color: #09090b; }
+
+  .d5a .body { display: flex; min-height: 600px; }
+  .d5a .left { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .d5a .vid {
+    aspect-ratio: 16/9; background: #09090b;
+    max-height: 420px; position: relative;
+  }
+  .d5a .vid::after {
+    content: "VIDEO"; position: absolute; inset: 0;
+    display: grid; place-items: center;
+    color: rgba(255,255,255,0.15);
+    font-size: 11px; letter-spacing: 0.25em; font-weight: 600;
+  }
+  .d5a .vid .tc-hud {
+    position: absolute; bottom: 14px; left: 14px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(8px);
+    color: #fafafa;
+    font-family: ui-monospace, monospace;
+    font-size: 11px; padding: 4px 10px; border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .d5a .scr {
+    padding: 10px 22px 4px; background: #fafafa;
+    border-top: 1px solid #f1f1f2;
+  }
+  .d5a .scr-bar {
+    height: 3px; background: #e4e4e7; border-radius: 99px; position: relative;
+  }
+  .d5a .scr-bar .f {
+    position: absolute; inset: 0 auto 0 0;
+    width: 32%; background: #09090b; border-radius: 99px;
+  }
+  .d5a .strip {
+    padding: 14px 22px 20px; overflow-x: auto;
+    background: #fafafa;
+  }
+  .d5a .strip-row { display: flex; gap: 10px; }
+  .d5a .tb { flex-shrink: 0; width: 100px; cursor: pointer; }
+  .d5a .tb .frame {
+    width: 100%; aspect-ratio: 16/9;
+    background: #18181b;
+    border-radius: 4px;
+    border: 1.5px solid transparent;
+    position: relative;
+    overflow: hidden;
+  }
+  .d5a .tb .frame::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 4px),
+      linear-gradient(135deg, #27272a 0%, #09090b 100%);
+  }
+  .d5a .tb.current .frame { border-color: #09090b; }
+  .d5a .tb .tc-lbl {
+    display: block; text-align: center;
+    font-family: ui-monospace, monospace;
+    font-size: 10px; color: #a1a1aa;
+    margin-top: 6px; letter-spacing: 0.03em;
+  }
+  .d5a .tb.current .tc-lbl { color: #09090b; font-weight: 700; }
+  .d5a .tb .bdg-group {
+    position: absolute; bottom: 6px; left: 6px;
+    display: flex; gap: 3px; z-index: 2;
+  }
+  .d5a .tb .bdg {
+    width: 14px; height: 14px; background: #09090b;
+    border-radius: 3px; display: grid; place-items: center;
+    color: #fff; position: relative;
+  }
+  .d5a .tb .bdg::after {
+    content: ""; position: absolute;
+    top: -3px; right: -3px;
+    width: 6px; height: 6px;
+    border-radius: 99px;
+    background: var(--d);
+    border: 1.5px solid #09090b;
+  }
+  .d5a .tb .bdg.r::after { background: #16a34a; }
+  .d5a .bdg.txt { --d: #ef4444; }
+  .d5a .bdg.cut { --d: #8b5cf6; }
+  .d5a .bdg.col { --d: #f97316; }
+  .d5a .bdg.aud { --d: #06b6d4; }
+  .d5a .bdg.etc { --d: #71717a; }
+
+  .d5a .legend {
+    padding: 10px 22px; background: #fff;
+    border-top: 1px solid #f1f1f2;
+    display: flex; gap: 18px; flex-wrap: wrap;
+  }
+  .d5a .legend .ltag {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11.5px; color: #71717a; font-weight: 500; cursor: pointer;
+  }
+  .d5a .legend .ltag.active { color: #09090b; font-weight: 700; }
+  .d5a .legend .ltag .dot {
+    width: 6px; height: 6px; border-radius: 99px; background: var(--d);
+  }
+  .d5a .legend .ltag .n { color: #a1a1aa; font-weight: 500; }
+  .d5a .legend .ltag.active .n { color: #52525b; }
+
+  .d5a .side {
+    width: 340px; border-left: 1px solid #f1f1f2;
+    display: flex; flex-direction: column;
+  }
+  .d5a .side-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f1f2;
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  .d5a .side-head h3 {
+    margin: 0; font-size: 13px;
+    font-weight: 700; letter-spacing: -0.01em; color: #09090b;
+  }
+  .d5a .side-head .n { color: #a1a1aa; font-size: 13px; font-weight: 500; }
+  .d5a .side-head .filt {
+    margin-left: auto;
+    background: transparent; border: 0;
+    font-size: 11px; color: #71717a; cursor: pointer;
+    padding: 4px 8px; border-radius: 4px;
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: inherit;
+  }
+  .d5a .cmts { flex: 1; overflow-y: auto; }
+  .d5a .cm {
+    padding: 16px 20px; border-bottom: 1px solid #f4f4f5; cursor: pointer;
+    display: block; min-height: 0;
+  }
+  .d5a .cm:hover { background: #fafafa; }
+  .d5a .cm.sel { background: #fafafa; box-shadow: inset 2px 0 0 #09090b; }
+  .d5a .cm-meta {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 6px; font-size: 11px; color: #71717a;
+  }
+  .d5a .cm-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-weight: 700; font-size: 10px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--c);
+  }
+  .d5a .cm-tag .dt {
+    width: 5px; height: 5px; border-radius: 99px; background: currentColor;
+  }
+  .d5a .cm-tag.txt { --c: #ef4444; }
+  .d5a .cm-tag.cut { --c: #8b5cf6; }
+  .d5a .cm-tag.col { --c: #f97316; }
+  .d5a .cm-tag.aud { --c: #06b6d4; }
+  .d5a .cm-tag.etc { --c: #71717a; }
+  .d5a .cm-tc {
+    font-family: ui-monospace, monospace;
+    font-size: 11px; font-weight: 600; color: #09090b;
+  }
+  .d5a .cm-who { font-weight: 600; color: #27272a; }
+  .d5a .cm-when { margin-left: auto; font-size: 11px; }
+  .d5a .cm-msg {
+    font-size: 13px; line-height: 1.55; color: #27272a;
+    letter-spacing: -0.005em;
+  }
+  .d5a .cm.resolved .cm-msg { opacity: 0.45; text-decoration: line-through; }
+  .d5a .cm.resolved .cm-when { color: #16a34a; font-weight: 600; }
+  .d5a .cm-rep {
+    font-size: 11px; color: #a1a1aa;
+    margin-top: 6px;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .d5a .compose {
+    border-top: 1px solid #f1f1f2;
+    padding: 14px 16px; background: #fafafa;
+  }
+  .d5a .compose .at {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #09090b; color: #fff;
+    padding: 3px 8px; border-radius: 4px;
+    font-family: ui-monospace, monospace;
+    font-size: 10.5px; font-weight: 700; margin-bottom: 8px;
+  }
+  .d5a .compose input {
+    width: 100%; background: #fff; border: 1px solid #e4e4e7;
+    padding: 9px 12px; border-radius: 6px;
+    font-family: inherit; font-size: 12.5px; outline: none;
+  }
+  .d5a .compose input:focus { border-color: #09090b; }
+  .d5a .compose .auto {
+    font-size: 11px; color: #a1a1aa;
+    margin-top: 8px; display: flex; align-items: center; gap: 6px;
+  }
+  .d5a .compose .auto .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 7px; background: #fff;
+    border: 1px solid #e4e4e7; border-radius: 4px;
+    font-weight: 700; color: #09090b;
+    font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .d5a .compose .auto .chip .dt {
+    width: 5px; height: 5px; border-radius: 99px;
+  }
+
+  /* ===================================================================
+     5B · STUDIO DARK — 시네마 다크, 앰버 포인트, 필름 느낌
+     =================================================================== */
+  .d5b .shell {
+    background: #0c0c0e; border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 20px 60px rgba(0,0,0,0.4);
+    color: #fafafa;
+  }
+  .d5b .topbar {
+    padding: 16px 22px;
+    border-bottom: 1px solid #1f1f23;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .d5b .topbar .fname {
+    font-size: 14px; font-weight: 700; color: #fafafa; letter-spacing: -0.01em;
+  }
+  .d5b .vpill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #18181b; border: 1px solid #2a2a30;
+    color: #fbbf24; padding: 4px 10px; border-radius: 4px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+    cursor: pointer;
+  }
+  .d5b .right-actions {
+    margin-left: auto; display: flex; gap: 6px;
+  }
+  .d5b .right-actions button {
+    background: transparent; border: 0; color: #a1a1aa;
+    padding: 6px 12px; font-family: inherit; font-size: 12px;
+    font-weight: 500; cursor: pointer; border-radius: 5px;
+  }
+  .d5b .right-actions button:hover { background: #18181b; color: #fafafa; }
+
+  .d5b .body { display: flex; min-height: 600px; }
+  .d5b .left { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .d5b .vid {
+    aspect-ratio: 16/9; background: #000;
+    max-height: 440px; position: relative;
+  }
+  .d5b .vid::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 50% at 50% 45%, #1c1c1f 0%, #000 100%);
+  }
+  .d5b .vid::after {
+    content: "VIDEO"; position: absolute; inset: 0;
+    display: grid; place-items: center;
+    color: rgba(255,255,255,0.2);
+    font-size: 11px; letter-spacing: 0.3em; font-weight: 700;
+  }
+  .d5b .vid .play-hud {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px; height: 60px;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+    border-radius: 99px; display: grid; place-items: center;
+    color: #fbbf24; z-index: 2;
+    border: 1px solid rgba(251,191,36,0.25);
+  }
+  .d5b .vid .tc-hud {
+    position: absolute; bottom: 18px; left: 18px;
+    color: #fbbf24;
+    font-family: ui-monospace, monospace;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.05em;
+    z-index: 2;
+    background: rgba(0,0,0,0.6); padding: 5px 12px; border-radius: 4px;
+    border: 1px solid rgba(251,191,36,0.2);
+  }
+  .d5b .scr {
+    padding: 12px 22px; background: #0c0c0e; border-top: 1px solid #1f1f23;
+  }
+  .d5b .scr-bar {
+    height: 4px; background: #1f1f23; border-radius: 99px; position: relative;
+  }
+  .d5b .scr-bar .f {
+    position: absolute; inset: 0 auto 0 0;
+    width: 32%; background: #fbbf24; border-radius: 99px;
+  }
+  .d5b .scr-bar .hd {
+    position: absolute; top: 50%; left: 32%;
+    transform: translate(-50%, -50%);
+    width: 12px; height: 12px; background: #fbbf24;
+    border-radius: 99px;
+    box-shadow: 0 0 0 5px rgba(251,191,36,0.15);
+  }
+
+  .d5b .strip {
+    background: #0c0c0e;
+    padding: 16px 22px 20px;
+    overflow-x: auto;
+    border-top: 1px solid #1f1f23;
+  }
+  .d5b .strip-row { display: flex; gap: 4px; }
+  .d5b .tb {
+    flex-shrink: 0; width: 110px; position: relative; cursor: pointer;
+  }
+  .d5b .tb .frame {
+    width: 100%; aspect-ratio: 16/9;
+    background: #000;
+    border-radius: 2px;
+    border: 2px solid transparent;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .d5b .tb.current .frame {
+    border-color: #fbbf24;
+    box-shadow: 0 0 0 4px rgba(251,191,36,0.1);
+  }
+  .d5b .tb .frame::before,
+  .d5b .tb .frame::after {
+    content: ""; position: absolute; left: 3px; right: 3px; height: 4px;
+    background-image: radial-gradient(circle, #000 1px, transparent 1.5px);
+    background-size: 8px 4px;
+    background-color: #18181b;
+    z-index: 2;
+  }
+  .d5b .tb .frame::before { top: 0; }
+  .d5b .tb .frame::after { bottom: 0; }
+  .d5b .tb .frame .inner {
+    position: absolute; inset: 4px;
+    background: linear-gradient(135deg, #2a2a2e 0%, #0a0a0c 100%);
+    border-radius: 1px;
+  }
+  .d5b .tb .tc-lbl {
+    display: block; text-align: center;
+    font-family: ui-monospace, monospace;
+    font-size: 10px; color: #52525b;
+    margin-top: 7px; letter-spacing: 0.05em;
+  }
+  .d5b .tb.current .tc-lbl { color: #fbbf24; font-weight: 700; }
+
+  .d5b .tb .bdg-group {
+    position: absolute; top: 8px; right: 5px;
+    display: flex; flex-direction: column; gap: 3px; z-index: 3;
+  }
+  .d5b .tb .bdg {
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+    border: 1px solid; border-radius: 3px;
+    padding: 2px 5px; font-size: 9px; font-weight: 700;
+    letter-spacing: 0.06em;
+    display: inline-flex; align-items: center; gap: 3px;
+  }
+  .d5b .bdg.txt { border-color: #ef4444; color: #fca5a5; }
+  .d5b .bdg.cut { border-color: #a78bfa; color: #c4b5fd; }
+  .d5b .bdg.col { border-color: #fb923c; color: #fdba74; }
+  .d5b .bdg.aud { border-color: #22d3ee; color: #67e8f9; }
+  .d5b .bdg.etc { border-color: #71717a; color: #d4d4d8; }
+  .d5b .bdg.r   { border-color: #22c55e; color: #86efac; }
+
+  .d5b .legend {
+    padding: 12px 22px; background: #0c0c0e;
+    border-top: 1px solid #1f1f23;
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .d5b .legend .ltag {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 10px; border-radius: 4px;
+    font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: #71717a; background: transparent;
+    border: 1px solid transparent; cursor: pointer;
+  }
+  .d5b .legend .ltag.active {
+    background: rgba(251,191,36,0.08);
+    color: #fbbf24; border-color: rgba(251,191,36,0.25);
+  }
+  .d5b .legend .ltag .n { opacity: 0.65; }
+
+  .d5b .side {
+    width: 380px; background: #0c0c0e;
+    border-left: 1px solid #1f1f23;
+    display: flex; flex-direction: column;
+  }
+  .d5b .side-head {
+    padding: 14px 20px; border-bottom: 1px solid #1f1f23;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .d5b .side-head h3 {
+    margin: 0; font-size: 10.5px;
+    font-weight: 700; letter-spacing: 0.15em;
+    color: #a1a1aa; text-transform: uppercase;
+  }
+  .d5b .side-head .n {
+    color: #fbbf24; font-size: 12px; font-weight: 700;
+  }
+  .d5b .side-head .filt {
+    margin-left: auto; background: transparent; border: 0;
+    color: #71717a; font-size: 10.5px; cursor: pointer;
+    padding: 4px 8px; border-radius: 4px;
+    letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700;
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: inherit;
+  }
+  .d5b .cmts { flex: 1; overflow-y: auto; }
+  .d5b .cm {
+    padding: 14px 20px; border-bottom: 1px solid #1a1a1e;
+    cursor: pointer; display: block; min-height: 0;
+  }
+  .d5b .cm:hover { background: rgba(255,255,255,0.02); }
+  .d5b .cm.sel {
+    background: rgba(251,191,36,0.05);
+    box-shadow: inset 2px 0 0 #fbbf24;
+  }
+  .d5b .cm-top {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 7px; font-size: 11px;
+  }
+  .d5b .cm-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 1px 6px; border: 1px solid; border-radius: 2px;
+    font-size: 9.5px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .d5b .cm-tag.txt { color: #fca5a5; border-color: #ef4444; }
+  .d5b .cm-tag.cut { color: #c4b5fd; border-color: #a78bfa; }
+  .d5b .cm-tag.col { color: #fdba74; border-color: #fb923c; }
+  .d5b .cm-tag.aud { color: #67e8f9; border-color: #22d3ee; }
+  .d5b .cm-tag.etc { color: #d4d4d8; border-color: #71717a; }
+  .d5b .cm-tc {
+    font-family: ui-monospace, monospace;
+    color: #fbbf24; font-weight: 700; font-size: 11px;
+    letter-spacing: 0.03em;
+  }
+  .d5b .cm-who { color: #fafafa; font-weight: 600; }
+  .d5b .cm-when { color: #52525b; margin-left: auto; font-size: 10.5px; }
+  .d5b .cm-msg {
+    color: #d4d4d8; font-size: 12.5px; line-height: 1.6;
+  }
+  .d5b .cm.resolved .cm-msg { opacity: 0.4; text-decoration: line-through; }
+  .d5b .cm.resolved .cm-when { color: #22c55e; }
+  .d5b .cm-rep {
+    font-size: 10.5px; color: #52525b;
+    margin-top: 6px;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+
+  .d5b .compose {
+    border-top: 1px solid #1f1f23;
+    padding: 12px 18px; background: #0a0a0c;
+  }
+  .d5b .compose .at {
+    color: #fbbf24; font-family: ui-monospace, monospace;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+    margin-bottom: 8px;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .d5b .compose input {
+    width: 100%; background: #18181b; border: 1px solid #27272a;
+    color: #fafafa; padding: 9px 12px; border-radius: 5px;
+    font-family: inherit; font-size: 12.5px; outline: none;
+  }
+  .d5b .compose input:focus { border-color: #fbbf24; }
+  .d5b .compose .auto {
+    font-size: 10.5px; color: #52525b; margin-top: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .d5b .compose .auto .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 7px;
+    border: 1px solid #fb923c;
+    color: #fdba74;
+    border-radius: 3px;
+    font-weight: 700; font-size: 9.5px;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+
+  /* ===================================================================
+     5C · EDITORIAL — 따뜻한 흰색, 둥근 카드, 여유
+     =================================================================== */
+  .d5c { background: #faf9f7; }
+  .d5c .concept-header { padding-bottom: 6px; }
+  .d5c .shell {
+    background: #fffefb;
+    border-radius: 20px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02), 0 8px 40px rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+  .d5c .topbar {
+    padding: 22px 28px;
+    display: flex; align-items: center; gap: 14px;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+  }
+  .d5c .topbar .fname {
+    font-size: 15.5px; font-weight: 700; color: #1c1917;
+    letter-spacing: -0.015em;
+  }
+  .d5c .vpill {
+    background: #f5f5f4; color: #57534e;
+    padding: 5px 12px; border-radius: 99px;
+    font-size: 12px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 5px;
+    cursor: pointer;
+  }
+  .d5c .vpill.active { background: #1c1917; color: #fffefb; }
+  .d5c .right-actions {
+    margin-left: auto; display: flex; gap: 4px;
+  }
+  .d5c .right-actions button {
+    background: transparent; border: 0;
+    color: #78716c;
+    padding: 7px 14px; border-radius: 99px;
+    font-family: inherit; font-size: 12.5px; font-weight: 500;
+    cursor: pointer;
+  }
+  .d5c .right-actions button:hover { background: #faf9f7; color: #1c1917; }
+
+  .d5c .body { display: flex; min-height: 620px; }
+  .d5c .left {
+    flex: 1; min-width: 0; display: flex; flex-direction: column;
+    padding: 22px 24px; gap: 16px;
+  }
+  .d5c .vid-card {
+    border-radius: 14px; overflow: hidden;
+    background: #1c1917;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    position: relative; max-height: 440px;
+    flex-shrink: 0;
+  }
+  .d5c .vid-card .frame {
+    aspect-ratio: 16/9;
+    background: linear-gradient(135deg, #292524 0%, #1c1917 100%);
+    position: relative;
+  }
+  .d5c .vid-card .frame::after {
+    content: "VIDEO"; position: absolute; inset: 0;
+    display: grid; place-items: center;
+    color: rgba(255,255,255,0.18);
+    font-size: 12px; letter-spacing: 0.3em; font-weight: 600;
+  }
+  .d5c .vid-card .tc-hud {
+    position: absolute; bottom: 14px; left: 14px;
+    background: rgba(255,255,255,0.12); backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #fffefb;
+    font-family: ui-monospace, monospace; font-size: 11.5px;
+    padding: 5px 12px; border-radius: 99px; font-weight: 500;
+  }
+
+  .d5c .scr-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 0 2px;
+  }
+  .d5c .scr-row .play {
+    width: 38px; height: 38px;
+    background: #1c1917; color: #fffefb;
+    border: 0; border-radius: 99px;
+    display: grid; place-items: center; cursor: pointer; flex-shrink: 0;
+  }
+  .d5c .scr-row .tc {
+    font-family: ui-monospace, monospace;
+    font-size: 13px; font-weight: 600; color: #1c1917;
+    min-width: 100px;
+  }
+  .d5c .scr-row .tc .total { color: #a8a29e; font-weight: 400; }
+  .d5c .scr-row .bar {
+    flex: 1; height: 4px; background: #f5f5f4;
+    border-radius: 99px; position: relative;
+  }
+  .d5c .scr-row .bar .f {
+    position: absolute; inset: 0 auto 0 0;
+    width: 32%; background: #1c1917; border-radius: 99px;
+  }
+  .d5c .scr-row .bar .hd {
+    position: absolute; top: 50%; left: 32%;
+    transform: translate(-50%, -50%);
+    width: 14px; height: 14px; background: #fffefb;
+    border: 2px solid #1c1917; border-radius: 99px;
+  }
+
+  .d5c .strip-wrap { overflow-x: auto; margin: 0 -24px; padding: 0 24px 4px; }
+  .d5c .strip { display: flex; gap: 12px; }
+  .d5c .tb {
+    flex-shrink: 0; width: 124px; cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  .d5c .tb:hover { transform: translateY(-3px); }
+  .d5c .tb .frame {
+    width: 100%; aspect-ratio: 16/9;
+    background: #292524; border-radius: 10px;
+    border: 2px solid transparent; position: relative; overflow: hidden;
+    transition: all 0.2s;
+  }
+  .d5c .tb.current .frame {
+    border-color: #d97706;
+    box-shadow: 0 0 0 4px rgba(217,119,6,0.12);
+  }
+  .d5c .tb .frame::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(135deg, #3f3a38 0%, #1c1917 100%);
+  }
+  .d5c .tb .frame::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(217,119,6,0.08) 0%, transparent 50%);
+  }
+  .d5c .tb .meta {
+    display: flex; align-items: center;
+    justify-content: center;
+    margin-top: 8px;
+  }
+  .d5c .tb .tc-lbl {
+    font-family: ui-monospace, monospace;
+    font-size: 11px; color: #78716c; font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .d5c .tb.current .tc-lbl { color: #d97706; font-weight: 700; }
+
+  .d5c .tb .bdg-group {
+    position: absolute; top: 8px; left: 8px;
+    display: flex; gap: 4px; z-index: 2;
+  }
+  .d5c .tb .bdg {
+    width: 24px; height: 24px; background: #fffefb;
+    border-radius: 8px; display: grid; place-items: center;
+    color: var(--c);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .d5c .bdg.txt { --c: #dc2626; }
+  .d5c .bdg.cut { --c: #7c3aed; }
+  .d5c .bdg.col { --c: #d97706; }
+  .d5c .bdg.aud { --c: #0891b2; }
+  .d5c .bdg.etc { --c: #78716c; }
+  .d5c .bdg.r { background: #dcfce7; color: #16a34a; }
+
+  .d5c .legend {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    padding: 0 2px;
+  }
+  .d5c .legend .ltag {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 99px;
+    font-size: 12px; font-weight: 500;
+    color: #57534e; background: #fafaf9;
+    border: 1px solid transparent; cursor: pointer;
+  }
+  .d5c .legend .ltag.active {
+    background: #fef3c7; color: #92400e;
+    border-color: #fde68a; font-weight: 700;
+  }
+  .d5c .legend .ltag .dot {
+    width: 7px; height: 7px; border-radius: 99px; background: var(--c);
+  }
+  .d5c .legend .ltag .n { color: #a8a29e; font-weight: 500; }
+  .d5c .ltag.txt { --c: #dc2626; }
+  .d5c .ltag.cut { --c: #7c3aed; }
+  .d5c .ltag.col { --c: #d97706; }
+  .d5c .ltag.aud { --c: #0891b2; }
+  .d5c .ltag.etc { --c: #78716c; }
+
+  .d5c .side {
+    width: 390px; background: #faf9f7;
+    border-left: 1px solid rgba(0,0,0,0.04);
+    display: flex; flex-direction: column;
+  }
+  .d5c .side-head {
+    padding: 22px 24px 14px;
+  }
+  .d5c .side-head h3 {
+    margin: 0 0 4px; font-size: 18px; font-weight: 800;
+    color: #1c1917; letter-spacing: -0.02em;
+  }
+  .d5c .side-head .sub { font-size: 12.5px; color: #a8a29e; }
+  .d5c .cmts { flex: 1; overflow-y: auto; padding: 8px 12px 12px; }
+  .d5c .cm {
+    padding: 15px 16px; background: #fffefb;
+    border-radius: 14px; margin-bottom: 8px; cursor: pointer;
+    border: 1px solid transparent; transition: all 0.15s;
+    display: block; min-height: 0;
+  }
+  .d5c .cm:hover {
+    border-color: rgba(0,0,0,0.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .d5c .cm.sel {
+    border-color: #d97706; background: #fffbeb;
+    box-shadow: 0 4px 14px rgba(217,119,6,0.1);
+  }
+  .d5c .cm-top {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  }
+  .d5c .cm-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 99px;
+    font-size: 10.5px; font-weight: 700;
+    background: var(--bg); color: var(--c);
+    letter-spacing: 0.01em;
+  }
+  .d5c .cm-tag.txt { --c: #dc2626; --bg: #fef2f2; }
+  .d5c .cm-tag.cut { --c: #7c3aed; --bg: #f3f0ff; }
+  .d5c .cm-tag.col { --c: #d97706; --bg: #fffbeb; }
+  .d5c .cm-tag.aud { --c: #0891b2; --bg: #ecfeff; }
+  .d5c .cm-tag.etc { --c: #78716c; --bg: #f5f5f4; }
+  .d5c .cm-tc {
+    font-family: ui-monospace, monospace;
+    color: #1c1917; font-weight: 700; font-size: 12.5px;
+  }
+  .d5c .cm-who { color: #1c1917; font-weight: 700; font-size: 12.5px; }
+  .d5c .cm-when {
+    margin-left: auto; color: #a8a29e; font-size: 11.5px;
+  }
+  .d5c .cm-msg {
+    font-size: 13.5px; line-height: 1.55; color: #292524;
+  }
+  .d5c .cm.resolved { opacity: 0.55; }
+  .d5c .cm.resolved .cm-msg { text-decoration: line-through; }
+  .d5c .cm-rep {
+    font-size: 11.5px; color: #a8a29e;
+    margin-top: 8px;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+
+  .d5c .compose {
+    padding: 14px 18px; background: #fffefb;
+    border-top: 1px solid rgba(0,0,0,0.04);
+  }
+  .d5c .compose .at-row {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
+  }
+  .d5c .compose .at {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #1c1917; color: #fffefb;
+    padding: 4px 10px; border-radius: 99px;
+    font-family: ui-monospace, monospace;
+    font-size: 11px; font-weight: 700;
+  }
+  .d5c .compose .in-box { display: flex; gap: 8px; align-items: center; }
+  .d5c .compose input {
+    flex: 1; background: #f5f5f4;
+    border: 1px solid transparent;
+    padding: 10px 14px; border-radius: 99px;
+    font-family: inherit; font-size: 13px; outline: none;
+  }
+  .d5c .compose input:focus { background: #fffefb; border-color: #d97706; }
+  .d5c .compose .send {
+    width: 38px; height: 38px; background: #d97706; color: #fffefb;
+    border: 0; border-radius: 99px; cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .d5c .compose .auto-row {
+    font-size: 11.5px; color: #a8a29e; margin-top: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .d5c .compose .auto-row .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; background: #fef3c7; color: #92400e;
+    border-radius: 99px; font-size: 10.5px; font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<nav class="switcher">
+  <span class="label">VIBOX · FEEDBACK WIREFRAMES</span>
+  <button class="active" data-t="d1">1. Split Panel</button>
+  <button data-t="d2">2. Theater</button>
+  <button data-t="d3">3. Chat</button>
+  <button data-t="d4">4. Swim Lanes</button>
+  <button data-t="d5">5. Thumbnail Strip</button>
+  <button data-t="d6">6. Smart Heatmap</button>
+  <span style="color:#6b7280; font-size:10px; margin: 0 4px;">│</span>
+  <button data-t="d5a">5A · Linear</button>
+  <button data-t="d5b">5B · Studio</button>
+  <button data-t="d5c">5C · Editorial</button>
+  <span class="note">← 5번 리디자인</span>
+</nav>
+
+<!-- ======================================================
+     시안 1 · Split Panel
+     ====================================================== -->
+<section id="d1" class="design active d1">
+  <div class="concept-header">
+    <div>
+      <h2 class="concept-title">시안 1 · Split Panel</h2>
+      <p class="concept-sub">Frame.io / Wipster 스타일을 리파인. 댓글 밀도 최대화, 프로 작업자용</p>
+    </div>
+    <div class="concept-tags">
+      <span class="tag">프로페셔널</span>
+      <span class="tag warn">밀도 높음</span>
+      <span class="tag green">익숙한 패턴</span>
+    </div>
+  </div>
+
+  <div class="shell">
+    <!-- Top bar -->
+    <div class="topbar">
+      <div class="fname">📁 프로젝트A / #18_프리비트_v02.mp4</div>
+      <div class="vers">
+        <button><span>V1</span><span class="ver-date">4/19</span></button>
+        <button class="current"><span>V2</span><span class="ver-date">4/20</span></button>
+        <button><span>V3</span><span class="ver-date">4/20</span></button>
+        <button style="color: var(--accent);">+ 새 버전</button>
+      </div>
+      <div class="right">
+        <button class="ghost">공유</button>
+        <button class="ghost">다운로드</button>
+        <button class="ghost">⋯</button>
+      </div>
+    </div>
+
+    <div class="body">
+      <!-- Left: video + controls -->
+      <div class="left">
+        <div class="vid-wrap">
+          <div class="vid-ph">
+            VIDEO · 1920 × 1080
+            <div class="tc">00:45 / 07:03</div>
+          </div>
+        </div>
+        <div class="controls">
+          <div class="tl-row">
+            <span class="tc-text">00:45 / 07:03</span>
+            <div class="tl-bar">
+              <div class="tl-filled"></div>
+              <div class="tl-head"></div>
+              <div class="marker" style="left: 3%;" title="자막 오타"></div>
+              <div class="marker mine" style="left: 11%;" title="컷 타이밍"></div>
+              <div class="marker" style="left: 15%;" title="BGM"></div>
+              <div class="marker resolved" style="left: 28%;" title="색감 — 해결됨"></div>
+              <div class="marker" style="left: 46%;" title="엔드카드"></div>
+            </div>
+          </div>
+          <div class="ctl-btns">
+            <button class="ibtn">⟲10</button>
+            <button class="play">▶</button>
+            <button class="ibtn">10⟳</button>
+            <button class="speed">1.0×</button>
+            <button class="ibtn">🔊</button>
+            <span class="spacer"></span>
+            <button class="add-here">+ 여기에 댓글 달기</button>
+            <button class="ibtn">⛶</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: comment panel -->
+      <div class="right-pane">
+        <div class="pane-head">
+          <h3>댓글</h3>
+          <span class="count">5</span>
+          <div class="filters">
+            <button class="active">전체</button>
+            <button>미해결</button>
+            <button>내 댓글</button>
+          </div>
+        </div>
+        <div class="comments">
+          <div class="cmt">
+            <div class="cmt-head">
+              <span class="avatar sm av-seon">SE</span>
+              <span class="name">seon</span>
+              <span class="tc-badge">00:12</span>
+              <span class="time">2분 전</span>
+            </div>
+            <div class="cmt-body">여기 자막 오타 있어요 "프리비트" 아니라 "프리핏"</div>
+            <div class="cmt-actions">
+              <span>↩ 답글</span>
+              <span>✓ 해결</span>
+            </div>
+          </div>
+
+          <div class="cmt playing">
+            <div class="cmt-head">
+              <span class="avatar sm av-jin">JI</span>
+              <span class="name">jin</span>
+              <span class="tc-badge amber">00:45</span>
+              <span class="time">5분 전</span>
+            </div>
+            <div class="cmt-body">이 컷 넘길 타이밍 애매해요. 0.3초 정도 더 붙여도 될 듯</div>
+            <div class="reply">
+              <div class="rep-head"><strong>seon</strong> · 3분 전</div>
+              맞아요, 다음 버전에서 조정할게요
+            </div>
+            <div class="reply">
+              <div class="rep-head"><strong>jin</strong> · 2분 전</div>
+              OK 👍
+            </div>
+            <div class="cmt-actions">
+              <span>↩ 답글 2</span>
+              <span>✓ 해결</span>
+            </div>
+          </div>
+
+          <div class="cmt">
+            <div class="cmt-head">
+              <span class="avatar sm av-seon">SE</span>
+              <span class="name">seon</span>
+              <span class="tc-badge">01:02</span>
+              <span class="time">5분 전</span>
+            </div>
+            <div class="cmt-body">BGM 볼륨 좀 낮춰야 할 듯. 내레이션이 묻혀요</div>
+            <div class="cmt-actions">
+              <span>↩ 답글</span>
+              <span>✓ 해결</span>
+            </div>
+          </div>
+
+          <div class="cmt">
+            <div class="cmt-head">
+              <span class="avatar sm av-min">MI</span>
+              <span class="name">min</span>
+              <span class="tc-badge green">01:58</span>
+              <span class="time" style="color: var(--success);">✓ 해결됨</span>
+            </div>
+            <div class="cmt-body" style="text-decoration: line-through; opacity: 0.6;">색감 톤 조정 필요 — 전체적으로 좀 따뜻하게</div>
+          </div>
+
+          <div class="cmt">
+            <div class="cmt-head">
+              <span class="avatar sm av-seon">SE</span>
+              <span class="name">seon</span>
+              <span class="tc-badge">03:15</span>
+              <span class="time">방금</span>
+            </div>
+            <div class="cmt-body">엔드카드 로고 위치 — 오른쪽 하단이 더 자연스러울 듯</div>
+            <div class="cmt-actions">
+              <span>↩ 답글</span>
+              <span>✓ 해결</span>
+            </div>
+          </div>
+        </div>
+        <div class="compose">
+          <div class="current-tc">
+            <span class="tc-badge muted">현재 00:45</span>
+            <span>여기에 댓글이 달려요</span>
+          </div>
+          <textarea placeholder="이 시점에 피드백을 남겨보세요..."></textarea>
+          <div class="compose-btns">
+            <div class="tool-btns">
+              <button title="그리기">✏</button>
+              <button title="멘션">@</button>
+              <button title="첨부">📎</button>
+            </div>
+            <button class="submit">댓글 달기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="concept-notes">
+    <div class="notes-grid">
+      <div>
+        <h4>👍 장점</h4>
+        <ul>
+          <li>프로페셔널 리뷰 도구 표준 레이아웃 (Frame.io, Wipster 익숙함)</li>
+          <li>한 화면에 비디오 + 댓글 리스트 + 버전 + 타임라인 마커 모두 보임</li>
+          <li>댓글 필터 (전체/미해결/내것) + 해결 체크가 프로세스 관리에 적합</li>
+          <li>재생바 위 color-coded marker로 어디서 피드백 많은지 한눈에</li>
+          <li>답글 트리 확장 지원 — 의견 충돌 논의 가능</li>
+        </ul>
+      </div>
+      <div>
+        <h4>👎 단점 / 고려사항</h4>
+        <ul>
+          <li>정보 밀도 높아서 처음 사용자 압도될 수 있음</li>
+          <li>우측 패널 380px — 모바일/태블릿엔 접기 필요</li>
+          <li>그리기 등 고급 기능 붙이기 시작하면 툴바 난잡해짐</li>
+          <li>한국 비디오팀이 "Frame.io 써봤지" 전제가 있어야 직관적</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================
+     시안 2 · Timeline Theater
+     ====================================================== -->
+<section id="d2" class="design d2">
+  <div class="concept-header">
+    <div>
+      <h2 class="concept-title">시안 2 · Timeline Theater</h2>
+      <p class="concept-sub">다크 테마 · 타임라인을 물리적 축으로 · 댓글이 시간축 위에 공간적으로 배치</p>
+    </div>
+    <div class="concept-tags">
+      <span class="tag">공간적</span>
+      <span class="tag">영상 중심</span>
+      <span class="tag warn">실험적</span>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="top-meta">
+      <div class="fname">#18_프리비트_v02.mp4</div>
+      <div class="file-dim">1920×1080 · 7:03 · 487 MB</div>
+      <div class="right">
+        <button>공유</button>
+        <button>다운로드</button>
+        <button class="primary">+ 새 버전 업로드</button>
+      </div>
+    </div>
+
+    <div class="body">
+      <!-- Vertical rail: versions -->
+      <aside class="vrail">
+        <h4>VERSIONS</h4>
+        <a class="ver-card v1">
+          <div class="thumb"></div>
+          <div class="label">V1</div>
+          <div class="date">4/19 22:48</div>
+          <div class="n">댓글 8 · 모두 해결</div>
+        </a>
+        <a class="ver-card current">
+          <div class="thumb"></div>
+          <div class="label">V2 · 현재</div>
+          <div class="date">4/20 10:15</div>
+          <div class="n">댓글 5 · 4개 미해결</div>
+        </a>
+        <a class="ver-card v3">
+          <div class="thumb"></div>
+          <div class="label">V3 (draft)</div>
+          <div class="date">4/20 17:30</div>
+          <div class="n">아직 피드백 없음</div>
+        </a>
+      </aside>
+
+      <div class="center">
+        <div class="stage">
+          <div class="vid-ph">
+            VIDEO
+            <div class="tc" style="background: rgba(0,0,0,0.6);">00:45</div>
+          </div>
+        </div>
+
+        <!-- Spatial timeline -->
+        <div class="spatial-tl">
+          <div class="now-time">
+            00:45<span class="total">/ 07:03</span>
+          </div>
+          <div class="st-bar">
+            <div class="base"></div>
+            <div class="progress"></div>
+            <!-- Comment chips along the axis (position by % of video) -->
+            <div class="chip" style="left: 3%;">
+              <span class="cdot"></span>00:12 · 자막 오타
+            </div>
+            <div class="chip mine active" style="left: 11%;">
+              <span class="cdot"></span>00:45 · jin
+            </div>
+            <div class="chip below" style="left: 15%;">
+              <span class="cdot"></span>01:02 · BGM
+            </div>
+            <div class="chip resolved" style="left: 28%;">
+              <span class="cdot"></span>01:58 · ✓
+            </div>
+            <div class="chip" style="left: 46%;">
+              <span class="cdot"></span>03:15 · 로고
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-actions">
+          <button class="play-big">▶</button>
+          <button class="add-comment-big">
+            <span class="hint">00:45</span>여기에 피드백을 남겨보세요 (Enter)
+          </button>
+        </div>
+      </div>
+
+      <!-- Right: selected comment detail -->
+      <div class="right-detail">
+        <div class="rd-head">SELECTED COMMENT</div>
+        <div class="rd-body">
+          <div class="selected-tc">00:45</div>
+          <div class="rd-author">
+            <span class="avatar av-jin">JI</span>
+            <div>
+              <div class="name" style="color:#fff;">jin</div>
+            </div>
+            <span class="when">5분 전</span>
+          </div>
+          <div class="rd-msg">
+            이 컷 넘길 타이밍 애매해요.<br>0.3초 정도 더 붙여도 될 듯
+          </div>
+          <div class="rd-replies">
+            <div class="rd-rep">
+              <span class="avatar sm av-seon">SE</span>
+              <div>
+                <div class="nm">seon <span class="tm">· 3분 전</span></div>
+                <div class="msg">맞아요, 다음 버전에서 조정할게요</div>
+              </div>
+            </div>
+            <div class="rd-rep">
+              <span class="avatar sm av-jin">JI</span>
+              <div>
+                <div class="nm">jin <span class="tm">· 2분 전</span></div>
+                <div class="msg">OK 👍</div>
+              </div>
+            </div>
+          </div>
+          <input class="rd-reply-input" placeholder="답글 달기..." />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="concept-notes">
+    <div class="notes-grid">
+      <div>
+        <h4>👍 장점</h4>
+        <ul>
+          <li><strong>공간적 타임라인</strong>: 댓글이 "그 시각에" 떠 있음 — 시간 축에서 어디가 붐비는지 직관적으로 보임</li>
+          <li>다크 테마로 비디오 몰입감 최대화 (영화관 느낌)</li>
+          <li>버전을 좌측 썸네일로 시각화 — 각 버전이 별개 작품처럼 느껴짐</li>
+          <li>큰 현재 타임코드 (00:45) — 지금 보고 있는 위치 확실</li>
+          <li>우측에 선택된 댓글만 크게 → 답글 쓸 때 집중</li>
+        </ul>
+      </div>
+      <div>
+        <h4>👎 단점 / 고려사항</h4>
+        <ul>
+          <li>댓글 칩이 많아지면 타임라인 겹침 (스태깅 로직 필요)</li>
+          <li>모든 댓글 한눈에 보기 어려움 — 리스트 토글 추가 필요</li>
+          <li>다크 테마는 호불호 (내부 팀 vs 고객 공유)</li>
+          <li>"지금 어디에 뭘 쓰고 있나" 컨텍스트 흐려질 수 있음</li>
+          <li>구현 복잡도 ↑ (칩 포지셔닝, 겹침 처리, 애니메이션)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================
+     시안 3 · Chat Mode
+     ====================================================== -->
+<section id="d3" class="design d3">
+  <div class="concept-header">
+    <div>
+      <h2 class="concept-title">시안 3 · Chat Mode</h2>
+      <p class="concept-sub">카톡/슬랙 익숙함 그대로 · 학습 비용 0 · 한국 팀 특화</p>
+    </div>
+    <div class="concept-tags">
+      <span class="tag green">가장 쉬움</span>
+      <span class="tag">카톡 느낌</span>
+      <span class="tag">모바일 OK</span>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="topbar">
+      <div class="fname">#18_프리비트_v02.mp4</div>
+      <div class="ver-dropdown">V2</div>
+      <div class="right">5명 참여 중 · 마지막 댓글 2분 전</div>
+    </div>
+
+    <div class="body">
+      <!-- Left: video -->
+      <div class="video-col">
+        <div class="vid-wrap">
+          <div class="vid-ph">
+            VIDEO
+            <div class="tc">00:45</div>
+          </div>
+        </div>
+        <div class="mini-ctl">
+          <button class="play">▶</button>
+          <span class="tc-disp">00:45 / 07:03</span>
+          <div class="tl-thin">
+            <div class="f"></div>
+            <div class="marker" style="left: 3%;"></div>
+            <div class="marker" style="left: 11%;"></div>
+            <div class="marker" style="left: 15%;"></div>
+            <div class="marker" style="left: 28%; background: var(--success);"></div>
+            <div class="marker" style="left: 46%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: chat stream -->
+      <div class="chat-col">
+        <div class="chat-head">
+          <h3>피드백</h3>
+          <div class="viewers">
+            <span class="avatar av-seon sm">SE</span>
+            <span class="avatar av-jin sm">JI</span>
+            <span class="avatar av-min sm">MI</span>
+          </div>
+        </div>
+
+        <div class="chat-stream">
+          <div class="system-msg">오늘 17:30</div>
+
+          <div class="msg-group">
+            <span class="avatar av-seon">SE</span>
+            <div class="msg-content">
+              <div class="msg-meta"><strong>seon</strong> · 10분 전</div>
+              <div class="msg-bubble">
+                <span class="tc-inline">00:12</span>여기 자막 오타 있어요 "프리비트" 아니라 "프리핏"
+              </div>
+              <div class="msg-actions">
+                <span>↩ 답글</span>
+                <span>✓ 해결</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="msg-group">
+            <span class="avatar av-jin">JI</span>
+            <div class="msg-content">
+              <div class="msg-meta"><strong>jin</strong> · 5분 전</div>
+              <div class="msg-bubble">
+                <span class="tc-inline">00:45</span>이 컷 넘길 타이밍 애매해요. 0.3초 정도 더 붙여도 될 듯
+              </div>
+              <div class="replies">
+                <div class="msg-group mine">
+                  <span class="avatar av-seon sm">SE</span>
+                  <div class="msg-content">
+                    <div class="msg-meta"><strong>seon (나)</strong> · 3분 전</div>
+                    <div class="msg-bubble">맞아요, 다음 버전에서 조정할게요</div>
+                  </div>
+                </div>
+                <div class="msg-group">
+                  <span class="avatar av-jin sm">JI</span>
+                  <div class="msg-content">
+                    <div class="msg-meta"><strong>jin</strong> · 2분 전</div>
+                    <div class="msg-bubble">OK 👍</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="msg-group mine">
+            <span class="avatar av-seon">SE</span>
+            <div class="msg-content">
+              <div class="msg-meta"><strong>나</strong> · 5분 전</div>
+              <div class="msg-bubble">
+                <span class="tc-inline">01:02</span>BGM 볼륨 좀 낮춰야 할 듯. 내레이션이 묻혀요
+              </div>
+            </div>
+          </div>
+
+          <div class="msg-group">
+            <span class="avatar av-min">MI</span>
+            <div class="msg-content">
+              <div class="msg-meta">
+                <strong>min</strong> · 4분 전 ·
+                <span style="color: var(--success); font-weight: 600;">✓ 해결됨</span>
+              </div>
+              <div class="msg-bubble resolved">
+                <span class="tc-inline">01:58</span>색감 톤 조정 필요 — 전체적으로 좀 따뜻하게
+              </div>
+            </div>
+          </div>
+
+          <div class="msg-group mine">
+            <span class="avatar av-seon">SE</span>
+            <div class="msg-content">
+              <div class="msg-meta"><strong>나</strong> · 방금</div>
+              <div class="msg-bubble">
+                <span class="tc-inline">03:15</span>엔드카드 로고 위치 — 오른쪽 하단이 더 자연스러울 듯
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input">
+          <div class="now-tag">🕐 00:45 에 댓글 달기</div>
+          <div class="ibox">
+            <textarea placeholder="피드백을 입력하세요..."></textarea>
+            <button class="send">➤</button>
+          </div>
+          <div class="tools-row">
+            <button>✏ 그리기</button>
+            <button>@ 멘션</button>
+            <button>📎 첨부</button>
+            <button style="margin-left: auto; color: var(--accent);">구간 표시 ▸</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="concept-notes">
+    <div class="notes-grid">
+      <div>
+        <h4>👍 장점</h4>
+        <ul>
+          <li><strong>학습 비용 거의 0</strong> — 카톡/슬랙 써본 사람은 즉시 이해</li>
+          <li>"댓글을 달다"가 아니라 "메시지를 보내다" 느낌 → 심리적 진입장벽 낮음</li>
+          <li>내 메시지/남의 메시지 좌우 구분으로 대화 맥락 명확</li>
+          <li>답글 트리가 들여쓰기로 자연스럽게 표현</li>
+          <li>입력창 하단 고정 + 현재 시간 배지 → "지금 00:45에 댓글 달 거야"가 항상 명시</li>
+          <li>모바일 레이아웃으로 손쉽게 변환 가능 (카톡 그대로)</li>
+        </ul>
+      </div>
+      <div>
+        <h4>👎 단점 / 고려사항</h4>
+        <ul>
+          <li>전체 시간축에서 어디가 피드백 밀집인지 한눈에 잘 안 보임 (재생바 마커로 보완)</li>
+          <li>댓글 100개 넘어가면 스트림 탐색 힘들 수 있음 (필터/검색 필요)</li>
+          <li>"프로페셔널"해 보이지 않을 수 있음 (외부 고객에 보여줄 때)</li>
+          <li>해결/미해결 상태 관리가 Split Panel보다 덜 명시적</li>
+          <li>버전 전환이 드롭다운 1개라서 비교하기 다소 답답할 수 있음</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================
+     시안 4 · Swim Lanes
+     ====================================================== -->
+<section id="d4" class="design d4">
+  <div class="concept-header">
+    <div>
+      <h2 class="concept-title">시안 4 · Swim Lanes</h2>
+      <p class="concept-sub">카테고리별 가로 트랙 · 마커가 흩어지지 않음 · 비어있는 차원 한눈에 보임</p>
+    </div>
+    <div class="concept-tags">
+      <span class="tag green">한눈에 파악</span>
+      <span class="tag">공간 분리</span>
+      <span class="tag">프로 오디오/영상 SW 패턴</span>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="topbar">
+      <div class="fname">#18_프리비트_v02.mp4</div>
+      <div class="vers">
+        <button>V1</button>
+        <button class="current">V2</button>
+        <button>V3</button>
+      </div>
+      <div class="right">
+        <button class="ghost">
+          <svg class="icn" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          공유
+        </button>
+        <button class="ghost">
+          <svg class="icn" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          다운로드
+        </button>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="left">
+        <div class="vid-wrap">
+          <div class="vid-ph">
+            VIDEO
+            <div class="tc">00:45</div>
+          </div>
+        </div>
+
+        <div class="playbar">
+          <button class="play">
+            <svg class="icn" viewBox="0 0 24 24" style="width:14px;height:14px;"><polygon points="6 3 20 12 6 21 6 3" fill="currentColor" stroke="none"/></svg>
+          </button>
+          <span class="tc-text">00:45 / 07:03</span>
+          <button class="add-here">
+            <svg class="icn" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="12" y1="7" x2="12" y2="13"/></svg>
+            여기에 댓글
+          </button>
+        </div>
+
+        <div class="lanes-wrap">
+          <div class="lanes-head">
+            <h4>CATEGORIES</h4>
+            <span class="legend-note">레이블 클릭 → 해당 레인만 보기 · 마커 클릭 → 우측에 상세</span>
+          </div>
+
+          <div class="lane cat-txt">
+            <span class="lbl">
+              <span class="tag-ico">
+                <svg class="icn-sm icn" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+              </span>
+              자막 <span class="n">2</span>
+            </span>
+            <div class="track">
+              <span class="m" style="left: 3%;" title="00:12 프리비트 오타"></span>
+              <span class="m" style="left: 75.6%;" title="05:20 줄바꿈"></span>
+            </div>
+          </div>
+
+          <div class="lane cat-cut">
+            <span class="lbl">
+              <span class="tag-ico">
+                <svg class="icn-sm icn" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+              </span>
+              컷 / 타이밍 <span class="n">2</span>
+            </span>
+            <div class="track">
+              <span class="m active" style="left: 10.6%;" title="00:45 타이밍"></span>
+              <span class="m" style="left: 35.4%;" title="02:30 샷 길이"></span>
+            </div>
+          </div>
+
+          <div class="lane cat-color">
+            <span class="lbl">
+              <span class="tag-ico">
+                <svg class="icn-sm icn" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+              </span>
+              색감 <span class="n">1 ✓</span>
+            </span>
+            <div class="track">
+              <span class="m resolved" style="left: 27.4%;" title="01:58 톤 조정 — 해결됨"></span>
+            </div>
+          </div>
+
+          <div class="lane cat-audio">
+            <span class="lbl">
+              <span class="tag-ico">
+                <svg class="icn-sm icn" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+              </span>
+              오디오 <span class="n">2</span>
+            </span>
+            <div class="track">
+              <span class="m" style="left: 14.6%;" title="01:02 BGM 볼륨"></span>
+              <span class="m" style="left: 56.7%;" title="04:00 내레이션 노이즈"></span>
+            </div>
+          </div>
+
+          <div class="lane cat-motion dim">
+            <span class="lbl">
+              <span class="tag-ico">
+                <svg class="icn-sm icn" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg>
+              </span>
+              모션/그래픽 <span class="n">0</span>
+            </span>
+            <div class="track"></div>
+          </div>
+
+          <div class="lane cat-etc">
+            <span class="lbl">
+              <span class="tag-ico">
+                <svg class="icn-sm icn" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+              </span>
+              기타 <span class="n">1</span>
+            </span>
+            <div class="track">
+              <span class="m" style="left: 46.1%;" title="03:15 엔드카드"></span>
+            </div>
+          </div>
+
+          <div class="playhead-line" style="left: calc(142px + (100% - 142px) * 0.106);"></div>
+
+          <div class="time-axis">
+            <span>0:00</span><span>1:00</span><span>2:00</span><span>3:00</span><span>4:00</span><span>5:00</span><span>6:00</span><span>7:00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="right-pane">
+        <div class="rp-head">
+          <div class="cat-ind cat-cut" style="color: var(--cat-c); background: var(--cat-bg);">
+            <svg class="icn icn-sm" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+            컷 / 타이밍
+          </div>
+          <div class="seek-tc">00:45</div>
+          <div class="meta">
+            <span class="avatar sm av-jin">JI</span>
+            <span style="font-weight:600;">jin</span>
+            <span style="color: var(--text-faint);">· 5분 전</span>
+          </div>
+        </div>
+        <div class="rp-body">
+          <div class="rp-msg">이 컷 넘길 타이밍 애매해요.<br>0.3초 정도 더 붙여도 될 듯합니다.</div>
+          <div class="rp-replies">
+            <div class="rp-rep">
+              <span class="avatar sm av-seon">SE</span>
+              <div>
+                <div class="h"><strong>seon</strong> · 3분 전</div>
+                <div class="body">맞아요, 다음 버전에서 조정할게요</div>
+              </div>
+            </div>
+            <div class="rp-rep">
+              <span class="avatar sm av-jin">JI</span>
+              <div>
+                <div class="h"><strong>jin</strong> · 2분 전</div>
+                <div class="body">OK!</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rp-foot">
+          <button class="btn-resolve">
+            <svg class="icn" viewBox="0 0 24 24" style="stroke:#fff;"><polyline points="20 6 9 17 4 12"/></svg>
+            해결 표시
+          </button>
+          <button class="btn-reply">답글 쓰기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="concept-notes">
+    <div class="notes-grid">
+      <div>
+        <h4>👍 장점</h4>
+        <ul>
+          <li><strong>카테고리별로 레인 분리</strong>: 마커가 한 줄에 몰리지 않아서 "정신없음" 해소</li>
+          <li>"모션/그래픽은 피드백 0" 같은 <strong>빈 레인이 한눈에 보임</strong> → 다음에 뭘 볼 필요 없는지 즉시 판단</li>
+          <li>Ableton Live / DaVinci Resolve 같은 프로 편집 SW 사용자에게 익숙</li>
+          <li>레이블 클릭 = 그 레인만 필터 (집중 모드)</li>
+          <li>해결된 항목은 속이 빈 원 — 상태 구분 명확</li>
+          <li>재생 헤드가 모든 레인 가로지르는 수직선 → 현재 시점 주변 피드백 관계 직관적</li>
+        </ul>
+      </div>
+      <div>
+        <h4>👎 단점 / 고려사항</h4>
+        <ul>
+          <li>세로 공간 차지 ↑ (5~6 레인 × 34px)</li>
+          <li>카테고리 분류 필수 — 댓글 달 때 1회 선택 or 자동 키워드 추론 필요</li>
+          <li>한 댓글이 여러 카테고리 걸치면 어디 둘지 (예: "BGM에 자막 타이밍 맞지 않아요")</li>
+          <li>레인 개수 많아지면 오히려 복잡 → 6개 이내로 유지</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================
+     시안 5 · Thumbnail Strip
+     ====================================================== -->
+<section id="d5" class="design d5">
+  <div class="concept-header">
+    <div>
+      <h2 class="concept-title">시안 5 · Thumbnail Strip</h2>
+      <p class="concept-sub">영상 프레임 썸네일을 시각 앵커로 · "이 장면에서 이런 피드백" 즉시 인지</p>
+    </div>
+    <div class="concept-tags">
+      <span class="tag green">장면 중심</span>
+      <span class="tag">편집자 직관</span>
+      <span class="tag">YouTube 프리뷰 느낌</span>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="topbar">
+      <div class="fname">#18_프리비트_v02.mp4</div>
+      <div class="ver-chip">
+        V2
+        <svg class="icn icn-sm" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="right">
+        <button class="ghost">공유</button>
+        <button class="ghost">다운로드</button>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="left">
+        <div class="vid-wrap">
+          <div class="vid-ph">
+            VIDEO
+            <div class="tc">00:45</div>
+          </div>
+        </div>
+
+        <div class="scrub">
+          <div class="scrub-bar">
+            <div class="f"></div>
+            <div class="hd"></div>
+          </div>
+        </div>
+
+        <div class="thumb-strip">
+          <div class="ts-row">
+            <div class="tb">
+              <div class="img"></div>
+              <span class="tc">00:00</span>
+            </div>
+            <div class="tb">
+              <div class="img"></div>
+              <div class="badges">
+                <span class="bdg cat-txt" style="background: #dc2626;">
+                  <svg class="icn icn-sm" viewBox="0 0 24 24" style="stroke:#fff;"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+                </span>
+              </div>
+              <span class="tc">00:12</span>
+            </div>
+            <div class="tb current">
+              <div class="img"></div>
+              <div class="badges">
+                <span class="bdg" style="background: #7c3aed;">
+                  <svg class="icn icn-sm" viewBox="0 0 24 24" style="stroke:#fff;"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                </span>
+              </div>
+              <span class="tc">00:45</span>
+            </div>
+            <div class="tb">
+              <div class="img"></div>
+              <div class="badges">
+                <span class="bdg" style="background: #0891b2;">
+                  <svg class="icn icn-sm" viewBox="0 0 24 24" style="stroke:#fff;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                </span>
+              </div>
+              <span class="tc">01:02</span>
+            </div>
+            <div class="tb">
+              <div class="img"></div>
+              <div class="badges">
+                <span class="bdg" style="background: #ea580c; opacity:0.5;">
+                  <svg class="icn icn-sm" viewBox="0 0 24 24" style="stroke:#fff;"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+              </div>
+              <span class="tc">01:58</span>
+            </div>
+            <div class="tb">
+              <div class="img"></div>
+              <div class="badges">
+                <span class="bdg" style="background: #7c3aed;">
+                  <svg class="icn icn-sm" viewBox="0 0 24 24" style="stroke:#fff;"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                </span>
+              </div>
+              <span class="tc">02:30</span>
+            </div>
+            <div class="tb">
+              <div class="img"></div>
+              <div class="badges">
+                <span class="bdg" style="background: #6b7280;">
+                  <svg class="icn icn-sm" viewBox="0 0 24 24" style="stroke:#fff;"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+                </span>
+              </div>
+              <span class="tc">03:15</span>
+            </div>
+            <div class="tb">
+              <div class="img"></div>
+              <div class="badges">
+                <span class="bdg" style="background: #0891b2;">
+                  <svg class="icn icn-sm" viewBox="0 0 24 24" style="stroke:#fff;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
+                </span>
+              </div>
+              <span class="tc">04:00</span>
+            </div>
+            <div class="tb">
+              <div class="img"></div>
+              <span class="tc">04:40</span>
+            </div>
+            <div class="tb">
+              <div class="img"></div>
+              <div class="badges">
+                <span class="bdg" style="background: #dc2626;">
+                  <svg class="icn icn-sm" viewBox="0 0 24 24" style="stroke:#fff;"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+                </span>
+              </div>
+              <span class="tc">05:20</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="cat-legend">
+          <span class="cat-chip cat-txt">
+            <svg class="icn-sm icn" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+            자막 <span class="n">2</span>
+          </span>
+          <span class="cat-chip cat-cut active">
+            <svg class="icn-sm icn" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/></svg>
+            컷 <span class="n">2</span>
+          </span>
+          <span class="cat-chip cat-color">
+            <svg class="icn-sm icn" viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+            색감 <span class="n">1 ✓</span>
+          </span>
+          <span class="cat-chip cat-audio">
+            <svg class="icn-sm icn" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
+            오디오 <span class="n">2</span>
+          </span>
+          <span class="cat-chip cat-etc">
+            <svg class="icn-sm icn" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+            기타 <span class="n">1</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="side-head">
+          <h3>댓글</h3>
+          <span style="background: var(--accent-soft); color: var(--accent); font-size:11px; font-weight:700; padding:2px 7px; border-radius:99px;">8</span>
+          <button class="mini-filter">
+            <svg class="icn-sm icn" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            필터
+          </button>
+        </div>
+        <div class="cmt-list">
+          <div class="cmt-item cat-txt">
+            <div class="cat-ico">
+              <svg class="icn" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+            </div>
+            <div class="body">
+              <div class="top"><span class="tc">00:12</span><span class="name">seon</span><span class="when">10분 전</span></div>
+              <div class="txt">여기 자막 오타 있어요 "프리비트" 아니라 "프리핏"</div>
+            </div>
+          </div>
+
+          <div class="cmt-item cat-cut selected">
+            <div class="cat-ico">
+              <svg class="icn" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+            </div>
+            <div class="body">
+              <div class="top"><span class="tc">00:45</span><span class="name">jin</span><span class="when">5분 전</span></div>
+              <div class="txt">이 컷 넘길 타이밍 애매. 0.3초 정도 더 붙여도 될 듯</div>
+              <div class="rep-n">
+                <svg class="icn-sm icn" viewBox="0 0 24 24"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg>
+                답글 2
+              </div>
+            </div>
+          </div>
+
+          <div class="cmt-item cat-audio">
+            <div class="cat-ico">
+              <svg class="icn" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            </div>
+            <div class="body">
+              <div class="top"><span class="tc">01:02</span><span class="name">seon</span><span class="when">5분 전</span></div>
+              <div class="txt">BGM 볼륨 좀 낮춰야 할 듯. 내레이션이 묻혀요</div>
+            </div>
+          </div>
+
+          <div class="cmt-item cat-color resolved">
+            <div class="cat-ico">
+              <svg class="icn" viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+            </div>
+            <div class="body">
+              <div class="top"><span class="tc">01:58</span><span class="name">min</span><span class="when" style="color: var(--success);">✓ 해결됨</span></div>
+              <div class="txt">색감 톤 조정 필요</div>
+            </div>
+          </div>
+
+          <div class="cmt-item cat-cut">
+            <div class="cat-ico">
+              <svg class="icn" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/></svg>
+            </div>
+            <div class="body">
+              <div class="top"><span class="tc">02:30</span><span class="name">jin</span><span class="when">4분 전</span></div>
+              <div class="txt">이 샷 0.5초 정도 더 붙여주세요</div>
+            </div>
+          </div>
+
+          <div class="cmt-item cat-etc">
+            <div class="cat-ico">
+              <svg class="icn" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+            </div>
+            <div class="body">
+              <div class="top"><span class="tc">03:15</span><span class="name">seon</span><span class="when">방금</span></div>
+              <div class="txt">엔드카드 로고 위치 재검토</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="side-foot">
+          <div class="quick-add">
+            <span class="now">00:45</span>
+            <span style="flex:1;">에 댓글 달기...</span>
+            <svg class="icn" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="concept-notes">
+    <div class="notes-grid">
+      <div>
+        <h4>👍 장점</h4>
+        <ul>
+          <li><strong>"이 장면에서 피드백 있었지"</strong> 식 편집자 본능과 맞음 (타임코드보다 시각 기억이 강함)</li>
+          <li>썸네일에 카테고리 아이콘 배지로 <strong>무슨 종류 피드백인지 미리 보임</strong></li>
+          <li>썸네일 + 댓글 리스트 조합으로 이중 탐색 (시각/논리 둘 다)</li>
+          <li>해결된 피드백은 배지가 흐려져서 자연스럽게 구분</li>
+          <li>모바일에서 가로 스크롤 스트립으로 변환 용이</li>
+        </ul>
+      </div>
+      <div>
+        <h4>👎 단점 / 고려사항</h4>
+        <ul>
+          <li>썸네일 개수 고정 (10~15개) → 시간 해상도 낮음. 짧은 영상엔 과잉, 긴 영상엔 부족</li>
+          <li>한 썸네일에 댓글 5개면 배지 겹쳐서 보기 어려움 (카운트 배지로 축약 필요)</li>
+          <li>썸네일 자동 생성 비용 (현재는 한 장만 쓰는데 이 UI는 10+ 장 필요) — 가능하지만 배치 시간 증가</li>
+          <li>카테고리 필터 (아래 칩)와 중복 정보 가능성</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================
+     시안 6 · Smart Heatmap
+     ====================================================== -->
+<section id="d6" class="design d6">
+  <div class="concept-header">
+    <div>
+      <h2 class="concept-title">시안 6 · Smart Heatmap</h2>
+      <p class="concept-sub">개별 마커 제거 · 밀도 밴드 + 카테고리 필터로 "어디 몰려있나" 한눈에</p>
+    </div>
+    <div class="concept-tags">
+      <span class="tag green">최소 시각 노이즈</span>
+      <span class="tag">밀도 시각화</span>
+      <span class="tag warn">개별 위치 간접적</span>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="topbar">
+      <div class="fname">#18_프리비트_v02.mp4</div>
+      <div class="vbtns">
+        <button>V1</button>
+        <button class="current">V2</button>
+        <button>V3</button>
+      </div>
+      <div style="margin-left:auto; display:flex; gap:8px;">
+        <button class="ghost" style="background:transparent; border:1px solid var(--border); padding:6px 12px; font-size:12px; border-radius:6px; color: var(--text-soft); font-family:inherit; cursor:pointer;">공유</button>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <span class="flabel">FILTER</span>
+      <span class="cat-chip cat-txt active">
+        <svg class="icn-sm icn" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        자막 <span class="n">2</span>
+      </span>
+      <span class="cat-chip cat-cut active">
+        <svg class="icn-sm icn" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/></svg>
+        컷 <span class="n">2</span>
+      </span>
+      <span class="cat-chip cat-color active">
+        <svg class="icn-sm icn" viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+        색감 <span class="n">1 ✓</span>
+      </span>
+      <span class="cat-chip cat-audio active">
+        <svg class="icn-sm icn" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
+        오디오 <span class="n">2</span>
+      </span>
+      <span class="cat-chip cat-motion">
+        <svg class="icn-sm icn" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>
+        모션 <span class="n">0</span>
+      </span>
+      <span class="cat-chip cat-etc active">
+        <svg class="icn-sm icn" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+        기타 <span class="n">1</span>
+      </span>
+      <span class="divider"></span>
+      <span class="toggle on">
+        <svg class="icn-sm icn" viewBox="0 0 24 24" style="stroke:currentColor;"><polyline points="20 6 9 17 4 12"/></svg>
+        미해결만
+      </span>
+      <span class="toggle">내 것만</span>
+    </div>
+
+    <div class="body">
+      <div class="left">
+        <div class="vid-wrap">
+          <div class="vid-ph">
+            VIDEO
+            <div class="tc">00:45</div>
+          </div>
+        </div>
+
+        <div class="hmap-wrap">
+          <div class="hmap-head">
+            <div class="tc-big">00:45<span class="total">/ 07:03</span></div>
+            <div class="summary">
+              <strong>8개 댓글</strong> · 7개 미해결 ·
+              <strong style="color: var(--cat-c); --cat-c: #7c3aed;">"컷" 몰려있음</strong> 0:45~2:30
+            </div>
+          </div>
+
+          <div class="hmap">
+            <!-- 위치(%)를 x, 높이(%)를 density로 -->
+            <div class="bar" style="left: 3%; width: 2.5%; height: 55%; background: #dc2626;"></div>
+            <div class="bar" style="left: 10%; width: 2.5%; height: 75%; background: #7c3aed;"></div>
+            <div class="bar" style="left: 14%; width: 2.5%; height: 55%; background: #0891b2;"></div>
+            <div class="bar" style="left: 27%; width: 2.5%; height: 30%; background: #ea580c; opacity: 0.4;"></div>
+            <div class="bar" style="left: 35%; width: 2.5%; height: 55%; background: #7c3aed;"></div>
+            <div class="bar" style="left: 46%; width: 2.5%; height: 45%; background: #6b7280;"></div>
+            <div class="bar" style="left: 56%; width: 2.5%; height: 55%; background: #0891b2;"></div>
+            <div class="bar" style="left: 75%; width: 2.5%; height: 45%; background: #dc2626;"></div>
+            <!-- 그라데이션 밴드 (density indicator) -->
+            <div style="position:absolute; inset:0; background: linear-gradient(90deg, transparent 0%, rgba(124,58,237,0.05) 5%, rgba(124,58,237,0.1) 12%, rgba(124,58,237,0.05) 18%, transparent 25%, transparent 32%, rgba(124,58,237,0.05) 38%, transparent 50%, transparent 100%); pointer-events:none;"></div>
+            <div class="playhead" style="left: 10.6%;"></div>
+          </div>
+          <div class="axis">
+            <span>0:00</span><span>1:00</span><span>2:00</span><span>3:00</span><span>4:00</span><span>5:00</span><span>6:00</span><span>7:00</span>
+          </div>
+        </div>
+
+        <div class="play-ctl">
+          <button class="play">
+            <svg class="icn" viewBox="0 0 24 24" style="width:14px;height:14px;"><polygon points="6 3 20 12 6 21 6 3" fill="currentColor" stroke="none"/></svg>
+          </button>
+          <span style="font-family: ui-monospace, monospace; font-size: 12px; color: var(--text-soft);">00:45 / 07:03</span>
+          <button class="add-here">
+            <svg class="icn" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="12" y1="7" x2="12" y2="13"/></svg>
+            여기에 댓글
+          </button>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="side-head">
+          <h3>댓글</h3>
+          <span class="n">7</span>
+          <span style="margin-left:auto; font-size: 11px; color: var(--text-faint);">미해결만 · 5개 카테고리</span>
+        </div>
+
+        <div class="cmts">
+          <div class="cmt cat-txt">
+            <div class="ci">
+              <svg class="icn" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+            </div>
+            <div class="b">
+              <div class="h"><span class="tc">00:12</span><span class="nm">seon</span><span class="when">10분 전</span></div>
+              <div class="msg">여기 자막 오타 "프리비트" 아니라 "프리핏"</div>
+            </div>
+          </div>
+
+          <div class="cmt cat-cut">
+            <div class="ci">
+              <svg class="icn" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+            </div>
+            <div class="b">
+              <div class="h"><span class="tc">00:45</span><span class="nm">jin</span><span class="when">5분 전</span></div>
+              <div class="msg">이 컷 넘길 타이밍 애매. 0.3초 정도 더 붙여도 될 듯</div>
+              <div class="foot">
+                <svg class="icn-sm icn" viewBox="0 0 24 24"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg>
+                <span>답글 2</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cmt cat-audio">
+            <div class="ci">
+              <svg class="icn" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            </div>
+            <div class="b">
+              <div class="h"><span class="tc">01:02</span><span class="nm">seon</span><span class="when">5분 전</span></div>
+              <div class="msg">BGM 볼륨 낮춰야 할 듯. 내레이션이 묻혀요</div>
+            </div>
+          </div>
+
+          <div class="cmt cat-cut">
+            <div class="ci">
+              <svg class="icn" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/></svg>
+            </div>
+            <div class="b">
+              <div class="h"><span class="tc">02:30</span><span class="nm">jin</span><span class="when">4분 전</span></div>
+              <div class="msg">이 샷 0.5초 정도 더 붙여주세요</div>
+            </div>
+          </div>
+
+          <div class="cmt cat-etc">
+            <div class="ci">
+              <svg class="icn" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+            </div>
+            <div class="b">
+              <div class="h"><span class="tc">03:15</span><span class="nm">seon</span><span class="when">방금</span></div>
+              <div class="msg">엔드카드 로고 위치 재검토</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="concept-notes">
+    <div class="notes-grid">
+      <div>
+        <h4>👍 장점</h4>
+        <ul>
+          <li><strong>개별 마커 완전 제거</strong> → 시각 노이즈 최소. "점 40개" 압박감 없음</li>
+          <li>밀도 그라데이션 밴드로 "어디 몰려있나" 즉시 인식 (왼쪽 영역 붐빔을 색 농도로)</li>
+          <li>상단 카테고리 필터 칩으로 <strong>관심 축만 보기</strong> — 색감에만 집중하면 나머지 숨김</li>
+          <li>"7개 미해결 · 컷 몰려있음 0:45~2:30" 같은 <strong>자동 인사이트 문구</strong> 제공 가능</li>
+          <li>미해결/내것 토글이 항상 상단 노출 → 상태 관리 쉬움</li>
+        </ul>
+      </div>
+      <div>
+        <h4>👎 단점 / 고려사항</h4>
+        <ul>
+          <li>개별 댓글 위치가 바 형태로만 있어서 정확한 시점 클릭이 까다로움 (바 hover로 보완 필요)</li>
+          <li>카테고리 분류가 더욱 필수 — 없으면 필터의 의미 퇴색</li>
+          <li>짧은 영상 (1분 미만)은 바 간격 너무 좁음</li>
+          <li>"우리 색감 대화 많이 했지" 같은 맥락 복기는 Split Panel보다 약함</li>
+          <li>"자동 인사이트" 문구 로직 잘못 짜면 오판 유발</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================
+     5A · Linear Mono
+     ====================================================== -->
+<section id="d5a" class="design d5a">
+  <div class="concept-header">
+    <div>
+      <h2 class="concept-title">5A · Linear Mono</h2>
+      <p class="concept-sub">미니멀 · 모노톤 지배 · 카테고리는 작은 점(dot)으로만 암시 · Linear/Vercel 분위기</p>
+    </div>
+    <div class="concept-tags">
+      <span class="tag">미니멀</span>
+      <span class="tag">프리미엄 무드</span>
+      <span class="tag green">밀도·조용함 균형</span>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="topbar">
+      <div class="fname">#18_프리비트_v02.mp4</div>
+      <span class="vpill">V2
+        <svg class="icn icn-sm" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </span>
+      <div class="right-actions">
+        <button>공유</button>
+        <button>다운로드</button>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="left">
+        <div class="vid">
+          <div class="tc-hud">00:45 / 07:03</div>
+        </div>
+        <div class="scr">
+          <div class="scr-bar"><div class="f"></div></div>
+        </div>
+        <div class="strip">
+          <div class="strip-row">
+            <div class="tb"><div class="frame"></div><span class="tc-lbl">00:00</span></div>
+            <div class="tb">
+              <div class="frame">
+                <span class="bdg-group"><span class="bdg txt"></span></span>
+              </div>
+              <span class="tc-lbl">00:12</span>
+            </div>
+            <div class="tb current">
+              <div class="frame">
+                <span class="bdg-group"><span class="bdg cut"></span></span>
+              </div>
+              <span class="tc-lbl">00:45</span>
+            </div>
+            <div class="tb">
+              <div class="frame">
+                <span class="bdg-group"><span class="bdg aud"></span></span>
+              </div>
+              <span class="tc-lbl">01:02</span>
+            </div>
+            <div class="tb">
+              <div class="frame">
+                <span class="bdg-group"><span class="bdg col r"></span></span>
+              </div>
+              <span class="tc-lbl">01:58</span>
+            </div>
+            <div class="tb">
+              <div class="frame">
+                <span class="bdg-group"><span class="bdg cut"></span></span>
+              </div>
+              <span class="tc-lbl">02:30</span>
+            </div>
+            <div class="tb">
+              <div class="frame">
+                <span class="bdg-group"><span class="bdg etc"></span></span>
+              </div>
+              <span class="tc-lbl">03:15</span>
+            </div>
+            <div class="tb">
+              <div class="frame">
+                <span class="bdg-group"><span class="bdg aud"></span></span>
+              </div>
+              <span class="tc-lbl">04:00</span>
+            </div>
+            <div class="tb"><div class="frame"></div><span class="tc-lbl">04:40</span></div>
+            <div class="tb">
+              <div class="frame">
+                <span class="bdg-group"><span class="bdg txt"></span></span>
+              </div>
+              <span class="tc-lbl">05:20</span>
+            </div>
+          </div>
+        </div>
+        <div class="legend">
+          <span class="ltag active"><span class="dot" style="background:#ef4444;"></span>자막 <span class="n">2</span></span>
+          <span class="ltag active"><span class="dot" style="background:#8b5cf6;"></span>컷 <span class="n">2</span></span>
+          <span class="ltag active"><span class="dot" style="background:#f97316;"></span>색감 <span class="n">1</span></span>
+          <span class="ltag active"><span class="dot" style="background:#06b6d4;"></span>오디오 <span class="n">2</span></span>
+          <span class="ltag"><span class="dot" style="background:#a1a1aa;"></span>모션 <span class="n">0</span></span>
+          <span class="ltag active"><span class="dot" style="background:#71717a;"></span>기타 <span class="n">1</span></span>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="side-head">
+          <h3>댓글</h3>
+          <span class="n">8</span>
+          <button class="filt">
+            <svg class="icn-sm icn" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            필터
+          </button>
+        </div>
+        <div class="cmts">
+          <div class="cm">
+            <div class="cm-meta">
+              <span class="cm-tag txt"><span class="dt"></span>자막</span>
+              <span class="cm-tc">00:12</span>
+              <span class="cm-who">seon</span>
+              <span class="cm-when">10분 전</span>
+            </div>
+            <div class="cm-msg">여기 자막 오타 있어요 "프리비트" 아니라 "프리핏"</div>
+          </div>
+          <div class="cm sel">
+            <div class="cm-meta">
+              <span class="cm-tag cut"><span class="dt"></span>컷</span>
+              <span class="cm-tc">00:45</span>
+              <span class="cm-who">jin</span>
+              <span class="cm-when">5분 전</span>
+            </div>
+            <div class="cm-msg">이 컷 넘길 타이밍 애매. 0.3초 정도 더 붙여도 될 듯</div>
+            <div class="cm-rep">
+              <svg class="icn-sm icn" viewBox="0 0 24 24"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg>
+              답글 2
+            </div>
+          </div>
+          <div class="cm">
+            <div class="cm-meta">
+              <span class="cm-tag aud"><span class="dt"></span>오디오</span>
+              <span class="cm-tc">01:02</span>
+              <span class="cm-who">seon</span>
+              <span class="cm-when">5분 전</span>
+            </div>
+            <div class="cm-msg">BGM 볼륨 좀 낮춰야 할 듯. 내레이션이 묻혀요</div>
+          </div>
+          <div class="cm resolved">
+            <div class="cm-meta">
+              <span class="cm-tag col"><span class="dt"></span>색감</span>
+              <span class="cm-tc">01:58</span>
+              <span class="cm-who">min</span>
+              <span class="cm-when">해결됨</span>
+            </div>
+            <div class="cm-msg">색감 톤 조정 필요</div>
+          </div>
+          <div class="cm">
+            <div class="cm-meta">
+              <span class="cm-tag cut"><span class="dt"></span>컷</span>
+              <span class="cm-tc">02:30</span>
+              <span class="cm-who">jin</span>
+              <span class="cm-when">4분 전</span>
+            </div>
+            <div class="cm-msg">이 샷 0.5초 정도 더 붙여주세요</div>
+          </div>
+          <div class="cm">
+            <div class="cm-meta">
+              <span class="cm-tag etc"><span class="dt"></span>기타</span>
+              <span class="cm-tc">03:15</span>
+              <span class="cm-who">seon</span>
+              <span class="cm-when">방금</span>
+            </div>
+            <div class="cm-msg">엔드카드 로고 위치 재검토</div>
+          </div>
+        </div>
+        <div class="compose">
+          <span class="at">
+            <svg class="icn-sm icn" viewBox="0 0 24 24" style="stroke:#fff;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            00:45
+          </span>
+          <input type="text" placeholder="피드백을 입력하세요..." value="이 컷 타이밍 애매" />
+          <div class="auto">
+            자동 분류:
+            <span class="chip"><span class="dt" style="background:#8b5cf6;"></span>컷</span>
+            <span style="margin-left: auto; font-size: 10.5px; color: #d4d4d8;">키워드 "타이밍" 감지됨 · 클릭하여 변경</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="concept-notes">
+    <div class="notes-grid">
+      <div>
+        <h4>👍 장점</h4>
+        <ul>
+          <li>채도 낮은 모노톤 + 작은 컬러 점(dot) → 조용하지만 정보 밀도 유지</li>
+          <li>썸네일이 <strong>rainbow gradient 아닌 단색 필름 프레임</strong> — 실제 영상 대체 시 자연스러움</li>
+          <li>카테고리 태그가 점+대문자 라벨 → Vercel/Linear 같은 프리미엄 무드</li>
+          <li>전체 tone-on-tone: 브랜드 파란색 의존 최소. 영상 자체가 주인공</li>
+        </ul>
+      </div>
+      <div>
+        <h4>👎 단점 / 고려사항</h4>
+        <ul>
+          <li>한국 B2B UX에 "너무 밋밋"으로 느껴질 수 있음 (취향 의존)</li>
+          <li>점이 작아서 원거리/모바일에서 식별 약함</li>
+          <li>흰배경+검정 대비만 있으니 따뜻함/감성 부족</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================
+     5B · Studio Dark
+     ====================================================== -->
+<section id="d5b" class="design d5b">
+  <div class="concept-header">
+    <div>
+      <h2 class="concept-title">5B · Studio Dark</h2>
+      <p class="concept-sub">시네마 다크 · 앰버 포인트 · 필름 스트립 감성 · 프로 편집 스위트 느낌</p>
+    </div>
+    <div class="concept-tags">
+      <span class="tag">시네마 무드</span>
+      <span class="tag warn">몰입감 ↑</span>
+      <span class="tag">프로툴 분위기</span>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="topbar">
+      <div class="fname">#18_프리비트_v02.mp4</div>
+      <span class="vpill">V2
+        <svg class="icn icn-sm" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </span>
+      <div class="right-actions">
+        <button>SHARE</button>
+        <button>EXPORT</button>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="left">
+        <div class="vid">
+          <div class="play-hud">
+            <svg class="icn icn-lg" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3" fill="currentColor" stroke="none"/></svg>
+          </div>
+          <div class="tc-hud">00:45 : 18</div>
+        </div>
+        <div class="scr">
+          <div class="scr-bar"><div class="f"></div><div class="hd"></div></div>
+        </div>
+        <div class="strip">
+          <div class="strip-row">
+            <div class="tb"><div class="frame"><div class="inner"></div></div><span class="tc-lbl">00:00</span></div>
+            <div class="tb">
+              <div class="frame"><div class="inner"></div>
+                <span class="bdg-group"><span class="bdg txt">TXT</span></span>
+              </div>
+              <span class="tc-lbl">00:12</span>
+            </div>
+            <div class="tb current">
+              <div class="frame"><div class="inner"></div>
+                <span class="bdg-group"><span class="bdg cut">CUT</span></span>
+              </div>
+              <span class="tc-lbl">00:45</span>
+            </div>
+            <div class="tb">
+              <div class="frame"><div class="inner"></div>
+                <span class="bdg-group"><span class="bdg aud">AUD</span></span>
+              </div>
+              <span class="tc-lbl">01:02</span>
+            </div>
+            <div class="tb">
+              <div class="frame"><div class="inner"></div>
+                <span class="bdg-group"><span class="bdg r">RES</span></span>
+              </div>
+              <span class="tc-lbl">01:58</span>
+            </div>
+            <div class="tb">
+              <div class="frame"><div class="inner"></div>
+                <span class="bdg-group"><span class="bdg cut">CUT</span></span>
+              </div>
+              <span class="tc-lbl">02:30</span>
+            </div>
+            <div class="tb">
+              <div class="frame"><div class="inner"></div>
+                <span class="bdg-group"><span class="bdg etc">ETC</span></span>
+              </div>
+              <span class="tc-lbl">03:15</span>
+            </div>
+            <div class="tb">
+              <div class="frame"><div class="inner"></div>
+                <span class="bdg-group"><span class="bdg aud">AUD</span></span>
+              </div>
+              <span class="tc-lbl">04:00</span>
+            </div>
+            <div class="tb"><div class="frame"><div class="inner"></div></div><span class="tc-lbl">04:40</span></div>
+            <div class="tb">
+              <div class="frame"><div class="inner"></div>
+                <span class="bdg-group"><span class="bdg txt">TXT</span></span>
+              </div>
+              <span class="tc-lbl">05:20</span>
+            </div>
+          </div>
+        </div>
+        <div class="legend">
+          <span class="ltag active">TXT <span class="n">2</span></span>
+          <span class="ltag active">CUT <span class="n">2</span></span>
+          <span class="ltag active">COL <span class="n">1✓</span></span>
+          <span class="ltag active">AUD <span class="n">2</span></span>
+          <span class="ltag">MTN <span class="n">0</span></span>
+          <span class="ltag active">ETC <span class="n">1</span></span>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="side-head">
+          <h3>COMMENTS</h3>
+          <span class="n">8</span>
+          <button class="filt">
+            <svg class="icn-sm icn" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            FILTER
+          </button>
+        </div>
+        <div class="cmts">
+          <div class="cm">
+            <div class="cm-top">
+              <span class="cm-tag txt">TXT</span>
+              <span class="cm-tc">00:12:00</span>
+              <span class="cm-who">seon</span>
+              <span class="cm-when">10m</span>
+            </div>
+            <div class="cm-msg">여기 자막 오타 있어요 "프리비트" 아니라 "프리핏"</div>
+          </div>
+          <div class="cm sel">
+            <div class="cm-top">
+              <span class="cm-tag cut">CUT</span>
+              <span class="cm-tc">00:45:18</span>
+              <span class="cm-who">jin</span>
+              <span class="cm-when">5m</span>
+            </div>
+            <div class="cm-msg">이 컷 넘길 타이밍 애매. 0.3초 정도 더 붙여도 될 듯</div>
+            <div class="cm-rep">
+              <svg class="icn-sm icn" viewBox="0 0 24 24"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg>
+              REPLIES 2
+            </div>
+          </div>
+          <div class="cm">
+            <div class="cm-top">
+              <span class="cm-tag aud">AUD</span>
+              <span class="cm-tc">01:02:04</span>
+              <span class="cm-who">seon</span>
+              <span class="cm-when">5m</span>
+            </div>
+            <div class="cm-msg">BGM 볼륨 좀 낮춰야 할 듯. 내레이션이 묻혀요</div>
+          </div>
+          <div class="cm resolved">
+            <div class="cm-top">
+              <span class="cm-tag col">COL</span>
+              <span class="cm-tc">01:58:00</span>
+              <span class="cm-who">min</span>
+              <span class="cm-when">RESOLVED</span>
+            </div>
+            <div class="cm-msg">색감 톤 조정 필요</div>
+          </div>
+          <div class="cm">
+            <div class="cm-top">
+              <span class="cm-tag cut">CUT</span>
+              <span class="cm-tc">02:30:12</span>
+              <span class="cm-who">jin</span>
+              <span class="cm-when">4m</span>
+            </div>
+            <div class="cm-msg">이 샷 0.5초 정도 더 붙여주세요</div>
+          </div>
+          <div class="cm">
+            <div class="cm-top">
+              <span class="cm-tag etc">ETC</span>
+              <span class="cm-tc">03:15:00</span>
+              <span class="cm-who">seon</span>
+              <span class="cm-when">now</span>
+            </div>
+            <div class="cm-msg">엔드카드 로고 위치 재검토</div>
+          </div>
+        </div>
+        <div class="compose">
+          <span class="at">
+            <svg class="icn-sm icn" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            @ 00:45:18
+          </span>
+          <input type="text" placeholder="LEAVE A NOTE..." value="이 컷 타이밍 애매" />
+          <div class="auto">
+            AUTO:
+            <span class="chip">CUT</span>
+            <span style="margin-left: auto; font-size: 10px; color: #3f3f46;">KEYWORD "타이밍" DETECTED</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="concept-notes">
+    <div class="notes-grid">
+      <div>
+        <h4>👍 장점</h4>
+        <ul>
+          <li>영상 자체가 어두운 컨텐츠 → 다크 UI와 대비/조화 자연스러움</li>
+          <li>앰버(#fbbf24) 단일 포인트 컬러 → 세련됨 · 프리미엄 프로툴 느낌</li>
+          <li>썸네일 필름 스트립 패턴 → "편집실" 분위기, 영상 작업자 심리적 호응</li>
+          <li>영문 태그 + 모노스페이스 TC → 프로페셔널 코드톤</li>
+        </ul>
+      </div>
+      <div>
+        <h4>👎 단점 / 고려사항</h4>
+        <ul>
+          <li>다크 테마 호불호. 외부 고객(밝은 환경) 공유 시 부담</li>
+          <li>장시간 리뷰 시 눈 피로 우려</li>
+          <li>영문 태그(TXT/CUT) → 한국 팀원 첫인상 진입장벽 가능</li>
+          <li>화면 전환 자주 하는 사람에겐 "시각 피로" 타 도구 대비 큼</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================
+     5C · Editorial
+     ====================================================== -->
+<section id="d5c" class="design d5c">
+  <div class="concept-header">
+    <div>
+      <h2 class="concept-title">5C · Editorial</h2>
+      <p class="concept-sub">따뜻한 아이보리 배경 · 둥근 카드 · 테라코타 포인트 · Notion·Figma Files 분위기</p>
+    </div>
+    <div class="concept-tags">
+      <span class="tag green">친근함</span>
+      <span class="tag">둥글둥글</span>
+      <span class="tag">여유로운 호흡</span>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="topbar">
+      <div class="fname">#18_프리비트_v02.mp4</div>
+      <span class="vpill">V1</span>
+      <span class="vpill active">V2
+        <svg class="icn icn-sm" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </span>
+      <span class="vpill">V3</span>
+      <div class="right-actions">
+        <button>공유</button>
+        <button>다운로드</button>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="left">
+        <div class="vid-card">
+          <div class="frame">
+            <div class="tc-hud">00:45 / 07:03</div>
+          </div>
+        </div>
+
+        <div class="scr-row">
+          <button class="play">
+            <svg class="icn" viewBox="0 0 24 24" style="width:13px;height:13px;"><polygon points="6 3 20 12 6 21 6 3" fill="currentColor" stroke="none"/></svg>
+          </button>
+          <span class="tc">00:45 <span class="total">/ 07:03</span></span>
+          <div class="bar"><div class="f"></div><div class="hd"></div></div>
+        </div>
+
+        <div class="strip-wrap">
+          <div class="strip">
+            <div class="tb">
+              <div class="frame"></div>
+              <div class="meta"><span class="tc-lbl">00:00</span></div>
+            </div>
+            <div class="tb">
+              <div class="frame">
+                <span class="bdg-group">
+                  <span class="bdg txt">
+                    <svg class="icn-sm icn" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+                  </span>
+                </span>
+              </div>
+              <div class="meta"><span class="tc-lbl">00:12</span></div>
+            </div>
+            <div class="tb current">
+              <div class="frame">
+                <span class="bdg-group">
+                  <span class="bdg cut">
+                    <svg class="icn-sm icn" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                  </span>
+                </span>
+              </div>
+              <div class="meta"><span class="tc-lbl">00:45</span></div>
+            </div>
+            <div class="tb">
+              <div class="frame">
+                <span class="bdg-group">
+                  <span class="bdg aud">
+                    <svg class="icn-sm icn" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                  </span>
+                </span>
+              </div>
+              <div class="meta"><span class="tc-lbl">01:02</span></div>
+            </div>
+            <div class="tb">
+              <div class="frame">
+                <span class="bdg-group">
+                  <span class="bdg r">
+                    <svg class="icn-sm icn" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                </span>
+              </div>
+              <div class="meta"><span class="tc-lbl">01:58</span></div>
+            </div>
+            <div class="tb">
+              <div class="frame">
+                <span class="bdg-group">
+                  <span class="bdg cut">
+                    <svg class="icn-sm icn" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/></svg>
+                  </span>
+                </span>
+              </div>
+              <div class="meta"><span class="tc-lbl">02:30</span></div>
+            </div>
+            <div class="tb">
+              <div class="frame">
+                <span class="bdg-group">
+                  <span class="bdg etc">
+                    <svg class="icn-sm icn" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+                  </span>
+                </span>
+              </div>
+              <div class="meta"><span class="tc-lbl">03:15</span></div>
+            </div>
+            <div class="tb">
+              <div class="frame">
+                <span class="bdg-group">
+                  <span class="bdg aud">
+                    <svg class="icn-sm icn" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
+                  </span>
+                </span>
+              </div>
+              <div class="meta"><span class="tc-lbl">04:00</span></div>
+            </div>
+            <div class="tb">
+              <div class="frame"></div>
+              <div class="meta"><span class="tc-lbl">04:40</span></div>
+            </div>
+            <div class="tb">
+              <div class="frame">
+                <span class="bdg-group">
+                  <span class="bdg txt">
+                    <svg class="icn-sm icn" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+                  </span>
+                </span>
+              </div>
+              <div class="meta"><span class="tc-lbl">05:20</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="legend">
+          <span class="ltag txt active"><span class="dot"></span>자막 <span class="n">2</span></span>
+          <span class="ltag cut active"><span class="dot"></span>컷 <span class="n">2</span></span>
+          <span class="ltag col active"><span class="dot"></span>색감 <span class="n">1 ✓</span></span>
+          <span class="ltag aud active"><span class="dot"></span>오디오 <span class="n">2</span></span>
+          <span class="ltag etc"><span class="dot"></span>모션 <span class="n">0</span></span>
+          <span class="ltag etc active"><span class="dot"></span>기타 <span class="n">1</span></span>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="side-head">
+          <h3>피드백</h3>
+          <div class="sub">8개 댓글 · 7개 미해결</div>
+        </div>
+        <div class="cmts">
+          <div class="cm">
+            <div class="cm-top">
+              <span class="cm-tag txt">자막</span>
+              <span class="cm-tc">00:12</span>
+              <span class="cm-who">seon</span>
+              <span class="cm-when">10분 전</span>
+            </div>
+            <div class="cm-msg">여기 자막 오타 있어요 "프리비트" 아니라 "프리핏"</div>
+          </div>
+          <div class="cm sel">
+            <div class="cm-top">
+              <span class="cm-tag cut">컷</span>
+              <span class="cm-tc">00:45</span>
+              <span class="cm-who">jin</span>
+              <span class="cm-when">5분 전</span>
+            </div>
+            <div class="cm-msg">이 컷 넘길 타이밍 애매. 0.3초 정도 더 붙여도 될 듯</div>
+            <div class="cm-rep">
+              <svg class="icn-sm icn" viewBox="0 0 24 24"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg>
+              답글 2
+            </div>
+          </div>
+          <div class="cm">
+            <div class="cm-top">
+              <span class="cm-tag aud">오디오</span>
+              <span class="cm-tc">01:02</span>
+              <span class="cm-who">seon</span>
+              <span class="cm-when">5분 전</span>
+            </div>
+            <div class="cm-msg">BGM 볼륨 좀 낮춰야 할 듯. 내레이션이 묻혀요</div>
+          </div>
+          <div class="cm resolved">
+            <div class="cm-top">
+              <span class="cm-tag col">색감</span>
+              <span class="cm-tc">01:58</span>
+              <span class="cm-who">min</span>
+              <span class="cm-when">✓ 해결</span>
+            </div>
+            <div class="cm-msg">색감 톤 조정 필요</div>
+          </div>
+          <div class="cm">
+            <div class="cm-top">
+              <span class="cm-tag cut">컷</span>
+              <span class="cm-tc">02:30</span>
+              <span class="cm-who">jin</span>
+              <span class="cm-when">4분 전</span>
+            </div>
+            <div class="cm-msg">이 샷 0.5초 정도 더 붙여주세요</div>
+          </div>
+          <div class="cm">
+            <div class="cm-top">
+              <span class="cm-tag etc">기타</span>
+              <span class="cm-tc">03:15</span>
+              <span class="cm-who">seon</span>
+              <span class="cm-when">방금</span>
+            </div>
+            <div class="cm-msg">엔드카드 로고 위치 재검토</div>
+          </div>
+        </div>
+        <div class="compose">
+          <div class="at-row">
+            <span class="at">
+              <svg class="icn-sm icn" viewBox="0 0 24 24" style="stroke:#fffefb;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              00:45
+            </span>
+            <span class="at-note">이 시점에 댓글 달기</span>
+          </div>
+          <div class="in-box">
+            <input type="text" placeholder="피드백을 입력하세요..." value="이 컷 타이밍 애매" />
+            <button class="send">
+              <svg class="icn" viewBox="0 0 24 24" style="stroke:#fffefb;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+          <div class="auto-row">
+            자동 분류:
+            <span class="chip">
+              <svg class="icn-sm icn" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/></svg>
+              컷
+            </span>
+            <span style="margin-left:auto; font-size: 11px; color: #d6d3d1;">"타이밍" 키워드 감지됨</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="concept-notes">
+    <div class="notes-grid">
+      <div>
+        <h4>👍 장점</h4>
+        <ul>
+          <li>아이보리 배경(#faf9f7) + 테라코타(#d97706) — 따뜻·친근함, 한국 내부팀 감성 어울림</li>
+          <li>댓글이 <strong>카드 단위로 떠 있어서 하나씩 집중</strong>하기 좋음</li>
+          <li>둥근 모서리 + 부드러운 그림자 = Notion·Figma Files 느낌, 모던</li>
+          <li>여백이 많아 오래 봐도 피로 적음, 외부 고객 공유에 무난</li>
+        </ul>
+      </div>
+      <div>
+        <h4>👎 단점 / 고려사항</h4>
+        <ul>
+          <li>프로툴스러운 긴장감 없음 — "느긋한" 느낌이라 빠른 리뷰 사이클엔 덜 맞을 수도</li>
+          <li>카드 패딩 많아 같은 영역에 댓글 적게 보임 (밀도 ↓)</li>
+          <li>테라코타는 영상 색감 리뷰 시 비교 혼동 가능 (thumbnail이 노란/주황 계열이면 덩어리로 보일 수 있음)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const buttons = document.querySelectorAll('.switcher button[data-t]');
+  const sections = document.querySelectorAll('.design');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.t;
+      buttons.forEach(b => b.classList.toggle('active', b === btn));
+      sections.forEach(s => s.classList.toggle('active', s.id === target));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+</script>
+
+</body>
+</html>

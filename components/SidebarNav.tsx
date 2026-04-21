@@ -2,18 +2,31 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { FolderOpen, Trash2, Link as LinkIcon } from "lucide-react";
+import {
+  FolderOpen,
+  Trash2,
+  Link as LinkIcon,
+  Users,
+  Sparkles,
+} from "lucide-react";
 
-const items = [
+const baseItems = [
   { label: "파일", icon: FolderOpen, href: "/" },
   { label: "휴지통", icon: Trash2, href: "/trash" },
   { label: "공유 링크", icon: LinkIcon, href: "/shares" },
+  { label: "인사이트", icon: Sparkles, href: "/insights" },
 ] as const;
 
-export function SidebarNav() {
+const adminItems = [
+  { label: "사용자 관리", icon: Users, href: "/admin/users" },
+] as const;
+
+export function SidebarNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
   const params = useSearchParams();
   const queryPath = params.get("path") ?? "/";
+
+  const items = isAdmin ? [...baseItems, ...adminItems] : baseItems;
 
   return (
     <nav className="flex-1 overflow-y-auto px-2 py-2">

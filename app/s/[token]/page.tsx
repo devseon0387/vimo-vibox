@@ -32,18 +32,29 @@ export default async function SharePage({
   if (!link) notFound();
 
   const expired = !!link.expiresAt && link.expiresAt.getTime() < Date.now();
-  const filename = path.basename(link.filePath);
   const needPassword = !!link.passwordHash;
-  const kind = detectKind(filename);
+
+  // paths 컬럼이 있으면 멀티, 없으면 단일
+  const paths: string[] = link.paths
+    ? (JSON.parse(link.paths) as string[])
+    : [link.filePath];
+
+  const files = paths.map((p) => ({
+    path: p,
+    name: path.basename(p),
+    kind: detectKind(path.basename(p)),
+  }));
 
   return (
     <SharePageClient
       token={token}
-      filename={filename}
-      kind={kind}
+      title={link.title ?? files[0].name}
+      files={files}
       expired={expired}
       needPassword={needPassword}
       expiresAt={link.expiresAt ? link.expiresAt.toISOString() : null}
+      allowComments={link.allowComments}
+      allowDownload={link.allowDownload}
     />
   );
 }

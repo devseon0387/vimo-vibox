@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>Vibox 자막 수정 기능 · 통합 목업</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet" />
+<style>
+  :root {
+    --text: #1a1a1a;
+    --text-soft: #52525b;
+    --text-faint: #a1a1aa;
+    --border: #e4e4e7;
+    --border-soft: #f1f1f2;
+    --surface: #fafafa;
+    --hover: #f4f4f5;
+    --accent: #2563eb;
+    --amber: #eab308;
+    --amber-bg: #fef3c7;
+    --praise: #16a34a;
+    --praise-bg: #f0fdf4;
+    --danger: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Pretendard Variable", Pretendard, -apple-system, sans-serif;
+    background: #eceef1;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .top-switcher {
+    max-width: 1400px; margin: 0 auto 20px;
+    display: flex; gap: 8px;
+    background: #0f1115; color: #fff;
+    padding: 12px 20px; border-radius: 10px;
+    align-items: center;
+  }
+  .top-switcher .title {
+    font-size: 11px; font-weight: 800; letter-spacing: 0.15em;
+    color: #9ca3af; margin-right: 10px;
+  }
+  .top-switcher button {
+    background: transparent; border: 1px solid #374151;
+    color: #d1d5db;
+    padding: 7px 14px; border-radius: 6px;
+    font-family: inherit; font-size: 12.5px; font-weight: 500;
+    cursor: pointer;
+  }
+  .top-switcher button.active {
+    background: #fff; color: #0f1115; border-color: #fff;
+    font-weight: 700;
+  }
+  .top-switcher .hint {
+    margin-left: auto; font-size: 11px; color: #6b7280;
+  }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .modal {
+    max-width: 1400px; margin: 0 auto;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 10px 50px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.04);
+    overflow: hidden;
+  }
+  .modal-head {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 14px;
+  }
+  .modal-head .fname {
+    font-size: 14px; font-weight: 700;
+  }
+  .modal-head .path {
+    font-size: 11px; color: var(--text-faint);
+  }
+  .modal-head .close {
+    margin-left: auto;
+    background: transparent; border: 0;
+    padding: 6px; color: var(--text-faint);
+    cursor: pointer; font-size: 16px;
+  }
+
+  .modal-body { display: flex; min-height: 640px; }
+
+  /* =========== 비디오 영역 =========== */
+  .video-col {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column;
+    background: #0a0a0a;
+  }
+  .video-frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    max-height: 560px;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(168,85,247,0.35), transparent 50%),
+      radial-gradient(circle at 70% 40%, rgba(236,72,153,0.3), transparent 50%),
+      linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #0f172a 100%);
+    overflow: hidden;
+  }
+  .video-frame::before {
+    content: "";
+    position: absolute;
+    left: 50%; top: 40%;
+    width: 280px; height: 380px;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse 80px 120px at 50% 25%, #f9a8d4 0%, transparent 70%),
+      radial-gradient(ellipse 140px 180px at 50% 80%, #c4b5fd 0%, transparent 70%);
+    filter: blur(6px);
+    opacity: 0.75;
+  }
+  .video-frame::after {
+    content: "";
+    position: absolute;
+    left: 10%; right: 10%; top: 20%;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, #ec4899, transparent);
+    opacity: 0.6; filter: blur(2px);
+  }
+  .subtitle {
+    position: absolute;
+    bottom: 10%; left: 50%;
+    transform: translateX(-50%);
+    color: #fff; font-size: 28px; font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.7);
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    z-index: 3;
+  }
+
+  /* =========== 주석 (B1 Solid) =========== */
+  .edit-box {
+    position: absolute;
+    border: 2.5px solid var(--amber);
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.4), 0 0 12px rgba(234,179,8,0.45);
+    z-index: 4;
+  }
+  .edit-box.praise {
+    border-color: var(--praise);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.4), 0 0 12px rgba(22,163,74,0.45);
+  }
+  .edit-box.resolved {
+    border-style: dashed;
+    opacity: 0.5;
+  }
+
+  .diff-tag {
+    position: absolute;
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #fff; padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 12px; font-weight: 600;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+    z-index: 5;
+    white-space: nowrap;
+    border: 1px solid rgba(0,0,0,0.04);
+  }
+  .diff-tag.praise { background: var(--praise); color: #fff; }
+  .diff-tag.praise .del,
+  .diff-tag.praise .arrow { color: rgba(255,255,255,0.8); }
+  .diff-tag.praise .ins { color: #fff; }
+  .diff-tag.resolved { opacity: 0.65; }
+
+  .diff-tag .num {
+    display: inline-grid; place-items: center;
+    width: 18px; height: 18px;
+    background: var(--amber); color: #fff;
+    border-radius: 99px;
+    font-size: 10px; font-weight: 800;
+    margin-right: 2px;
+  }
+  .diff-tag.praise .num { background: #fff; color: var(--praise); }
+  .diff-tag .del {
+    color: var(--danger); text-decoration: line-through;
+    font-weight: 500;
+  }
+  .diff-tag .ins { color: var(--praise); font-weight: 700; }
+  .diff-tag .arrow { color: var(--text-faint); margin: 0 2px; }
+
+  /* =========== HUD =========== */
+  .tc-hud {
+    position: absolute; bottom: 16px; left: 16px;
+    color: #fff;
+    font-family: ui-monospace, monospace; font-size: 11.5px;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(6px);
+    padding: 4px 10px; border-radius: 4px;
+    z-index: 2;
+  }
+
+  .anno-mode-toggle {
+    position: absolute; top: 16px; right: 16px;
+    background: rgba(0,0,0,0.55); backdrop-filter: blur(8px);
+    color: #fff; padding: 8px 12px; border-radius: 8px;
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11.5px; font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.15);
+    cursor: pointer;
+    z-index: 10;
+  }
+  .anno-mode-toggle .dot {
+    width: 8px; height: 8px; border-radius: 99px;
+    background: var(--amber);
+  }
+  .anno-mode-toggle.on { background: var(--amber); color: #111; }
+  .anno-mode-toggle.on .dot { background: #fff; }
+
+  /* =========== 플레이 컨트롤 =========== */
+  .player-ctl {
+    padding: 10px 14px;
+    background: #0f0f0f;
+    display: flex; align-items: center; gap: 12px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .play {
+    width: 36px; height: 36px;
+    background: #fff; color: #000;
+    border: 0; border-radius: 99px;
+    cursor: pointer; display: grid; place-items: center;
+  }
+  .tc-text {
+    font-family: ui-monospace, monospace; font-size: 11.5px;
+    color: rgba(255,255,255,0.7); min-width: 96px;
+  }
+  .bar {
+    flex: 1; height: 5px; background: rgba(255,255,255,0.12);
+    border-radius: 99px; position: relative;
+  }
+  .bar .f {
+    position: absolute; inset: 0 auto 0 0;
+    width: 40%; background: rgba(255,255,255,0.55);
+    border-radius: 99px;
+  }
+  .bar .hd {
+    position: absolute; top: 50%; left: 40%;
+    transform: translate(-50%, -50%);
+    width: 14px; height: 14px; background: #fff;
+    border-radius: 99px;
+  }
+  .bar .m {
+    position: absolute; top: 50%; transform: translate(-50%, -50%);
+    width: 10px; height: 10px; border-radius: 99px;
+    background: var(--amber); border: 2px solid #0f0f0f;
+    cursor: pointer;
+  }
+  .bar .m.praise { background: var(--praise); }
+  .bar .m.edit {
+    width: 6px; height: 12px; border-radius: 2px;
+    background: var(--amber); border: 1.5px solid #0f0f0f;
+  }
+  .ibtn {
+    width: 32px; height: 32px; border-radius: 6px;
+    background: transparent; border: 0;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer; display: grid; place-items: center;
+  }
+  .ibtn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+  /* =========== 댓글 패널 =========== */
+  .side {
+    width: 400px;
+    background: #fff;
+    border-left: 1px solid var(--border);
+    display: flex; flex-direction: column;
+  }
+  .side-head {
+    padding: 12px 16px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .side-head .row1 {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 10px;
+  }
+  .side-head h3 { margin: 0; font-size: 14px; font-weight: 700; }
+  .side-head .count { color: var(--text-faint); font-size: 13px; }
+  .side-head .row1 .right { margin-left: auto; font-size: 11px; color: var(--text-faint); }
+  .side-head .tabs {
+    display: flex; background: var(--surface);
+    padding: 3px; border-radius: 6px; gap: 2px;
+  }
+  .side-head .tabs button {
+    flex: 1; background: transparent; border: 0;
+    padding: 5px 10px; font-size: 11.5px; font-weight: 600;
+    border-radius: 4px; cursor: pointer;
+    color: var(--text-faint);
+    display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+    font-family: inherit;
+  }
+  .side-head .tabs button.active {
+    background: #fff; color: var(--text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    font-weight: 700;
+  }
+
+  .comment-list { flex: 1; overflow-y: auto; }
+  .cm {
+    border-bottom: 1px solid var(--border-soft);
+    cursor: pointer;
+  }
+  .cm:hover { background: var(--surface); }
+  .cm.open { background: var(--surface); }
+  .cm .row {
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+    min-height: 40px;
+  }
+  .cm .tc {
+    font-family: ui-monospace, monospace; font-size: 11.5px;
+    font-weight: 700; color: var(--cat-c, var(--amber));
+    min-width: 40px;
+  }
+  .cm .type-ico {
+    width: 18px; height: 18px; border-radius: 4px;
+    display: grid; place-items: center;
+    background: var(--cat-bg, var(--amber-bg));
+    color: var(--cat-c, var(--amber));
+    flex-shrink: 0;
+  }
+  .cm .name {
+    font-size: 12px; font-weight: 700; color: var(--text);
+    flex-shrink: 0;
+  }
+  .cm .snippet {
+    flex: 1; min-width: 0;
+    font-size: 12.5px; color: var(--text-soft);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .cm .snippet .del {
+    color: var(--danger); text-decoration: line-through;
+    font-weight: 500;
+  }
+  .cm .snippet .arrow { color: var(--text-faint); margin: 0 4px; }
+  .cm .snippet .ins { color: var(--praise); font-weight: 700; }
+  .cm .indicators {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10.5px; color: var(--text-faint);
+    flex-shrink: 0;
+  }
+  .cm .indicators .heart { color: var(--praise); }
+  .cm.resolved .snippet { opacity: 0.45; text-decoration: line-through; }
+
+  .cm .expanded {
+    display: none;
+    padding: 0 16px 16px 54px;
+  }
+  .cm.open .expanded { display: block; }
+  .cm .pill-row {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .cm .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 4px;
+    font-size: 10.5px; font-weight: 700;
+    background: var(--amber-bg); color: var(--amber);
+    letter-spacing: 0.03em; text-transform: uppercase;
+  }
+  .cm .pill.praise { background: var(--praise-bg); color: var(--praise); }
+  .cm .pill.resolved {
+    background: transparent; color: var(--praise); padding: 0;
+  }
+  .cm .pill.num {
+    background: var(--amber); color: #fff;
+    padding: 2px 7px;
+    border-radius: 99px; font-size: 10px;
+  }
+  .cm .pill.num.praise { background: var(--praise); }
+  .cm .pill-row .when {
+    margin-left: auto; color: var(--text-faint);
+    font-size: 10.5px; font-weight: 500;
+  }
+  .cm .full {
+    font-size: 13.5px; line-height: 1.55; color: var(--text);
+    margin-bottom: 10px;
+  }
+  .cm .full .del {
+    color: var(--danger); text-decoration: line-through;
+    font-weight: 500;
+  }
+  .cm .full .arrow { color: var(--text-faint); margin: 0 6px; }
+  .cm .full .ins { color: var(--praise); font-weight: 700; font-size: 14px; }
+  .cm .note {
+    font-size: 12px; color: var(--text-soft);
+    font-style: italic; margin-bottom: 10px;
+    padding-left: 10px; border-left: 2px solid var(--border);
+  }
+  .cm .actions {
+    display: flex; gap: 4px; flex-wrap: wrap;
+  }
+  .cm .actions button {
+    background: #fff; border: 1px solid var(--border);
+    padding: 5px 10px; border-radius: 5px;
+    font-size: 11.5px; color: var(--text-soft);
+    cursor: pointer; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .cm .actions button:hover {
+    border-color: var(--text); color: var(--text);
+  }
+  .cm .actions button.danger:hover {
+    border-color: var(--danger); color: var(--danger);
+  }
+
+  /* 카테고리 색 */
+  .cat-txt    { --cat-c: #ef4444; --cat-bg: #fef2f2; }
+  .cat-cut    { --cat-c: #8b5cf6; --cat-bg: #f5f3ff; }
+  .cat-col    { --cat-c: #f97316; --cat-bg: #fff7ed; }
+  .cat-aud    { --cat-c: #06b6d4; --cat-bg: #ecfeff; }
+  .cat-etc    { --cat-c: #71717a; --cat-bg: #f4f4f5; }
+  .cat-edit   { --cat-c: var(--amber); --cat-bg: var(--amber-bg); }
+
+  /* Compose 바 */
+  .compose {
+    padding: 10px 14px 12px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .compose .tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #111; color: #fff;
+    padding: 3px 8px; border-radius: 4px;
+    font-family: ui-monospace, monospace;
+    font-size: 10.5px; font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .compose textarea {
+    width: 100%; padding: 8px 10px;
+    border: 1px solid var(--border); border-radius: 6px;
+    font-family: inherit; font-size: 12.5px;
+    resize: none; outline: none;
+  }
+  .compose textarea:focus { border-color: var(--text); }
+  .compose .auto {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 6px;
+    font-size: 10.5px; color: var(--text-faint);
+  }
+  .compose .auto .chip {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 7px; border-radius: 4px;
+    background: #fff; border: 1px solid var(--border);
+    font-size: 10px; font-weight: 700;
+  }
+
+  /* =========== Compose popover (주석 작성용) =========== */
+  .anno-popover {
+    position: absolute;
+    z-index: 50;
+    width: 340px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    padding: 14px;
+    color: var(--text);
+  }
+  .anno-popover::before {
+    content: "";
+    position: absolute;
+    left: 40px; top: -7px;
+    width: 14px; height: 14px;
+    background: #fff;
+    transform: rotate(45deg);
+  }
+  .anno-popover h4 {
+    margin: 0 0 10px;
+    font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-faint);
+    font-weight: 800;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .anno-popover h4 .dot {
+    width: 8px; height: 8px; border-radius: 99px;
+    background: var(--amber);
+  }
+  .anno-popover .group {
+    margin-bottom: 9px;
+  }
+  .anno-popover .group label {
+    display: block; font-size: 10.5px;
+    font-weight: 700; color: var(--text-soft);
+    margin-bottom: 3px;
+    letter-spacing: 0.03em;
+  }
+  .anno-popover .group input {
+    width: 100%; padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-family: inherit; font-size: 13px;
+    outline: none;
+  }
+  .anno-popover .group input.ocr-loaded {
+    background: var(--amber-bg);
+    font-weight: 700;
+    border-color: var(--amber);
+  }
+  .anno-popover .group input:focus {
+    border-color: var(--text);
+  }
+  .anno-popover .ocr-note {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 10px; color: var(--amber);
+    margin-top: 3px; font-weight: 600;
+  }
+  .anno-popover .actions {
+    display: flex; gap: 6px; justify-content: flex-end;
+    margin-top: 12px;
+  }
+  .anno-popover .actions button {
+    background: transparent; border: 1px solid var(--border);
+    padding: 6px 12px; border-radius: 5px;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    font-family: inherit;
+    color: var(--text-soft);
+  }
+  .anno-popover .actions button.primary {
+    background: var(--amber); border-color: var(--amber);
+    color: #111; font-weight: 700;
+  }
+  .anno-popover .toggle {
+    display: flex; gap: 4px;
+    padding: 3px; background: var(--surface);
+    border-radius: 5px;
+  }
+  .anno-popover .toggle button {
+    flex: 1; background: transparent; border: 0;
+    padding: 4px 8px; font-size: 11px; font-weight: 600;
+    border-radius: 3px; cursor: pointer;
+    color: var(--text-faint);
+    font-family: inherit;
+    display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  }
+  .anno-popover .toggle button.active {
+    background: #fff; color: var(--text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    font-weight: 700;
+  }
+  .anno-popover .toggle button.edit.active { color: var(--amber); }
+  .anno-popover .toggle button.praise.active { color: var(--praise); }
+
+  /* =========== 드래그 중 상태 =========== */
+  .dragging {
+    position: absolute;
+    border: 2px dashed var(--amber);
+    background: rgba(234,179,8,0.15);
+    z-index: 6;
+  }
+  .dragging .hint {
+    position: absolute; bottom: -28px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--amber); color: #111;
+    padding: 3px 8px; border-radius: 4px;
+    font-size: 10.5px; font-weight: 700;
+    white-space: nowrap;
+  }
+
+  /* 아이콘 */
+  .icn {
+    width: 12px; height: 12px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+  .icn-sm { width: 10px; height: 10px; }
+  .icn-lg { width: 14px; height: 14px; }
+  .heart-fill { fill: currentColor; }
+</style>
+</head>
+<body>
+
+<div class="top-switcher">
+  <span class="title">VIBOX · 자막 수정 통합 목업</span>
+  <button class="active" data-v="v1">기본 상태</button>
+  <button data-v="v2">드래그 선택 중</button>
+  <button data-v="v3">수정 입력 팝업</button>
+  <span class="hint">상단 탭으로 상태 전환</span>
+</div>
+
+<!-- ============================================================
+     V1 · 기본 상태 (주석 렌더링됨)
+     ============================================================ -->
+<div id="v1" class="view active">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="fname">#18_프리비트_v02.mp4</div>
+        <div class="path">프로젝트A / 완성본</div>
+      </div>
+      <div style="margin-left: auto; display: flex; gap: 6px; align-items: center;">
+        <button style="background: transparent; border: 1px solid var(--border); padding: 5px 10px; border-radius: 5px; font-size: 11.5px; color: var(--text-soft); cursor: pointer; font-family: inherit;">공유</button>
+      </div>
+      <button class="close">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="video-col">
+        <div class="video-frame">
+          <div class="tc-hud">02:15 / 07:03</div>
+          <button class="anno-mode-toggle on">
+            <span class="dot"></span>자막 수정 모드 켜짐
+          </button>
+
+          <div class="subtitle">여기서 에이전트 모드를 선택할 수 있습니다</div>
+
+          <!-- 주석 1: 에이전트 → agent -->
+          <div class="edit-box" style="left: 39.6%; top: 71.5%; width: 12.8%; height: 7.5%;"></div>
+          <div class="diff-tag" style="left: 27%; top: 82%;">
+            <span class="num">1</span>
+            <span class="del">에이전트</span>
+            <span class="arrow">→</span>
+            <span class="ins">agent</span>
+          </div>
+
+          <!-- 주석 2: 모드 → mode -->
+          <div class="edit-box" style="left: 52%; top: 71.5%; width: 7.6%; height: 7.5%;"></div>
+          <div class="diff-tag" style="left: 61.5%; top: 82%;">
+            <span class="num">2</span>
+            <span class="del">모드</span>
+            <span class="arrow">→</span>
+            <span class="ins">mode</span>
+          </div>
+
+          <!-- 좋아요 -->
+          <div class="edit-box praise" style="left: 15%; top: 18%; width: 70%; height: 38%;"></div>
+          <div class="diff-tag praise" style="right: 6%; top: 11%;">
+            <span class="num">3</span>
+            <span style="font-weight: 700;">이 구간 색감 완벽!</span>
+          </div>
+        </div>
+
+        <div class="player-ctl">
+          <button class="play">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px;"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+          </button>
+          <span class="tc-text">02:15 / 07:03</span>
+          <div class="bar">
+            <div class="f"></div>
+            <div class="hd"></div>
+            <div class="m edit" style="left: 30%;"></div>
+            <div class="m edit" style="left: 30.5%;"></div>
+            <div class="m praise" style="left: 30.2%;"></div>
+            <div class="m" style="left: 12%;"></div>
+            <div class="m" style="left: 48%;"></div>
+            <div class="m" style="left: 62%;"></div>
+          </div>
+          <button class="ibtn">
+            <svg class="icn" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          </button>
+          <button class="ibtn">
+            <svg class="icn" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="side-head">
+          <div class="row1">
+            <h3>댓글</h3>
+            <span class="count">6</span>
+            <span class="right">해결 (1)</span>
+          </div>
+          <div class="tabs">
+            <button class="active">전체</button>
+            <button>수정</button>
+            <button>자막</button>
+            <button>좋아요</button>
+          </div>
+        </div>
+
+        <div class="comment-list">
+          <!-- 자막 수정 댓글 1 (open) -->
+          <div class="cm cat-edit open">
+            <div class="row">
+              <span class="tc">02:15</span>
+              <span class="type-ico">
+                <svg class="icn-sm icn" viewBox="0 0 24 24" style="stroke:currentColor;"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+              </span>
+              <span class="name">seon</span>
+              <span class="snippet"><span class="del">에이전트</span><span class="arrow">→</span><span class="ins">agent</span></span>
+              <span class="indicators">방금</span>
+            </div>
+            <div class="expanded">
+              <div class="pill-row">
+                <span class="pill num">1</span>
+                <span class="pill">자막 수정</span>
+                <span class="when">seon · 방금</span>
+              </div>
+              <div class="full">
+                <span class="del">에이전트</span>
+                <span class="arrow">→</span>
+                <span class="ins">agent</span>
+              </div>
+              <div class="note">영문 통일 (다른 자막들도 영문)</div>
+              <div class="actions">
+                <button>
+                  <svg class="icn-sm icn" viewBox="0 0 24 24"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg>
+                  답글
+                </button>
+                <button>
+                  <svg class="icn-sm icn" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  반영됨
+                </button>
+                <button class="danger" style="margin-left: auto;">삭제</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 자막 수정 댓글 2 -->
+          <div class="cm cat-edit">
+            <div class="row">
+              <span class="tc">02:15</span>
+              <span class="type-ico">
+                <svg class="icn-sm icn" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+              </span>
+              <span class="name">jin</span>
+              <span class="snippet"><span class="del">모드</span><span class="arrow">→</span><span class="ins">mode</span></span>
+              <span class="indicators">1분</span>
+            </div>
+          </div>
+
+          <!-- 좋아요 댓글 -->
+          <div class="cm cat-cut">
+            <div class="row">
+              <span class="tc">02:15</span>
+              <span class="type-ico" style="--cat-c: var(--praise); --cat-bg: var(--praise-bg);">
+                <svg class="icn-sm icn heart-fill" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+              </span>
+              <span class="name">min</span>
+              <span class="snippet">이 구간 색감 완벽!</span>
+              <span class="indicators">
+                <span class="heart">
+                  <svg class="icn-sm icn heart-fill" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                </span>
+                3분
+              </span>
+            </div>
+          </div>
+
+          <!-- 일반 컷 댓글 -->
+          <div class="cm cat-cut">
+            <div class="row">
+              <span class="tc">00:45</span>
+              <span class="type-ico">
+                <svg class="icn-sm icn" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/></svg>
+              </span>
+              <span class="name">jin</span>
+              <span class="snippet">이 컷 넘길 타이밍 애매. 0.3초 더 붙여도 될 듯</span>
+              <span class="indicators">
+                <svg class="icn-sm icn" viewBox="0 0 24 24" style="color: var(--text-faint);"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg>
+                2 · 5분
+              </span>
+            </div>
+          </div>
+
+          <!-- 오디오 댓글 -->
+          <div class="cm cat-aud">
+            <div class="row">
+              <span class="tc">01:02</span>
+              <span class="type-ico">
+                <svg class="icn-sm icn" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              </span>
+              <span class="name">seon</span>
+              <span class="snippet">BGM 볼륨 좀 낮춰야 할 듯. 내레이션이 묻혀요</span>
+              <span class="indicators">5분</span>
+            </div>
+          </div>
+
+          <!-- 해결된 댓글 -->
+          <div class="cm cat-col resolved">
+            <div class="row">
+              <span class="tc">01:58</span>
+              <span class="type-ico">
+                <svg class="icn-sm icn" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span class="name">min</span>
+              <span class="snippet">색감 톤 조정 필요</span>
+              <span class="indicators">✓</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="compose">
+          <span class="tag">
+            <svg class="icn-sm icn" viewBox="0 0 24 24" style="stroke:#fff;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            02:15
+          </span>
+          <textarea placeholder="피드백을 입력하거나, 영상 위에서 드래그해 자막 수정 요청..." rows="2"></textarea>
+          <div class="auto">
+            자동 분류:
+            <span class="chip"><span class="icn-sm" style="background:#71717a; border-radius:99px; width:6px; height:6px;"></span>기타</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     V2 · 드래그 선택 중
+     ============================================================ -->
+<div id="v2" class="view">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="fname">#18_프리비트_v02.mp4</div>
+        <div class="path">프로젝트A / 완성본</div>
+      </div>
+      <button class="close" style="margin-left: auto;">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="video-col">
+        <div class="video-frame" style="cursor: crosshair;">
+          <div class="tc-hud">02:15 / 07:03</div>
+          <button class="anno-mode-toggle on">
+            <span class="dot"></span>자막 수정 모드 · 드래그하세요
+          </button>
+
+          <div class="subtitle">여기서 에이전트 모드를 선택할 수 있습니다</div>
+
+          <!-- 드래그 중 박스 -->
+          <div class="dragging" style="left: 39.6%; top: 71.5%; width: 12.8%; height: 7.5%;">
+            <span class="hint">"에이전트" 선택 중...</span>
+          </div>
+        </div>
+
+        <div class="player-ctl">
+          <button class="play">
+            <svg viewBox="0 0 24 24" style="width:12px; height:12px;"><rect x="6" y="4" width="4" height="16" fill="currentColor"/><rect x="14" y="4" width="4" height="16" fill="currentColor"/></svg>
+          </button>
+          <span class="tc-text">02:15 / 07:03 · 일시정지</span>
+          <div class="bar">
+            <div class="f"></div>
+            <div class="hd"></div>
+          </div>
+          <button class="ibtn">
+            <svg class="icn" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="side-head">
+          <div class="row1">
+            <h3>자막 수정 모드</h3>
+            <span class="count" style="color: var(--amber); font-weight: 700;">ACTIVE</span>
+          </div>
+          <div style="padding: 12px; background: var(--amber-bg); border-radius: 8px; font-size: 12.5px; line-height: 1.55;">
+            <div style="font-weight: 700; margin-bottom: 4px; color: #854d0e;">💡 사용 방법</div>
+            <ol style="margin: 0; padding-left: 18px; color: var(--text-soft);">
+              <li>영상에서 수정할 텍스트를 <strong>드래그</strong></li>
+              <li>원본이 자동 인식됨 (Claude Vision)</li>
+              <li>수정안만 입력 → 등록</li>
+            </ol>
+          </div>
+          <div style="font-size: 11px; color: var(--text-faint); margin-top: 10px; padding-left: 2px;">
+            ESC 키로 취소
+          </div>
+        </div>
+
+        <div class="comment-list">
+          <div style="padding: 40px 20px; text-align: center; color: var(--text-faint); font-size: 12.5px;">
+            드래그 중...<br>
+            커서 위치: <span style="font-family: ui-monospace; color: var(--text); font-weight: 600;">40%, 72%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     V3 · 수정 입력 팝업
+     ============================================================ -->
+<div id="v3" class="view">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="fname">#18_프리비트_v02.mp4</div>
+        <div class="path">프로젝트A / 완성본</div>
+      </div>
+      <button class="close" style="margin-left: auto;">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="video-col">
+        <div class="video-frame">
+          <div class="tc-hud">02:15 / 07:03</div>
+          <button class="anno-mode-toggle on">
+            <span class="dot"></span>자막 수정 모드 켜짐
+          </button>
+
+          <div class="subtitle">여기서 에이전트 모드를 선택할 수 있습니다</div>
+
+          <!-- 선택된 박스 (강조) -->
+          <div class="edit-box" style="left: 39.6%; top: 71.5%; width: 12.8%; height: 7.5%;"></div>
+
+          <!-- Compose popover -->
+          <div class="anno-popover" style="left: 37%; top: 38%;">
+            <h4>
+              <span class="dot"></span>
+              자막 수정 요청
+            </h4>
+
+            <div class="group">
+              <label>종류</label>
+              <div class="toggle">
+                <button class="edit active">
+                  <svg class="icn-sm icn" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+                  수정 요청
+                </button>
+                <button class="praise">
+                  <svg class="icn-sm icn heart-fill" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                  좋아요
+                </button>
+              </div>
+            </div>
+
+            <div class="group">
+              <label>원본 (자동 인식됨)</label>
+              <input type="text" class="ocr-loaded" value="에이전트" readonly />
+              <div class="ocr-note">
+                <svg class="icn-sm icn" viewBox="0 0 24 24" style="color: var(--amber);"><path d="M12 2a10 10 0 1 0 10 10"/><polyline points="22 2 12 12 7 7"/></svg>
+                Claude Vision으로 인식됨
+              </div>
+            </div>
+
+            <div class="group">
+              <label>→ 수정안</label>
+              <input type="text" placeholder="예: agent" autofocus />
+            </div>
+
+            <div class="group">
+              <label>부가 설명 (선택)</label>
+              <input type="text" placeholder="예: 영문 통일" />
+            </div>
+
+            <div class="actions">
+              <button>취소</button>
+              <button class="primary">등록 (⌘↵)</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="player-ctl">
+          <button class="play">
+            <svg viewBox="0 0 24 24" style="width:12px;height:12px;"><rect x="6" y="4" width="4" height="16" fill="currentColor"/><rect x="14" y="4" width="4" height="16" fill="currentColor"/></svg>
+          </button>
+          <span class="tc-text">02:15 / 07:03</span>
+          <div class="bar">
+            <div class="f"></div>
+            <div class="hd"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="side-head">
+          <div class="row1">
+            <h3>댓글</h3>
+            <span class="count">5</span>
+          </div>
+        </div>
+        <div class="comment-list">
+          <div style="padding: 30px 20px; text-align: center; color: var(--text-faint); font-size: 12px;">
+            수정 요청을 작성 중입니다
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.top-switcher button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.v;
+      document.querySelectorAll('.top-switcher button').forEach(b => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === target));
+    });
+  });
+
+  document.querySelectorAll('.cm').forEach(cm => {
+    cm.addEventListener('click', () => {
+      const wasOpen = cm.classList.contains('open');
+      document.querySelectorAll('.cm').forEach(c => c.classList.remove('open'));
+      if (!wasOpen) cm.classList.add('open');
+    });
+  });
+</script>
+
+</body>
+</html>

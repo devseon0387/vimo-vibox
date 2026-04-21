@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Vibox 플레이어 재설계 시안 (B안 댓글 패널 매칭)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif; }
+  .variant { display: none; }
+  .variant.active { display: block; }
+  .tab.active { background: #111; color: white; }
+  .video-bg {
+    background:
+      linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.55)),
+      url('https://picsum.photos/seed/soju/1280/720') center/cover;
+  }
+</style>
+</head>
+<body class="bg-slate-100 p-6 min-h-screen">
+
+<div class="max-w-[1440px] mx-auto mb-5">
+  <h1 class="text-2xl font-bold tracking-tight mb-1">Vibox 플레이어 재설계 (4안)</h1>
+  <p class="text-sm text-slate-500 mb-4">우측 댓글 패널 = B안 고정 · 좌측 플레이어만 변형</p>
+  <div class="flex gap-1 border border-slate-200 rounded-lg p-1 bg-white w-fit">
+    <button class="tab active px-4 py-2 rounded-md text-sm font-medium transition-colors" data-target="p1">
+      P1 · 시네마
+    </button>
+    <button class="tab px-4 py-2 rounded-md text-sm font-medium hover:bg-slate-50 transition-colors" data-target="p2">
+      P2 · 타임라인 중심
+    </button>
+    <button class="tab px-4 py-2 rounded-md text-sm font-medium hover:bg-slate-50 transition-colors" data-target="p3">
+      P3 · 카드 패널
+    </button>
+    <button class="tab px-4 py-2 rounded-md text-sm font-medium hover:bg-slate-50 transition-colors" data-target="p4">
+      P4 · 이슈 네비게이터
+    </button>
+  </div>
+</div>
+
+<!-- ==================== Shared B안 Comment Panel ==================== -->
+<template id="b-panel">
+  <div class="w-[380px] border-l border-slate-200 flex flex-col bg-slate-50">
+    <div class="px-4 pt-4 pb-3 bg-white border-b border-slate-200">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <h3 class="text-[14px] font-semibold text-slate-900">댓글</h3>
+          <span class="text-[11px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">7</span>
+        </div>
+        <button class="text-[11.5px] font-medium text-white bg-slate-900 px-2.5 py-1.5 rounded-md inline-flex items-center gap-1.5 hover:bg-slate-800">
+          ✨ AI 검수
+        </button>
+      </div>
+      <div class="flex items-center gap-1">
+        <button class="text-[11.5px] px-2.5 py-1 rounded bg-slate-900 text-white font-medium">전체 <span class="opacity-60">7</span></button>
+        <button class="text-[11.5px] px-2.5 py-1 rounded text-slate-500 hover:bg-slate-100">✏️ 수정</button>
+        <button class="text-[11.5px] px-2.5 py-1 rounded text-slate-500 hover:bg-slate-100">❤ 좋아요</button>
+      </div>
+    </div>
+    <div class="flex-1 overflow-auto p-3 space-y-2">
+      <div class="bg-white rounded-lg border border-slate-200 p-3 hover:border-slate-300 transition-colors cursor-pointer">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">00:46</span>
+          <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+          <span class="text-[10.5px] text-slate-400 ml-auto inline-flex items-center gap-1">
+            <span class="w-3 h-3 rounded-full bg-gradient-to-br from-violet-500 to-blue-500"></span>AI
+          </span>
+        </div>
+        <div class="text-[13px] font-medium text-slate-900 mb-0.5">"3번 째" → <span class="text-orange-600">"3번째"</span></div>
+        <div class="text-[11px] text-slate-500">접미사 '번째'는 붙여 씁니다</div>
+      </div>
+      <div class="bg-white rounded-lg border border-slate-200 p-3 hover:border-slate-300 transition-colors cursor-pointer">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">02:58</span>
+          <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+          <span class="text-[10.5px] text-slate-400 ml-auto inline-flex items-center gap-1">
+            <span class="w-3 h-3 rounded-full bg-gradient-to-br from-violet-500 to-blue-500"></span>AI
+          </span>
+        </div>
+        <div class="text-[13px] font-medium text-slate-900 mb-0.5">"하게된" → <span class="text-orange-600">"하게 된"</span></div>
+        <div class="text-[11px] text-slate-500">'되다'는 띄어 씁니다</div>
+      </div>
+      <div class="bg-white rounded-lg border-2 border-slate-900 p-3 cursor-pointer">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">10:14</span>
+          <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+          <span class="text-[10.5px] text-slate-400 ml-auto inline-flex items-center gap-1">
+            <span class="w-3 h-3 rounded-full bg-gradient-to-br from-violet-500 to-blue-500"></span>AI
+          </span>
+        </div>
+        <div class="text-[13px] font-medium text-slate-900 mb-0.5">"일하지말자" → <span class="text-orange-600">"일하지 말자"</span></div>
+        <div class="text-[11px] text-slate-500">보조용언 띄어쓰기</div>
+      </div>
+      <div class="bg-white rounded-lg border border-slate-200 p-3 hover:border-slate-300 transition-colors cursor-pointer">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">10:18</span>
+          <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span>
+          <span class="text-[10.5px] text-slate-400 ml-auto inline-flex items-center gap-1">
+            <span class="w-3 h-3 rounded-full bg-gradient-to-br from-violet-500 to-blue-500"></span>AI
+          </span>
+        </div>
+        <div class="text-[13px] font-medium text-slate-900 mb-0.5">"자신있는" → <span class="text-orange-600">"자신 있는"</span></div>
+        <div class="text-[11px] text-slate-500">'자신 있다'는 띄어 씁니다</div>
+      </div>
+    </div>
+    <div class="p-3 border-t border-slate-200 bg-white">
+      <div class="bg-slate-50 rounded-lg border border-slate-200 p-2.5 focus-within:border-slate-400">
+        <div class="flex items-center gap-1.5 mb-1">
+          <span class="font-mono text-[10px] font-bold text-slate-600 bg-white px-1.5 py-0.5 rounded border">10:14</span>
+          <span class="text-[10px] text-slate-400">에 댓글 남기기</span>
+        </div>
+        <textarea placeholder="..." class="w-full text-[12.5px] outline-none resize-none bg-transparent" rows="2"></textarea>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- =========================================================== -->
+<!-- P1: 시네마 (Cinema / Minimalist)                              -->
+<!-- =========================================================== -->
+<div class="variant active" id="p1">
+  <div class="max-w-[1440px] mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
+    <div class="flex" style="height: 640px">
+      <div class="flex-1 bg-black flex flex-col relative">
+        <div class="relative flex-1 video-bg">
+          <!-- Subtitle -->
+          <div class="absolute bottom-[22%] left-0 right-0 text-center text-white text-2xl font-bold drop-shadow-lg">
+            비겁하게는 일하지말자
+          </div>
+          <!-- B안 annotation box -->
+          <div class="absolute" style="left: 17%; top: 72%; width: 66%; height: 18%;">
+            <div class="w-full h-full rounded border-[1.5px] border-orange-300/90 bg-orange-500/5"></div>
+            <div class="absolute -top-8 left-0 bg-orange-500 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md shadow-lg">
+              <span class="line-through opacity-70">일하지말자</span> → 일하지 말자
+            </div>
+          </div>
+          <!-- Top-right info (subtle) -->
+          <div class="absolute top-4 right-4 text-white/40 text-[10.5px] font-mono tracking-wider">
+            10:14 / 11:13
+          </div>
+        </div>
+        <!-- Single-row controls, minimal, blended bottom -->
+        <div class="px-5 py-3.5 bg-gradient-to-b from-transparent to-black flex items-center gap-4">
+          <button class="w-10 h-10 rounded-full bg-white text-slate-900 grid place-items-center hover:scale-105 transition-transform">▶</button>
+          <div class="flex-1 h-1 relative rounded-full bg-white/15 cursor-pointer group">
+            <div class="absolute left-0 top-0 h-full bg-white/70 rounded-full" style="width: 92%"></div>
+            <!-- minimal issue dots -->
+            <span class="absolute top-1/2 -translate-y-1/2 w-1 h-2.5 bg-orange-400/90 rounded" style="left: 7%"></span>
+            <span class="absolute top-1/2 -translate-y-1/2 w-1 h-2.5 bg-orange-400/90 rounded" style="left: 27%"></span>
+            <span class="absolute top-1/2 -translate-y-1/2 w-1 h-2.5 bg-orange-400/90 rounded" style="left: 79%"></span>
+            <span class="absolute top-1/2 -translate-y-1/2 w-1 h-2.5 bg-orange-400/90 rounded" style="left: 92%"></span>
+            <span class="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white ring-2 ring-black opacity-0 group-hover:opacity-100" style="left: 92%"></span>
+          </div>
+          <span class="text-[11px] font-mono text-white/60 tabular-nums shrink-0">10:14 · 11:13</span>
+          <button class="w-8 h-8 rounded grid place-items-center text-white/50 hover:text-white hover:bg-white/10">🔊</button>
+          <button class="w-8 h-8 rounded grid place-items-center text-white/50 hover:text-white hover:bg-white/10">⋯</button>
+        </div>
+      </div>
+      <!-- B안 comment panel (inline for preview) -->
+      <div class="w-[380px] border-l border-slate-200 flex flex-col bg-slate-50">
+        <div class="px-4 pt-4 pb-3 bg-white border-b border-slate-200">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <h3 class="text-[14px] font-semibold">댓글</h3>
+              <span class="text-[11px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">7</span>
+            </div>
+            <button class="text-[11.5px] font-medium text-white bg-slate-900 px-2.5 py-1.5 rounded-md inline-flex items-center gap-1.5">✨ AI 검수</button>
+          </div>
+          <div class="flex items-center gap-1">
+            <button class="text-[11.5px] px-2.5 py-1 rounded bg-slate-900 text-white font-medium">전체 <span class="opacity-60">7</span></button>
+            <button class="text-[11.5px] px-2.5 py-1 rounded text-slate-500 hover:bg-slate-100">✏️ 수정</button>
+            <button class="text-[11.5px] px-2.5 py-1 rounded text-slate-500 hover:bg-slate-100">❤ 좋아요</button>
+          </div>
+        </div>
+        <div class="flex-1 overflow-auto p-3 space-y-2">
+          <div class="bg-white rounded-lg border border-slate-200 p-3"><div class="flex items-center gap-2 mb-1.5"><span class="font-mono text-[11px] font-bold bg-slate-100 px-1.5 py-0.5 rounded">00:46</span><span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span><span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span></div><div class="text-[13px] font-medium mb-0.5">"3번 째" → <span class="text-orange-600">"3번째"</span></div><div class="text-[11px] text-slate-500">접미사 띄어쓰기</div></div>
+          <div class="bg-white rounded-lg border-2 border-slate-900 p-3"><div class="flex items-center gap-2 mb-1.5"><span class="font-mono text-[11px] font-bold bg-slate-100 px-1.5 py-0.5 rounded">10:14</span><span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span><span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span></div><div class="text-[13px] font-medium mb-0.5">"일하지말자" → <span class="text-orange-600">"일하지 말자"</span></div><div class="text-[11px] text-slate-500">보조용언 띄어쓰기</div></div>
+          <div class="bg-white rounded-lg border border-slate-200 p-3"><div class="flex items-center gap-2 mb-1.5"><span class="font-mono text-[11px] font-bold bg-slate-100 px-1.5 py-0.5 rounded">10:18</span><span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span><span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span></div><div class="text-[13px] font-medium mb-0.5">"자신있는" → <span class="text-orange-600">"자신 있는"</span></div><div class="text-[11px] text-slate-500">'자신 있다'는 띄어 씁니다</div></div>
+          <div class="bg-white rounded-lg border border-slate-200 p-3"><div class="flex items-center gap-2 mb-1.5"><span class="font-mono text-[11px] font-bold bg-slate-100 px-1.5 py-0.5 rounded">10:28</span><span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span><span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span></div><div class="text-[13px] font-medium mb-0.5">"풀어야할" → <span class="text-orange-600">"풀어야 할"</span></div><div class="text-[11px] text-slate-500">어미+보조용언 띄어쓰기</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="max-w-[1440px] mx-auto mt-3 text-[12px] text-slate-500 space-y-1">
+    <div><b>P1 · 시네마:</b> 단일 행 · 얇은 progress · 시간 우상단에 흐리게 · 재생/음량/⋯만 · 영상 몰입 최대화</div>
+    <div class="text-slate-400">세부: ±3s/±10s seek은 키보드만 (←/→, Shift+←/→)</div>
+  </div>
+</div>
+
+<!-- =========================================================== -->
+<!-- P2: 타임라인 중심 (Timeline-First)                           -->
+<!-- =========================================================== -->
+<div class="variant" id="p2">
+  <div class="max-w-[1440px] mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
+    <div class="flex" style="height: 640px">
+      <div class="flex-1 bg-black flex flex-col">
+        <div class="relative flex-1 video-bg">
+          <div class="absolute bottom-[22%] left-0 right-0 text-center text-white text-2xl font-bold drop-shadow-lg">
+            비겁하게는 일하지말자
+          </div>
+          <div class="absolute" style="left: 17%; top: 72%; width: 66%; height: 18%;">
+            <div class="w-full h-full rounded border-[1.5px] border-orange-300/90 bg-orange-500/5"></div>
+            <div class="absolute -top-8 left-0 bg-orange-500 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md shadow-lg">
+              <span class="line-through opacity-70">일하지말자</span> → 일하지 말자
+            </div>
+          </div>
+        </div>
+        <!-- Dedicated timeline area with labeled issue chips -->
+        <div class="bg-slate-900 border-t border-slate-800">
+          <!-- issue chip row ABOVE timeline -->
+          <div class="px-4 pt-3 pb-1 flex items-center gap-2 overflow-x-auto">
+            <span class="text-[10px] font-medium text-slate-500 uppercase tracking-wider shrink-0">피드백 7</span>
+            <div class="flex items-center gap-1">
+              <button class="text-[10.5px] font-mono font-semibold text-orange-400 bg-orange-500/10 border border-orange-500/30 rounded px-1.5 py-0.5 hover:bg-orange-500/20 shrink-0">00:46</button>
+              <button class="text-[10.5px] font-mono font-semibold text-orange-400 bg-orange-500/10 border border-orange-500/30 rounded px-1.5 py-0.5 hover:bg-orange-500/20 shrink-0">02:58</button>
+              <button class="text-[10.5px] font-mono font-semibold text-orange-400 bg-orange-500/10 border border-orange-500/30 rounded px-1.5 py-0.5 hover:bg-orange-500/20 shrink-0">08:47</button>
+              <button class="text-[10.5px] font-mono font-semibold text-orange-400 bg-orange-500/10 border border-orange-500/30 rounded px-1.5 py-0.5 hover:bg-orange-500/20 shrink-0">10:12</button>
+              <button class="text-[10.5px] font-mono font-semibold text-white bg-orange-500 border border-orange-500 rounded px-1.5 py-0.5 shadow-md shrink-0">10:14</button>
+              <button class="text-[10.5px] font-mono font-semibold text-orange-400 bg-orange-500/10 border border-orange-500/30 rounded px-1.5 py-0.5 hover:bg-orange-500/20 shrink-0">10:18</button>
+              <button class="text-[10.5px] font-mono font-semibold text-orange-400 bg-orange-500/10 border border-orange-500/30 rounded px-1.5 py-0.5 hover:bg-orange-500/20 shrink-0">10:28</button>
+            </div>
+          </div>
+          <!-- timeline -->
+          <div class="px-4 pt-2 pb-2">
+            <div class="relative h-8 cursor-pointer group">
+              <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[3px] bg-slate-700 rounded-full"></div>
+              <div class="absolute left-0 top-1/2 -translate-y-1/2 h-[3px] bg-white/60 rounded-full" style="width: 92%"></div>
+              <!-- issue markers -->
+              <span class="absolute top-1/2 -translate-y-1/2 w-[4px] h-3.5 bg-orange-400 rounded-sm" style="left: 7%"></span>
+              <span class="absolute top-1/2 -translate-y-1/2 w-[4px] h-3.5 bg-orange-400 rounded-sm" style="left: 27%"></span>
+              <span class="absolute top-1/2 -translate-y-1/2 w-[4px] h-3.5 bg-orange-400 rounded-sm" style="left: 79%"></span>
+              <span class="absolute top-1/2 -translate-y-1/2 w-[4px] h-3.5 bg-orange-400 rounded-sm" style="left: 91%"></span>
+              <span class="absolute top-1/2 -translate-y-1/2 w-[5px] h-4 bg-orange-500 rounded-sm" style="left: 92%"></span>
+              <span class="absolute top-1/2 -translate-y-1/2 w-[4px] h-3.5 bg-orange-400 rounded-sm" style="left: 93%"></span>
+              <span class="absolute top-1/2 -translate-y-1/2 w-[4px] h-3.5 bg-orange-400 rounded-sm" style="left: 94%"></span>
+              <!-- playhead -->
+              <div class="absolute top-0 bottom-0 w-[2px] bg-white pointer-events-none" style="left: 92%">
+                <span class="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rotate-45 rounded-sm"></span>
+              </div>
+            </div>
+          </div>
+          <!-- controls -->
+          <div class="px-4 pb-3 pt-1 flex items-center gap-3 border-t border-slate-800">
+            <button class="w-7 h-7 rounded grid place-items-center text-slate-400 hover:bg-slate-800" title="이전 피드백">⏮</button>
+            <button class="w-9 h-9 rounded-full bg-white text-slate-900 grid place-items-center shadow-md">▶</button>
+            <button class="w-7 h-7 rounded grid place-items-center text-slate-400 hover:bg-slate-800" title="다음 피드백">⏭</button>
+            <span class="text-[11px] font-mono text-white/60 tabular-nums">10:14 <span class="text-slate-500">/ 11:13</span></span>
+            <div class="ml-auto flex items-center gap-1">
+              <button class="text-[10.5px] text-slate-500 hover:text-white px-2 py-1">1.0x</button>
+              <button class="w-8 h-8 rounded grid place-items-center text-slate-500 hover:text-white hover:bg-slate-800">🔊</button>
+              <button class="w-8 h-8 rounded grid place-items-center text-slate-500 hover:text-white hover:bg-slate-800">⛶</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="w-[380px] border-l border-slate-200 flex flex-col bg-slate-50">
+        <div class="px-4 pt-4 pb-3 bg-white border-b border-slate-200"><div class="flex items-center justify-between mb-3"><div class="flex items-center gap-2"><h3 class="text-[14px] font-semibold">댓글</h3><span class="text-[11px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">7</span></div><button class="text-[11.5px] font-medium text-white bg-slate-900 px-2.5 py-1.5 rounded-md">✨ AI 검수</button></div><div class="flex items-center gap-1"><button class="text-[11.5px] px-2.5 py-1 rounded bg-slate-900 text-white font-medium">전체 <span class="opacity-60">7</span></button><button class="text-[11.5px] px-2.5 py-1 rounded text-slate-500">✏️ 수정</button><button class="text-[11.5px] px-2.5 py-1 rounded text-slate-500">❤ 좋아요</button></div></div>
+        <div class="flex-1 overflow-auto p-3 space-y-2">
+          <div class="bg-white rounded-lg border border-slate-200 p-3"><div class="flex items-center gap-2 mb-1.5"><span class="font-mono text-[11px] font-bold bg-slate-100 px-1.5 py-0.5 rounded">00:46</span><span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span><span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span></div><div class="text-[13px] font-medium mb-0.5">"3번 째" → <span class="text-orange-600">"3번째"</span></div><div class="text-[11px] text-slate-500">접미사 띄어쓰기</div></div>
+          <div class="bg-white rounded-lg border-2 border-slate-900 p-3"><div class="flex items-center gap-2 mb-1.5"><span class="font-mono text-[11px] font-bold bg-slate-100 px-1.5 py-0.5 rounded">10:14</span><span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span><span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span></div><div class="text-[13px] font-medium mb-0.5">"일하지말자" → <span class="text-orange-600">"일하지 말자"</span></div><div class="text-[11px] text-slate-500">보조용언 띄어쓰기</div></div>
+          <div class="bg-white rounded-lg border border-slate-200 p-3"><div class="flex items-center gap-2 mb-1.5"><span class="font-mono text-[11px] font-bold bg-slate-100 px-1.5 py-0.5 rounded">10:18</span><span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span><span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span></div><div class="text-[13px] font-medium mb-0.5">"자신있는" → <span class="text-orange-600">"자신 있는"</span></div><div class="text-[11px] text-slate-500">'자신 있다'는 띄어 씁니다</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="max-w-[1440px] mx-auto mt-3 text-[12px] text-slate-500 space-y-1">
+    <div><b>P2 · 타임라인 중심:</b> 오타 타임코드 chip 가로 목록 · 클릭 점프 · 이전/다음 오타 버튼 · 재생속도 · 현재 오타 하이라이트</div>
+    <div class="text-slate-400">장점: 7개 오타 사이 빠른 점프 · 어디 있는지 한눈에 / 단점: 이슈 많으면 가로 스크롤</div>
+  </div>
+</div>
+
+<!-- =========================================================== -->
+<!-- P3: 카드 패널 (Card)                                         -->
+<!-- =========================================================== -->
+<div class="variant" id="p3">
+  <div class="max-w-[1440px] mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
+    <div class="flex" style="height: 640px">
+      <!-- Player as rounded panel on white canvas -->
+      <div class="flex-1 bg-slate-100 p-4 flex flex-col">
+        <div class="relative flex-1 rounded-xl overflow-hidden shadow-xl bg-black">
+          <div class="absolute inset-0 video-bg"></div>
+          <div class="absolute bottom-[22%] left-0 right-0 text-center text-white text-2xl font-bold drop-shadow-lg">
+            비겁하게는 일하지말자
+          </div>
+          <div class="absolute" style="left: 17%; top: 72%; width: 66%; height: 18%;">
+            <div class="w-full h-full rounded border-[1.5px] border-orange-300/90 bg-orange-500/5"></div>
+            <div class="absolute -top-8 left-0 bg-orange-500 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md shadow-lg">
+              <span class="line-through opacity-70">일하지말자</span> → 일하지 말자
+            </div>
+          </div>
+        </div>
+        <!-- White card control strip, matching B안 comment cards -->
+        <div class="mt-3 bg-white rounded-xl border border-slate-200 shadow-sm p-3">
+          <!-- Progress row (top) -->
+          <div class="flex items-center gap-3 mb-2.5">
+            <span class="text-[11px] font-mono font-semibold text-slate-900 tabular-nums shrink-0">10:14</span>
+            <div class="flex-1 h-1.5 relative rounded-full bg-slate-100 cursor-pointer group">
+              <div class="absolute left-0 top-0 h-full bg-slate-900 rounded-full" style="width: 92%"></div>
+              <span class="absolute top-1/2 -translate-y-1/2 w-[3px] h-2.5 bg-orange-500 rounded-full" style="left: 7%"></span>
+              <span class="absolute top-1/2 -translate-y-1/2 w-[3px] h-2.5 bg-orange-500 rounded-full" style="left: 27%"></span>
+              <span class="absolute top-1/2 -translate-y-1/2 w-[3px] h-2.5 bg-orange-500 rounded-full" style="left: 79%"></span>
+              <span class="absolute top-1/2 -translate-y-1/2 w-[3px] h-2.5 bg-orange-500 rounded-full" style="left: 92%"></span>
+              <span class="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-slate-900" style="left: 92%"></span>
+            </div>
+            <span class="text-[11px] font-mono text-slate-400 tabular-nums shrink-0">11:13</span>
+          </div>
+          <!-- Controls row (bottom) -->
+          <div class="flex items-center gap-1">
+            <button class="w-9 h-9 rounded-lg bg-slate-900 text-white grid place-items-center shadow-md hover:bg-slate-700">▶</button>
+            <div class="w-px h-6 bg-slate-200 mx-1.5"></div>
+            <button class="h-8 px-2 rounded-md text-slate-500 hover:bg-slate-100 text-[11px] font-semibold inline-flex items-center gap-1" title="이전 피드백">
+              ⏮ <span>이전 피드백</span>
+            </button>
+            <button class="h-8 px-2 rounded-md text-slate-500 hover:bg-slate-100 text-[11px] font-semibold inline-flex items-center gap-1" title="다음 피드백">
+              <span>다음 피드백</span> ⏭
+            </button>
+            <div class="ml-auto flex items-center gap-1">
+              <button class="h-8 px-2 rounded-md text-slate-500 hover:bg-slate-100 text-[11px] font-semibold">1x</button>
+              <button class="w-8 h-8 rounded-md grid place-items-center text-slate-500 hover:bg-slate-100">🔊</button>
+              <button class="w-8 h-8 rounded-md grid place-items-center text-slate-500 hover:bg-slate-100">⋯</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="w-[380px] border-l border-slate-200 flex flex-col bg-slate-50">
+        <div class="px-4 pt-4 pb-3 bg-white border-b border-slate-200"><div class="flex items-center justify-between mb-3"><div class="flex items-center gap-2"><h3 class="text-[14px] font-semibold">댓글</h3><span class="text-[11px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">7</span></div><button class="text-[11.5px] font-medium text-white bg-slate-900 px-2.5 py-1.5 rounded-md">✨ AI 검수</button></div><div class="flex items-center gap-1"><button class="text-[11.5px] px-2.5 py-1 rounded bg-slate-900 text-white font-medium">전체 <span class="opacity-60">7</span></button><button class="text-[11.5px] px-2.5 py-1 rounded text-slate-500">✏️ 수정</button><button class="text-[11.5px] px-2.5 py-1 rounded text-slate-500">❤ 좋아요</button></div></div>
+        <div class="flex-1 overflow-auto p-3 space-y-2">
+          <div class="bg-white rounded-lg border border-slate-200 p-3"><div class="flex items-center gap-2 mb-1.5"><span class="font-mono text-[11px] font-bold bg-slate-100 px-1.5 py-0.5 rounded">00:46</span><span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span><span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span></div><div class="text-[13px] font-medium mb-0.5">"3번 째" → <span class="text-orange-600">"3번째"</span></div><div class="text-[11px] text-slate-500">접미사 띄어쓰기</div></div>
+          <div class="bg-white rounded-lg border-2 border-slate-900 p-3"><div class="flex items-center gap-2 mb-1.5"><span class="font-mono text-[11px] font-bold bg-slate-100 px-1.5 py-0.5 rounded">10:14</span><span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span><span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span></div><div class="text-[13px] font-medium mb-0.5">"일하지말자" → <span class="text-orange-600">"일하지 말자"</span></div><div class="text-[11px] text-slate-500">보조용언 띄어쓰기</div></div>
+          <div class="bg-white rounded-lg border border-slate-200 p-3"><div class="flex items-center gap-2 mb-1.5"><span class="font-mono text-[11px] font-bold bg-slate-100 px-1.5 py-0.5 rounded">10:18</span><span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span><span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span></div><div class="text-[13px] font-medium mb-0.5">"자신있는" → <span class="text-orange-600">"자신 있는"</span></div><div class="text-[11px] text-slate-500">'자신 있다'는 띄어 씁니다</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="max-w-[1440px] mx-auto mt-3 text-[12px] text-slate-500 space-y-1">
+    <div><b>P3 · 카드 패널:</b> 영상이 둥근 카드 · 컨트롤 바도 화이트 카드 · 댓글 패널 카드 언어와 완전 일치 · 밝은 테마</div>
+    <div class="text-slate-400">특징: 배경 회색 · 진행바 상단 · 컨트롤 하단 · 두 섹션 구분 명확</div>
+  </div>
+</div>
+
+<!-- =========================================================== -->
+<!-- P4: 이슈 네비게이터 (Issue Navigator)                         -->
+<!-- =========================================================== -->
+<div class="variant" id="p4">
+  <div class="max-w-[1440px] mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
+    <div class="flex" style="height: 640px">
+      <div class="flex-1 bg-slate-950 flex flex-col">
+        <div class="relative flex-1 video-bg">
+          <div class="absolute bottom-[22%] left-0 right-0 text-center text-white text-2xl font-bold drop-shadow-lg">
+            비겁하게는 일하지말자
+          </div>
+          <div class="absolute" style="left: 17%; top: 72%; width: 66%; height: 18%;">
+            <div class="w-full h-full rounded border-[1.5px] border-orange-300/90 bg-orange-500/5"></div>
+            <div class="absolute -top-8 left-0 bg-orange-500 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md shadow-lg">
+              <span class="line-through opacity-70">일하지말자</span> → 일하지 말자
+            </div>
+          </div>
+          <!-- Issue nav top-center pill -->
+          <div class="absolute top-4 left-1/2 -translate-x-1/2 bg-slate-900/80 backdrop-blur border border-slate-700 rounded-full px-1 py-1 flex items-center gap-1 text-white">
+            <button class="w-7 h-7 rounded-full hover:bg-white/10 grid place-items-center text-sm" title="이전 피드백">◀</button>
+            <div class="px-3 text-[11.5px] font-medium tabular-nums flex items-center gap-2">
+              <span class="text-orange-400 font-bold">피드백 4</span>
+              <span class="text-slate-500">/</span>
+              <span class="text-white/70">7</span>
+            </div>
+            <button class="w-7 h-7 rounded-full hover:bg-white/10 grid place-items-center text-sm" title="다음 피드백">▶</button>
+          </div>
+        </div>
+        <!-- Bottom bar: timeline with tick labels + controls -->
+        <div class="bg-slate-950 border-t border-slate-800">
+          <!-- Timeline with tick labels -->
+          <div class="px-4 pt-2.5 pb-3">
+            <div class="relative h-9">
+              <!-- tick labels ABOVE bar -->
+              <div class="absolute inset-x-0 top-0 flex justify-between text-[9px] text-slate-600 font-mono">
+                <span>0:00</span><span>2:00</span><span>4:00</span><span>6:00</span><span>8:00</span><span>10:00</span><span>11:13</span>
+              </div>
+              <!-- bar -->
+              <div class="absolute left-0 right-0 top-[18px] h-1.5 rounded-full bg-slate-800 cursor-pointer group">
+                <div class="absolute left-0 top-0 h-full rounded-full bg-slate-400" style="width: 92%"></div>
+                <span class="absolute top-1/2 -translate-y-1/2 w-1 h-3.5 bg-orange-400 rounded" style="left: 7%"></span>
+                <span class="absolute top-1/2 -translate-y-1/2 w-1 h-3.5 bg-orange-400 rounded" style="left: 27%"></span>
+                <span class="absolute top-1/2 -translate-y-1/2 w-1 h-3.5 bg-orange-400 rounded" style="left: 79%"></span>
+                <span class="absolute top-1/2 -translate-y-1/2 w-1.5 h-4 bg-orange-500 rounded shadow-lg shadow-orange-500/50" style="left: 92%"></span>
+                <span class="absolute top-1/2 -translate-y-1/2 w-1 h-3.5 bg-orange-400 rounded" style="left: 94%"></span>
+                <span class="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white ring-2 ring-slate-950" style="left: 92%"></span>
+              </div>
+              <!-- time below playhead -->
+              <div class="absolute top-[30px] text-[10px] font-mono font-semibold text-orange-400 tabular-nums -translate-x-1/2" style="left: 92%">10:14</div>
+            </div>
+          </div>
+          <!-- Controls -->
+          <div class="px-4 py-3 flex items-center gap-2 border-t border-slate-800/50">
+            <button class="w-9 h-9 rounded-full bg-white text-slate-900 grid place-items-center shadow-lg">▶</button>
+            <div class="flex items-center gap-0.5 ml-1">
+              <button class="h-8 px-2 rounded text-slate-500 hover:bg-slate-800 hover:text-white text-[10.5px] font-mono font-semibold">-10s</button>
+              <button class="h-8 px-2 rounded text-slate-500 hover:bg-slate-800 hover:text-white text-[10.5px] font-mono font-semibold">-3s</button>
+              <button class="h-8 px-2 rounded text-slate-500 hover:bg-slate-800 hover:text-white text-[10.5px] font-mono font-semibold">+3s</button>
+              <button class="h-8 px-2 rounded text-slate-500 hover:bg-slate-800 hover:text-white text-[10.5px] font-mono font-semibold">+10s</button>
+            </div>
+            <div class="ml-auto flex items-center gap-2">
+              <div class="flex items-center gap-1 text-[10px] text-slate-600">
+                <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-400 font-mono">[</kbd>
+                <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-400 font-mono">]</kbd>
+                <span>피드백 이동</span>
+              </div>
+              <button class="w-8 h-8 rounded grid place-items-center text-slate-500 hover:bg-slate-800 hover:text-white">🔊</button>
+              <button class="w-8 h-8 rounded grid place-items-center text-slate-500 hover:bg-slate-800 hover:text-white">⛶</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="w-[380px] border-l border-slate-200 flex flex-col bg-slate-50">
+        <div class="px-4 pt-4 pb-3 bg-white border-b border-slate-200"><div class="flex items-center justify-between mb-3"><div class="flex items-center gap-2"><h3 class="text-[14px] font-semibold">댓글</h3><span class="text-[11px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">7</span></div><button class="text-[11.5px] font-medium text-white bg-slate-900 px-2.5 py-1.5 rounded-md">✨ AI 검수</button></div><div class="flex items-center gap-1"><button class="text-[11.5px] px-2.5 py-1 rounded bg-slate-900 text-white font-medium">전체 <span class="opacity-60">7</span></button><button class="text-[11.5px] px-2.5 py-1 rounded text-slate-500">✏️ 수정</button><button class="text-[11.5px] px-2.5 py-1 rounded text-slate-500">❤ 좋아요</button></div></div>
+        <div class="flex-1 overflow-auto p-3 space-y-2">
+          <div class="bg-white rounded-lg border border-slate-200 p-3"><div class="flex items-center gap-2 mb-1.5"><span class="font-mono text-[11px] font-bold bg-slate-100 px-1.5 py-0.5 rounded">00:46</span><span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span><span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span></div><div class="text-[13px] font-medium mb-0.5">"3번 째" → <span class="text-orange-600">"3번째"</span></div><div class="text-[11px] text-slate-500">접미사 띄어쓰기</div></div>
+          <div class="bg-white rounded-lg border-2 border-slate-900 p-3"><div class="flex items-center gap-2 mb-1.5"><span class="font-mono text-[11px] font-bold bg-slate-100 px-1.5 py-0.5 rounded">10:14</span><span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span><span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span></div><div class="text-[13px] font-medium mb-0.5">"일하지말자" → <span class="text-orange-600">"일하지 말자"</span></div><div class="text-[11px] text-slate-500">보조용언 띄어쓰기</div></div>
+          <div class="bg-white rounded-lg border border-slate-200 p-3"><div class="flex items-center gap-2 mb-1.5"><span class="font-mono text-[11px] font-bold bg-slate-100 px-1.5 py-0.5 rounded">10:18</span><span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">자막</span><span class="text-[10.5px] text-slate-400 ml-auto">✨ AI</span></div><div class="text-[13px] font-medium mb-0.5">"자신있는" → <span class="text-orange-600">"자신 있는"</span></div><div class="text-[11px] text-slate-500">'자신 있다'는 띄어 씁니다</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="max-w-[1440px] mx-auto mt-3 text-[12px] text-slate-500 space-y-1">
+    <div><b>P4 · 이슈 네비게이터:</b> 상단 중앙 pill로 "오타 N/7" · 시간 눈금 표시 · ±3s/±10s 텍스트 버튼 (명확) · 키보드 [/] 힌트</div>
+    <div class="text-slate-400">특징: 현재 보고 있는 이슈가 몇 번째인지 시각적 피드백 강함</div>
+  </div>
+</div>
+
+<!-- Comparison -->
+<div class="max-w-[1440px] mx-auto mt-8 bg-white rounded-xl border p-6">
+  <h2 class="text-lg font-bold mb-4">4안 비교 (B안 댓글 패널 동일)</h2>
+  <table class="w-full text-[12.5px]">
+    <thead>
+      <tr class="border-b">
+        <th class="text-left py-2 pr-4 font-medium text-slate-500">항목</th>
+        <th class="text-left py-2 px-4 font-medium">P1 시네마</th>
+        <th class="text-left py-2 px-4 font-medium">P2 타임라인 중심</th>
+        <th class="text-left py-2 px-4 font-medium">P3 카드 패널</th>
+        <th class="text-left py-2 px-4 font-medium">P4 이슈 네비게이터</th>
+      </tr>
+    </thead>
+    <tbody class="text-slate-700">
+      <tr class="border-b"><td class="py-2 pr-4 text-slate-500">영상 영역</td><td class="py-2 px-4">전체 다크</td><td class="py-2 px-4">전체 다크</td><td class="py-2 px-4">둥근 카드 다크</td><td class="py-2 px-4">전체 다크</td></tr>
+      <tr class="border-b"><td class="py-2 pr-4 text-slate-500">컨트롤 바</td><td class="py-2 px-4">1줄 · 최소</td><td class="py-2 px-4">3단 (chip + timeline + ctrl)</td><td class="py-2 px-4">화이트 카드 · 2단</td><td class="py-2 px-4">2단 (timeline + ctrl)</td></tr>
+      <tr class="border-b"><td class="py-2 pr-4 text-slate-500">피드백 간 이동</td><td class="py-2 px-4">댓글 클릭만</td><td class="py-2 px-4">상단 chip + ⏮⏭</td><td class="py-2 px-4">"이전/다음 피드백" 버튼</td><td class="py-2 px-4">상단 pill N/7</td></tr>
+      <tr class="border-b"><td class="py-2 pr-4 text-slate-500">seek ±3s/±10s</td><td class="py-2 px-4">키보드만</td><td class="py-2 px-4">-</td><td class="py-2 px-4">⋯ 메뉴</td><td class="py-2 px-4">보이는 텍스트 버튼</td></tr>
+      <tr class="border-b"><td class="py-2 pr-4 text-slate-500">현재 위치 인지</td><td class="py-2 px-4">playhead만</td><td class="py-2 px-4">chip 강조 + playhead</td><td class="py-2 px-4">시간 숫자</td><td class="py-2 px-4">상단 pill "피드백 4/7"</td></tr>
+      <tr class="border-b"><td class="py-2 pr-4 text-slate-500">버튼 개수</td><td class="py-2 px-4">4</td><td class="py-2 px-4">8</td><td class="py-2 px-4">7</td><td class="py-2 px-4">9</td></tr>
+      <tr class="border-b"><td class="py-2 pr-4 text-slate-500">적합 시나리오</td><td class="py-2 px-4">몰입 감상 + 리뷰</td><td class="py-2 px-4">피드백 많은 영상 빠른 순회</td><td class="py-2 px-4">B안과 시각 통일 최대</td><td class="py-2 px-4">프로 검수 · 단축키 친화</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.variant').forEach(v => v.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.target).classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

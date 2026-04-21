@@ -15,7 +15,7 @@ export async function Sidebar() {
         </Link>
       </div>
 
-      <SidebarNav />
+      <SidebarNav isAdmin={session?.role === "admin"} />
 
       <div className="border-t border-border px-4 py-3 flex items-center gap-3">
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-purple text-white grid place-items-center text-[11px] font-bold shrink-0">
