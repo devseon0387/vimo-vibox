@@ -1,0 +1,21 @@
+tunnel: 5ca61b90-7a18-4927-90d6-29fbc5a2ef2c
+credentials-file: /Users/vimo/.cloudflared/5ca61b90-7a18-4927-90d6-29fbc5a2ef2c.json
+protocol: http2
+
+# Caddy (로컬 443) 대신 Next.js 서버 직접 라우팅
+# Caddy 의 request_body max 100GB, CORS, HTTP/3 설정은 Tunnel 에선 Cloudflare 가 처리
+
+ingress:
+  - hostname: vibox.cloud
+    service: http://localhost:4200
+  - hostname: u1.vibox.cloud
+    service: http://localhost:4200
+  - hostname: u2.vibox.cloud
+    service: http://localhost:4200
+  - service: http_status:404
+
+# 큰 파일 업로드 대응
+originRequest:
+  connectTimeout: 30s
+  noTLSVerify: true
+  # Cloudflare Free 플랜 요청 바디 100MB 제한 → 청크 업로드 (50MB)라 OK

@@ -182,7 +182,19 @@ export function UsersAdmin({
                         <span className="text-[12px] text-text-soft">멤버</span>
                       )}
                     </td>
-                    <td className="px-4 py-2.5 text-text-soft">{user.quotaGb} GB</td>
+                    <td className="px-4 py-2.5">
+                      <QuotaEditor
+                        userId={user.id}
+                        value={user.quotaGb}
+                        disabled={busy === user.id}
+                        onBusy={(b) => setBusy(b ? user.id : null)}
+                        onSaved={() => {
+                          success("할당량 변경됨");
+                          router.refresh();
+                        }}
+                        onError={(m) => toastError(m)}
+                      />
+                    </td>
                     <td className="px-4 py-2.5 text-text-faint text-[12px]">
                       {formatDate(user.createdAt)}
                     </td>
@@ -249,6 +261,102 @@ export function UsersAdmin({
 
       {confirmDialog}
     </>
+  );
+}
+
+function QuotaEditor({
+  userId,
+  value,
+  disabled,
+  onBusy,
+  onSaved,
+  onError,
+}: {
+  userId: string;
+  value: number;
+  disabled: boolean;
+  onBusy: (b: boolean) => void;
+  onSaved: () => void;
+  onError: (msg: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(value));
+
+  const save = async () => {
+    const n = parseInt(draft, 10);
+    if (!Number.isFinite(n) || n < 0 || n > 100000) {
+      onError("0~100000 GB 범위여야 해요");
+      return;
+    }
+    if (n === value) {
+      setEditing(false);
+      return;
+    }
+    onBusy(true);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quotaGb: n }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        onError(body.error ?? res.statusText);
+        return;
+      }
+      setEditing(false);
+      onSaved();
+    } finally {
+      onBusy(false);
+    }
+  };
+
+  if (!editing) {
+    return (
+      <button
+        onClick={() => {
+          setDraft(String(value));
+          setEditing(true);
+        }}
+        disabled={disabled}
+        className="text-text-soft hover:text-accent hover:bg-hover px-1.5 py-0.5 rounded text-[13px] tabular-nums disabled:opacity-40"
+        title="클릭해서 수정"
+      >
+        {value} GB
+      </button>
+    );
+  }
+
+  return (
+    <div className="inline-flex items-center gap-1">
+      <input
+        type="number"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") save();
+          if (e.key === "Escape") setEditing(false);
+        }}
+        autoFocus
+        min={0}
+        max={100000}
+        className="w-20 px-1.5 py-0.5 border border-accent rounded text-[13px] tabular-nums outline-none focus:ring-1 focus:ring-accent"
+      />
+      <span className="text-[11px] text-text-faint">GB</span>
+      <button
+        onClick={save}
+        disabled={disabled}
+        className="text-[11px] font-semibold text-white bg-accent hover:opacity-90 px-1.5 py-0.5 rounded disabled:opacity-40"
+      >
+        저장
+      </button>
+      <button
+        onClick={() => setEditing(false)}
+        className="text-[11px] text-text-faint hover:text-text px-1"
+      >
+        취소
+      </button>
+    </div>
   );
 }
 

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID, randomBytes } from "node:crypto";
 import { desc, eq } from "drizzle-orm";
-import bcrypt from "bcryptjs";
 import { db } from "@/lib/db/client";
 import { shareLinks } from "@/lib/db/schema";
 import { getCurrentSession } from "@/lib/auth/session";
+import { canAccessFile } from "@/lib/auth/access";
 import { statPath } from "@/lib/fs/storage";
 
 function generateToken() {
@@ -29,6 +29,7 @@ export async function GET() {
       filePath: r.filePath,
       title: r.title,
       paths: r.paths ? (JSON.parse(r.paths) as string[]) : [r.filePath],
+      mode: r.mode,
       allowComments: r.allowComments,
       allowDownload: r.allowDownload,
       expiresAt: r.expiresAt,
@@ -66,6 +67,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "path or paths required" }, { status: 400 });
   }
 
+  // 접근 권한 확인 (파트너는 본인 파일만 공유 가능)
+  for (const p of rawPaths) {
+    if (!(await canAccessFile(session, p))) {
+      return NextResponse.json({ error: `접근 불가: ${p}` }, { status: 403 });
+    }
+  }
+
   // 모든 파일 존재 확인
   for (const p of rawPaths) {
     try {
@@ -80,7 +88,8 @@ export async function POST(req: NextRequest) {
   }
 
   const token = generateToken();
-  const passwordHash = body?.password ? await bcrypt.hash(String(body.password), 10) : null;
+  // 비번 기능 제거 — 새 링크는 항상 비번 없음 (기존 passwordHash 가진 레거시 링크는 호환 유지)
+  const passwordHash = null;
   const expiresAt =
     typeof body?.expiresInDays === "number" && body.expiresInDays > 0
       ? new Date(Date.now() + body.expiresInDays * 24 * 60 * 60 * 1000)
@@ -90,13 +99,22 @@ export async function POST(req: NextRequest) {
   const primaryPath = rawPaths[0];
   const title = body?.title ? String(body.title).slice(0, 200) : null;
 
+  // 모드: 'preview' (재생 전용, 기본) | 'full' (피드백 가능)
+  const mode = body?.mode === "full" ? "full" : "preview";
+  // 풀모드면 자동으로 댓글 허용 (explicit 지정 있으면 그걸 따름)
+  const allowComments =
+    body?.allowComments !== undefined
+      ? !!body.allowComments
+      : mode === "full";
+
   await db.insert(shareLinks).values({
     id: randomUUID(),
     token,
     filePath: primaryPath, // 첫 파일 (backward compat)
     paths: isMulti ? JSON.stringify(rawPaths) : null,
     title,
-    allowComments: !!body?.allowComments,
+    mode,
+    allowComments,
     allowDownload: body?.allowDownload !== false, // 기본 true
     createdBy: session.sub,
     expiresAt,

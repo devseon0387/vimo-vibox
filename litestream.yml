@@ -1,0 +1,28 @@
+# Vibox SQLite 실시간 백업 설정 (Litestream)
+#
+# 복제 타겟 전략:
+#   1) 외장 HDD — Vibox Vault/litestream/ (물리 분리)
+#       내장 SSD 장애 시 DB 복구 가능. 별도 물리 디스크라 동시 손상 위험 낮음.
+#   2) (예정) Dropbox 또는 B2 등 원격 — 나중에 경로 확정 시 추가
+#
+# WAL 모드 필수 (lib/db/client.ts에서 이미 설정됨)
+#
+# 실행:
+#   litestream replicate -config /Users/vimo/vimo-cloud/litestream.yml
+#
+# 복구:
+#   litestream restore -config /Users/vimo/vimo-cloud/litestream.yml \
+#     -o /tmp/vimo-cloud-restored.db \
+#     /Users/vimo/vimo-cloud/_data/vimo-cloud.db
+
+dbs:
+  - path: /Users/vimo/vimo-cloud/_data/vimo-cloud.db
+    replicas:
+      - type: file
+        path: /Volumes/Vibox Vault/litestream
+        # retention 기본 24시간, sync-interval 1초 (기본값 사용)
+        # 더 오래 보관하려면 retention: 168h 식으로 조정
+        retention: 720h          # 30일치 보관
+        retention-check-interval: 1h
+        sync-interval: 1s
+        snapshot-interval: 24h   # 매일 전체 스냅샷 1번

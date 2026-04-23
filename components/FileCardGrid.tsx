@@ -22,6 +22,7 @@ import { useConfirm } from "./ConfirmDialog";
 import { usePrompt } from "./PromptDialog";
 import { PreviewModal } from "./PreviewModal";
 import { MoveDialog } from "./MoveDialog";
+import { ShareDialog } from "./ShareDialog";
 import { useToast } from "./Toast";
 
 type FileStats = { commentCount: number; openCount: number };
@@ -268,6 +269,7 @@ export function FileCardGrid({
   const [deleting, setDeleting] = useState<string | null>(null);
   const [previewEntry, setPreviewEntry] = useState<FileEntry | null>(null);
   const [moveEntry, setMoveEntry] = useState<FileEntry | null>(null);
+  const [shareEntry, setShareEntry] = useState<FileEntry | null>(null);
   const { confirm, dialog: confirmDialog } = useConfirm();
   const { promptInput, dialog: promptDialog } = usePrompt();
   const { show: showToast } = useToast();
@@ -276,7 +278,7 @@ export function FileCardGrid({
     if (entry.isFolder) {
       router.push(`/?path=${encodeURIComponent(entry.path)}`);
     } else if (isVideo(entry)) {
-      router.push(`/v?path=${encodeURIComponent(entry.path)}`);
+      router.push(`/vimo-box?path=${encodeURIComponent(entry.path)}`);
     } else if (isPreviewable(entry)) {
       setPreviewEntry(entry);
     } else {
@@ -368,46 +370,13 @@ export function FileCardGrid({
     a.click();
   };
 
-  const onShare = async (entry: FileEntry, e: React.MouseEvent) => {
+  const onShare = (entry: FileEntry, e: React.MouseEvent) => {
     e.stopPropagation();
     if (entry.isFolder) {
       showToast("지금은 폴더 공유를 지원하지 않아요", "error");
       return;
     }
-    try {
-      const res = await fetch("/api/shares", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ path: entry.path }),
-      });
-      const body = await res.json();
-      if (!res.ok) {
-        showToast("링크 생성 실패: " + (body.error ?? res.statusText), "error");
-        return;
-      }
-      const url = `${window.location.origin}/s/${body.token}`;
-      try {
-        await navigator.clipboard.writeText(url);
-        showToast(
-          <>
-            <span className="font-semibold text-white mr-1.5">링크 복사됨</span>
-            <span className="text-white/70 text-[12px]">{url}</span>
-          </>,
-        );
-      } catch {
-        showToast(
-          <>
-            <span className="font-semibold text-white mr-1.5">링크 생성됨</span>
-            <span className="text-white/70 text-[12px]">{url}</span>
-          </>,
-        );
-      }
-    } catch (err) {
-      showToast(
-        "링크 생성 중 오류: " + (err instanceof Error ? err.message : "unknown"),
-        "error",
-      );
-    }
+    setShareEntry(entry);
   };
 
   const onMove = (entry: FileEntry, e: React.MouseEvent) => {
@@ -466,6 +435,11 @@ export function FileCardGrid({
         open={!!moveEntry}
         onClose={() => setMoveEntry(null)}
         onMoved={() => router.refresh()}
+      />
+      <ShareDialog
+        entry={shareEntry}
+        open={!!shareEntry}
+        onClose={() => setShareEntry(null)}
       />
     </>
   );

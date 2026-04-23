@@ -3,6 +3,7 @@ import path from "node:path";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { shareLinks } from "@/lib/db/schema";
+import { resolveAllowedPaths } from "@/lib/share/paths";
 import { SharePageClient } from "./share-client";
 
 type Kind = "video" | "image" | "audio" | "pdf" | "other";
@@ -32,12 +33,9 @@ export default async function SharePage({
   if (!link) notFound();
 
   const expired = !!link.expiresAt && link.expiresAt.getTime() < Date.now();
-  const needPassword = !!link.passwordHash;
 
-  // paths 컬럼이 있으면 멀티, 없으면 단일
-  const paths: string[] = link.paths
-    ? (JSON.parse(link.paths) as string[])
-    : [link.filePath];
+  // paths 컬럼이 있으면 멀티, 없으면 단일 (invalid JSON 은 안전 폴백)
+  const paths = resolveAllowedPaths(link);
 
   const files = paths.map((p) => ({
     path: p,
@@ -51,10 +49,10 @@ export default async function SharePage({
       title={link.title ?? files[0].name}
       files={files}
       expired={expired}
-      needPassword={needPassword}
       expiresAt={link.expiresAt ? link.expiresAt.toISOString() : null}
-      allowComments={link.allowComments}
+      allowComments={link.allowComments && link.mode === "full"}
       allowDownload={link.allowDownload}
+      mode={link.mode}
     />
   );
 }

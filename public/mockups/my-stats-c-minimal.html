@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Vibox · 내 기록 (C · Minimal)</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #ffffff; color: #0a0a0a;
+    font-family: 'Pretendard', sans-serif; font-size: 14px; line-height: 1.6;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 72px 32px 120px; }
+
+  .head { border-bottom: 1px solid #0a0a0a; padding-bottom: 24px; margin-bottom: 56px; }
+  .head .meta { display: flex; justify-content: space-between; align-items: flex-end; }
+  .head .title { font-family: 'Nanum Myeongjo', serif; font-size: 36px; font-weight: 700; letter-spacing: -0.02em; }
+  .head .period { font-size: 12px; color: #737373; text-align: right; line-height: 1.7; font-variant-numeric: tabular-nums; }
+
+  .big-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-bottom: 72px; border-top: 1px solid #e5e5e5; border-bottom: 1px solid #e5e5e5; }
+  .big-grid .cell { padding: 28px 20px; border-right: 1px solid #e5e5e5; }
+  .big-grid .cell:last-child { border-right: none; }
+  .big-grid .lbl { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #737373; margin-bottom: 10px; }
+  .big-grid .num { font-size: 42px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; line-height: 1; }
+  .big-grid .unit { font-size: 13px; color: #737373; font-weight: 500; margin-left: 2px; }
+  .big-grid .delta { font-size: 11px; color: #737373; margin-top: 10px; font-variant-numeric: tabular-nums; }
+  .big-grid .delta b { color: #16a34a; font-weight: 600; }
+  .big-grid .delta b.up { color: #dc2626; }
+
+  .sect { margin-bottom: 72px; }
+  .sect-title { font-family: 'Nanum Myeongjo', serif; font-size: 22px; font-weight: 700; margin: 0 0 28px; letter-spacing: -0.01em; display: flex; align-items: baseline; gap: 14px; }
+  .sect-title small { font-family: 'Pretendard', sans-serif; font-size: 11px; color: #737373; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  .cat-list { display: flex; flex-direction: column; }
+  .cat-line { display: grid; grid-template-columns: 140px 1fr 60px 80px; gap: 20px; align-items: center; padding: 14px 0; border-bottom: 1px solid #f4f4f4; font-size: 13.5px; }
+  .cat-line:last-child { border-bottom: none; }
+  .cat-line .n { font-weight: 600; }
+  .cat-line .bar { height: 2px; background: #0a0a0a; }
+  .cat-line .c { font-variant-numeric: tabular-nums; text-align: right; color: #0a0a0a; font-weight: 500; }
+  .cat-line .t { font-variant-numeric: tabular-nums; text-align: right; font-size: 11.5px; color: #737373; }
+  .cat-line .t.down { color: #16a34a; font-weight: 600; }
+  .cat-line .t.up { color: #dc2626; font-weight: 600; }
+
+  .praise-quote {
+    padding: 32px 0;
+    border-top: 1px solid #e5e5e5;
+    border-bottom: 1px solid #e5e5e5;
+    margin-bottom: 24px;
+    display: flex; justify-content: space-between; align-items: center; gap: 24px;
+  }
+  .praise-quote .q {
+    font-family: 'Nanum Myeongjo', serif;
+    font-size: 24px; font-weight: 400;
+    letter-spacing: -0.015em; line-height: 1.4;
+    flex: 1;
+  }
+  .praise-quote .m { font-size: 11px; color: #737373; white-space: nowrap; }
+  .praise-more { font-size: 12px; color: #525252; }
+  .praise-more a { color: #0a0a0a; text-decoration: underline; text-underline-offset: 3px; }
+
+  .note {
+    padding: 20px 24px; border: 1px solid #0a0a0a; background: #fafaf9;
+    font-size: 13px; line-height: 1.6;
+  }
+  .note b { font-weight: 700; }
+
+  .foot { text-align: center; font-size: 10.5px; color: #a3a3a3; margin-top: 56px; letter-spacing: 0.08em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="meta">
+      <div class="title">내 작업 기록</div>
+      <div class="period">김편집<br>2026. 03. 24 — 04. 23</div>
+    </div>
+  </div>
+
+  <div class="big-grid">
+    <div class="cell">
+      <div class="lbl">Uploads</div>
+      <div class="num">12<span class="unit">개</span></div>
+      <div class="delta">전월 9 · <b>+33%</b></div>
+    </div>
+    <div class="cell">
+      <div class="lbl">Feedback</div>
+      <div class="num">47<span class="unit">건</span></div>
+      <div class="delta">전월 61 · <b>-23%</b></div>
+    </div>
+    <div class="cell">
+      <div class="lbl">Resolved</div>
+      <div class="num">89<span class="unit">%</span></div>
+      <div class="delta">전월 82% · <b>+7%p</b></div>
+    </div>
+    <div class="cell">
+      <div class="lbl">Praise</div>
+      <div class="num">8<span class="unit">건</span></div>
+      <div class="delta">전월 5 · <b>+60%</b></div>
+    </div>
+  </div>
+
+  <div class="sect">
+    <h2 class="sect-title">피드백 분포 <small>By Category</small></h2>
+    <div class="cat-list">
+      <div class="cat-line"><span class="n">자막 오타</span><span class="bar" style="width:100%;"></span><span class="c">18</span><span class="t down">-28%</span></div>
+      <div class="cat-line"><span class="n">컷 타이밍</span><span class="bar" style="width:67%;"></span><span class="c">12</span><span class="t up">+50%</span></div>
+      <div class="cat-line"><span class="n">색감 조정</span><span class="bar" style="width:44%;"></span><span class="c">8</span><span class="t down">-20%</span></div>
+      <div class="cat-line"><span class="n">오디오</span><span class="bar" style="width:28%;"></span><span class="c">5</span><span class="t down">-17%</span></div>
+      <div class="cat-line"><span class="n">동작</span><span class="bar" style="width:11%;"></span><span class="c">2</span><span class="t down">-50%</span></div>
+      <div class="cat-line"><span class="n">기타</span><span class="bar" style="width:11%;"></span><span class="c">2</span><span class="t">—</span></div>
+    </div>
+  </div>
+
+  <div class="sect">
+    <h2 class="sect-title">받은 칭찬 <small>Praise</small></h2>
+    <div class="praise-quote">
+      <div class="q">“이 부분 색감 완벽! 따뜻한 느낌이 딱 맞아요”</div>
+      <div class="m">정직왕 #2-4<br>매니저 김선 · 4/22</div>
+    </div>
+    <div class="praise-quote">
+      <div class="q">“자막 타이밍 훌륭해요, 숨 쉴 틈 잘 주셨어요”</div>
+      <div class="m">프리비트 #18<br>매니저 김선 · 4/20</div>
+    </div>
+    <div class="praise-more"><a href="#">남은 6건 보기 →</a></div>
+  </div>
+
+  <div class="sect">
+    <h2 class="sect-title">참고 <small>Note</small></h2>
+    <div class="note">
+      최근 30일 <b>"띄어쓰기"</b> 관련 지적이 5건 이상 나왔습니다.
+      업로드 전 맞춤법 검사를 한 번 돌려보시면 같은 유형 피드백을 줄일 수 있어요.
+    </div>
+  </div>
+
+  <div class="foot">Vibox · 본인에게만 표시 · 매일 자정 갱신</div>
+</div>
+</body>
+</html>

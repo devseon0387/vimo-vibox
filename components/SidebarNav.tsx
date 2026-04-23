@@ -8,49 +8,119 @@ import {
   Link as LinkIcon,
   Users,
   Sparkles,
+  HardDrive,
+  BarChart3,
+  Package,
+  BookOpen,
+  Film,
+  Layers,
 } from "lucide-react";
 
-const baseItems = [
-  { label: "파일", icon: FolderOpen, href: "/" },
-  { label: "휴지통", icon: Trash2, href: "/trash" },
-  { label: "공유 링크", icon: LinkIcon, href: "/shares" },
-  { label: "인사이트", icon: Sparkles, href: "/insights" },
-] as const;
+type NavItem = {
+  label: string;
+  icon: typeof FolderOpen;
+  href: string;
+  matchExact?: boolean;
+};
 
-const adminItems = [
+// VIMO Box 섹션 (팀 공용)
+const vimoBoxItems: NavItem[] = [
+  { label: "렌더링", icon: Film, href: "/" },
+  { label: "자료실", icon: BookOpen, href: "/vimo-box/library" },
+];
+
+// 개인 섹션
+const personalItems: NavItem[] = [
+  { label: "내 박스", icon: Package, href: "/my/box" },
+];
+
+// 공통
+const commonItems: NavItem[] = [
+  { label: "공유 링크", icon: LinkIcon, href: "/shares" },
+  { label: "휴지통", icon: Trash2, href: "/trash" },
+  { label: "인사이트", icon: Sparkles, href: "/insights" },
+];
+
+const adminItems: NavItem[] = [
   { label: "사용자 관리", icon: Users, href: "/admin/users" },
-] as const;
+  { label: "트래픽 통계", icon: BarChart3, href: "/admin/stats" },
+  { label: "저장소 정리", icon: HardDrive, href: "/admin/storage" },
+];
+
+function SectionLabel({
+  icon: Icon,
+  label,
+}: {
+  icon: typeof FolderOpen;
+  label: string;
+}) {
+  return (
+    <div className="flex items-center gap-1.5 px-3 pt-3 pb-1 text-[10.5px] font-bold tracking-widest text-text-faint uppercase">
+      <Icon size={11} strokeWidth={2.3} />
+      {label}
+    </div>
+  );
+}
+
+function NavRow({ item, isActive }: { item: NavItem; isActive: boolean }) {
+  const Icon = item.icon;
+  return (
+    <Link
+      href={item.href}
+      className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] mb-0.5 transition-colors ${
+        isActive
+          ? "bg-accent-soft text-accent font-semibold"
+          : "text-text-muted hover:bg-hover hover:text-text"
+      }`}
+    >
+      <Icon size={15} strokeWidth={isActive ? 2.5 : 2} />
+      <span className="flex-1 truncate">{item.label}</span>
+    </Link>
+  );
+}
 
 export function SidebarNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
   const params = useSearchParams();
   const queryPath = params.get("path") ?? "/";
 
-  const items = isAdmin ? [...baseItems, ...adminItems] : baseItems;
+  const isItemActive = (item: NavItem) => {
+    // 렌더링(/)은 루트 경로 + path=/ 일 때만 active (파트너 필터링·내부 경로 진입 구분)
+    if (item.href === "/") {
+      return pathname === "/" && (queryPath === "/" || !queryPath);
+    }
+    return pathname.startsWith(item.href);
+  };
 
   return (
-    <nav className="flex-1 overflow-y-auto px-2 py-2">
-      {items.map((item) => {
-        const Icon = item.icon;
-        const isActive =
-          item.href === "/"
-            ? pathname === "/" && queryPath === "/"
-            : pathname.startsWith(item.href);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] mb-0.5 transition-colors ${
-              isActive
-                ? "bg-accent-soft text-accent font-semibold"
-                : "text-text-muted hover:bg-hover hover:text-text"
-            }`}
-          >
-            <Icon size={15} strokeWidth={isActive ? 2.5 : 2} />
-            <span className="flex-1 truncate">{item.label}</span>
-          </Link>
-        );
-      })}
+    <nav className="flex-1 overflow-y-auto px-2 pt-1 pb-2">
+      {/* VIMO Box 섹션 */}
+      <SectionLabel icon={Layers} label="VIMO Box" />
+      {vimoBoxItems.map((item) => (
+        <NavRow key={item.href} item={item} isActive={isItemActive(item)} />
+      ))}
+
+      {/* 개인 */}
+      <SectionLabel icon={Package} label="Personal" />
+      {personalItems.map((item) => (
+        <NavRow key={item.href} item={item} isActive={isItemActive(item)} />
+      ))}
+
+      {/* 공통 도구 */}
+      <SectionLabel icon={FolderOpen} label="도구" />
+      {commonItems.map((item) => (
+        <NavRow key={item.href} item={item} isActive={isItemActive(item)} />
+      ))}
+
+      {/* 관리자 전용 */}
+      {isAdmin && (
+        <>
+          <SectionLabel icon={HardDrive} label="관리" />
+          {adminItems.map((item) => (
+            <NavRow key={item.href} item={item} isActive={isItemActive(item)} />
+          ))}
+        </>
+      )}
     </nav>
   );
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { LogOut } from "lucide-react";
 import { getCurrentSession } from "@/lib/auth/session";
 import { logoutAction } from "@/app/login/actions";
@@ -10,7 +11,18 @@ export async function Sidebar() {
   return (
     <aside className="w-[240px] bg-surface border-r border-border flex flex-col h-screen">
       <div className="px-5 pt-6 pb-5">
-        <Link href="/" className="text-[15px] font-extrabold tracking-tight text-text">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-[15px] font-extrabold tracking-tight text-text"
+        >
+          <Image
+            src="/logo.png"
+            alt="Vibox"
+            width={24}
+            height={24}
+            priority
+            className="rounded"
+          />
           vi<span className="text-accent">.</span>box
         </Link>
       </div>

@@ -22,7 +22,9 @@ import {
 import type { FileEntry } from "@/lib/fs/storage";
 import {
   parseAnnotation,
+  shapesBounds,
   type Annotation,
+  type Shape,
 } from "@/lib/comments/annotation";
 import {
   Check,
@@ -38,6 +40,10 @@ import {
   Heart,
   PencilLine,
   Type,
+  MoveUpRight,
+  Circle as CircleIcon,
+  Pencil,
+  Square,
   Sparkles,
   Loader2,
   SkipBack,
@@ -46,6 +52,9 @@ import {
   ArrowUpNarrowWide,
   ArrowDownNarrowWide,
   X,
+  User,
+  Eye,
+  AlertCircle,
 } from "lucide-react";
 
 type CommentRow = {
@@ -60,16 +69,30 @@ type CommentRow = {
   autoKind: Kind;
   annotation: Annotation | null;
   body: string;
+  moderatedBody?: string | null;
+  visibility?: "internal" | "client";
+  status?: "approved" | "pending";
+  approvedAt?: number | null;
+  approvedBy?: string | null;
+  guestName?: string | null;
   parentId: string | null;
   resolvedAt: number | null;
   resolvedBy: string | null;
   createdAt: number;
 };
 
+type AnnotationTool = "box" | "arrow" | "ellipse" | "pen";
+
 type PendingAnno = {
-  bbox: { x: number; y: number; w: number; h: number }; // 비율 0~1
+  tool: AnnotationTool;
+  // box tool용
+  bbox?: { x: number; y: number; w: number; h: number };
   original: string;
   suggestion: string;
+  // shape tool용
+  shapes?: Shape[];
+  // 공통
+  body: string; // shape 도구에서 쓰는 자유 피드백 본문
   note: string;
   kind: Kind;
   ocrLoading?: boolean;
@@ -137,20 +160,38 @@ function formatRelative(ms: number): string {
   return `${date.getMonth() + 1}월 ${date.getDate()}일`;
 }
 
+export type ShareContext = {
+  token: string;
+  password: string;
+  guestName: string;
+  onSetGuestName: (n: string) => void;
+};
+
 export function FeedbackModal({
   entry,
   backHref = "/",
   currentUserId,
   isAdmin,
+  role = "member",
+  shareContext,
 }: {
   entry: FileEntry | null;
   backHref?: string;
   currentUserId: string;
   isAdmin: boolean;
+  role?: "admin" | "member" | "partner";
+  shareContext?: ShareContext;
 }) {
+  const isGuest = !!shareContext;
+  const effectiveRole = isGuest ? "partner" : role;
+  const effectiveIsAdmin = isGuest ? false : isAdmin;
+  const effectiveUserId = isGuest ? "guest" : currentUserId;
+  const isStaff =
+    !isGuest && (effectiveRole === "admin" || effectiveRole === "member");
   const open = !!entry;
   const vidRef = useRef<HTMLVideoElement>(null);
   const [items, setItems] = useState<CommentRow[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -159,8 +200,11 @@ export function FeedbackModal({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [viewFilter, setViewFilter] = useState<ViewFilter>("all");
   const [annotationMode, setAnnotationMode] = useState(false);
+  const [annotationTool, setAnnotationTool] = useState<AnnotationTool>("box");
   const [pendingAnno, setPendingAnno] = useState<PendingAnno | null>(null);
-  const [popoverPos, setPopoverPos] = useState<{ left: string; top: string } | null>(null);
+  const [popoverPos, setPopoverPos] = useState<
+    { left: string; top: string; flipUp?: boolean } | null
+  >(null);
   const videoWrapRef = useRef<HTMLDivElement>(null);
   const { confirm, dialog: confirmDialog } = useConfirm();
   const { success, error: toastError } = useToast();
@@ -171,24 +215,28 @@ export function FeedbackModal({
     if (!filePath) return;
     setLoading(true);
     try {
-      const res = await fetch(
-        `/api/comments?path=${encodeURIComponent(filePath)}`,
-      );
+      const url = shareContext
+        ? `/api/s/${shareContext.token}/comments?p=${encodeURIComponent(filePath)}`
+        : `/api/comments?path=${encodeURIComponent(filePath)}`;
+      const res = await fetch(url);
       const data = await res.json();
       if (res.ok) {
-        const parsed: CommentRow[] = (data.comments ?? []).map((c: CommentRow & { annotation: string | Annotation | null }) => ({
-          ...c,
-          annotation:
-            typeof c.annotation === "string"
-              ? parseAnnotation(c.annotation)
-              : (c.annotation ?? null),
-        }));
+        const parsed: CommentRow[] = (data.comments ?? []).map(
+          (c: CommentRow & { annotation: string | Annotation | null }) => ({
+            ...c,
+            annotation:
+              typeof c.annotation === "string"
+                ? parseAnnotation(c.annotation)
+                : (c.annotation ?? null),
+          }),
+        );
         setItems(parsed);
+        setPendingCount(Number(data.pendingCount ?? 0));
       }
     } finally {
       setLoading(false);
     }
-  }, [filePath]);
+  }, [filePath, shareContext]);
 
   useEffect(() => {
     if (open && filePath) fetchComments();
@@ -443,13 +491,20 @@ export function FeedbackModal({
     ) =>
       !(a.x + a.w < b.x || b.x + b.w < a.x || a.y + a.h < b.y || b.y + b.h < a.y);
 
+    const annoBounds = (a: Annotation) => {
+      if (a.bbox) return a.bbox;
+      if (a.shapes?.length) return shapesBounds(a.shapes);
+      return null;
+    };
+
     const shown: CommentRow[] = [];
     for (const { c } of candidates) {
-      const ab = c.annotation?.bbox;
+      const ab = annoBounds(c.annotation!);
       if (!ab) continue;
-      const overlapsShown = shown.some(
-        (s) => s.annotation && bboxOverlaps(ab, s.annotation.bbox),
-      );
+      const overlapsShown = shown.some((s) => {
+        const sb = annoBounds(s.annotation!);
+        return sb ? bboxOverlaps(ab, sb) : false;
+      });
       if (!overlapsShown) shown.push(c);
     }
     return shown;
@@ -511,6 +566,61 @@ export function FeedbackModal({
       await fetchComments();
     } else {
       toastError("종류 변경 실패");
+    }
+  };
+
+  const handleApprove = async (id: string) => {
+    const res = await fetch(`/api/comments/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ approve: true }),
+    });
+    if (res.ok) {
+      success("파트너에게 공개됨");
+      await fetchComments();
+    } else {
+      const body = await res.json().catch(() => ({}));
+      toastError("확인 실패: " + (body.error ?? res.statusText));
+    }
+  };
+
+  const handleToggleVisibility = async (
+    id: string,
+    current: "internal" | "client",
+  ) => {
+    const next = current === "client" ? "internal" : "client";
+    const res = await fetch(`/api/comments/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visibility: next }),
+    });
+    if (res.ok) {
+      await fetchComments();
+    } else {
+      const body = await res.json().catch(() => ({}));
+      toastError("변경 실패: " + (body.error ?? res.statusText));
+    }
+  };
+
+  // 순화 편집 대상 (모달 열림)
+  const [moderateTarget, setModerateTarget] = useState<CommentRow | null>(null);
+
+  const handleSaveModeration = async (
+    id: string,
+    moderatedBody: string | null,
+  ) => {
+    const res = await fetch(`/api/comments/${id}/moderate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ moderatedBody }),
+    });
+    if (res.ok) {
+      success(moderatedBody === null ? "순화본 제거됨" : "순화본 저장됨");
+      setModerateTarget(null);
+      await fetchComments();
+    } else {
+      const body = await res.json().catch(() => ({}));
+      toastError("저장 실패: " + (body.error ?? res.statusText));
     }
   };
 
@@ -670,8 +780,9 @@ export function FeedbackModal({
   }, [filePath]);
 
   useEffect(() => {
+    if (isGuest) return; // 게스트는 스캔 히스토리 접근 불가
     if (open && filePath) fetchLastScan();
-  }, [open, filePath, fetchLastScan]);
+  }, [open, filePath, fetchLastScan, isGuest]);
 
   // 검수 완료 후 히스토리 갱신
   useEffect(() => {
@@ -679,21 +790,31 @@ export function FeedbackModal({
   }, [scanJob, fetchLastScan]);
 
   if (!entry) return null;
-  const src = `/api/download?path=${encodeURIComponent(entry.path)}&inline=1`;
-  const poster = `/api/thumb?path=${encodeURIComponent(entry.path)}`;
+  const src = shareContext
+    ? `/api/s/${shareContext.token}?p=${encodeURIComponent(entry.path)}`
+    : `/api/download?path=${encodeURIComponent(entry.path)}&inline=1`;
+  const poster = shareContext
+    ? undefined
+    : `/api/thumb?path=${encodeURIComponent(entry.path)}`;
 
   return (
     <>
-      <div className="flex flex-col h-[calc(100vh-0px)] bg-slate-100">
-        {/* 상단 바: 뒤로가기 + 파일명 */}
+      <div className="flex flex-col h-full bg-slate-100">
+        {/* 상단 바: 뒤로가기 + 파일명 (게스트는 vi.box 로고) */}
         <div className="shrink-0 bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3">
-          <Link
-            href={backHref}
-            className="inline-flex items-center gap-1 text-[13px] font-medium text-slate-600 hover:text-slate-900 px-2 py-1 rounded hover:bg-slate-100 transition-colors"
-          >
-            <ChevronLeft size={16} strokeWidth={2} />
-            파일 목록
-          </Link>
+          {isGuest ? (
+            <span className="shrink-0 text-[13px] font-extrabold tracking-tight text-slate-900">
+              vi<span className="text-accent">.</span>box
+            </span>
+          ) : (
+            <Link
+              href={backHref}
+              className="inline-flex items-center gap-1 text-[13px] font-medium text-slate-600 hover:text-slate-900 px-2 py-1 rounded hover:bg-slate-100 transition-colors"
+            >
+              <ChevronLeft size={16} strokeWidth={2} />
+              파일 목록
+            </Link>
+          )}
           <div className="w-px h-5 bg-slate-200" />
           <h1 className="text-[14px] font-semibold text-slate-900 truncate">
             {entry.name}
@@ -747,9 +868,17 @@ export function FeedbackModal({
                     : "bg-black/55 text-white border-white/15 hover:bg-black/70"
                 }`}
               >
-                <Type size={11} strokeWidth={2.3} />
-                {annotationMode ? "자막 수정 모드" : "자막 수정"}
+                <PencilLine size={11} strokeWidth={2.3} />
+                {annotationMode ? "주석 모드" : "주석"}
               </button>
+
+              {/* 도구 피커 */}
+              {annotationMode && (
+                <AnnotationToolbar
+                  tool={annotationTool}
+                  onChange={setAnnotationTool}
+                />
+              )}
 
               {/* 기존 주석 렌더: 자막 등장 시각 즈음에만 + bbox 겹침 방지 */}
               {activeAnnotations.map((c) => {
@@ -760,9 +889,8 @@ export function FeedbackModal({
                 return (
                   <AnnotationOverlay
                     key={c.id}
-                    bbox={c.annotation.bbox}
-                    original={c.annotation.original}
-                    suggestion={c.annotation.suggestion}
+                    annotation={c.annotation}
+                    body={c.moderatedBody ?? c.body}
                     color={color}
                     resolved={isResolved}
                     isPraise={isPraise}
@@ -772,21 +900,23 @@ export function FeedbackModal({
               })}
 
               {/* 드래그 + 팝오버 */}
-              {annotationMode && (
+              {annotationMode && !pendingAnno && (
                 <AnnotationDragLayer
-                  onComplete={(bbox, popoverPos) => {
+                  tool={annotationTool}
+                  onBox={(bbox, popoverPos) => {
                     setPendingAnno({
+                      tool: "box",
                       bbox,
                       original: "",
                       suggestion: "",
                       note: "",
+                      body: "",
                       kind: "feedback",
                       ocrLoading: true,
                     });
                     setPopoverPos(popoverPos);
                     if (vidRef.current) vidRef.current.pause();
 
-                    // OCR 요청: 영상 프레임의 bbox 영역을 crop해서 서버로
                     runOcr(vidRef.current, bbox).then((text) => {
                       setPendingAnno((cur) =>
                         cur
@@ -798,6 +928,19 @@ export function FeedbackModal({
                           : cur,
                       );
                     });
+                  }}
+                  onShape={(shape, popoverPos) => {
+                    setPendingAnno({
+                      tool: shape.kind,
+                      shapes: [shape],
+                      original: "",
+                      suggestion: "",
+                      note: "",
+                      body: "",
+                      kind: "feedback",
+                    });
+                    setPopoverPos(popoverPos);
+                    if (vidRef.current) vidRef.current.pause();
                   }}
                 />
               )}
@@ -811,11 +954,32 @@ export function FeedbackModal({
                     setPopoverPos(null);
                   }}
                   onSubmit={async () => {
-                    if (!pendingAnno.original.trim() || !pendingAnno.suggestion.trim()) return;
-                    const body =
-                      pendingAnno.kind === "praise"
-                        ? pendingAnno.suggestion.trim() || pendingAnno.original
-                        : `${pendingAnno.original} → ${pendingAnno.suggestion}`;
+                    const isBox = pendingAnno.tool === "box";
+                    let body = "";
+                    let annotationPayload: Annotation;
+
+                    if (isBox) {
+                      if (!pendingAnno.original.trim() || !pendingAnno.suggestion.trim()) return;
+                      body =
+                        pendingAnno.kind === "praise"
+                          ? pendingAnno.suggestion.trim() || pendingAnno.original
+                          : `${pendingAnno.original} → ${pendingAnno.suggestion}`;
+                      annotationPayload = {
+                        bbox: pendingAnno.bbox!,
+                        original: pendingAnno.original,
+                        suggestion: pendingAnno.suggestion,
+                        note: pendingAnno.note || undefined,
+                      };
+                    } else {
+                      body = pendingAnno.body.trim();
+                      if (!body || !pendingAnno.shapes?.length) return;
+                      annotationPayload = {
+                        shapes: pendingAnno.shapes,
+                        note: pendingAnno.note || undefined,
+                      };
+                    }
+
+                    const category = isBox ? "txt" : "etc";
                     const res = await fetch("/api/comments", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
@@ -823,14 +987,9 @@ export function FeedbackModal({
                         path: entry.path,
                         videoTimeMs: Math.floor(currentTime),
                         body,
-                        category: "txt",
+                        category,
                         kind: pendingAnno.kind,
-                        annotation: {
-                          bbox: pendingAnno.bbox,
-                          original: pendingAnno.original,
-                          suggestion: pendingAnno.suggestion,
-                          note: pendingAnno.note || undefined,
-                        },
+                        annotation: annotationPayload,
                       }),
                     });
                     if (res.ok) {
@@ -863,6 +1022,7 @@ export function FeedbackModal({
                 muted={muted}
                 playbackRate={playbackRate}
                 filePath={entry.path}
+                disableThumbs={isGuest}
                 onSeek={seek}
                 onTogglePlay={togglePlay}
                 onToggleMute={toggleMute}
@@ -890,7 +1050,7 @@ export function FeedbackModal({
                   {items.length}
                 </span>
                 <div className="ml-auto flex items-center gap-1">
-                  {entry.kind === "video" && !scanJob && (
+                  {!isGuest && entry.kind === "video" && !scanJob && (
                     <button
                       onClick={handleScan}
                       title={
@@ -1111,7 +1271,7 @@ export function FeedbackModal({
                       <div className="text-[11.5px] text-slate-400 mt-1">
                         재생 중 아래 입력창에 자유롭게 작성
                       </div>
-                      {entry.kind === "video" && (
+                      {!isGuest && entry.kind === "video" && (
                         <button
                           onClick={handleScan}
                           className="mt-4 inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-violet-600 bg-violet-50 hover:bg-violet-100 px-3 py-1.5 rounded-md transition-colors"
@@ -1125,13 +1285,71 @@ export function FeedbackModal({
                 </div>
               ) : (
                 <div className="p-3 space-y-2">
+                  {/* 파트너: 매니저 확인 대기중인 게스트 피드백 안내 */}
+                  {!isStaff && pendingCount > 0 && (
+                    <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 text-[12px] text-amber-800">
+                      <AlertCircle size={13} strokeWidth={2.2} />
+                      <span>
+                        클라이언트 피드백{" "}
+                        <span className="font-bold">{pendingCount}건</span>{" "}
+                        매니저 확인 중이에요
+                      </span>
+                    </div>
+                  )}
+
+                  {/* 스태프 일괄 클라공개 — 내부 댓글이 하나라도 있을 때만 */}
+                  {isStaff &&
+                    (() => {
+                      const internalCount = items.filter(
+                        (c) =>
+                          c.parentId === null &&
+                          c.authorId !== "guest" &&
+                          (c.visibility ?? "internal") === "internal",
+                      ).length;
+                      if (internalCount === 0) return null;
+                      return (
+                        <div className="flex items-center gap-2 bg-sky-50 border border-sky-200 rounded-md px-3 py-2 text-[12px] text-sky-900">
+                          <Eye size={13} strokeWidth={2.2} />
+                          <span className="flex-1">
+                            내부 댓글{" "}
+                            <span className="font-bold">{internalCount}건</span>
+                            이 아직 클라에게 비공개
+                          </span>
+                          <button
+                            onClick={async () => {
+                              const targets = items.filter(
+                                (c) =>
+                                  c.parentId === null &&
+                                  c.authorId !== "guest" &&
+                                  (c.visibility ?? "internal") === "internal",
+                              );
+                              await Promise.all(
+                                targets.map((c) =>
+                                  fetch(`/api/comments/${c.id}`, {
+                                    method: "PATCH",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ visibility: "client" }),
+                                  }),
+                                ),
+                              );
+                              success(`${targets.length}건 클라에게 공개`);
+                              await fetchComments();
+                            }}
+                            className="inline-flex items-center gap-1 text-[11px] font-bold bg-sky-600 text-white hover:bg-sky-700 px-2 py-0.5 rounded"
+                          >
+                            모두 클라공개
+                          </button>
+                        </div>
+                      );
+                    })()}
                   {visibleItems.map((c) => (
                     <CommentItem
                       key={c.id}
                       comment={c}
                       replies={repliesByParent[c.id] ?? []}
-                      currentUserId={currentUserId}
-                      isAdmin={isAdmin}
+                      currentUserId={effectiveUserId}
+                      isAdmin={effectiveIsAdmin}
+                      isStaff={isStaff}
                       filePath={entry.path}
                       selected={selectedId === c.id}
                       canEdit={c.authorId === currentUserId || isAdmin}
@@ -1149,23 +1367,198 @@ export function FeedbackModal({
                       onDelete={() => handleDelete(c.id, c.authorName)}
                       onReplied={fetchComments}
                       onDeleteReply={handleDelete}
+                      onApprove={() => handleApprove(c.id)}
+                      onToggleVisibility={() =>
+                        handleToggleVisibility(c.id, c.visibility ?? "internal")
+                      }
+                      onOpenModerate={() => setModerateTarget(c)}
                     />
                   ))}
                 </div>
               )}
             </div>
 
-            <ComposeBar
-              currentTime={currentTime}
-              filePath={entry.path}
-              onPosted={fetchComments}
-            />
+            {isGuest ? (
+              <GuestComposeBar
+                currentTime={currentTime}
+                filePath={entry.path}
+                shareContext={shareContext!}
+                onPosted={fetchComments}
+              />
+            ) : (
+              <ComposeBar
+                currentTime={currentTime}
+                filePath={entry.path}
+                onPosted={fetchComments}
+              />
+            )}
           </div>
         </div>
       </div>
 
+      {moderateTarget && (
+        <ModerateModal
+          comment={moderateTarget}
+          onClose={() => setModerateTarget(null)}
+          onSave={(body) => handleSaveModeration(moderateTarget.id, body)}
+        />
+      )}
+
       {confirmDialog}
     </>
+  );
+}
+
+function ModerateModal({
+  comment,
+  onClose,
+  onSave,
+}: {
+  comment: CommentRow;
+  onClose: () => void;
+  onSave: (moderatedBody: string | null) => void;
+}) {
+  const [value, setValue] = useState(comment.moderatedBody ?? "");
+  const [history, setHistory] = useState<
+    {
+      id: string;
+      bodyBefore: string | null;
+      bodyAfter: string;
+      editedByName: string;
+      editedAt: number;
+    }[]
+  >([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+
+  const loadHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      const res = await fetch(`/api/comments/${comment.id}/moderate`);
+      if (res.ok) {
+        const data = await res.json();
+        setHistory(data.history ?? []);
+      }
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comment.id]);
+
+  const hasChange = value.trim() !== (comment.moderatedBody ?? "").trim();
+  const canRemove = !!comment.moderatedBody;
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4">
+      <div className="bg-white rounded-lg w-full max-w-xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+          <div className="flex items-center gap-2">
+            <PencilLine size={15} strokeWidth={2.2} className="text-slate-700" />
+            <h2 className="text-[14px] font-bold text-slate-900">순화 편집</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600"
+          >
+            <X size={16} strokeWidth={2.2} />
+          </button>
+        </div>
+
+        <div className="p-4 overflow-y-auto space-y-3">
+          <div>
+            <div className="text-[11px] font-bold text-slate-500 uppercase mb-1">
+              원문 (클라이언트 작성)
+            </div>
+            <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5 text-[13px] text-slate-700 whitespace-pre-wrap">
+              {comment.body}
+            </div>
+          </div>
+
+          <div>
+            <div className="text-[11px] font-bold text-slate-500 uppercase mb-1">
+              파트너 뷰에 보일 텍스트 (순화본)
+            </div>
+            <textarea
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              placeholder="거친 표현을 중립적으로 바꾸거나 핵심만 정리"
+              rows={4}
+              className="w-full px-3 py-2 border border-slate-300 rounded-md text-[13px] outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft resize-none"
+            />
+            <div className="text-[10.5px] text-slate-400 mt-1">
+              비워두고 저장하면 원문이 그대로 파트너에게 표시됩니다.
+            </div>
+          </div>
+
+          <div className="border-t border-slate-100 pt-2">
+            <button
+              onClick={() => setShowHistory((v) => !v)}
+              className="text-[11.5px] font-semibold text-slate-600 hover:text-slate-900 inline-flex items-center gap-1"
+            >
+              편집 히스토리 ({historyLoading ? "..." : history.length})
+              <span className="text-[9px]">{showHistory ? "▲" : "▼"}</span>
+            </button>
+            {showHistory && (
+              <div className="mt-2 space-y-1.5 max-h-48 overflow-y-auto">
+                {history.length === 0 && !historyLoading && (
+                  <div className="text-[11.5px] text-slate-400 italic">
+                    히스토리 없음
+                  </div>
+                )}
+                {history.map((h) => (
+                  <div
+                    key={h.id}
+                    className="bg-slate-50 border border-slate-200 rounded p-2"
+                  >
+                    <div className="flex items-center justify-between text-[10.5px] text-slate-500 mb-1">
+                      <span className="font-semibold">{h.editedByName}</span>
+                      <span>{formatRelative(h.editedAt)}</span>
+                    </div>
+                    {h.bodyBefore !== null && (
+                      <div className="text-[11px] text-slate-500 line-through mb-0.5 whitespace-pre-wrap">
+                        {h.bodyBefore}
+                      </div>
+                    )}
+                    <div className="text-[11.5px] text-slate-700 whitespace-pre-wrap">
+                      {h.bodyAfter || "(순화본 제거)"}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-2 px-4 py-3 border-t border-slate-200 bg-slate-50">
+          <button
+            onClick={() => onSave(null)}
+            disabled={!canRemove}
+            className="text-[12.5px] font-semibold text-red-600 hover:bg-red-50 disabled:text-slate-300 disabled:hover:bg-transparent px-3 py-1.5 rounded-md"
+          >
+            순화본 제거
+          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="text-[13px] font-semibold text-slate-600 hover:bg-slate-100 px-3 py-1.5 rounded-md"
+            >
+              취소
+            </button>
+            <button
+              onClick={() => onSave(value.trim() ? value.trim() : null)}
+              disabled={!hasChange}
+              className="text-[13px] font-semibold text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-50 px-4 py-1.5 rounded-md"
+            >
+              저장
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -1250,6 +1643,7 @@ function TimelineStrip({
   onToggleFullscreen,
   onChangePlaybackRate,
   onSelect,
+  disableThumbs = false,
 }: {
   items: CommentRow[];
   duration: number;
@@ -1264,6 +1658,7 @@ function TimelineStrip({
   onToggleFullscreen: () => void;
   onChangePlaybackRate: (rate: number) => void;
   onSelect: (id: string) => void;
+  disableThumbs?: boolean;
 }) {
   const [speedMenuOpen, setSpeedMenuOpen] = useState(false);
   const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2];
@@ -1302,6 +1697,7 @@ function TimelineStrip({
 
   // 모달 열릴 때 썸네일 배치 preload (호버 시 즉시 표시)
   useEffect(() => {
+    if (disableThumbs) return;
     if (!filePath) return;
     // duration이 유효하지 않거나 비정상이면 skip (Infinity/NaN 방지)
     if (!Number.isFinite(duration) || duration <= 0) return;
@@ -1317,7 +1713,7 @@ function TimelineStrip({
       img.src = `/api/thumb?path=${encodeURIComponent(filePath)}&t=${t}`;
       count++;
     }
-  }, [filePath, duration]);
+  }, [filePath, duration, disableThumbs]);
 
   const jump = (deltaSec: number) => {
     const next = Math.max(0, Math.min(duration, currentTime + deltaSec * 1000));
@@ -1353,7 +1749,7 @@ function TimelineStrip({
           className="relative h-5 cursor-pointer flex-1"
         >
           {/* 호버 썸네일 프리뷰 — 양 끝에서 overflow 안 되도록 clamp */}
-          {hoverState && duration > 0 && filePath && hoverState.barWidth > 0 && (() => {
+          {!disableThumbs && hoverState && duration > 0 && filePath && hoverState.barWidth > 0 && (() => {
             const THUMB_W = 180;
             const HALF = THUMB_W / 2;
             // 바가 썸네일보다 좁으면 바 중앙에 배치
@@ -1582,6 +1978,7 @@ function CommentItem({
   replies,
   currentUserId,
   isAdmin,
+  isStaff,
   filePath,
   selected,
   canEdit,
@@ -1592,11 +1989,15 @@ function CommentItem({
   onDelete,
   onReplied,
   onDeleteReply,
+  onApprove,
+  onToggleVisibility,
+  onOpenModerate,
 }: {
   comment: CommentRow;
   replies: CommentRow[];
   currentUserId: string;
   isAdmin: boolean;
+  isStaff: boolean;
   filePath: string;
   selected: boolean;
   canEdit: boolean;
@@ -1607,27 +2008,126 @@ function CommentItem({
   onDelete: () => void;
   onReplied: () => void;
   onDeleteReply: (id: string, authorName: string) => void;
+  onApprove: () => void;
+  onToggleVisibility: () => void;
+  onOpenModerate: () => void;
 }) {
   const [replyOpen, setReplyOpen] = useState(false);
   const [resolvePending, setResolvePending] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showOriginal, setShowOriginal] = useState(false);
   const isResolved = !!comment.resolvedAt;
   const isPraise = comment.kind === "praise";
   const isAI = comment.authorId === "ai-reviewer";
+  const isGuest = comment.authorId === "guest";
+  const isPending = comment.status === "pending";
+  const hasModerated = !!comment.moderatedBody;
+  const isClientVisible = comment.visibility === "client";
   const meta = getCategoryMeta(comment.category);
 
   const annotation = comment.annotation;
   const hasKeywordFormat =
     isAI && annotation && annotation.original && annotation.suggestion;
 
+  // 매니저 뷰에서 실제 표시할 본문 (순화본 > 원문)
+  const displayBody = isStaff && hasModerated && !showOriginal
+    ? comment.moderatedBody!
+    : comment.body;
+
   return (
     <div
       className={`bg-white rounded-lg p-3 transition-colors ${
         selected
           ? "border-2 border-slate-900"
-          : "border border-slate-200 hover:border-slate-300"
+          : isPending
+            ? "border border-amber-400 bg-amber-50/30"
+            : "border border-slate-200 hover:border-slate-300"
       }`}
     >
+      {/* 상단 상태 줄: 게스트/대기/클라공개 배지 + 스태프 액션 */}
+      {(isGuest || isPending || isClientVisible || hasModerated) && (
+        <div className="flex items-center justify-between mb-2 gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {isGuest && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700">
+                <User size={9} strokeWidth={2.5} />
+                클라이언트
+              </span>
+            )}
+            {isPending && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                확인 대기
+              </span>
+            )}
+            {!isPending && isClientVisible && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-100 text-sky-700">
+                <Eye size={9} strokeWidth={2.5} />
+                클라에게 공개
+              </span>
+            )}
+            {isStaff && hasModerated && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowOriginal((v) => !v);
+                }}
+                className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 hover:bg-slate-200"
+                title={showOriginal ? "순화본 보기" : "원문 보기"}
+              >
+                <PencilLine size={9} strokeWidth={2.5} />
+                {showOriginal ? "원문" : "순화"}
+              </button>
+            )}
+          </div>
+
+          {isStaff && (
+            <div className="flex items-center gap-1 shrink-0">
+              {isPending && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onApprove();
+                  }}
+                  className="inline-flex items-center gap-1 text-[10.5px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white hover:bg-emerald-700"
+                  title="파트너에게 공개"
+                >
+                  <Check size={10} strokeWidth={3} />
+                  확인
+                </button>
+              )}
+              {isGuest && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenModerate();
+                  }}
+                  className="inline-flex items-center gap-1 text-[10.5px] font-bold px-2 py-0.5 rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
+                  title="파트너 뷰에 보일 순화본 편집"
+                >
+                  <PencilLine size={10} strokeWidth={2.5} />
+                  순화
+                </button>
+              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleVisibility();
+                }}
+                className={`inline-flex items-center gap-1 text-[10.5px] font-bold px-2 py-0.5 rounded border ${
+                  isClientVisible
+                    ? "bg-sky-600 text-white border-sky-600 hover:bg-sky-700"
+                    : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+                }`}
+                title={isClientVisible ? "클라공개 해제" : "클라에게 보이기"}
+              >
+                <Eye size={10} strokeWidth={2.5} />
+                {isClientVisible ? "공개중" : "클라공개"}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="flex gap-2.5">
         {/* 좌측: 해결 체크박스 (클릭 전파 차단) */}
         <button
@@ -1702,13 +2202,15 @@ function CommentItem({
           {/* 본문 */}
           {hasKeywordFormat ? (
             <div className="text-[13px] font-medium text-slate-900 mb-0.5">
-              "{annotation.original}"{" "}
+              &quot;{annotation?.original ?? ""}&quot;{" "}
               <span className="text-slate-300 mx-0.5">→</span>{" "}
-              <span className="text-orange-600">"{annotation.suggestion}"</span>
+              <span className="text-orange-600">
+                &quot;{annotation?.suggestion ?? ""}&quot;
+              </span>
             </div>
           ) : (
             <div className="text-[13px] text-slate-700 whitespace-pre-wrap break-words">
-              {comment.body}
+              {displayBody}
             </div>
           )}
 
@@ -1962,6 +2464,104 @@ function ReplyCompose({
   );
 }
 
+function GuestComposeBar({
+  currentTime,
+  filePath,
+  shareContext,
+  onPosted,
+}: {
+  currentTime: number;
+  filePath: string;
+  shareContext: ShareContext;
+  onPosted: () => void;
+}) {
+  const [text, setText] = useState("");
+  const [name, setName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const { error: toastError, success } = useToast();
+
+  // 이름은 부모의 localStorage 읽기 후 동기화 (SSR hydration 일치)
+  useEffect(() => {
+    if (shareContext.guestName && !name) setName(shareContext.guestName);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shareContext.guestName]);
+
+  const submit = async () => {
+    if (submitting || !text.trim() || !name.trim()) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch(
+        `/api/s/${shareContext.token}/comments`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            path: filePath,
+            videoTimeMs: Math.floor(currentTime),
+            body: text.trim(),
+            guestName: name.trim(),
+          }),
+        },
+      );
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        toastError("전송 실패: " + (body.error ?? res.statusText));
+        return;
+      }
+      shareContext.onSetGuestName(name.trim());
+      setText("");
+      success("의견이 전달됐어요");
+      onPosted();
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="border-t border-slate-200 p-3 bg-white">
+      <div className="rounded-lg border border-slate-200 bg-slate-50 focus-within:border-slate-400 focus-within:bg-white transition-colors">
+        <div className="flex items-center gap-2 px-3 pt-2.5 pb-1.5">
+          <span
+            className="inline-flex items-center gap-1 font-mono text-[10.5px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded"
+            title="현재 재생 시간"
+          >
+            {formatTc(currentTime)}
+          </span>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="이름"
+            className="ml-auto w-24 text-[11px] bg-white border border-slate-200 rounded px-1.5 py-0.5 outline-none focus:border-slate-400"
+          />
+        </div>
+        <div className="flex gap-2 items-end px-3 pb-3">
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                e.preventDefault();
+                submit();
+              }
+            }}
+            placeholder="의견을 남겨주세요 (⌘+Enter 전송)"
+            rows={2}
+            className="flex-1 bg-transparent text-[13px] outline-none resize-none placeholder:text-slate-400"
+          />
+          <button
+            onClick={submit}
+            disabled={submitting || !text.trim() || !name.trim()}
+            className="w-8 h-8 bg-slate-900 text-white hover:bg-slate-700 rounded grid place-items-center disabled:opacity-40 shrink-0"
+            title="등록"
+          >
+            <SendHorizontal size={14} strokeWidth={2.2} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ComposeBar({
   currentTime,
   filePath,
@@ -2154,145 +2754,444 @@ function ComposeBar({
 // ====================================================================
 
 function AnnotationOverlay({
-  bbox,
-  original,
-  suggestion,
+  annotation,
+  body,
   color,
   resolved,
   isPraise,
   onClick,
 }: {
-  bbox: { x: number; y: number; w: number; h: number };
-  original: string;
-  suggestion: string;
+  annotation: Annotation;
+  body: string;
   color: string;
   resolved: boolean;
   isPraise: boolean;
   onClick: () => void;
 }) {
-  return (
-    <>
-      <div
-        onClick={(e) => {
-          e.stopPropagation();
-          onClick();
-        }}
-        className="absolute cursor-pointer"
-        style={{
-          left: `${bbox.x * 100}%`,
-          top: `${bbox.y * 100}%`,
-          width: `${bbox.w * 100}%`,
-          height: `${bbox.h * 100}%`,
-          border: `2.5px ${resolved ? "dashed" : "solid"} ${color}`,
-          borderRadius: 4,
-          boxShadow: `0 0 0 1px rgba(255,255,255,0.4), 0 0 12px ${color}66`,
-          opacity: resolved ? 0.5 : 1,
-          zIndex: 4,
-        }}
-      />
-      <div
-        onClick={(e) => {
-          e.stopPropagation();
-          onClick();
-        }}
-        className="absolute cursor-pointer"
-        style={{
-          left: `${(bbox.x + bbox.w / 2) * 100}%`,
-          top: `${(bbox.y + bbox.h) * 100}%`,
-          transform: "translate(-50%, 8px)",
-          zIndex: 5,
-        }}
-      >
-        <span
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11.5px] font-semibold whitespace-nowrap"
+  // 자막 교정형 (bbox + original/suggestion)
+  if (annotation.bbox && (annotation.original || annotation.suggestion)) {
+    const bbox = annotation.bbox;
+    const original = annotation.original ?? "";
+    const suggestion = annotation.suggestion ?? "";
+    return (
+      <>
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick();
+          }}
+          className="absolute cursor-pointer"
           style={{
-            background: isPraise ? color : "#fff",
-            color: isPraise ? "#fff" : "#1a1a1a",
-            boxShadow: "0 3px 10px rgba(0,0,0,0.25)",
-            border: "1px solid rgba(0,0,0,0.05)",
+            left: `${bbox.x * 100}%`,
+            top: `${bbox.y * 100}%`,
+            width: `${bbox.w * 100}%`,
+            height: `${bbox.h * 100}%`,
+            border: `2.5px ${resolved ? "dashed" : "solid"} ${color}`,
+            borderRadius: 4,
+            boxShadow: `0 0 0 1px rgba(255,255,255,0.4), 0 0 12px ${color}66`,
+            opacity: resolved ? 0.5 : 1,
+            zIndex: 4,
+          }}
+        />
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick();
+          }}
+          className="absolute cursor-pointer"
+          style={{
+            left: `${(bbox.x + bbox.w / 2) * 100}%`,
+            top: `${(bbox.y + bbox.h) * 100}%`,
+            transform: "translate(-50%, 8px)",
+            zIndex: 5,
           }}
         >
-          {isPraise ? (
-            <span style={{ fontWeight: 700 }}>{suggestion || original}</span>
-          ) : (
-            <>
-              <span style={{ color: "#dc2626", textDecoration: "line-through" }}>
-                {original}
-              </span>
-              <span style={{ color: "#a1a1aa" }}>→</span>
-              <span style={{ color: PRAISE_COLOR, fontWeight: 700 }}>
-                {suggestion}
-              </span>
-            </>
-          )}
-        </span>
-      </div>
+          <span
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11.5px] font-semibold whitespace-nowrap"
+            style={{
+              background: isPraise ? color : "#fff",
+              color: isPraise ? "#fff" : "#1a1a1a",
+              boxShadow: "0 3px 10px rgba(0,0,0,0.25)",
+              border: "1px solid rgba(0,0,0,0.05)",
+            }}
+          >
+            {isPraise ? (
+              <span style={{ fontWeight: 700 }}>{suggestion || original}</span>
+            ) : (
+              <>
+                <span style={{ color: "#dc2626", textDecoration: "line-through" }}>
+                  {original}
+                </span>
+                <span style={{ color: "#a1a1aa" }}>→</span>
+                <span style={{ color: PRAISE_COLOR, fontWeight: 700 }}>
+                  {suggestion}
+                </span>
+              </>
+            )}
+          </span>
+        </div>
+      </>
+    );
+  }
+
+  // 도형형 (arrow / ellipse / pen)
+  if (!annotation.shapes?.length) return null;
+  const bounds = shapesBounds(annotation.shapes);
+  if (!bounds) return null;
+
+  const markerId = `arrowhead-${Math.round(bounds.x * 1e4)}-${Math.round(bounds.y * 1e4)}`;
+
+  return (
+    <>
+      <svg
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick();
+        }}
+        className="absolute inset-0 w-full h-full cursor-pointer"
+        viewBox="0 0 1 1"
+        preserveAspectRatio="none"
+        style={{
+          zIndex: 4,
+          opacity: resolved ? 0.55 : 1,
+          pointerEvents: "none",
+        }}
+      >
+        <defs>
+          <marker
+            id={markerId}
+            markerWidth="4"
+            markerHeight="4"
+            refX="3"
+            refY="2"
+            orient="auto-start-reverse"
+            markerUnits="strokeWidth"
+          >
+            <path d="M0,0 L4,2 L0,4 z" fill={color} />
+          </marker>
+        </defs>
+        <g
+          style={{ pointerEvents: "visiblePainted" }}
+          vectorEffect="non-scaling-stroke"
+        >
+          {annotation.shapes.map((s, i) => {
+            const dashArray = resolved ? "6,5" : undefined;
+            if (s.kind === "arrow") {
+              return (
+                <line
+                  key={i}
+                  x1={s.x1}
+                  y1={s.y1}
+                  x2={s.x2}
+                  y2={s.y2}
+                  stroke={color}
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                  strokeDasharray={dashArray}
+                  markerEnd={`url(#${markerId})`}
+                  vectorEffect="non-scaling-stroke"
+                  style={{
+                    filter: "drop-shadow(0 0 2px rgba(0,0,0,0.55))",
+                  }}
+                />
+              );
+            }
+            if (s.kind === "ellipse") {
+              return (
+                <ellipse
+                  key={i}
+                  cx={s.cx}
+                  cy={s.cy}
+                  rx={s.rx}
+                  ry={s.ry}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={3}
+                  strokeDasharray={dashArray}
+                  vectorEffect="non-scaling-stroke"
+                  style={{
+                    filter: "drop-shadow(0 0 2px rgba(0,0,0,0.55))",
+                  }}
+                />
+              );
+            }
+            // pen
+            const d = s.points
+              .map((p, idx) => `${idx === 0 ? "M" : "L"}${p[0]} ${p[1]}`)
+              .join(" ");
+            return (
+              <path
+                key={i}
+                d={d}
+                fill="none"
+                stroke={color}
+                strokeWidth={3}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeDasharray={dashArray}
+                vectorEffect="non-scaling-stroke"
+                style={{
+                  filter: "drop-shadow(0 0 2px rgba(0,0,0,0.55))",
+                }}
+              />
+            );
+          })}
+        </g>
+      </svg>
+      {body?.trim() && (
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick();
+          }}
+          className="absolute cursor-pointer"
+          style={{
+            left: `${(bounds.x + bounds.w / 2) * 100}%`,
+            top: `${(bounds.y + bounds.h) * 100}%`,
+            transform: "translate(-50%, 8px)",
+            zIndex: 5,
+            maxWidth: "70%",
+          }}
+        >
+          <span
+            className="inline-block px-2.5 py-1 rounded-md text-[11.5px] font-semibold"
+            style={{
+              background: isPraise ? color : "#fff",
+              color: isPraise ? "#fff" : "#1a1a1a",
+              boxShadow: "0 3px 10px rgba(0,0,0,0.25)",
+              border: "1px solid rgba(0,0,0,0.05)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              maxWidth: "100%",
+            }}
+          >
+            {body.trim()}
+          </span>
+        </div>
+      )}
     </>
   );
 }
 
-function AnnotationDragLayer({
-  onComplete,
+function AnnotationToolbar({
+  tool,
+  onChange,
 }: {
-  onComplete: (
+  tool: AnnotationTool;
+  onChange: (t: AnnotationTool) => void;
+}) {
+  const tools: Array<{ id: AnnotationTool; label: string; Icon: typeof Square }> = [
+    { id: "box", label: "자막", Icon: Type },
+    { id: "arrow", label: "화살표", Icon: MoveUpRight },
+    { id: "ellipse", label: "원", Icon: CircleIcon },
+    { id: "pen", label: "펜", Icon: Pencil },
+  ];
+  return (
+    <div
+      className="absolute top-3 left-3 inline-flex items-center gap-1 px-1.5 py-1.5 rounded-md bg-black/55 backdrop-blur border border-white/15 z-20"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {tools.map(({ id, label, Icon }) => {
+        const active = tool === id;
+        return (
+          <button
+            key={id}
+            onClick={(e) => {
+              e.stopPropagation();
+              onChange(id);
+            }}
+            className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-semibold transition-colors ${
+              active
+                ? "bg-amber-400 text-black"
+                : "text-white hover:bg-white/10"
+            }`}
+            title={label}
+          >
+            <Icon size={11} strokeWidth={2.3} />
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// 팝오버가 비디오 밖으로 잘리지 않도록 앵커 위치 계산
+// - 하단이면 앵커를 bbox 위쪽으로 두고 flipUp=true (팝오버가 위로 뻗도록)
+// - 좌/우 가장자리는 CSS clamp로 가운데 정렬 보정
+function smartPopoverPos(
+  bounds: { x: number; y: number; w: number; h: number },
+): { left: string; top: string; flipUp?: boolean } {
+  const cx = bounds.x + bounds.w / 2;
+  const flipUp = bounds.y + bounds.h > 0.55;
+  // 팝오버 반폭 ≈ 170px. 좌/우 170px 이하로 가장자리에 붙지 않게 클램프
+  const left = `clamp(170px, ${cx * 100}%, calc(100% - 170px))`;
+  const top = flipUp
+    ? `${bounds.y * 100}%`
+    : `${(bounds.y + bounds.h) * 100}%`;
+  return { left, top, flipUp };
+}
+
+function AnnotationDragLayer({
+  tool,
+  onBox,
+  onShape,
+}: {
+  tool: AnnotationTool;
+  onBox: (
     bbox: { x: number; y: number; w: number; h: number },
-    popoverPos: { left: string; top: string },
+    popoverPos: { left: string; top: string; flipUp?: boolean },
+  ) => void;
+  onShape: (
+    shape: Shape,
+    popoverPos: { left: string; top: string; flipUp?: boolean },
   ) => void;
 }) {
   const layerRef = useRef<HTMLDivElement>(null);
+  // 박스/화살표/원: 두 점 드래그
   const [drag, setDrag] = useState<{
     startX: number;
     startY: number;
     x: number;
     y: number;
   } | null>(null);
+  // 펜: 폴리라인
+  const [pen, setPen] = useState<Array<[number, number]> | null>(null);
+  const penLastSample = useRef<[number, number] | null>(null);
 
-  const onDown = (e: React.MouseEvent) => {
+  const norm = (e: React.PointerEvent) => {
     const rect = layerRef.current!.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    setDrag({ startX: x, startY: y, x, y });
-  };
-
-  const onMove = (e: React.MouseEvent) => {
-    if (!drag) return;
-    const rect = layerRef.current!.getBoundingClientRect();
-    setDrag({
-      ...drag,
+    return {
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
-    });
+      w: rect.width,
+      h: rect.height,
+    };
+  };
+
+  const onDown = (e: React.PointerEvent) => {
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+    const { x, y } = norm(e);
+    if (tool === "pen") {
+      const rect = layerRef.current!.getBoundingClientRect();
+      const nx = x / rect.width;
+      const ny = y / rect.height;
+      setPen([[nx, ny]]);
+      penLastSample.current = [nx, ny];
+    } else {
+      setDrag({ startX: x, startY: y, x, y });
+    }
+  };
+
+  const onMove = (e: React.PointerEvent) => {
+    if (tool === "pen") {
+      if (!pen) return;
+      const { x, y, w, h } = norm(e);
+      const nx = x / w;
+      const ny = y / h;
+      const last = penLastSample.current;
+      if (last) {
+        const dx = nx - last[0];
+        const dy = ny - last[1];
+        // 너무 촘촘한 점 스킵 (정규화 공간 0.004 ≈ 1600px 폭 기준 ~6px)
+        if (dx * dx + dy * dy < 0.000016) return;
+      }
+      penLastSample.current = [nx, ny];
+      setPen((cur) => (cur ? [...cur, [nx, ny]] : cur));
+      return;
+    }
+    if (!drag) return;
+    const { x, y } = norm(e);
+    setDrag({ ...drag, x, y });
   };
 
   const onUp = () => {
-    if (!drag || !layerRef.current) return;
+    if (!layerRef.current) return;
     const rect = layerRef.current.getBoundingClientRect();
+
+    if (tool === "pen") {
+      const pts = pen;
+      setPen(null);
+      penLastSample.current = null;
+      if (!pts || pts.length < 2) return;
+      // 선 길이 체크 (너무 짧으면 무시)
+      let len = 0;
+      for (let i = 1; i < pts.length; i++) {
+        const dx = pts[i][0] - pts[i - 1][0];
+        const dy = pts[i][1] - pts[i - 1][1];
+        len += Math.hypot(dx, dy);
+      }
+      if (len < 0.02) return;
+      const shape: Shape = { kind: "pen", points: pts };
+      const bounds = shapesBounds([shape])!;
+      onShape(shape, smartPopoverPos(bounds));
+      return;
+    }
+
+    if (!drag) return;
     const x1 = Math.min(drag.startX, drag.x);
     const y1 = Math.min(drag.startY, drag.y);
     const x2 = Math.max(drag.startX, drag.x);
     const y2 = Math.max(drag.startY, drag.y);
     const w = x2 - x1;
     const h = y2 - y1;
-    if (w < 15 || h < 10) {
+
+    if (tool === "box") {
+      if (w < 15 || h < 10) {
+        setDrag(null);
+        return;
+      }
+      const bbox = {
+        x: x1 / rect.width,
+        y: y1 / rect.height,
+        w: w / rect.width,
+        h: h / rect.height,
+      };
+      onBox(bbox, smartPopoverPos(bbox));
       setDrag(null);
       return;
     }
-    const bbox = {
-      x: x1 / rect.width,
-      y: y1 / rect.height,
-      w: w / rect.width,
-      h: h / rect.height,
-    };
-    // popover 위치: bbox 아래 중앙
-    const popoverPos = {
-      left: `${(bbox.x + bbox.w / 2) * 100}%`,
-      top: `${(bbox.y + bbox.h) * 100}%`,
-    };
-    onComplete(bbox, popoverPos);
-    setDrag(null);
+
+    if (tool === "arrow") {
+      const dist = Math.hypot(drag.x - drag.startX, drag.y - drag.startY);
+      if (dist < 20) {
+        setDrag(null);
+        return;
+      }
+      const shape: Shape = {
+        kind: "arrow",
+        x1: drag.startX / rect.width,
+        y1: drag.startY / rect.height,
+        x2: drag.x / rect.width,
+        y2: drag.y / rect.height,
+      };
+      const bounds = shapesBounds([shape])!;
+      onShape(shape, smartPopoverPos(bounds));
+      setDrag(null);
+      return;
+    }
+
+    if (tool === "ellipse") {
+      if (w < 15 || h < 10) {
+        setDrag(null);
+        return;
+      }
+      const cx = (x1 + w / 2) / rect.width;
+      const cy = (y1 + h / 2) / rect.height;
+      const rx = w / 2 / rect.width;
+      const ry = h / 2 / rect.height;
+      const shape: Shape = { kind: "ellipse", cx, cy, rx, ry };
+      const bounds = shapesBounds([shape])!;
+      onShape(shape, smartPopoverPos(bounds));
+      setDrag(null);
+      return;
+    }
   };
 
-  const rect =
+  // 프리뷰 렌더
+  const previewBox =
+    tool === "box" &&
     drag && {
       left: Math.min(drag.startX, drag.x),
       top: Math.min(drag.startY, drag.y),
@@ -2303,21 +3202,25 @@ function AnnotationDragLayer({
   return (
     <div
       ref={layerRef}
-      onMouseDown={onDown}
-      onMouseMove={onMove}
-      onMouseUp={onUp}
-      onMouseLeave={() => setDrag(null)}
+      onPointerDown={onDown}
+      onPointerMove={onMove}
+      onPointerUp={onUp}
+      onPointerCancel={() => {
+        setDrag(null);
+        setPen(null);
+        penLastSample.current = null;
+      }}
       className="absolute inset-0 z-10"
-      style={{ cursor: "crosshair" }}
+      style={{ cursor: "crosshair", touchAction: "none" }}
     >
-      {rect && (
+      {previewBox && (
         <div
           className="absolute pointer-events-none"
           style={{
-            left: rect.left,
-            top: rect.top,
-            width: rect.width,
-            height: rect.height,
+            left: previewBox.left,
+            top: previewBox.top,
+            width: previewBox.width,
+            height: previewBox.height,
             border: "2px dashed #eab308",
             background: "rgba(234,179,8,0.15)",
           }}
@@ -2335,6 +3238,67 @@ function AnnotationDragLayer({
           </span>
         </div>
       )}
+
+      {/* 화살표/원/펜 프리뷰 */}
+      {(tool === "arrow" || tool === "ellipse" || tool === "pen") && (
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          viewBox="0 0 1 1"
+          preserveAspectRatio="none"
+        >
+          {tool === "arrow" && drag && (() => {
+            const rect = layerRef.current?.getBoundingClientRect();
+            if (!rect) return null;
+            return (
+              <line
+                x1={drag.startX / rect.width}
+                y1={drag.startY / rect.height}
+                x2={drag.x / rect.width}
+                y2={drag.y / rect.height}
+                stroke="#eab308"
+                strokeWidth={3}
+                strokeLinecap="round"
+                strokeDasharray="6,4"
+                vectorEffect="non-scaling-stroke"
+              />
+            );
+          })()}
+          {tool === "ellipse" && drag && (() => {
+            const rect = layerRef.current?.getBoundingClientRect();
+            if (!rect) return null;
+            const x1 = Math.min(drag.startX, drag.x);
+            const y1 = Math.min(drag.startY, drag.y);
+            const w = Math.abs(drag.x - drag.startX);
+            const h = Math.abs(drag.y - drag.startY);
+            return (
+              <ellipse
+                cx={(x1 + w / 2) / rect.width}
+                cy={(y1 + h / 2) / rect.height}
+                rx={w / 2 / rect.width}
+                ry={h / 2 / rect.height}
+                fill="none"
+                stroke="#eab308"
+                strokeWidth={3}
+                strokeDasharray="6,4"
+                vectorEffect="non-scaling-stroke"
+              />
+            );
+          })()}
+          {tool === "pen" && pen && pen.length >= 2 && (
+            <path
+              d={pen
+                .map((p, idx) => `${idx === 0 ? "M" : "L"}${p[0]} ${p[1]}`)
+                .join(" ")}
+              fill="none"
+              stroke="#eab308"
+              strokeWidth={3}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          )}
+        </svg>
+      )}
     </div>
   );
 }
@@ -2347,19 +3311,36 @@ function AnnotationPopover({
   onSubmit,
 }: {
   anno: PendingAnno;
-  pos: { left: string; top: string };
+  pos: { left: string; top: string; flipUp?: boolean };
   onChange: (a: PendingAnno) => void;
   onCancel: () => void;
   onSubmit: () => void;
 }) {
   const isPraise = anno.kind === "praise";
+  const isBox = anno.tool === "box";
+  const toolLabel =
+    anno.tool === "arrow"
+      ? "화살표 주석"
+      : anno.tool === "ellipse"
+        ? "원 주석"
+        : anno.tool === "pen"
+          ? "펜 주석"
+          : isPraise
+            ? "좋아요"
+            : "자막 수정";
+  const canSubmit = isBox
+    ? anno.original.trim().length > 0 && anno.suggestion.trim().length > 0
+    : anno.body.trim().length > 0;
+
   return (
     <div
       className="absolute z-50"
       style={{
         left: pos.left,
         top: pos.top,
-        transform: "translate(-50%, 16px)",
+        transform: pos.flipUp
+          ? "translate(-50%, calc(-100% - 16px))"
+          : "translate(-50%, 16px)",
         width: 320,
       }}
       onClick={(e) => e.stopPropagation()}
@@ -2371,7 +3352,7 @@ function AnnotationPopover({
             style={{ background: isPraise ? PRAISE_COLOR : "#eab308" }}
           />
           <span className="text-[10.5px] font-bold tracking-widest uppercase text-text-faint">
-            {isPraise ? "좋아요" : "자막 수정"}
+            {toolLabel}
           </span>
           <button
             onClick={onCancel}
@@ -2390,7 +3371,7 @@ function AnnotationPopover({
             }`}
           >
             <PencilLine size={11} strokeWidth={2.3} />
-            수정 요청
+            {isBox ? "수정 요청" : "피드백"}
           </button>
           <button
             onClick={() => onChange({ ...anno, kind: "praise" })}
@@ -2404,84 +3385,112 @@ function AnnotationPopover({
           </button>
         </div>
 
-        <div className="mb-2">
-          <label className="block text-[10.5px] font-semibold text-text-soft mb-1 tracking-wide flex items-center gap-1.5">
-            {isPraise ? "대상 (자동 인식됨)" : "원본 자막"}
-            {anno.ocrLoading && (
-              <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 font-normal">
-                <span className="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                인식 중...
-              </span>
+        {isBox ? (
+          <>
+            <div className="mb-2">
+              <label className="block text-[10.5px] font-semibold text-text-soft mb-1 tracking-wide flex items-center gap-1.5">
+                {isPraise ? "대상 (자동 인식됨)" : "원본 자막"}
+                {anno.ocrLoading && (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 font-normal">
+                    <span className="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                    인식 중...
+                  </span>
+                )}
+                {!anno.ocrLoading && anno.original && (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 font-normal">
+                    ✓ 자동 인식됨
+                  </span>
+                )}
+              </label>
+              <input
+                value={anno.original}
+                onChange={(e) =>
+                  onChange({ ...anno, original: e.target.value, ocrLoading: false })
+                }
+                placeholder={
+                  anno.ocrLoading ? "자막 읽는 중..." : "드래그한 텍스트"
+                }
+                className={`w-full px-2.5 py-1.5 border rounded-md text-[13px] outline-none focus:border-text ${
+                  anno.ocrLoading
+                    ? "bg-amber-50 border-amber-300"
+                    : anno.original
+                      ? "bg-amber-50 border-amber-300 font-semibold"
+                      : "border-border"
+                }`}
+              />
+            </div>
+
+            {!isPraise && (
+              <div className="mb-2">
+                <label className="block text-[10.5px] font-semibold text-text-soft mb-1 tracking-wide">
+                  → 수정안
+                </label>
+                <input
+                  value={anno.suggestion}
+                  onChange={(e) => onChange({ ...anno, suggestion: e.target.value })}
+                  placeholder="예: agent"
+                  className="w-full px-2.5 py-1.5 border border-border rounded-md text-[13px] outline-none focus:border-text"
+                />
+              </div>
             )}
-            {!anno.ocrLoading && anno.original && (
-              <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 font-normal">
-                ✓ 자동 인식됨
-              </span>
+
+            {isPraise && (
+              <div className="mb-2">
+                <label className="block text-[10.5px] font-semibold text-text-soft mb-1 tracking-wide">
+                  좋은 점
+                </label>
+                <input
+                  value={anno.suggestion}
+                  onChange={(e) => onChange({ ...anno, suggestion: e.target.value })}
+                  placeholder="예: 이 구간 색감 완벽!"
+                  className="w-full px-2.5 py-1.5 border border-border rounded-md text-[13px] outline-none focus:border-text"
+                />
+              </div>
             )}
-          </label>
-          <input
-            value={anno.original}
-            onChange={(e) =>
-              onChange({ ...anno, original: e.target.value, ocrLoading: false })
-            }
-            placeholder={
-              anno.ocrLoading ? "자막 읽는 중..." : "드래그한 텍스트"
-            }
-            className={`w-full px-2.5 py-1.5 border rounded-md text-[13px] outline-none focus:border-text ${
-              anno.ocrLoading
-                ? "bg-amber-50 border-amber-300"
-                : anno.original
-                  ? "bg-amber-50 border-amber-300 font-semibold"
-                  : "border-border"
-            }`}
-          />
-        </div>
 
-        {!isPraise && (
-          <div className="mb-2">
+            <div className="mb-3">
+              <label className="block text-[10.5px] font-semibold text-text-soft mb-1 tracking-wide">
+                부가 설명 (선택)
+              </label>
+              <input
+                value={anno.note}
+                onChange={(e) => onChange({ ...anno, note: e.target.value })}
+                placeholder="예: 영문 통일"
+                className="w-full px-2.5 py-1.5 border border-border rounded-md text-[13px] outline-none focus:border-text"
+                onKeyDown={(e) => {
+                  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                    e.preventDefault();
+                    onSubmit();
+                  }
+                }}
+              />
+            </div>
+          </>
+        ) : (
+          <div className="mb-3">
             <label className="block text-[10.5px] font-semibold text-text-soft mb-1 tracking-wide">
-              → 수정안
+              피드백
             </label>
-            <input
-              value={anno.suggestion}
-              onChange={(e) => onChange({ ...anno, suggestion: e.target.value })}
-              placeholder="예: agent"
-              className="w-full px-2.5 py-1.5 border border-border rounded-md text-[13px] outline-none focus:border-text"
-            />
-          </div>
-        )}
-
-        {isPraise && (
-          <div className="mb-2">
-            <label className="block text-[10.5px] font-semibold text-text-soft mb-1 tracking-wide">
-              좋은 점
-            </label>
-            <input
-              value={anno.suggestion}
-              onChange={(e) => onChange({ ...anno, suggestion: e.target.value })}
-              placeholder="예: 이 구간 색감 완벽!"
-              className="w-full px-2.5 py-1.5 border border-border rounded-md text-[13px] outline-none focus:border-text"
-            />
-          </div>
-        )}
-
-        <div className="mb-3">
-          <label className="block text-[10.5px] font-semibold text-text-soft mb-1 tracking-wide">
-            부가 설명 (선택)
-          </label>
-          <input
-            value={anno.note}
-            onChange={(e) => onChange({ ...anno, note: e.target.value })}
-            placeholder="예: 영문 통일"
-            className="w-full px-2.5 py-1.5 border border-border rounded-md text-[13px] outline-none focus:border-text"
-            onKeyDown={(e) => {
-              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-                e.preventDefault();
-                onSubmit();
+            <textarea
+              value={anno.body}
+              autoFocus
+              onChange={(e) => onChange({ ...anno, body: e.target.value })}
+              onKeyDown={(e) => {
+                if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                  e.preventDefault();
+                  if (canSubmit) onSubmit();
+                }
+              }}
+              placeholder={
+                isPraise
+                  ? "뭐가 좋았어요? (⌘+Enter)"
+                  : "이 부분 뭘 수정할까요? (⌘+Enter)"
               }
-            }}
-          />
-        </div>
+              rows={3}
+              className="w-full px-2.5 py-1.5 border border-border rounded-md text-[13px] outline-none focus:border-text resize-none"
+            />
+          </div>
+        )}
 
         <div className="flex gap-2 justify-end">
           <button
@@ -2492,7 +3501,7 @@ function AnnotationPopover({
           </button>
           <button
             onClick={onSubmit}
-            disabled={!anno.original.trim() || !anno.suggestion.trim()}
+            disabled={!canSubmit}
             className="px-3 py-1.5 text-[12px] font-bold rounded-md disabled:opacity-40"
             style={{
               background: isPraise ? PRAISE_COLOR : "#eab308",

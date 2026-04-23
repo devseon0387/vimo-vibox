@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.vibox.cloudflared</string>
+
+    <key>ProgramArguments</key>
+    <array>
+      <string>/usr/local/bin/cloudflared</string>
+      <string>tunnel</string>
+      <string>--config</string>
+      <string>/Users/vimo/.cloudflared/config.yml</string>
+      <string>run</string>
+      <string>vimo-cloud</string>
+    </array>
+
+    <key>UserName</key>
+    <string>vimo</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/com.vibox.cloudflared.out</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/com.vibox.cloudflared.err</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>PATH</key>
+      <string>/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+  </dict>
+</plist>

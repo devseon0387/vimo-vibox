@@ -4,7 +4,12 @@ import { randomUUID } from "node:crypto";
 import { eq, lt } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { trashItems, shareLinks } from "@/lib/db/schema";
-import { getStorageRoot, resolveSafePath } from "./storage";
+import {
+  getStorageRoot,
+  getZoneRoot,
+  parseZoneFromPath,
+  resolveSafePath,
+} from "./storage";
 
 function getTrashRoot(): string {
   return path.join(getStorageRoot(), ".vibox", "trash");
@@ -21,7 +26,10 @@ export async function moveToTrash(
   userName: string,
 ): Promise<void> {
   const abs = resolveSafePath(relativePath);
-  if (abs === getStorageRoot()) throw new Error("Cannot trash storage root");
+  // 3개 zone 루트 모두 보호 (삭제 방지)
+  for (const z of ["rendering", "library", "personal"] as const) {
+    if (abs === getZoneRoot(z)) throw new Error(`Cannot trash ${z} root`);
+  }
 
   const stat = await fs.stat(abs);
   const isFolder = stat.isDirectory();
@@ -87,9 +95,12 @@ export async function restoreFromTrash(trashId: string): Promise<string> {
 
   await db.delete(trashItems).where(eq(trashItems.id, trashId));
 
-  const root = getStorageRoot();
-  const relRestored = "/" + path.relative(root, finalAbs).split(path.sep).join("/");
-  return relRestored;
+  // 복원 경로를 zone-aware 상대 경로로 재구성
+  const { zone } = parseZoneFromPath(row.originalPath);
+  const zoneRoot = getZoneRoot(zone);
+  const zoneRel = path.relative(zoneRoot, finalAbs).split(path.sep).join("/");
+  const prefix = zone === "rendering" ? "" : `/${zone}`;
+  return prefix + "/" + zoneRel;
 }
 
 export async function permanentDelete(trashId: string): Promise<void> {

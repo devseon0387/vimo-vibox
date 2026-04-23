@@ -64,6 +64,7 @@ export default async function FeedbackPage({
       backHref={backHref}
       currentUserId={session.sub}
       isAdmin={session.role === "admin"}
+      role={session.role}
     />
   );
 }

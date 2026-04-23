@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Vibox · 내 기록 (A · Classic)</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f5f6f8; color: #1a1a1a; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 13px; line-height: 1.5; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; }
+  .crumb { font-size: 11px; color: #6b7280; letter-spacing: 0.02em; margin-bottom: 8px; }
+  h1 { font-size: 20px; font-weight: 800; margin: 0 0 2px; }
+  .sub { font-size: 12px; color: #6b7280; margin-bottom: 24px; }
+
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .kpi { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; }
+  .kpi .lbl { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; }
+  .kpi .val { font-size: 24px; font-weight: 800; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .kpi .unit { font-size: 12px; color: #94a3b8; font-weight: 600; margin-left: 4px; }
+  .kpi .delta { font-size: 11px; margin-top: 3px; font-weight: 600; }
+  .kpi .delta.up { color: #dc2626; }
+  .kpi .delta.down { color: #059669; }
+
+  .row { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 18px 20px; }
+  .card h2 { font-size: 13px; font-weight: 700; margin: 0 0 12px; display: flex; align-items: center; gap: 6px; }
+  .card h2 .tag { font-size: 10px; font-weight: 500; color: #94a3b8; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
+
+  .bars { display: flex; flex-direction: column; gap: 6px; }
+  .bar-row { display: grid; grid-template-columns: 80px 1fr 40px 52px; gap: 10px; align-items: center; font-size: 12px; }
+  .bar-row .name { font-weight: 600; color: #1a1a1a; }
+  .bar-row .track { height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
+  .bar-row .fill { height: 100%; background: #334155; border-radius: 3px; }
+  .bar-row .count { text-align: right; font-variant-numeric: tabular-nums; color: #64748b; }
+  .bar-row .pct { text-align: right; font-weight: 600; color: #1a1a1a; font-variant-numeric: tabular-nums; }
+
+  .trend { display: flex; flex-direction: column; gap: 8px; }
+  .trend-row { display: flex; justify-content: space-between; font-size: 12px; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+  .trend-row:last-child { border-bottom: none; }
+  .trend-row .name { font-weight: 600; }
+  .trend-row .vs { color: #94a3b8; font-variant-numeric: tabular-nums; }
+  .trend-row .dir { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .dir.down { color: #059669; }
+  .dir.up { color: #dc2626; }
+
+  .praise-list { display: flex; flex-direction: column; gap: 10px; }
+  .praise { padding: 10px 12px; background: #fdf4ff; border-left: 3px solid #d946ef; border-radius: 4px; }
+  .praise .q { font-size: 12.5px; color: #1a1a1a; font-weight: 500; }
+  .praise .meta { font-size: 10.5px; color: #86198f; margin-top: 3px; }
+
+  .note { padding: 12px 14px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; font-size: 12px; }
+  .note .t { font-weight: 700; color: #b45309; margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
+  .note .d { color: #92400e; }
+
+  .fine { font-size: 10.5px; color: #94a3b8; text-align: center; margin-top: 20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="crumb">VIBOX · 내 기록</div>
+  <h1>내 작업 기록</h1>
+  <div class="sub">김편집 · 지난 30일 (2026-03-24 ~ 2026-04-23)</div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="lbl">업로드</div><div class="val">12<span class="unit">개</span></div><div class="delta down">전월 9 → 12 · +33%</div></div>
+    <div class="kpi"><div class="lbl">받은 피드백</div><div class="val">47<span class="unit">건</span></div><div class="delta down">전월 61 → 47 · -23%</div></div>
+    <div class="kpi"><div class="lbl">반영 완료율</div><div class="val">89<span class="unit">%</span></div><div class="delta down">전월 82% → 89%</div></div>
+    <div class="kpi"><div class="lbl">받은 칭찬</div><div class="val">8<span class="unit">건</span></div><div class="delta down">전월 5 → 8 · +60%</div></div>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <h2>받은 피드백 분포 <span class="tag">39건 (수정 요청)</span></h2>
+      <div class="bars">
+        <div class="bar-row"><span class="name">자막 오타</span><span class="track"><span class="fill" style="width:100%;"></span></span><span class="count">18</span><span class="pct">46%</span></div>
+        <div class="bar-row"><span class="name">컷 타이밍</span><span class="track"><span class="fill" style="width:67%;"></span></span><span class="count">12</span><span class="pct">31%</span></div>
+        <div class="bar-row"><span class="name">색감 조정</span><span class="track"><span class="fill" style="width:44%;"></span></span><span class="count">8</span><span class="pct">20%</span></div>
+        <div class="bar-row"><span class="name">오디오</span><span class="track"><span class="fill" style="width:28%;"></span></span><span class="count">5</span><span class="pct">13%</span></div>
+        <div class="bar-row"><span class="name">동작</span><span class="track"><span class="fill" style="width:11%;"></span></span><span class="count">2</span><span class="pct">5%</span></div>
+        <div class="bar-row"><span class="name">기타</span><span class="track"><span class="fill" style="width:11%;"></span></span><span class="count">2</span><span class="pct">5%</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>전월 대비 추세</h2>
+      <div class="trend">
+        <div class="trend-row"><span class="name">자막 오타</span><span class="vs">25 → 18</span><span class="dir down">-28%</span></div>
+        <div class="trend-row"><span class="name">컷 타이밍</span><span class="vs">8 → 12</span><span class="dir up">+50%</span></div>
+        <div class="trend-row"><span class="name">색감</span><span class="vs">10 → 8</span><span class="dir down">-20%</span></div>
+        <div class="trend-row"><span class="name">오디오</span><span class="vs">6 → 5</span><span class="dir down">-17%</span></div>
+        <div class="trend-row"><span class="name">동작</span><span class="vs">4 → 2</span><span class="dir down">-50%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <h2>받은 칭찬 <span class="tag">최근 8건</span></h2>
+      <div class="praise-list">
+        <div class="praise"><div class="q">"이 부분 색감 완벽! 따뜻한 느낌이 딱 맞아요"</div><div class="meta">매니저 김선 · 정직왕 #2-4 · 4/22</div></div>
+        <div class="praise"><div class="q">"자막 타이밍 훌륭해요, 숨 쉴 틈 잘 주셨어요"</div><div class="meta">매니저 김선 · 프리비트 #18 (15) · 4/20</div></div>
+        <div class="praise"><div class="q">"컷 긴장감 최고네요"</div><div class="meta">매니저 김선 · BB테이프 700크리에이터스 · 4/18</div></div>
+        <div class="praise"><div class="q">"오프닝 리듬 깔끔"</div><div class="meta">매니저 김선 · 어울림체육대축전 · 4/15</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>반복되는 지적</h2>
+      <div class="note">
+        <div class="t">⚠ 띄어쓰기</div>
+        <div class="d">최근 30일 5건 이상 지적됨. 업로드 전 맞춤법 검사 한번 돌려보면 좋을 것 같아요.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fine">이 페이지는 본인에게만 보여요 · 집계는 매일 자정에 업데이트</div>
+</div>
+</body>
+</html>

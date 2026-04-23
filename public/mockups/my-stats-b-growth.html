@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Vibox · 내 기록 (B · Growth)</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; color: #1f2937;
+    font-family: 'Pretendard', sans-serif; font-size: 13px; line-height: 1.55;
+    background:
+      radial-gradient(circle at top left, #fef3c7 0%, transparent 45%),
+      radial-gradient(circle at top right, #d1fae5 0%, transparent 40%),
+      linear-gradient(180deg, #fffbeb 0%, #ffffff 40%);
+    min-height: 100vh;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 40px 28px 80px; }
+  .hero { text-align: center; margin-bottom: 32px; }
+  .hero .hi { font-size: 13px; color: #64748b; font-weight: 600; letter-spacing: 0.02em; }
+  .hero h1 { font-size: 30px; font-weight: 800; margin: 6px 0 4px; color: #0f172a; }
+  .hero .period { font-size: 12px; color: #94a3b8; }
+
+  .circle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
+  .circle-card {
+    background: white; border-radius: 18px; padding: 22px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03);
+    text-align: center;
+    border: 1px solid #f1f5f9;
+  }
+  .circle-card .ring {
+    position: relative; width: 110px; height: 110px; margin: 0 auto 10px;
+  }
+  .circle-card svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .circle-card .ring-text {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .circle-card .big { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; color: #0f172a; }
+  .circle-card .small { font-size: 10.5px; color: #64748b; font-weight: 600; margin-top: -3px; }
+  .circle-card .lbl { font-size: 12px; font-weight: 700; color: #334155; margin-top: 6px; }
+  .circle-card .sub-lbl { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 700; }
+  .badge.up { background: #fee2e2; color: #991b1b; }
+  .badge.down { background: #d1fae5; color: #065f46; }
+  .badge.neutral { background: #e0e7ff; color: #3730a3; }
+
+  .section { margin-bottom: 26px; }
+  .section-title { font-size: 15px; font-weight: 800; margin: 0 0 12px; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+
+  .category-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .cat {
+    background: white; border-radius: 12px; padding: 14px 16px;
+    border: 1px solid #f1f5f9;
+  }
+  .cat .name { font-size: 12px; font-weight: 700; color: #334155; display: flex; justify-content: space-between; align-items: center; }
+  .cat .value-row { display: flex; align-items: baseline; gap: 6px; margin: 8px 0 6px; }
+  .cat .v { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; color: #0f172a; }
+  .cat .u { font-size: 11px; color: #94a3b8; font-weight: 600; }
+  .cat .compare { font-size: 11px; color: #64748b; font-variant-numeric: tabular-nums; }
+  .cat .compare.improve { color: #059669; font-weight: 600; }
+  .cat .compare.worse { color: #b91c1c; font-weight: 600; }
+  .cat .track-mini { height: 4px; background: #f1f5f9; border-radius: 2px; margin-top: 8px; overflow: hidden; }
+  .cat .fill-mini { height: 100%; background: linear-gradient(90deg, #f59e0b, #f97316); border-radius: 2px; }
+
+  .praise-wall { background: white; border-radius: 18px; padding: 24px 26px; border: 1px solid #f1f5f9; }
+  .praise-wall .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .praise-wall .head h3 { font-size: 15px; font-weight: 800; margin: 0; color: #0f172a; }
+  .praise-wall .head .count { font-size: 11px; color: #94a3b8; font-weight: 700; }
+  .praise-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .praise-card {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-radius: 12px; padding: 14px 16px;
+    border: 1px solid #fcd34d;
+  }
+  .praise-card .q { font-size: 13px; font-weight: 600; color: #713f12; line-height: 1.45; }
+  .praise-card .m { font-size: 10.5px; color: #92400e; margin-top: 6px; font-weight: 600; }
+
+  .tip {
+    background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+    border-radius: 14px; padding: 18px 20px; border: 1px solid #c7d2fe;
+    display: flex; gap: 14px; align-items: flex-start;
+  }
+  .tip .ico { font-size: 24px; line-height: 1; }
+  .tip .txt .t { font-weight: 800; font-size: 13.5px; color: #1e3a8a; margin-bottom: 4px; }
+  .tip .txt .d { font-size: 12.5px; color: #1e40af; }
+
+  .streak {
+    margin-top: 20px;
+    background: linear-gradient(135deg, #fff 0%, #fef9c3 100%);
+    border: 1px solid #fde047; border-radius: 14px; padding: 18px 22px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .streak .t { font-size: 13.5px; font-weight: 800; color: #854d0e; }
+  .streak .d { font-size: 12px; color: #a16207; margin-top: 3px; }
+  .streak .emoji { font-size: 32px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="hi">김편집님, 이번 달도 수고하셨어요</div>
+    <h1>✨ 내 기록</h1>
+    <div class="period">지난 30일 · 2026-03-24 ~ 2026-04-23</div>
+  </div>
+
+  <div class="circle-grid">
+    <div class="circle-card">
+      <div class="ring">
+        <svg viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#f1f5f9" stroke-width="8"/>
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#059669" stroke-width="8" stroke-linecap="round" stroke-dasharray="247" stroke-dashoffset="27" />
+        </svg>
+        <div class="ring-text"><div class="big">89%</div><div class="small">42/47</div></div>
+      </div>
+      <div class="lbl">반영 완료율</div>
+      <div class="sub-lbl"><span class="badge down">+7%p</span></div>
+    </div>
+    <div class="circle-card">
+      <div class="ring">
+        <svg viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#f1f5f9" stroke-width="8"/>
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#f59e0b" stroke-width="8" stroke-linecap="round" stroke-dasharray="247" stroke-dashoffset="185" />
+        </svg>
+        <div class="ring-text"><div class="big">12</div><div class="small">업로드</div></div>
+      </div>
+      <div class="lbl">이번 달 업로드</div>
+      <div class="sub-lbl"><span class="badge down">전월 9 → 12</span></div>
+    </div>
+    <div class="circle-card">
+      <div class="ring">
+        <svg viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#f1f5f9" stroke-width="8"/>
+          <circle cx="50" cy="50" r="44" fill="none" stroke="#d946ef" stroke-width="8" stroke-linecap="round" stroke-dasharray="247" stroke-dashoffset="205" />
+        </svg>
+        <div class="ring-text"><div class="big">8</div><div class="small">💜 칭찬</div></div>
+      </div>
+      <div class="lbl">받은 칭찬</div>
+      <div class="sub-lbl"><span class="badge down">+3건</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📊 피드백 유형 · 전월 대비</div>
+    <div class="category-grid">
+      <div class="cat">
+        <div class="name"><span>자막 오타</span><span class="compare improve">↓ 28%</span></div>
+        <div class="value-row"><span class="v">18</span><span class="u">건</span></div>
+        <div class="compare">이전 25건 → 18건</div>
+        <div class="track-mini"><div class="fill-mini" style="width:100%;"></div></div>
+      </div>
+      <div class="cat">
+        <div class="name"><span>컷 타이밍</span><span class="compare worse">↑ 50%</span></div>
+        <div class="value-row"><span class="v">12</span><span class="u">건</span></div>
+        <div class="compare">이전 8건 → 12건</div>
+        <div class="track-mini"><div class="fill-mini" style="width:67%;"></div></div>
+      </div>
+      <div class="cat">
+        <div class="name"><span>색감</span><span class="compare improve">↓ 20%</span></div>
+        <div class="value-row"><span class="v">8</span><span class="u">건</span></div>
+        <div class="compare">이전 10건 → 8건</div>
+        <div class="track-mini"><div class="fill-mini" style="width:44%;"></div></div>
+      </div>
+      <div class="cat">
+        <div class="name"><span>오디오</span><span class="compare improve">↓ 17%</span></div>
+        <div class="value-row"><span class="v">5</span><span class="u">건</span></div>
+        <div class="compare">이전 6건 → 5건</div>
+        <div class="track-mini"><div class="fill-mini" style="width:28%;"></div></div>
+      </div>
+      <div class="cat">
+        <div class="name"><span>동작</span><span class="compare improve">↓ 50%</span></div>
+        <div class="value-row"><span class="v">2</span><span class="u">건</span></div>
+        <div class="compare">이전 4건 → 2건</div>
+        <div class="track-mini"><div class="fill-mini" style="width:11%;"></div></div>
+      </div>
+      <div class="cat">
+        <div class="name"><span>기타</span><span class="compare">→ 유지</span></div>
+        <div class="value-row"><span class="v">2</span><span class="u">건</span></div>
+        <div class="compare">이전 2건 → 2건</div>
+        <div class="track-mini"><div class="fill-mini" style="width:11%;"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="praise-wall">
+      <div class="head">
+        <h3>💜 받은 칭찬</h3>
+        <span class="count">이번 달 8건</span>
+      </div>
+      <div class="praise-grid">
+        <div class="praise-card"><div class="q">"이 부분 색감 완벽! 따뜻한 느낌이 딱 맞아요"</div><div class="m">정직왕 #2-4 · 매니저 김선</div></div>
+        <div class="praise-card"><div class="q">"자막 타이밍 훌륭해요, 숨 쉴 틈 잘 주셨어요"</div><div class="m">프리비트 #18 · 매니저 김선</div></div>
+        <div class="praise-card"><div class="q">"컷 긴장감 최고네요"</div><div class="m">BB테이프 크리에이터스 · 매니저 김선</div></div>
+        <div class="praise-card"><div class="q">"오프닝 리듬 깔끔"</div><div class="m">어울림체육대축전 · 매니저 김선</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="tip">
+      <div class="ico">💡</div>
+      <div class="txt">
+        <div class="t">다음 업로드 전 체크 포인트</div>
+        <div class="d">최근 30일 <b>"띄어쓰기"</b> 관련 지적이 5건 이상 나왔어요. 맞춤법 검사 한번 돌리면 더 줄어들 수 있어요.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="streak">
+    <div>
+      <div class="t">🔥 연속 칭찬 3주</div>
+      <div class="d">3주 연속으로 매주 칭찬을 받고 있어요! 이 페이스 유지해봐요.</div>
+    </div>
+    <div class="emoji">🏆</div>
+  </div>
+</div>
+</body>
+</html>

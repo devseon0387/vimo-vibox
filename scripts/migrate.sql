@@ -87,3 +87,47 @@ CREATE TABLE IF NOT EXISTS file_uploads (
   uploaded_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_file_uploads_uploader ON file_uploads(uploaded_by);
+
+-- 2026-04-22: 클라이언트 피드백 워크플로 (매니저 승인 게이트 + 순화)
+-- visibility: 'internal' (기본) / 'client' (클라이언트 뷰에 공개)
+-- status: 'approved' (기본, 바로 보임) / 'pending' (매니저 승인 대기, 게스트 댓글 전용)
+-- moderated_body: 매니저가 순화한 내부용 텍스트 (null이면 원문 사용)
+ALTER TABLE comments ADD COLUMN visibility TEXT NOT NULL DEFAULT 'internal';
+ALTER TABLE comments ADD COLUMN moderated_body TEXT;
+ALTER TABLE comments ADD COLUMN status TEXT NOT NULL DEFAULT 'approved';
+ALTER TABLE comments ADD COLUMN approved_at INTEGER;
+ALTER TABLE comments ADD COLUMN approved_by TEXT;
+CREATE INDEX IF NOT EXISTS idx_comments_status ON comments(status);
+CREATE INDEX IF NOT EXISTS idx_comments_visibility ON comments(visibility);
+
+-- 2026-04-22: 공유 링크 프리뷰/풀 모드
+-- mode: 'preview' (재생 전용) / 'full' (피드백 가능)
+ALTER TABLE share_links ADD COLUMN mode TEXT NOT NULL DEFAULT 'preview';
+
+-- 2026-04-22: 순화본 편집 히스토리 (admin/member만 열람)
+CREATE TABLE IF NOT EXISTS comment_moderations (
+  id TEXT PRIMARY KEY,
+  comment_id TEXT NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
+  body_before TEXT,       -- 수정 전 moderated_body (최초 수정이면 null)
+  body_after TEXT NOT NULL,
+  edited_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  edited_by_name TEXT NOT NULL,
+  edited_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_moderations_comment ON comment_moderations(comment_id);
+
+-- 2026-04-22: 트래픽 로그 (아웃바운드 바이트 집계)
+-- source: 'download' (내부 다운로드) | 'share' (공유 링크) | 'thumb' | 'upload' (들어오는 바이트)
+CREATE TABLE IF NOT EXISTS traffic_log (
+  id TEXT PRIMARY KEY,
+  path TEXT NOT NULL,
+  bytes INTEGER NOT NULL,
+  source TEXT NOT NULL,
+  share_token TEXT,
+  user_id TEXT,
+  at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_traffic_at ON traffic_log(at);
+CREATE INDEX IF NOT EXISTS idx_traffic_source ON traffic_log(source);
+CREATE INDEX IF NOT EXISTS idx_traffic_path ON traffic_log(path);
+CREATE INDEX IF NOT EXISTS idx_traffic_share ON traffic_log(share_token);

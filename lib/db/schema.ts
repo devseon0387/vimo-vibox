@@ -21,6 +21,9 @@ export const shareLinks = sqliteTable("share_links", {
   filePath: text("file_path").notNull(), // backward compat (단일 파일)
   title: text("title"),
   paths: text("paths"), // JSON array ["/a.mp4", "/b.mp4"] — 여러 파일 묶음
+  mode: text("mode", { enum: ["preview", "full"] })
+    .notNull()
+    .default("preview"),
   allowComments: integer("allow_comments", { mode: "boolean" })
     .notNull()
     .default(false),
@@ -69,13 +72,41 @@ export const comments = sqliteTable("comments", {
   // 게스트(공유 링크 비회원) 댓글: authorId='guest', guestName에 실제 이름
   guestName: text("guest_name"),
   shareToken: text("share_token"), // 어느 공유링크에서 작성한 댓글인지
+  // 매니저 승인 게이트 + 클라 가시성 (2026-04-22)
+  visibility: text("visibility", { enum: ["internal", "client"] })
+    .notNull()
+    .default("internal"),
+  moderatedBody: text("moderated_body"),
+  status: text("status", { enum: ["approved", "pending"] })
+    .notNull()
+    .default("approved"),
+  approvedAt: integer("approved_at", { mode: "timestamp_ms" }),
+  approvedBy: text("approved_by"),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+export const commentModerations = sqliteTable("comment_moderations", {
+  id: text("id").primaryKey(),
+  commentId: text("comment_id")
+    .notNull()
+    .references(() => comments.id, { onDelete: "cascade" }),
+  bodyBefore: text("body_before"),
+  bodyAfter: text("body_after").notNull(),
+  editedBy: text("edited_by")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  editedByName: text("edited_by_name").notNull(),
+  editedAt: integer("edited_at", { mode: "timestamp_ms" })
     .notNull()
     .$defaultFn(() => new Date()),
 });
 
 export type Comment = typeof comments.$inferSelect;
 export type NewComment = typeof comments.$inferInsert;
+export type CommentModeration = typeof commentModerations.$inferSelect;
+export type NewCommentModeration = typeof commentModerations.$inferInsert;
 export type FileUpload = typeof fileUploads.$inferSelect;
 export type NewFileUpload = typeof fileUploads.$inferInsert;
 
@@ -111,6 +142,23 @@ export const scanHistory = sqliteTable("scan_history", {
   issuesFound: integer("issues_found"),
   error: text("error"),
 });
+
+export const trafficLog = sqliteTable("traffic_log", {
+  id: text("id").primaryKey(),
+  path: text("path").notNull(),
+  bytes: integer("bytes").notNull(),
+  source: text("source", {
+    enum: ["download", "share", "thumb", "upload"],
+  }).notNull(),
+  shareToken: text("share_token"),
+  userId: text("user_id"),
+  at: integer("at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+export type TrafficLog = typeof trafficLog.$inferSelect;
+export type NewTrafficLog = typeof trafficLog.$inferInsert;
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;

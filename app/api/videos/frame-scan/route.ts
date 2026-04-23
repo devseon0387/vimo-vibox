@@ -7,6 +7,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { comments } from "@/lib/db/schema";
 import { getCurrentSession } from "@/lib/auth/session";
+import { canAccessFile } from "@/lib/auth/access";
 import { resolveSafePath } from "@/lib/fs/storage";
 
 const SCAN_SCRIPT = path.join(process.cwd(), "scripts", "frame-scan.sh");
@@ -37,6 +38,10 @@ export async function POST(req: NextRequest) {
   const filePath = body?.path;
   if (!filePath || typeof filePath !== "string") {
     return NextResponse.json({ error: "path required" }, { status: 400 });
+  }
+
+  if (!(await canAccessFile(session, filePath))) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
   let absVideo: string;

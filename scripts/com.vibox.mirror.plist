@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.vibox.mirror</string>
+
+    <key>ProgramArguments</key>
+    <array>
+      <string>/Users/vimo/vimo-cloud/scripts/vibox-mirror.sh</string>
+    </array>
+
+    <key>UserName</key>
+    <string>vimo</string>
+
+    <!-- 매 6시간마다: 00:00 / 06:00 / 12:00 / 18:00 -->
+    <key>StartCalendarInterval</key>
+    <array>
+      <dict>
+        <key>Hour</key><integer>0</integer>
+        <key>Minute</key><integer>0</integer>
+      </dict>
+      <dict>
+        <key>Hour</key><integer>6</integer>
+        <key>Minute</key><integer>0</integer>
+      </dict>
+      <dict>
+        <key>Hour</key><integer>12</integer>
+        <key>Minute</key><integer>0</integer>
+      </dict>
+      <dict>
+        <key>Hour</key><integer>18</integer>
+        <key>Minute</key><integer>0</integer>
+      </dict>
+    </array>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/com.vibox.mirror.out</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/com.vibox.mirror.err</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>PATH</key>
+      <string>/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+  </dict>
+</plist>

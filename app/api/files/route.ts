@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { inArray } from "drizzle-orm";
 import { getCurrentSession } from "@/lib/auth/session";
+import { canAccessFile } from "@/lib/auth/access";
 import {
   listDirectory,
   createFolder,
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
 
 // PATCH /api/files  body: { from, to } → 이름 변경 또는 이동
 export async function PATCH(req: NextRequest) {
-  const { error } = await requireAuth();
+  const { error, session } = await requireAuth();
   if (error) return error;
 
   const body = await req.json().catch(() => null);
@@ -86,6 +87,12 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "from and to required" }, { status: 400 });
   }
   const { from, to } = body as { from: string; to: string };
+
+  // 파트너는 본인 업로드한 파일만 이동·이름변경 가능
+  if (!(await canAccessFile(session!, from))) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
   try {
     await moveEntry(from, to);
     return NextResponse.json({ ok: true, path: to });
@@ -102,6 +109,12 @@ export async function DELETE(req: NextRequest) {
 
   const rel = req.nextUrl.searchParams.get("path");
   if (!rel) return NextResponse.json({ error: "path required" }, { status: 400 });
+
+  // 파트너는 본인 업로드한 파일만 삭제 가능
+  if (!(await canAccessFile(session!, rel))) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
   try {
     await moveToTrash(rel, session!.sub, session!.name ?? session!.username);
     return NextResponse.json({ ok: true });

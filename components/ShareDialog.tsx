@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Modal } from "./Modal";
-import { Copy, Check, Link as LinkIcon } from "lucide-react";
+import { Copy, Check, Link as LinkIcon, Eye, MessageSquare } from "lucide-react";
 import type { FileEntry } from "@/lib/fs/storage";
 
 type Step = "configure" | "ready";
+type Mode = "preview" | "full";
 
 export function ShareDialog({
   entry,
@@ -17,9 +18,8 @@ export function ShareDialog({
   onClose: () => void;
 }) {
   const [step, setStep] = useState<Step>("configure");
+  const [mode, setMode] = useState<Mode>("preview");
   const [expiresInDays, setExpiresInDays] = useState<number>(7);
-  const [usePassword, setUsePassword] = useState(false);
-  const [password, setPassword] = useState("");
   const [creating, setCreating] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -28,9 +28,8 @@ export function ShareDialog({
   useEffect(() => {
     if (!open) return;
     setStep("configure");
+    setMode("preview");
     setExpiresInDays(7);
-    setUsePassword(false);
-    setPassword("");
     setToken(null);
     setCopied(false);
     setError(null);
@@ -47,8 +46,8 @@ export function ShareDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           path: entry.path,
+          mode,
           expiresInDays: expiresInDays > 0 ? expiresInDays : null,
-          password: usePassword && password ? password : undefined,
         }),
       });
       const body = await res.json();
@@ -96,6 +95,54 @@ export function ShareDialog({
           <>
             <div className="mb-5">
               <label className="block text-[12px] font-semibold text-text-soft mb-2">
+                모드
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setMode("preview")}
+                  className={`flex items-start gap-2 p-2.5 rounded-md border text-left transition-colors ${
+                    mode === "preview"
+                      ? "border-text bg-surface"
+                      : "border-border hover:border-border-hover bg-white"
+                  }`}
+                >
+                  <Eye
+                    size={14}
+                    strokeWidth={2}
+                    className={`mt-0.5 shrink-0 ${mode === "preview" ? "text-text" : "text-text-muted"}`}
+                  />
+                  <div>
+                    <div className="text-[12.5px] font-semibold text-text">프리뷰</div>
+                    <div className="text-[10.5px] text-text-muted mt-0.5 leading-snug">
+                      재생만 가능. 깔끔
+                    </div>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setMode("full")}
+                  className={`flex items-start gap-2 p-2.5 rounded-md border text-left transition-colors ${
+                    mode === "full"
+                      ? "border-text bg-surface"
+                      : "border-border hover:border-border-hover bg-white"
+                  }`}
+                >
+                  <MessageSquare
+                    size={14}
+                    strokeWidth={2}
+                    className={`mt-0.5 shrink-0 ${mode === "full" ? "text-text" : "text-text-muted"}`}
+                  />
+                  <div>
+                    <div className="text-[12.5px] font-semibold text-text">풀</div>
+                    <div className="text-[10.5px] text-text-muted mt-0.5 leading-snug">
+                      피드백 받기
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <div className="mb-5">
+              <label className="block text-[12px] font-semibold text-text-soft mb-2">
                 만료 기간
               </label>
               <div className="flex gap-2 flex-wrap">
@@ -120,36 +167,13 @@ export function ShareDialog({
               </div>
             </div>
 
-            <div className="mb-6">
-              <label className="flex items-center gap-2 mb-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={usePassword}
-                  onChange={(e) => setUsePassword(e.target.checked)}
-                  className="rounded"
-                />
-                <span className="text-[12px] font-semibold text-text-soft">
-                  비밀번호 걸기
-                </span>
-              </label>
-              {usePassword && (
-                <input
-                  type="text"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="공유할 비밀번호"
-                  className="w-full px-3 py-2 border border-border rounded-md text-[13.5px] outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
-                />
-              )}
-            </div>
-
             {error && (
               <div className="text-[12px] text-danger mb-3">{error}</div>
             )}
 
             <button
               onClick={create}
-              disabled={creating || (usePassword && !password)}
+              disabled={creating}
               className="w-full bg-text text-white hover:bg-[#333] disabled:opacity-60 py-2.5 rounded-md text-[14px] font-semibold"
             >
               {creating ? "생성 중..." : "공유 링크 생성"}
@@ -177,14 +201,6 @@ export function ShareDialog({
                 </button>
               </div>
             </div>
-
-            {usePassword && (
-              <div className="text-[11.5px] text-text-muted mb-4 bg-warning-soft border border-[#fde68a] rounded-md px-3 py-2">
-                비밀번호: <span className="font-mono font-bold">{password}</span>
-                <br />
-                (받는 분에게 별도로 전달해주세요)
-              </div>
-            )}
 
             <button
               onClick={onClose}

@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server";
 import { createReadStream } from "node:fs";
 import fs from "node:fs/promises";
-import { Readable } from "node:stream";
 import { getCurrentSession } from "@/lib/auth/session";
+import { canAccessFile } from "@/lib/auth/access";
+import { streamWithTrafficLog } from "@/lib/traffic";
 import {
   getThumbPath,
   hasThumb,
@@ -21,6 +22,9 @@ export async function GET(req: NextRequest) {
   if (!relativePath) return new Response("path required", { status: 400 });
   if (!isVideoPath(relativePath)) {
     return new Response("not a video", { status: 400 });
+  }
+  if (!(await canAccessFile(session, relativePath))) {
+    return new Response("forbidden", { status: 403 });
   }
 
   // t 파라미터 있으면 프레임 시점별 썸네일
@@ -43,14 +47,30 @@ export async function GET(req: NextRequest) {
   }
 
   const stat = await fs.stat(abs);
+  const etag = `"${stat.size}-${Math.floor(stat.mtimeMs)}"`;
+  const cacheControl = "private, max-age=604800"; // 7일
+
+  // 조건부 요청: 브라우저가 보낸 ETag와 일치하면 304로 응답 (바디 생략)
+  const ifNoneMatch = req.headers.get("if-none-match");
+  if (ifNoneMatch && ifNoneMatch === etag) {
+    return new Response(null, {
+      status: 304,
+      headers: { ETag: etag, "Cache-Control": cacheControl },
+    });
+  }
+
   const nodeStream = createReadStream(abs);
-  const webStream = Readable.toWeb(nodeStream) as unknown as ReadableStream;
+  const webStream = streamWithTrafficLog(nodeStream, {
+    path: relativePath,
+    source: "thumb",
+    userId: session.sub,
+  });
   return new Response(webStream, {
     headers: {
       "Content-Type": "image/jpeg",
       "Content-Length": String(stat.size),
-      "Cache-Control": "private, max-age=604800", // 7일
-      ETag: `"${stat.size}-${stat.mtimeMs}"`,
+      "Cache-Control": cacheControl,
+      ETag: etag,
     },
   });
 }

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { comments } from "@/lib/db/schema";
 import { getCurrentSession } from "@/lib/auth/session";
+import { canAccessFile } from "@/lib/auth/access";
 import {
   detectCategory,
   detectKind,
@@ -18,7 +19,9 @@ import {
 const VALID_CATEGORIES: Category[] = ["txt", "cut", "col", "aud", "mtn", "etc"];
 const VALID_KINDS: Kind[] = ["feedback", "praise"];
 
-// GET /api/comments?path=/foo.mp4 → 해당 파일의 모든 댓글 (생성시각순)
+// GET /api/comments?path=/foo.mp4 → 해당 파일의 댓글 (역할별 필터)
+// admin/member: 전부 (모든 status + 원문 + 순화본 둘 다)
+// partner: 승인된 것만 + 본인 작성 (순화본이 있으면 순화본)
 export async function GET(req: NextRequest) {
   const session = await getCurrentSession();
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -26,11 +29,38 @@ export async function GET(req: NextRequest) {
   const filePath = req.nextUrl.searchParams.get("path");
   if (!filePath) return NextResponse.json({ error: "path required" }, { status: 400 });
 
+  if (!(await canAccessFile(session, filePath))) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
+  const isStaff = session.role === "admin" || session.role === "member";
+
+  // 파트너는 pending 제외 (본인 댓글은 제외 대상 아님 — 어차피 본인 댓글은 기본 approved)
+  const where = isStaff
+    ? eq(comments.filePath, filePath)
+    : and(
+        eq(comments.filePath, filePath),
+        or(
+          eq(comments.status, "approved"),
+          eq(comments.authorId, session.sub),
+        ),
+      );
+
   const rows = await db
     .select()
     .from(comments)
-    .where(eq(comments.filePath, filePath))
+    .where(where)
     .orderBy(asc(comments.videoTimeMs), asc(comments.createdAt));
+
+  // pending 개수 (파트너에게 배너용으로 반환)
+  let pendingCount = 0;
+  if (!isStaff) {
+    const pending = await db
+      .select({ n: sql<number>`count(*)` })
+      .from(comments)
+      .where(and(eq(comments.filePath, filePath), eq(comments.status, "pending")));
+    pendingCount = Number(pending[0]?.n ?? 0);
+  }
 
   return NextResponse.json({
     comments: rows.map((r) => ({
@@ -44,12 +74,21 @@ export async function GET(req: NextRequest) {
       kind: r.kind,
       autoKind: r.autoKind,
       annotation: r.annotation,
-      body: r.body,
+      // 파트너는 순화본 있으면 순화본, 없으면 원문
+      // admin/member는 원문 body + moderatedBody 둘 다 받음 (UI에서 둘 다 보여줌)
+      body: isStaff ? r.body : (r.moderatedBody ?? r.body),
+      moderatedBody: isStaff ? r.moderatedBody : null,
+      visibility: r.visibility,
+      status: r.status,
+      approvedAt: r.approvedAt ? r.approvedAt.getTime() : null,
+      approvedBy: r.approvedBy,
+      guestName: r.guestName,
       parentId: r.parentId,
       resolvedAt: r.resolvedAt ? r.resolvedAt.getTime() : null,
       resolvedBy: r.resolvedBy,
       createdAt: r.createdAt.getTime(),
     })),
+    pendingCount,
   });
 }
 
@@ -65,6 +104,11 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
+
+  if (!(await canAccessFile(session, String(body.path)))) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
   const text = String(body.body).trim();
   if (text.length === 0 || text.length > 2000) {
     return NextResponse.json({ error: "invalid body length" }, { status: 400 });

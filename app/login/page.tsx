@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useActionState } from "react";
 import { Lock, User } from "lucide-react";
 import { loginAction, type LoginState } from "./actions";
@@ -17,9 +18,19 @@ export default function LoginPage() {
         <div className="text-center mb-10">
           <Link
             href="/"
-            className="text-[26px] font-extrabold tracking-tight text-text inline-block"
+            className="inline-flex flex-col items-center gap-3 text-[26px] font-extrabold tracking-tight text-text"
           >
-            vi<span className="text-accent">.</span>box
+            <Image
+              src="/logo.png"
+              alt="Vibox"
+              width={64}
+              height={64}
+              priority
+              className="rounded-xl"
+            />
+            <span>
+              vi<span className="text-accent">.</span>box
+            </span>
           </Link>
           <p className="text-[13px] text-text-soft mt-2">
             VIMO 내부 팀 파일 공간

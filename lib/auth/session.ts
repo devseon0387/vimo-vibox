@@ -56,8 +56,9 @@ function cookieOpts(maxAge: number): CookieOpts {
   const opts: CookieOpts = {
     httpOnly: true,
     secure: isProd,
-    // 프로덕션: 서브도메인 샤딩 cross-origin POST에서도 쿠키 전송 보장
-    sameSite: isProd ? "none" : "lax",
+    // CSRF 방어 강화: 동일 사이트 내 요청에만 전송
+    // 크로스 오리진 POST가 진짜 필요해지면 "none"으로 올리되 secure 필수
+    sameSite: "lax",
     maxAge,
     path: "/",
   };

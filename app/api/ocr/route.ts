@@ -16,6 +16,10 @@ const OCR_TIMEOUT_MS = 8_000;
 export async function POST(req: NextRequest) {
   const session = await getCurrentSession();
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  // OCR 은 CPU 무거워 내부팀만 (파트너/게스트 접근 차단)
+  if (session.role !== "admin" && session.role !== "member") {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
 
   const body = await req.json().catch(() => null);
   if (!body?.imageBase64) {
@@ -67,8 +71,8 @@ function runVisionOCR(imagePath: string): Promise<string> {
     });
     proc.on("exit", (code) => {
       clearTimeout(timer);
-      if (code !== 0 && code !== 0) {
-        // code 0 = success (including empty text), other = error
+      // code 0 = success (including empty text), other = error
+      if (code !== 0) {
         reject(new Error(`ocr exit ${code}: ${stderr.slice(0, 200)}`));
         return;
       }

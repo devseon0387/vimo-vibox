@@ -12,8 +12,8 @@ ROLLBACK_DIR="/Users/vimo/vimo-cloud-rollback"
 LOCAL_PATH="$(cd "$(dirname "$0")/.." && pwd)"
 TS="$(date +%Y%m%d-%H%M%S)"
 
-# 원격 node/npm PATH (Homebrew)
-REMOTE_PATH_ENV="export PATH=/usr/local/bin:/usr/local/Cellar/node/25.6.1/bin:\$PATH"
+# 원격 node/npm PATH (Homebrew) — node@22 (LTS) 사용. Node 25 에선 Next.js 16 런타임 이슈
+REMOTE_PATH_ENV="export PATH=/usr/local/opt/node@22/bin:/usr/local/bin:\$PATH"
 
 # -------- ROLLBACK --------
 if [[ "${1:-}" == "--rollback" ]]; then

@@ -3,22 +3,71 @@ import fs from "node:fs/promises";
 import { createReadStream } from "node:fs";
 import type { Stats } from "node:fs";
 
+/**
+ * 스토리지 영역(Zone).
+ * - rendering : 비모 팀 검수 파이프라인 (기존 /Shared/). prefix 없는 레거시 경로도 여기로 폴백.
+ * - library   : 자료실 (팀 공용 레퍼런스 — staff만 쓰기)
+ * - personal  : 개인 드라이브 (/personal/{userId}/...)
+ */
+export type Zone = "rendering" | "library" | "personal";
+
+/** rendering zone 의 디스크 루트 = STORAGE_ROOT env */
 export function getStorageRoot(): string {
   const root = process.env.STORAGE_ROOT;
   if (!root) throw new Error("STORAGE_ROOT env not set");
   return path.resolve(root);
 }
 
+/** zone별 디스크 루트 반환. rendering = STORAGE_ROOT, 나머지는 STORAGE_ROOT 의 부모(base)에서 sibling. */
+export function getZoneRoot(zone: Zone): string {
+  const renderingRoot = getStorageRoot();
+  if (zone === "rendering") return renderingRoot;
+  const base = path.dirname(renderingRoot);
+  if (zone === "library") return path.join(base, "Library");
+  if (zone === "personal") return path.join(base, "Personal");
+  throw new Error(`unknown zone: ${zone}`);
+}
+
+/**
+ * 상대 경로에서 zone 추출.
+ * - /library/... → library zone
+ * - /personal/... → personal zone
+ * - 그 외 (레거시 /foo.mp4 포함) → rendering zone
+ */
+export function parseZoneFromPath(relativePath: string): {
+  zone: Zone;
+  sub: string;
+} {
+  const normalized =
+    relativePath.startsWith("/") ? relativePath : "/" + relativePath;
+  if (normalized === "/library" || normalized.startsWith("/library/")) {
+    return { zone: "library", sub: normalized.slice("/library".length) || "/" };
+  }
+  if (normalized === "/personal" || normalized.startsWith("/personal/")) {
+    return { zone: "personal", sub: normalized.slice("/personal".length) || "/" };
+  }
+  return { zone: "rendering", sub: normalized };
+}
+
+/** personal zone 소유자 ID 추출. /personal/{userId}/... → userId */
+export function personalOwnerOf(relativePath: string): string | null {
+  const { zone, sub } = parseZoneFromPath(relativePath);
+  if (zone !== "personal") return null;
+  const parts = sub.split("/").filter(Boolean);
+  return parts[0] ?? null;
+}
+
 /**
  * URL 경로를 받아 실제 파일시스템 절대 경로로 변환.
- * path traversal (../ 등) 방지.
+ * zone 인식 + path traversal(../) 방지.
  */
 export function resolveSafePath(relativePath: string): string {
-  const root = getStorageRoot();
-  const normalized = path.posix.normalize("/" + relativePath.replace(/\\/g, "/"));
+  const { zone, sub } = parseZoneFromPath(relativePath.replace(/\\/g, "/"));
+  const root = getZoneRoot(zone);
+  const normalized = path.posix.normalize(sub.startsWith("/") ? sub : "/" + sub);
   const absolute = path.join(root, normalized);
 
-  // 반드시 root 하위여야 함
+  // 반드시 zone root 하위여야 함
   const rel = path.relative(root, absolute);
   if (rel.startsWith("..") || path.isAbsolute(rel)) {
     throw new Error(`Invalid path: ${relativePath}`);
@@ -331,15 +380,23 @@ export async function finalizeChunkUpload(fileId: string): Promise<FileEntry> {
 
   // 스트림으로 순차 append (메모리 안정)
   const { createReadStream: crs, createWriteStream: cws } = await import("node:fs");
-  const { pipeline } = await import("node:stream/promises");
   const writeStream = cws(finalAbs);
+  // 청크 N개 루프 돌며 pipeline/pipe 호출 시 writeStream 에 리스너가 누적됨.
+  // 기본 한계 10 이라 50MB * 11청크 넘어가면 MaxListenersExceededWarning 발생.
+  // 업로드 완료 이후 즉시 종료되는 stream 이라 안전하게 풀어도 됨.
+  writeStream.setMaxListeners(Infinity);
   try {
     for (const part of partFiles) {
-      await pipeline(crs(path.join(tempDir, part)), writeStream, { end: false });
+      await new Promise<void>((resolve, reject) => {
+        const reader = crs(path.join(tempDir, part));
+        reader.once("error", reject);
+        reader.once("end", resolve);
+        reader.pipe(writeStream, { end: false });
+      });
     }
     await new Promise<void>((resolve, reject) => {
+      writeStream.once("error", reject);
       writeStream.end(() => resolve());
-      writeStream.on("error", reject);
     });
   } catch (e) {
     writeStream.destroy();

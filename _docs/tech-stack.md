@@ -15,7 +15,7 @@
 | 스타일 | **Tailwind CSS 4** (@theme inline) | Next.js 16 기본 셋업, 라이트 테마 고정 |
 | 폰트 | **Pretendard + Nanum Myeongjo** | 메뉴한컷과 통일된 한글 타이포 |
 | DB | **SQLite + Drizzle ORM** | Supabase 회피 철학. 단일 파일, 무설정 |
-| 파일 저장 | **로컬 파일시스템** `/Volumes/T5 EVO/Shared/` | 직접 호스팅, 8TB SSD 활용 |
+| 파일 저장 | **로컬 파일시스템** `/Volumes/Vibox Storage A/Shared/` | 직접 호스팅, 8TB SSD 활용 |
 | 인증 | **NextAuth v5 (Auth.js)** — credentials provider | 계정/비밀번호 방식, 추후 Google SSO 확장 |
 | 업로드 | **tus-js-client** (resumable chunked) | 대용량 영상 끊겨도 이어올리기 |
 | 미리보기 | `<video>` / `<img>` 네이티브 + PDF.js | 서버 변환 없이 브라우저가 처리 |
@@ -116,7 +116,7 @@
 └── tech-stack.md
 
 실제 파일:
-/Volumes/T5 EVO/Shared/            ← 아이맥 외장 SSD (prod)
+/Volumes/Vibox Storage A/Shared/   ← 아이맥 외장 SSD (prod)
 ├── .vibox/                        ← 시스템 메타 (썸네일, 임시 업로드)
 ├── users/{username}/              ← 개인 폴더
 ├── team/                          ← 팀 공용

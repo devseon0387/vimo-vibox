@@ -3,6 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { scanHistory } from "@/lib/db/schema";
 import { getCurrentSession } from "@/lib/auth/session";
+import { canAccessFile } from "@/lib/auth/access";
 
 // GET /api/videos/scan/history?path=/foo.mp4
 // → 해당 파일의 가장 최근 완료된 검수 정보
@@ -12,6 +13,10 @@ export async function GET(req: NextRequest) {
 
   const filePath = req.nextUrl.searchParams.get("path");
   if (!filePath) return NextResponse.json({ error: "path required" }, { status: 400 });
+
+  if (!(await canAccessFile(session, filePath))) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
 
   const rows = await db
     .select()

@@ -9,6 +9,7 @@ import { generateThumbInBackground, isVideoPath } from "@/lib/fs/thumbnail";
 import { db } from "@/lib/db/client";
 import { fileUploads } from "@/lib/db/schema";
 import { sql } from "drizzle-orm";
+import { logTraffic } from "@/lib/traffic";
 
 // POST /api/upload/complete  body: { fileId, action?: "complete" | "abort" }
 export async function POST(req: NextRequest) {
@@ -57,6 +58,13 @@ export async function POST(req: NextRequest) {
         },
       })
       .catch(() => {});
+    // 인바운드 트래픽 기록 (업로드된 파일 크기)
+    logTraffic({
+      path: saved.path,
+      bytes: saved.size,
+      source: "upload",
+      userId: session.sub,
+    });
     // 영상이면 백그라운드로 썸네일 생성 (응답 지연 안 됨)
     if (isVideoPath(saved.path)) {
       generateThumbInBackground(saved.path);

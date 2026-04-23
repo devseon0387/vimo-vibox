@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, or } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db/client";
 import { comments, shareLinks } from "@/lib/db/schema";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { resolveAllowedPaths } from "@/lib/share/paths";
 
 // 공유 링크 검증 helper
 async function verifyShare(
@@ -28,9 +30,7 @@ async function verifyShare(
     const m = await bcrypt.compare(password, link.passwordHash);
     if (!m) return { ok: false, status: 401, error: "wrong password" };
   }
-  const allowedPaths: string[] = link.paths
-    ? (JSON.parse(link.paths) as string[])
-    : [link.filePath];
+  const allowedPaths = resolveAllowedPaths(link);
   return { ok: true, link, allowedPaths };
 }
 
@@ -52,20 +52,43 @@ export async function GET(
   const { link, allowedPaths } = check;
   const filePath = p && allowedPaths.includes(p) ? p : link.filePath;
 
+  // 클라이언트 뷰: visibility='client' (스태프가 공개로 전환한 것)
+  //                 + 이 공유 링크로 남긴 게스트 댓글 (shareToken 매칭)
+  // 순화본 대신 원문 body 사용 — 클라이언트는 본인이 쓴 글 그대로 보여야 함
   const rows = await db
     .select()
     .from(comments)
-    .where(eq(comments.filePath, filePath))
+    .where(
+      and(
+        eq(comments.filePath, filePath),
+        or(
+          eq(comments.visibility, "client"),
+          and(
+            eq(comments.authorId, "guest"),
+            eq(comments.shareToken, token),
+          ),
+        ),
+      ),
+    )
     .orderBy(asc(comments.videoTimeMs), asc(comments.createdAt));
 
   return NextResponse.json({
     comments: rows.map((r) => ({
       id: r.id,
       filePath: r.filePath,
-      videoTimeMs: r.videoTimeMs,
-      body: r.body,
-      guestName: r.guestName,
+      authorId: r.authorId,
       authorName: r.authorName,
+      guestName: r.guestName,
+      videoTimeMs: r.videoTimeMs,
+      category: r.category,
+      autoCategory: r.autoCategory,
+      kind: r.kind,
+      autoKind: r.autoKind,
+      annotation: r.annotation,
+      body: r.body, // 원문 사용 (순화본 노출 X)
+      parentId: r.parentId,
+      resolvedAt: r.resolvedAt ? r.resolvedAt.getTime() : null,
+      resolvedBy: r.resolvedBy,
       createdAt: r.createdAt.getTime(),
     })),
   });
@@ -78,6 +101,30 @@ export async function POST(
   ctx: { params: Promise<{ token: string }> },
 ) {
   const { token } = await ctx.params;
+
+  // 스팸 방어 — IP 기반 + 토큰 기반
+  const ip = getClientIp(req);
+  const ipLimit = rateLimit(`guestcomment:ip:${ip}`, {
+    max: 20,
+    windowMs: 60 * 1000,
+  });
+  if (!ipLimit.ok) {
+    return NextResponse.json(
+      { error: `너무 많은 요청. ${ipLimit.retryAfterSec}초 후 다시 시도` },
+      { status: 429 },
+    );
+  }
+  const tokenLimit = rateLimit(`guestcomment:token:${token}`, {
+    max: 60,
+    windowMs: 60 * 1000,
+  });
+  if (!tokenLimit.ok) {
+    return NextResponse.json(
+      { error: `이 공유 링크에 너무 많은 댓글. ${tokenLimit.retryAfterSec}초 후 다시 시도` },
+      { status: 429 },
+    );
+  }
+
   const body = await req.json().catch(() => null);
   if (!body?.body || !body?.guestName) {
     return NextResponse.json({ error: "body, guestName required" }, { status: 400 });
@@ -121,6 +168,10 @@ export async function POST(
     kind: "feedback",
     autoKind: "feedback",
     body: text,
+    // 게스트 피드백은 매니저 승인 대기 + 클라이언트 본인 뷰에는 자동 공개
+    // (shareToken 매칭으로 자기 것 보임)
+    visibility: "internal",
+    status: "pending",
   });
 
   return NextResponse.json({ ok: true });
