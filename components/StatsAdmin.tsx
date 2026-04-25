@@ -26,6 +26,7 @@ import {
   Snowflake,
   Flame,
   Copy,
+  Film,
 } from "lucide-react";
 
 type DiskIO = {
@@ -102,6 +103,25 @@ type HealthSnapshot = {
     totalBytes: number;
     lastLogTail: string | null;
   } | null;
+  encoding: {
+    active: {
+      id: string;
+      filePath: string;
+      progress: number;
+      startedAt: number | null;
+    }[];
+    queuedCount: number;
+    doneCount: number;
+    failedCount: number;
+    totalAssets: number;
+    totalAssetBytes: number;
+    recentFailed: {
+      id: string;
+      filePath: string;
+      error: string | null;
+      finishedAt: number | null;
+    }[];
+  };
 };
 
 type SystemSnapshot = {
@@ -725,6 +745,7 @@ function SystemHealthSection({
             <Pm2Card pm2={health.pm2} />
             <LitestreamCard litestream={health.litestream} />
             <MirrorCard mirror={health.mirror} />
+            <EncodingCard encoding={health.encoding} />
           </div>
         </>
       )}
@@ -1894,5 +1915,120 @@ function Row({ label, value }: { label: string; value: string }) {
       <dt className="text-text-muted">{label}</dt>
       <dd className="font-semibold text-text">{value}</dd>
     </div>
+  );
+}
+
+function EncodingCard({
+  encoding,
+}: {
+  encoding: HealthSnapshot["encoding"];
+}) {
+  const activeCount = encoding.active.length;
+  const tone =
+    encoding.failedCount > 0
+      ? "warn"
+      : activeCount > 0 || encoding.queuedCount > 0
+        ? "ok"
+        : "muted";
+  const label =
+    activeCount > 0
+      ? `인코딩 ${activeCount}건`
+      : encoding.queuedCount > 0
+        ? `대기 ${encoding.queuedCount}건`
+        : "유휴";
+  return (
+    <HealthCard
+      icon={<Film size={13} strokeWidth={2.3} />}
+      title="HLS 인코딩"
+      statusText={label}
+      statusTone={tone}
+    >
+      <div className="space-y-1 text-[11.5px] text-text-muted">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span>
+            동작{" "}
+            <span className="font-semibold text-text tabular-nums">
+              {activeCount}
+            </span>
+          </span>
+          <span className="text-text-faint">·</span>
+          <span>
+            대기{" "}
+            <span className="font-semibold text-text tabular-nums">
+              {encoding.queuedCount}
+            </span>
+          </span>
+          <span className="text-text-faint">·</span>
+          <span>
+            완료{" "}
+            <span className="font-semibold text-emerald-700 tabular-nums">
+              {encoding.doneCount}
+            </span>
+          </span>
+          {encoding.failedCount > 0 && (
+            <>
+              <span className="text-text-faint">·</span>
+              <span>
+                실패{" "}
+                <span className="font-semibold text-rose-600 tabular-nums">
+                  {encoding.failedCount}
+                </span>
+              </span>
+            </>
+          )}
+        </div>
+        {encoding.totalAssets > 0 && (
+          <div>
+            HLS 자산{" "}
+            <span className="font-semibold text-text tabular-nums">
+              {encoding.totalAssets}
+            </span>
+            {" · "}
+            <span className="font-semibold text-text tabular-nums">
+              {formatBytes(encoding.totalAssetBytes)}
+            </span>
+          </div>
+        )}
+        {encoding.active.length > 0 && (
+          <div className="space-y-0.5 pt-1 border-t border-border/40 mt-1">
+            {encoding.active.map((j) => (
+              <div key={j.id} className="flex items-center gap-2">
+                <span
+                  className="flex-1 truncate font-mono text-[10.5px] text-text-soft"
+                  title={j.filePath}
+                >
+                  {j.filePath.replace(/^\//, "")}
+                </span>
+                <div className="w-16 h-1.5 bg-slate-200 rounded overflow-hidden shrink-0">
+                  <div
+                    className="h-full bg-sky-500 transition-[width]"
+                    style={{ width: `${j.progress}%` }}
+                  />
+                </div>
+                <span className="font-semibold text-text tabular-nums w-9 text-right shrink-0">
+                  {j.progress}%
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+        {encoding.recentFailed.length > 0 && (
+          <div className="space-y-0.5 pt-1 border-t border-border/40 mt-1">
+            <div className="text-[10.5px] font-semibold text-rose-600">
+              최근 실패
+            </div>
+            {encoding.recentFailed.slice(0, 3).map((f) => (
+              <div
+                key={f.id}
+                className="font-mono text-[10.5px] text-text-faint truncate"
+                title={`${f.filePath}\n${f.error ?? ""}`}
+              >
+                {f.filePath.replace(/^\//, "")}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </HealthCard>
   );
 }
