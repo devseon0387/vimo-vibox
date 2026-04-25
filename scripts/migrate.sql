@@ -131,3 +131,31 @@ CREATE INDEX IF NOT EXISTS idx_traffic_at ON traffic_log(at);
 CREATE INDEX IF NOT EXISTS idx_traffic_source ON traffic_log(source);
 CREATE INDEX IF NOT EXISTS idx_traffic_path ON traffic_log(path);
 CREATE INDEX IF NOT EXISTS idx_traffic_share ON traffic_log(share_token);
+
+-- 2026-04-25: HLS 인코딩 큐 + 자산 매핑 (Phase 1 — 스트리밍 최적화)
+-- encoding_jobs: ffmpeg HLS 변환 작업 큐 (max 2 동시, FIFO)
+CREATE TABLE IF NOT EXISTS encoding_jobs (
+  id TEXT PRIMARY KEY,
+  file_path TEXT NOT NULL,
+  fingerprint TEXT,
+  status TEXT NOT NULL DEFAULT 'queued',  -- queued | running | done | failed | cancelled
+  progress INTEGER NOT NULL DEFAULT 0,    -- 0~100
+  enqueued_at INTEGER NOT NULL,
+  started_at INTEGER,
+  finished_at INTEGER,
+  error TEXT,
+  duration_sec INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_encoding_status ON encoding_jobs(status);
+CREATE INDEX IF NOT EXISTS idx_encoding_file ON encoding_jobs(file_path);
+
+-- hls_assets: 변환 완료된 HLS 자산 레지스트리 (file_path → fingerprint)
+CREATE TABLE IF NOT EXISTS hls_assets (
+  fingerprint TEXT PRIMARY KEY,
+  file_path TEXT NOT NULL UNIQUE,
+  segment_count INTEGER NOT NULL,
+  total_bytes INTEGER NOT NULL,
+  duration_sec INTEGER NOT NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_hls_file ON hls_assets(file_path);

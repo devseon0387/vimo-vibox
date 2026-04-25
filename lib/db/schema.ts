@@ -160,6 +160,43 @@ export const trafficLog = sqliteTable("traffic_log", {
 export type TrafficLog = typeof trafficLog.$inferSelect;
 export type NewTrafficLog = typeof trafficLog.$inferInsert;
 
+// HLS 인코딩 작업 큐
+export const encodingJobs = sqliteTable("encoding_jobs", {
+  id: text("id").primaryKey(),
+  filePath: text("file_path").notNull(),
+  fingerprint: text("fingerprint"),
+  status: text("status", {
+    enum: ["queued", "running", "done", "failed", "cancelled"],
+  })
+    .notNull()
+    .default("queued"),
+  progress: integer("progress").notNull().default(0), // 0~100
+  enqueuedAt: integer("enqueued_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  startedAt: integer("started_at", { mode: "timestamp_ms" }),
+  finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
+  error: text("error"),
+  durationSec: integer("duration_sec"),
+});
+
+// HLS 자산 메타 (file_path → fingerprint 매핑)
+export const hlsAssets = sqliteTable("hls_assets", {
+  fingerprint: text("fingerprint").primaryKey(),
+  filePath: text("file_path").notNull().unique(),
+  segmentCount: integer("segment_count").notNull(),
+  totalBytes: integer("total_bytes").notNull(),
+  durationSec: integer("duration_sec").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+export type EncodingJob = typeof encodingJobs.$inferSelect;
+export type NewEncodingJob = typeof encodingJobs.$inferInsert;
+export type HlsAsset = typeof hlsAssets.$inferSelect;
+export type NewHlsAsset = typeof hlsAssets.$inferInsert;
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type ShareLink = typeof shareLinks.$inferSelect;

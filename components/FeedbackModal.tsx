@@ -206,6 +206,13 @@ export function FeedbackModal({
     { left: string; top: string; flipUp?: boolean } | null
   >(null);
   const videoWrapRef = useRef<HTMLDivElement>(null);
+  const [hlsManifestUrl, setHlsManifestUrl] = useState<string | null>(null);
+  const [hlsStatus, setHlsStatus] = useState<
+    | { kind: "checking" }
+    | { kind: "ready"; url: string }
+    | { kind: "encoding"; progress: number }
+    | { kind: "fallback" }
+  >({ kind: "checking" });
   const { confirm, dialog: confirmDialog } = useConfirm();
   const { success, error: toastError } = useToast();
 
@@ -246,6 +253,68 @@ export function FeedbackModal({
       setCurrentTime(0);
     }
   }, [open, filePath, fetchComments]);
+
+  // HLS 자산 lookup — 변환 완료됐으면 manifestUrl 받아 hls.js로 재생
+  useEffect(() => {
+    if (!filePath) return;
+    setHlsManifestUrl(null);
+    setHlsStatus({ kind: "checking" });
+    let cancelled = false;
+    let pollTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const check = async () => {
+      const tokenSuffix = shareContext
+        ? `&token=${encodeURIComponent(shareContext.token)}`
+        : "";
+      try {
+        const r = await fetch(
+          `/api/stream/lookup?path=${encodeURIComponent(filePath)}${tokenSuffix}`,
+        );
+        if (cancelled) return;
+        if (!r.ok) {
+          setHlsStatus({ kind: "fallback" });
+          return;
+        }
+        const data = await r.json();
+        if (data.ready && data.manifestUrl) {
+          setHlsManifestUrl(data.manifestUrl);
+          setHlsStatus({ kind: "ready", url: data.manifestUrl });
+        } else if (data.status === "queued" || data.status === "running") {
+          setHlsStatus({ kind: "encoding", progress: data.progress ?? 0 });
+          // 인코딩 중이면 5초 후 재확인
+          pollTimer = setTimeout(check, 5000);
+        } else {
+          setHlsStatus({ kind: "fallback" });
+        }
+      } catch {
+        if (!cancelled) setHlsStatus({ kind: "fallback" });
+      }
+    };
+    check();
+
+    return () => {
+      cancelled = true;
+      if (pollTimer) clearTimeout(pollTimer);
+    };
+  }, [filePath, shareContext]);
+
+  // hls.js 어태치 — manifestUrl 준비되면 vidRef에 붙임
+  useEffect(() => {
+    if (!hlsManifestUrl) return;
+    const v = vidRef.current;
+    if (!v) return;
+    let handle: { destroy: () => void } | null = null;
+    let cancelled = false;
+    void (async () => {
+      const { attachHls } = await import("@/lib/hls-client");
+      if (cancelled) return;
+      handle = await attachHls(v, hlsManifestUrl);
+    })();
+    return () => {
+      cancelled = true;
+      handle?.destroy();
+    };
+  }, [hlsManifestUrl]);
 
   // 키보드 단축키: Space(재생), ←/→(±3s), Shift+←/→(±10s), J/L(-/+10s)
   useEffect(() => {
@@ -840,7 +909,8 @@ export function FeedbackModal({
               >
               <video
                 ref={vidRef}
-                src={src}
+                // HLS 준비됐으면 hls.js 가 src 덮어씀, 아니면 원본 (fallback)
+                src={hlsStatus.kind === "ready" ? undefined : src}
                 poster={poster}
                 preload="metadata"
                 className="w-full h-full object-contain pointer-events-none"
@@ -854,6 +924,13 @@ export function FeedbackModal({
                 onPlay={() => setPlaying(true)}
                 onPause={() => setPlaying(false)}
               />
+              {/* HLS 인코딩 진행 중 배지 */}
+              {hlsStatus.kind === "encoding" && (
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-amber-500/90 text-black px-2.5 py-1 rounded text-[11px] font-bold inline-flex items-center gap-1.5 z-20">
+                  <span className="inline-block w-2 h-2 rounded-full bg-amber-200 animate-pulse" />
+                  스트리밍 최적화 중 {hlsStatus.progress}% (원본 재생 중)
+                </div>
+              )}
 
               {/* 주석 모드 토글 */}
               <button

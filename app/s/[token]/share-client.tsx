@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Download, AlertTriangle } from "lucide-react";
 import { FeedbackModal, type ShareContext } from "@/components/FeedbackModal";
+import { HlsVideo } from "@/components/HlsVideo";
 import type { FileEntry } from "@/lib/fs/storage";
 
 type Kind = "video" | "image" | "audio" | "pdf" | "other";
@@ -189,11 +190,11 @@ export function SharePageClient({
       <div className="flex-1 flex items-center justify-center p-4 bg-slate-100">
         {activeFile.kind === "video" && (
           <div className="w-full max-w-[1400px] aspect-video bg-black rounded-lg overflow-hidden shadow-md">
-            <video
+            <HlsVideo
               key={activeFile.path}
-              src={fileUrl!}
-              controls
-              preload="metadata"
+              filePath={activeFile.path}
+              fallbackSrc={fileUrl!}
+              shareToken={token}
               className="w-full h-full"
             />
           </div>

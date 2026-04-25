@@ -10,6 +10,7 @@ import { db } from "@/lib/db/client";
 import { fileUploads } from "@/lib/db/schema";
 import { sql } from "drizzle-orm";
 import { logTraffic } from "@/lib/traffic";
+import { enqueue as enqueueHLS } from "@/lib/encoding/queue";
 
 // POST /api/upload/complete  body: { fileId, action?: "complete" | "abort" }
 export async function POST(req: NextRequest) {
@@ -65,9 +66,12 @@ export async function POST(req: NextRequest) {
       source: "upload",
       userId: session.sub,
     });
-    // 영상이면 백그라운드로 썸네일 생성 (응답 지연 안 됨)
+    // 영상이면 백그라운드로 썸네일 생성 + HLS 인코딩 큐에 추가
     if (isVideoPath(saved.path)) {
       generateThumbInBackground(saved.path);
+      enqueueHLS(saved.path).catch(() => {
+        /* 큐 등록 실패는 응답 막지 않음 */
+      });
     }
     return Response.json({ ok: true, saved });
   } catch (e: unknown) {

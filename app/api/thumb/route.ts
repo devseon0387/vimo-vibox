@@ -48,7 +48,8 @@ export async function GET(req: NextRequest) {
 
   const stat = await fs.stat(abs);
   const etag = `"${stat.size}-${Math.floor(stat.mtimeMs)}"`;
-  const cacheControl = "private, max-age=604800"; // 7일
+  // CF 엣지 캐시 활용 — 썸네일은 bbox/파일 기반 ETag 으로 안전하게 공유
+  const cacheControl = "public, max-age=604800"; // 7일
 
   // 조건부 요청: 브라우저가 보낸 ETag와 일치하면 304로 응답 (바디 생략)
   const ifNoneMatch = req.headers.get("if-none-match");

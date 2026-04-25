@@ -70,7 +70,9 @@ export async function GET(
   const encodedName = encodeURIComponent(filename);
   const contentType = mime(filename);
   const disposition = isDownload ? "attachment" : "inline";
-  const cacheControl = "private, max-age=3600";
+  // 공유 링크 = 토큰 아는 사람 접근 허용 → CF 엣지 캐시 가능 (public)
+  // 같은 영상 재시청 시 터널 트래픽 0. 비번 기능 제거됐고 토큰이 128비트라 URL 자체가 접근 제어.
+  const cacheControl = "public, max-age=3600";
 
   const range = req.headers.get("range");
 
