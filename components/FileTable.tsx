@@ -8,6 +8,7 @@ import type { FileEntry } from "@/lib/fs/storage";
 import { Download, Trash2, Pencil, Link as LinkIcon, MoveRight, FolderOpen } from "lucide-react";
 import { useConfirm } from "./ConfirmDialog";
 import { usePrompt } from "./PromptDialog";
+import { humanError } from "@/lib/human-error";
 import { PreviewModal } from "./PreviewModal";
 import { MoveDialog } from "./MoveDialog";
 import { ShareDialog } from "./ShareDialog";
@@ -125,7 +126,7 @@ export function FileTable({
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        showToast("삭제 실패: " + (body.error ?? res.statusText), "error");
+        showToast(humanError(body.error ?? res.statusText, "delete"), "error");
         return;
       }
       const body = await res.json().catch(() => ({}));
@@ -183,7 +184,7 @@ export function FileTable({
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      showToast("이름 변경 실패: " + (body.error ?? res.statusText), "error");
+      showToast(humanError(body.error ?? res.statusText, "rename"), "error");
       return;
     }
     showToast(

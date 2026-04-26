@@ -20,6 +20,7 @@ import {
   Archive,
 } from "lucide-react";
 import { useConfirm } from "./ConfirmDialog";
+import { humanError } from "@/lib/human-error";
 import { usePrompt } from "./PromptDialog";
 import { PreviewModal } from "./PreviewModal";
 import { MoveDialog } from "./MoveDialog";
@@ -391,7 +392,7 @@ export function FileCardGrid({
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        showToast("삭제 실패: " + (body.error ?? res.statusText), "error");
+        showToast(humanError(body.error ?? res.statusText, "delete"), "error");
         return;
       }
       const body = await res.json().catch(() => ({}));
@@ -448,7 +449,7 @@ export function FileCardGrid({
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      showToast("이름 변경 실패: " + (body.error ?? res.statusText), "error");
+      showToast(humanError(body.error ?? res.statusText, "rename"), "error");
       return;
     }
     showToast(

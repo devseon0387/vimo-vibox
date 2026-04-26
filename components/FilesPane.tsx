@@ -12,6 +12,7 @@ import { ConflictDialog } from "./ConflictDialog";
 import { type ConflictMode } from "@/lib/upload";
 import { useUpload } from "@/lib/upload-store";
 import { useToast } from "./Toast";
+import { humanError } from "@/lib/human-error";
 
 type ViewMode = "list" | "grid";
 const VIEW_MODE_KEY = "vibox:files:view";
@@ -147,7 +148,7 @@ export function FilesPane({
               </>,
             );
           } else if (entry.status === "failed") {
-            toast.error("업로드 실패: " + (entry.error ?? "unknown"));
+            toast.error(humanError(entry.error, "upload"));
           }
           // cancelled 는 사용자 의도라 토스트 X (도크에서 시각적 표시됨)
         },

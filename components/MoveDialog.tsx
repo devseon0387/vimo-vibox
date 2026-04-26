@@ -5,6 +5,7 @@ import { ChevronRight, Folder, ArrowLeft, MoveRight } from "lucide-react";
 import { Modal } from "./Modal";
 import type { FileEntry } from "@/lib/fs/storage";
 import { useToast } from "./Toast";
+import { humanError } from "@/lib/human-error";
 
 export function MoveDialog({
   entry,

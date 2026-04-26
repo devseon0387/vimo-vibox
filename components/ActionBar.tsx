@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Upload, FolderPlus, FolderUp } from "lucide-react";
 import { usePrompt } from "./PromptDialog";
 import { useToast } from "./Toast";
+import { humanError } from "@/lib/human-error";
 
 // FilePathed: 폴더 업로드 시 webkitRelativePath 보존
 export type FilePathed = File & { __relPath?: string };
@@ -60,7 +61,7 @@ export function ActionBar({
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      toast.error("폴더 생성 실패: " + (body.error ?? res.statusText));
+      toast.error(humanError(body.error ?? res.statusText, "general"));
       return;
     }
     toast.success(
