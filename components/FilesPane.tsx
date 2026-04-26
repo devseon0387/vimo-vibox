@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { LayoutGrid, List } from "lucide-react";
 import type { FileEntry } from "@/lib/fs/storage";
 import { ActionBar } from "./ActionBar";
@@ -9,9 +8,9 @@ import { BulkActionBar } from "./BulkActionBar";
 import { DropZone } from "./DropZone";
 import { FileTable } from "./FileTable";
 import { FileCardGrid } from "./FileCardGrid";
-import { UploadProgress, type UploadState } from "./UploadProgress";
 import { ConflictDialog } from "./ConflictDialog";
-import { startUpload, type ConflictMode } from "@/lib/upload";
+import { type ConflictMode } from "@/lib/upload";
+import { useUpload } from "@/lib/upload-store";
 import { useToast } from "./Toast";
 
 type ViewMode = "list" | "grid";
@@ -28,11 +27,14 @@ export function FilesPane({
   session: { id: string; isAdmin: boolean };
   stats?: Record<string, { commentCount: number; openCount: number }>;
 }) {
-  const router = useRouter();
   const toast = useToast();
-  const [uploadState, setUploadState] = useState<UploadState | null>(null);
-  const cancelRef = useRef<(() => void) | null>(null);
+  const { enqueue, uploads } = useUpload();
   const [view, setView] = useState<ViewMode>("list");
+
+  // 이 폴더 대상 진행 중 업로드가 있나? (ActionBar 비활성화는 안 함 — 글로벌 업로드라 동시 가능. 단순 상태표시용)
+  const uploadingHere = uploads.some(
+    (u) => u.status === "running" && u.targetPath.startsWith(currentPath),
+  );
 
   // 다중 선택 상태 (path 기준 set)
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
@@ -132,53 +134,26 @@ export function FilesPane({
   } | null>(null);
 
   const runUpload = useCallback(
-    async (files: File[], conflictMode?: ConflictMode) => {
-      const total = files.reduce((s, f) => s + f.size, 0);
-      setUploadState({ files, sent: 0, total, startedAt: Date.now() });
-
-      const h = startUpload(
-        currentPath,
-        files,
-        (sent, totalBytes) => {
-          setUploadState((prev) =>
-            prev ? { ...prev, sent, total: totalBytes } : prev,
-          );
+    (files: File[], conflictMode?: ConflictMode) => {
+      // 글로벌 큐로 enqueue. 페이지 이동해도 진행 + 완료 토스트 + router.refresh 모두 Provider 가 처리
+      enqueue(currentPath, files, {
+        conflictMode,
+        onComplete: (entry) => {
+          if (entry.status === "done") {
+            toast.success(
+              <>
+                <span className="font-semibold">{entry.fileCount}개 파일</span>{" "}
+                업로드 완료
+              </>,
+            );
+          } else if (entry.status === "failed") {
+            toast.error("업로드 실패: " + (entry.error ?? "unknown"));
+          }
+          // cancelled 는 사용자 의도라 토스트 X (도크에서 시각적 표시됨)
         },
-        (statsProgress) => {
-          setUploadState((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  peakBytesPerSec: statsProgress.peakBytesPerSec,
-                  chunksByShard: { ...statsProgress.chunksByShard },
-                }
-              : prev,
-          );
-        },
-        { conflictMode },
-      );
-      cancelRef.current = h.cancel;
-      const res = await h.done;
-      cancelRef.current = null;
-      setUploadState(null);
-
-      if (!res.ok) {
-        if (res.error === "aborted") {
-          toast.info("업로드가 취소됐어요");
-        } else {
-          toast.error("업로드 실패: " + (res.error ?? "unknown"));
-        }
-        return;
-      }
-      const count = res.saved?.length ?? files.length;
-      toast.success(
-        <>
-          <span className="font-semibold">{count}개 파일</span> 업로드 완료
-        </>,
-      );
-      router.refresh();
+      });
     },
-    [currentPath, router, toast],
+    [currentPath, enqueue, toast],
   );
 
   const doUpload = useCallback(
@@ -228,7 +203,7 @@ export function FilesPane({
         }
       }
 
-      await runUpload(files, conflictMode);
+      runUpload(files, conflictMode);
     },
     [currentPath, runUpload, toast],
   );
@@ -239,7 +214,7 @@ export function FilesPane({
         <ActionBar
           currentPath={currentPath}
           onUpload={doUpload}
-          uploading={!!uploadState}
+          uploading={uploadingHere}
         />
         <div className="flex items-center rounded-md border border-border bg-white p-0.5 shrink-0">
           <button
@@ -288,10 +263,7 @@ export function FilesPane({
         />
       )}
       <DropZone onFiles={doUpload} />
-      <UploadProgress
-        state={uploadState}
-        onCancel={() => cancelRef.current?.()}
-      />
+      {/* UploadProgress 는 글로벌 GlobalUploadDock 으로 이전 — (app)/layout.tsx 에 mount */}
       <ConflictDialog
         open={!!pendingConflict}
         conflicts={pendingConflict?.conflicts ?? []}
