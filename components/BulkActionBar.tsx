@@ -23,9 +23,13 @@ function formatSize(bytes: number): string {
 export function BulkActionBar({
   selected,
   onClear,
+  onOptimisticHide,
+  onOptimisticUnhide,
 }: {
   selected: FileEntry[];
   onClear: () => void;
+  onOptimisticHide?: (paths: string[]) => void;
+  onOptimisticUnhide?: (paths: string[]) => void;
 }) {
   const router = useRouter();
   const { confirm, dialog } = useConfirm();
@@ -64,9 +68,14 @@ export function BulkActionBar({
     });
     if (!ok) return;
 
+    // 낙관적: 선택 항목 모두 즉시 숨김
+    const allPaths = selected.map((e) => e.path);
+    onOptimisticHide?.(allPaths);
+
     let success = 0;
     let failed = 0;
     const trashIds: string[] = [];
+    const failedPaths: string[] = [];
     for (const entry of selected) {
       try {
         const res = await fetch(
@@ -77,11 +86,17 @@ export function BulkActionBar({
           success++;
           const body = await res.json().catch(() => ({}));
           if (body?.trashId) trashIds.push(body.trashId);
-        } else failed++;
+        } else {
+          failed++;
+          failedPaths.push(entry.path);
+        }
       } catch {
         failed++;
+        failedPaths.push(entry.path);
       }
     }
+    // 실패한 것들은 다시 보이게
+    if (failedPaths.length > 0) onOptimisticUnhide?.(failedPaths);
     if (failed === 0) {
       toast.success(`${success}개 항목 삭제됨`, {
         action:
@@ -156,6 +171,8 @@ export function BulkActionBar({
         open={moveOpen}
         onClose={() => setMoveOpen(false)}
         onMoved={() => {
+          // 낙관적: 모든 선택 항목 즉시 숨김
+          onOptimisticHide?.(selected.map((e) => e.path));
           setMoveOpen(false);
           onClear();
           router.refresh();

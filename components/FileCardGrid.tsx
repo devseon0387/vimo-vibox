@@ -343,6 +343,8 @@ export function FileCardGrid({
   stats,
   selectedPaths,
   onToggleSelect,
+  onOptimisticHide,
+  onOptimisticUnhide,
 }: {
   entries: FileEntry[];
   basePath: string;
@@ -353,6 +355,8 @@ export function FileCardGrid({
     path: string,
     opts?: { range?: boolean; toggle?: boolean },
   ) => void;
+  onOptimisticHide?: (paths: string[]) => void;
+  onOptimisticUnhide?: (paths: string[]) => void;
 }) {
   const router = useRouter();
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -396,12 +400,14 @@ export function FileCardGrid({
     });
     if (!ok) return;
 
+    onOptimisticHide?.([entry.path]);
     setDeleting(entry.path);
     try {
       const res = await fetch(`/api/files?path=${encodeURIComponent(entry.path)}`, {
         method: "DELETE",
       });
       if (!res.ok) {
+        onOptimisticUnhide?.([entry.path]);
         const body = await res.json().catch(() => ({}));
         showToast(humanError(body.error ?? res.statusText, "delete"), "error");
         return;
@@ -552,7 +558,10 @@ export function FileCardGrid({
         entry={moveEntry}
         open={!!moveEntry}
         onClose={() => setMoveEntry(null)}
-        onMoved={() => router.refresh()}
+        onMoved={() => {
+          if (moveEntry) onOptimisticHide?.([moveEntry.path]);
+          router.refresh();
+        }}
       />
       <ShareDialog
         entry={shareEntry}

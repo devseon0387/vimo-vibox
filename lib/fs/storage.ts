@@ -303,6 +303,10 @@ export type ChunkUploadMeta = {
   createdAt: number;
   /** 같은 이름 파일 충돌 시 처리 방식. 미지정 = autonumber (하위호환) */
   conflictMode?: ConflictMode;
+  /** 외부 ERP(파트너 ERP) 연동 메타 — fileUploads에 함께 저장됨 */
+  episodeId?: string;
+  projectId?: string;
+  partnerId?: string;
 };
 
 /** 청크 임시 저장소 루트 (STORAGE_ROOT 안, 점으로 시작해 listDirectory에서 필터됨) */

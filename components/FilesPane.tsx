@@ -37,9 +37,35 @@ export function FilesPane({
   // 정렬
   const { config: sortConfig, setKey: setSortKey, toggleOrder, setFoldersFirst } =
     useSortConfig();
+
+  // 낙관적 업데이트: 삭제·이동 즉시 리스트에서 숨김. entries prop 변경 시 자동 리셋
+  const [hiddenPaths, setHiddenPaths] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    // 서버에서 새 entries 가 도착하면 (router.refresh 후) 숨김 상태 초기화
+    setHiddenPaths(new Set());
+  }, [entries]);
+
+  const hideOptimistic = useCallback((paths: string[]) => {
+    setHiddenPaths((prev) => {
+      const next = new Set(prev);
+      for (const p of paths) next.add(p);
+      return next;
+    });
+  }, []);
+  const unhideOptimistic = useCallback((paths: string[]) => {
+    setHiddenPaths((prev) => {
+      const next = new Set(prev);
+      for (const p of paths) next.delete(p);
+      return next;
+    });
+  }, []);
+
   const sortedEntries = useMemo(
-    () => sortEntries(entries, sortConfig),
-    [entries, sortConfig],
+    () =>
+      sortEntries(entries, sortConfig).filter(
+        (e) => !hiddenPaths.has(e.path),
+      ),
+    [entries, sortConfig, hiddenPaths],
   );
 
   // 이 폴더 대상 진행 중 업로드가 있나? (ActionBar 비활성화는 안 함 — 글로벌 업로드라 동시 가능. 단순 상태표시용)
@@ -263,7 +289,12 @@ export function FilesPane({
         </div>
       </div>
 
-      <BulkActionBar selected={selectedEntries} onClear={clearSelect} />
+      <BulkActionBar
+        selected={selectedEntries}
+        onClear={clearSelect}
+        onOptimisticHide={hideOptimistic}
+        onOptimisticUnhide={unhideOptimistic}
+      />
 
       {view === "grid" ? (
         <FileCardGrid
@@ -273,6 +304,8 @@ export function FilesPane({
           stats={stats}
           selectedPaths={selectedPaths}
           onToggleSelect={toggleSelect}
+          onOptimisticHide={hideOptimistic}
+          onOptimisticUnhide={unhideOptimistic}
         />
       ) : (
         <FileTable
@@ -281,6 +314,8 @@ export function FilesPane({
           session={session}
           selectedPaths={selectedPaths}
           onToggleSelect={toggleSelect}
+          onOptimisticHide={hideOptimistic}
+          onOptimisticUnhide={unhideOptimistic}
         />
       )}
       <DropZone onFiles={doUpload} />

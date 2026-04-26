@@ -65,6 +65,8 @@ export function FileTable({
   session,
   selectedPaths,
   onToggleSelect,
+  onOptimisticHide,
+  onOptimisticUnhide,
 }: {
   entries: FileEntry[];
   basePath: string;
@@ -74,6 +76,9 @@ export function FileTable({
     path: string,
     opts?: { range?: boolean; toggle?: boolean },
   ) => void;
+  /** 낙관적 업데이트: 즉시 리스트에서 숨김. 실패 시 unhide */
+  onOptimisticHide?: (paths: string[]) => void;
+  onOptimisticUnhide?: (paths: string[]) => void;
 }) {
   const router = useRouter();
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -119,12 +124,16 @@ export function FileTable({
     });
     if (!ok) return;
 
+    // 낙관적: 즉시 리스트에서 숨김
+    onOptimisticHide?.([entry.path]);
     setDeleting(entry.path);
     try {
       const res = await fetch(`/api/files?path=${encodeURIComponent(entry.path)}`, {
         method: "DELETE",
       });
       if (!res.ok) {
+        // 롤백
+        onOptimisticUnhide?.([entry.path]);
         const body = await res.json().catch(() => ({}));
         showToast(humanError(body.error ?? res.statusText, "delete"), "error");
         return;
@@ -323,7 +332,11 @@ export function FileTable({
         entry={moveEntry}
         open={!!moveEntry}
         onClose={() => setMoveEntry(null)}
-        onMoved={() => router.refresh()}
+        onMoved={() => {
+          // 낙관적: 이동 시작 즉시 리스트에서 숨김 (서버 refresh 끝나면 자연스럽게 갱신)
+          if (moveEntry) onOptimisticHide?.([moveEntry.path]);
+          router.refresh();
+        }}
       />
       <ShareDialog
         entry={shareEntry}

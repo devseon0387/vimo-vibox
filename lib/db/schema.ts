@@ -50,6 +50,10 @@ export const fileUploads = sqliteTable("file_uploads", {
   uploadedAt: integer("uploaded_at", { mode: "timestamp_ms" })
     .notNull()
     .$defaultFn(() => new Date()),
+  // 외부 ERP 연동 (Supabase 측 식별자) — nullable
+  episodeId: text("episode_id"),
+  projectId: text("project_id"),
+  partnerId: text("partner_id"),
 });
 
 export const comments = sqliteTable("comments", {
