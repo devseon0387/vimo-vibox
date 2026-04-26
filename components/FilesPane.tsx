@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LayoutGrid, List } from "lucide-react";
 import type { FileEntry } from "@/lib/fs/storage";
 import { ActionBar } from "./ActionBar";
+import { BulkActionBar } from "./BulkActionBar";
 import { DropZone } from "./DropZone";
 import { FileTable } from "./FileTable";
 import { FileCardGrid } from "./FileCardGrid";
@@ -31,6 +32,84 @@ export function FilesPane({
   const [uploadState, setUploadState] = useState<UploadState | null>(null);
   const cancelRef = useRef<(() => void) | null>(null);
   const [view, setView] = useState<ViewMode>("list");
+
+  // 다중 선택 상태 (path 기준 set)
+  const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
+  const [lastClickedPath, setLastClickedPath] = useState<string | null>(null);
+
+  // entries 또는 currentPath 바뀌면 선택 해제
+  useEffect(() => {
+    setSelectedPaths(new Set());
+    setLastClickedPath(null);
+  }, [currentPath, entries.length]);
+
+  const toggleSelect = useCallback(
+    (path: string, opts?: { range?: boolean; toggle?: boolean }) => {
+      setSelectedPaths((prev) => {
+        const next = new Set(prev);
+        if (opts?.range && lastClickedPath) {
+          // shift+click — lastClicked 와 path 사이의 모든 항목 선택
+          const idxA = entries.findIndex((e) => e.path === lastClickedPath);
+          const idxB = entries.findIndex((e) => e.path === path);
+          if (idxA !== -1 && idxB !== -1) {
+            const [from, to] = idxA < idxB ? [idxA, idxB] : [idxB, idxA];
+            for (let i = from; i <= to; i++) next.add(entries[i].path);
+            return next;
+          }
+        }
+        if (opts?.toggle ?? true) {
+          if (next.has(path)) next.delete(path);
+          else next.add(path);
+        } else {
+          next.clear();
+          next.add(path);
+        }
+        return next;
+      });
+      setLastClickedPath(path);
+    },
+    [entries, lastClickedPath],
+  );
+
+  const clearSelect = useCallback(() => {
+    setSelectedPaths(new Set());
+    setLastClickedPath(null);
+  }, []);
+
+  const selectAll = useCallback(() => {
+    setSelectedPaths(new Set(entries.map((e) => e.path)));
+  }, [entries]);
+
+  const selectedEntries = useMemo(
+    () => entries.filter((e) => selectedPaths.has(e.path)),
+    [entries, selectedPaths],
+  );
+
+  // ⌘A / Ctrl+A 전체 선택, Esc 해제
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "a") {
+        if (entries.length > 0) {
+          e.preventDefault();
+          selectAll();
+        }
+      }
+      if (e.key === "Escape" && selectedPaths.size > 0) {
+        clearSelect();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [entries.length, selectedPaths.size, selectAll, clearSelect]);
 
   useEffect(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY);
@@ -128,15 +207,25 @@ export function FilesPane({
         </div>
       </div>
 
+      <BulkActionBar selected={selectedEntries} onClear={clearSelect} />
+
       {view === "grid" ? (
         <FileCardGrid
           entries={entries}
           basePath={currentPath}
           session={session}
           stats={stats}
+          selectedPaths={selectedPaths}
+          onToggleSelect={toggleSelect}
         />
       ) : (
-        <FileTable entries={entries} basePath={currentPath} session={session} />
+        <FileTable
+          entries={entries}
+          basePath={currentPath}
+          session={session}
+          selectedPaths={selectedPaths}
+          onToggleSelect={toggleSelect}
+        />
       )}
       <DropZone onFiles={doUpload} />
       <UploadProgress

@@ -11,50 +11,77 @@ import { logTraffic } from "@/lib/traffic";
 
 /**
  * GET /api/download/zip?path=/folder
- * 폴더를 ZIP 으로 스트리밍 다운로드.
+ *   또는 ?paths=/a,/b,/c.mp4  (여러 경로 — 다중 선택 일괄 다운로드용)
+ * 폴더 하나 또는 임의 파일·폴더 묶음을 ZIP 으로 스트리밍 다운로드.
  *  - archiver 로 메모리 안 먹고 청크 스트리밍
  *  - canAccessFile 권한 통과한 파일만 포함 (파트너는 본인 업로드만)
  *  - .vibox/ .DS_Store / ._* 자동 제외
- *  - Content-Length 미리 계산 안 함 (chunked transfer)
  */
 export async function GET(req: NextRequest) {
   const session = await getCurrentSession();
   if (!session) return new Response("unauthorized", { status: 401 });
 
-  const rel = req.nextUrl.searchParams.get("path");
-  if (!rel) return new Response("path required", { status: 400 });
-
-  if (!(await canAccessFile(session, rel))) {
-    return new Response("forbidden", { status: 403 });
+  const single = req.nextUrl.searchParams.get("path");
+  const multi = req.nextUrl.searchParams.get("paths");
+  const targets: string[] = multi
+    ? multi
+        .split(",")
+        .map((s) => decodeURIComponent(s.trim()))
+        .filter(Boolean)
+    : single
+      ? [single]
+      : [];
+  if (targets.length === 0) {
+    return new Response("path or paths required", { status: 400 });
   }
 
-  let absDir: string;
-  try {
-    absDir = resolveSafePath(rel);
-    const stat = await fsp.stat(absDir);
-    if (!stat.isDirectory()) {
-      return new Response("not a directory", { status: 400 });
+  // 권한 검사 (모든 대상)
+  for (const t of targets) {
+    if (!(await canAccessFile(session, t))) {
+      return new Response("forbidden", { status: 403 });
     }
-  } catch {
-    return new Response("not found", { status: 404 });
   }
 
-  const folderName = path.basename(absDir) || "vibox";
+  // 묶음 이름 결정: 단일이면 폴더/파일명, 다중이면 "vibox-N개"
   const today = new Date().toISOString().slice(0, 10);
-  const zipName = `${folderName}-${today}.zip`;
+  let zipName: string;
+  if (targets.length === 1) {
+    const baseAbs = resolveSafePath(targets[0]);
+    const baseName = path.basename(baseAbs) || "vibox";
+    zipName = `${baseName}-${today}.zip`;
+  } else {
+    zipName = `vibox-${targets.length}items-${today}.zip`;
+  }
   const encodedName = encodeURIComponent(zipName);
 
-  const archive = archiver("zip", {
-    zlib: { level: 1 }, // 영상이 대부분이라 압축 효과 거의 없음 → 속도 우선
-  });
+  const archive = archiver("zip", { zlib: { level: 1 } });
 
   let totalBytes = 0;
   archive.on("data", (chunk: Buffer) => {
     totalBytes += chunk.length;
   });
 
-  // 파일 단위로 권한 체크하면서 추가
-  await addDirToArchive(archive, absDir, "", session, rel);
+  // 각 대상이 파일이면 그대로, 폴더면 재귀 추가
+  for (const t of targets) {
+    let abs: string;
+    try {
+      abs = resolveSafePath(t);
+    } catch {
+      continue;
+    }
+    let stat;
+    try {
+      stat = await fsp.stat(abs);
+    } catch {
+      continue;
+    }
+    if (stat.isDirectory()) {
+      const folderName = path.basename(abs);
+      await addDirToArchive(archive, abs, folderName, session, t);
+    } else if (stat.isFile() && !shouldSkip(path.basename(abs))) {
+      archive.file(abs, { name: path.basename(abs) });
+    }
+  }
   void archive.finalize();
 
   const webStream = Readable.toWeb(
@@ -69,11 +96,10 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  // 응답 후 트래픽 로그 (정확한 크기 모르므로 archive 종료 시 기록)
   archive.on("end", () => {
     if (totalBytes > 0) {
       logTraffic({
-        path: rel,
+        path: targets.join(","),
         bytes: totalBytes,
         source: "download",
         shareToken: null,

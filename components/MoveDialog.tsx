@@ -8,11 +8,14 @@ import { useToast } from "./Toast";
 
 export function MoveDialog({
   entry,
+  additionalEntries,
   open,
   onClose,
   onMoved,
 }: {
   entry: FileEntry | null;
+  /** 다중 선택 일괄 이동 시 같이 옮길 추가 항목들 */
+  additionalEntries?: FileEntry[];
   open: boolean;
   onClose: () => void;
   onMoved: () => void;
@@ -59,26 +62,51 @@ export function MoveDialog({
   const currentParent = entry.path.split("/").slice(0, -1).join("/") || "/";
   const targetSame = path === currentParent;
 
+  const allEntries = [entry, ...(additionalEntries ?? [])].filter(
+    (e): e is FileEntry => !!e,
+  );
+  const isMulti = allEntries.length > 1;
+
   const doMove = async () => {
     setMoving(true);
     try {
-      const toPath = (path === "/" ? "" : path) + "/" + entry.name;
-      const res = await fetch("/api/files", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ from: entry.path, to: toPath }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        toast.error("이동 실패: " + (body.error ?? res.statusText));
-        return;
+      let success = 0;
+      let failed = 0;
+      for (const it of allEntries) {
+        const toPath = (path === "/" ? "" : path) + "/" + it.name;
+        if (toPath === it.path) {
+          // 같은 위치 — skip
+          continue;
+        }
+        try {
+          const res = await fetch("/api/files", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ from: it.path, to: toPath }),
+          });
+          if (res.ok) success++;
+          else failed++;
+        } catch {
+          failed++;
+        }
       }
-      toast.success(
-        <>
-          <span className="font-semibold">{entry.name}</span>{" "}
-          {path === "/" ? "루트로" : `${path}으로`} 이동됨
-        </>,
-      );
+      if (failed === 0) {
+        toast.success(
+          isMulti ? (
+            <>
+              <span className="font-semibold">{success}개 항목</span>{" "}
+              {path === "/" ? "루트로" : `${path}으로`} 이동됨
+            </>
+          ) : (
+            <>
+              <span className="font-semibold">{entry.name}</span>{" "}
+              {path === "/" ? "루트로" : `${path}으로`} 이동됨
+            </>
+          ),
+        );
+      } else {
+        toast.error(`${success}개 이동, ${failed}개 실패`);
+      }
       onMoved();
       onClose();
     } finally {
@@ -93,7 +121,9 @@ export function MoveDialog({
       title={
         <span className="flex items-center gap-2">
           <MoveRight size={15} strokeWidth={2.2} />
-          &quot;{entry.name}&quot; 이동
+          {isMulti
+            ? `${allEntries.length}개 항목 이동`
+            : `"${entry.name}" 이동`}
         </span>
       }
       maxWidth="max-w-md"

@@ -61,10 +61,17 @@ export function FileTable({
   entries,
   basePath,
   session,
+  selectedPaths,
+  onToggleSelect,
 }: {
   entries: FileEntry[];
   basePath: string;
   session?: { id: string; isAdmin: boolean };
+  selectedPaths?: Set<string>;
+  onToggleSelect?: (
+    path: string,
+    opts?: { range?: boolean; toggle?: boolean },
+  ) => void;
 }) {
   const router = useRouter();
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -215,6 +222,35 @@ export function FileTable({
           <table className="w-full min-w-[680px] text-[13.5px]">
             <thead>
               <tr className="border-b border-border">
+                <th className="px-3 py-2.5 w-[36px]">
+                  {onToggleSelect && entries.length > 0 && (
+                    <input
+                      type="checkbox"
+                      aria-label="전체 선택"
+                      checked={
+                        !!selectedPaths &&
+                        entries.length > 0 &&
+                        entries.every((e) => selectedPaths.has(e.path))
+                      }
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          for (const en of entries) {
+                            if (!selectedPaths?.has(en.path)) {
+                              onToggleSelect(en.path, { toggle: true });
+                            }
+                          }
+                        } else {
+                          for (const en of entries) {
+                            if (selectedPaths?.has(en.path)) {
+                              onToggleSelect(en.path, { toggle: true });
+                            }
+                          }
+                        }
+                      }}
+                      className="cursor-pointer"
+                    />
+                  )}
+                </th>
                 <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider">
                   이름
                 </th>
@@ -230,14 +266,53 @@ export function FileTable({
               </tr>
             </thead>
             <tbody>
-              {rows.map((entry) => (
+              {rows.map((entry) => {
+                const isSelected = selectedPaths?.has(entry.path) ?? false;
+                return (
                 <tr
                   key={entry.path}
-                  onClick={() => onOpen(entry)}
+                  onClick={(e) => {
+                    // 체크박스 영역 클릭은 별도 처리
+                    if (
+                      (e.target as HTMLElement).closest("input[type=checkbox]")
+                    ) {
+                      return;
+                    }
+                    if (e.shiftKey && onToggleSelect) {
+                      e.preventDefault();
+                      onToggleSelect(entry.path, { range: true });
+                      return;
+                    }
+                    if ((e.metaKey || e.ctrlKey) && onToggleSelect) {
+                      onToggleSelect(entry.path);
+                      return;
+                    }
+                    if ((selectedPaths?.size ?? 0) > 0 && onToggleSelect) {
+                      onToggleSelect(entry.path);
+                      return;
+                    }
+                    onOpen(entry);
+                  }}
                   className={`border-b border-[#f5f5f5] hover:bg-surface cursor-pointer transition-colors ${
                     deleting === entry.path ? "opacity-40" : ""
-                  }`}
+                  } ${isSelected ? "bg-accent-soft hover:bg-accent-soft" : ""}`}
                 >
+                  <td className="px-3 py-2.5 w-[36px]">
+                    {onToggleSelect && (
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) =>
+                          onToggleSelect(entry.path, {
+                            range: (e.nativeEvent as MouseEvent).shiftKey,
+                          })
+                        }
+                        className="cursor-pointer"
+                        aria-label={`${entry.name} 선택`}
+                      />
+                    )}
+                  </td>
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-2.5">
                       <Thumbnail kind={entry.kind} path={entry.path} />
@@ -295,7 +370,8 @@ export function FileTable({
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

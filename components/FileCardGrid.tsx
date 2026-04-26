@@ -111,6 +111,9 @@ function Card({
   onDownload,
   onDelete,
   deleting,
+  selected,
+  onToggleSelect,
+  hasSelection,
 }: {
   entry: FileEntry;
   stats?: FileStats;
@@ -121,18 +124,66 @@ function Card({
   onDownload: (e: FileEntry, ev: React.MouseEvent) => void;
   onDelete: (e: FileEntry, ev: React.MouseEvent) => void;
   deleting: boolean;
+  selected: boolean;
+  onToggleSelect?: (
+    path: string,
+    opts?: { range?: boolean; toggle?: boolean },
+  ) => void;
+  hasSelection: boolean;
 }) {
   const [hover, setHover] = useState(false);
+  const handleClick = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest("input[type=checkbox]")) return;
+    if (e.shiftKey && onToggleSelect) {
+      e.preventDefault();
+      onToggleSelect(entry.path, { range: true });
+      return;
+    }
+    if ((e.metaKey || e.ctrlKey) && onToggleSelect) {
+      onToggleSelect(entry.path);
+      return;
+    }
+    if (hasSelection && onToggleSelect) {
+      onToggleSelect(entry.path);
+      return;
+    }
+    onOpen(entry);
+  };
+  const SelectCheckbox = onToggleSelect ? (
+    <div
+      className={`absolute top-1.5 left-1.5 z-10 ${selected || hover ? "opacity-100" : "opacity-0"} transition-opacity`}
+    >
+      <input
+        type="checkbox"
+        checked={selected}
+        onClick={(e) => e.stopPropagation()}
+        onChange={(e) =>
+          onToggleSelect(entry.path, {
+            range: (e.nativeEvent as MouseEvent).shiftKey,
+          })
+        }
+        className="cursor-pointer w-4 h-4"
+        aria-label={`${entry.name} 선택`}
+      />
+    </div>
+  ) : null;
 
   if (entry.isFolder) {
     return (
       <div
-        onClick={() => onOpen(entry)}
+        onClick={handleClick}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
         className={`group cursor-pointer ${deleting ? "opacity-40" : ""}`}
       >
-        <div className="aspect-[16/10] bg-surface border border-border rounded-lg flex items-center justify-center mb-2 group-hover:border-border-hover transition-colors relative">
+        <div
+          className={`aspect-[16/10] bg-surface border rounded-lg flex items-center justify-center mb-2 transition-colors relative ${
+            selected
+              ? "border-accent ring-2 ring-accent/30"
+              : "border-border group-hover:border-border-hover"
+          }`}
+        >
+          {SelectCheckbox}
           <Folder className="w-12 h-12 text-amber-400" strokeWidth={1.5} />
           {hover && (
             <div className="absolute top-1.5 right-1.5 flex gap-0.5 bg-white/95 backdrop-blur rounded-md border border-border shadow-sm">
@@ -172,16 +223,19 @@ function Card({
 
   return (
     <div
-      onClick={() => onOpen(entry)}
+      onClick={handleClick}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       className={`group cursor-pointer ${deleting ? "opacity-40" : ""}`}
     >
       <div
-        className={`aspect-[16/10] rounded-lg overflow-hidden mb-2 relative border border-border group-hover:border-border-hover transition-colors ${
-          isVid ? "bg-black" : "bg-surface"
-        }`}
+        className={`aspect-[16/10] rounded-lg overflow-hidden mb-2 relative border transition-colors ${
+          selected
+            ? "border-accent ring-2 ring-accent/30"
+            : "border-border group-hover:border-border-hover"
+        } ${isVid ? "bg-black" : "bg-surface"}`}
       >
+        {SelectCheckbox}
         {isVid ? (
           <VideoThumb path={entry.path} />
         ) : (
@@ -259,11 +313,18 @@ function Card({
 export function FileCardGrid({
   entries,
   stats,
+  selectedPaths,
+  onToggleSelect,
 }: {
   entries: FileEntry[];
   basePath: string;
   session?: { id: string; isAdmin: boolean };
   stats?: Record<string, FileStats>;
+  selectedPaths?: Set<string>;
+  onToggleSelect?: (
+    path: string,
+    opts?: { range?: boolean; toggle?: boolean },
+  ) => void;
 }) {
   const router = useRouter();
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -423,6 +484,9 @@ export function FileCardGrid({
             onDownload={onDownload}
             onDelete={onDelete}
             deleting={deleting === entry.path}
+            selected={selectedPaths?.has(entry.path) ?? false}
+            onToggleSelect={onToggleSelect}
+            hasSelection={(selectedPaths?.size ?? 0) > 0}
           />
         ))}
       </div>
