@@ -28,7 +28,10 @@ export function FilesPane({
   entries: FileEntry[];
   currentPath: string;
   session: { id: string; isAdmin: boolean };
-  stats?: Record<string, { commentCount: number; openCount: number }>;
+  stats?: Record<
+    string,
+    { commentCount: number; openCount: number; uploaderName?: string | null }
+  >;
 }) {
   const toast = useToast();
   const { enqueue, uploads } = useUpload();
@@ -320,6 +323,7 @@ export function FilesPane({
           entries={sortedEntries}
           basePath={currentPath}
           session={session}
+          stats={stats}
           selectedPaths={selectedPaths}
           onToggleSelect={toggleSelect}
           onOptimisticHide={hideOptimistic}

@@ -59,10 +59,17 @@ function isVideo(entry: FileEntry) {
   return entry.kind === "video";
 }
 
+type FileStats = {
+  commentCount: number;
+  openCount: number;
+  uploaderName?: string | null;
+};
+
 export function FileTable({
   entries,
   basePath,
   session,
+  stats,
   selectedPaths,
   onToggleSelect,
   onOptimisticHide,
@@ -71,6 +78,7 @@ export function FileTable({
   entries: FileEntry[];
   basePath: string;
   session?: { id: string; isAdmin: boolean };
+  stats?: Record<string, FileStats>;
   selectedPaths?: Set<string>;
   onToggleSelect?: (
     path: string,
@@ -285,6 +293,9 @@ export function FileTable({
                 <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider">
                   이름
                 </th>
+                <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider w-[120px]">
+                  업로더
+                </th>
                 <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider w-[140px]">
                   수정일
                 </th>
@@ -303,6 +314,7 @@ export function FileTable({
                 <FileRow
                   key={entry.path}
                   entry={entry}
+                  uploaderName={stats?.[entry.path]?.uploaderName ?? null}
                   isSelected={isSelected}
                   deleting={deleting === entry.path}
                   selectedPaths={selectedPaths}
@@ -349,6 +361,7 @@ export function FileTable({
 
 function FileRow({
   entry,
+  uploaderName,
   isSelected,
   deleting,
   selectedPaths,
@@ -361,6 +374,7 @@ function FileRow({
   onDelete,
 }: {
   entry: FileEntry;
+  uploaderName?: string | null;
   isSelected: boolean;
   deleting: boolean;
   selectedPaths?: Set<string>;
@@ -433,6 +447,9 @@ function FileRow({
           <Thumbnail kind={entry.kind} path={entry.path} />
           <span className="text-text">{entry.name}</span>
         </div>
+      </td>
+      <td className="px-4 py-2.5 text-text-soft truncate" title={uploaderName ?? ""}>
+        {uploaderName ?? <span className="text-text-faint">—</span>}
       </td>
       <td
         className="px-4 py-2.5 text-text-soft"

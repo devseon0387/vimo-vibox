@@ -63,6 +63,7 @@ type CommentRow = {
   filePath: string;
   authorId: string;
   authorName: string;
+  authorRole?: "admin" | "member" | "partner" | "guest" | null;
   videoTimeMs: number;
   category: Category;
   autoCategory: Category;
@@ -143,6 +144,29 @@ async function runOcr(
 
 type ViewFilter = "all" | "feedback" | "praise";
 
+function RoleBadge({
+  role,
+}: {
+  role: "admin" | "member" | "partner" | "guest" | null;
+}) {
+  if (!role) return null;
+  const map = {
+    admin: { label: "관리", cls: "bg-purple-100 text-purple-700" },
+    member: { label: "매니저", cls: "bg-purple-100 text-purple-700" },
+    partner: { label: "파트너", cls: "bg-slate-200 text-slate-700" },
+    guest: { label: "클라", cls: "bg-amber-100 text-amber-700" },
+  } as const;
+  const c = map[role];
+  if (!c) return null;
+  return (
+    <span
+      className={`px-1 py-[1px] rounded text-[9px] font-bold tracking-wider ${c.cls}`}
+    >
+      {c.label}
+    </span>
+  );
+}
+
 function formatTc(ms: number): string {
   const totalSec = Math.floor(ms / 1000);
   const m = Math.floor(totalSec / 60);
@@ -181,6 +205,7 @@ export function FeedbackModal({
   backHref = "/",
   prevHref,
   nextHref,
+  uploaderName,
   currentUserId,
   isAdmin,
   role = "member",
@@ -193,6 +218,8 @@ export function FeedbackModal({
   prevHref?: string;
   /** 같은 폴더의 다음 영상 (J/↓ 키) */
   nextHref?: string;
+  /** 헤더에 표시할 업로더 이름 */
+  uploaderName?: string | null;
   currentUserId: string;
   isAdmin: boolean;
   role?: "admin" | "member" | "partner";
@@ -953,9 +980,16 @@ export function FeedbackModal({
             </Link>
           )}
           <div className="w-px h-5 bg-slate-200" />
-          <h1 className="text-[14px] font-semibold text-slate-900 truncate flex-1 min-w-0">
+          <h1 className="text-[14px] font-semibold text-slate-900 truncate min-w-0">
             {entry.name}
           </h1>
+          {uploaderName && (
+            <span className="hidden md:inline shrink-0 text-[11.5px] text-slate-500">
+              올린 사람:{" "}
+              <span className="font-semibold text-slate-700">{uploaderName}</span>
+            </span>
+          )}
+          <div className="flex-1" />
           {!isGuest && (prevHref || nextHref) && (
             <div className="hidden md:flex items-center gap-0.5 shrink-0">
               <Link
@@ -2428,7 +2462,10 @@ function CommentItem({
                   AI
                 </>
               ) : (
-                comment.authorName
+                <>
+                  {comment.authorName}
+                  <RoleBadge role={comment.authorRole ?? null} />
+                </>
               )}
             </span>
           </div>

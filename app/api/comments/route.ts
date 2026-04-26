@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { and, asc, eq, or, sql } from "drizzle-orm";
+import { and, asc, eq, or, sql, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { comments } from "@/lib/db/schema";
+import { comments, users } from "@/lib/db/schema";
 import { getCurrentSession } from "@/lib/auth/session";
 import { canAccessFile } from "@/lib/auth/access";
 import {
@@ -52,6 +52,21 @@ export async function GET(req: NextRequest) {
     .where(where)
     .orderBy(asc(comments.videoTimeMs), asc(comments.createdAt));
 
+  // 작성자 역할 lookup (멤버·매니저 vs 파트너 vs 게스트 시각적 구분용)
+  const authorIds = Array.from(
+    new Set(rows.map((r) => r.authorId).filter((id) => id && id !== "guest")),
+  );
+  const roleMap = new Map<string, "admin" | "member" | "partner">();
+  if (authorIds.length > 0) {
+    const userRows = await db
+      .select({ id: users.id, role: users.role })
+      .from(users)
+      .where(inArray(users.id, authorIds));
+    for (const u of userRows) {
+      roleMap.set(u.id, u.role);
+    }
+  }
+
   // pending 개수 (파트너에게 배너용으로 반환)
   let pendingCount = 0;
   if (!isStaff) {
@@ -68,6 +83,10 @@ export async function GET(req: NextRequest) {
       filePath: r.filePath,
       authorId: r.authorId,
       authorName: r.authorName,
+      authorRole:
+        r.authorId === "guest"
+          ? ("guest" as const)
+          : (roleMap.get(r.authorId) ?? null),
       videoTimeMs: r.videoTimeMs,
       category: r.category,
       autoCategory: r.autoCategory,

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import path from "node:path";
 import fs from "node:fs/promises";
+import { eq } from "drizzle-orm";
 import {
   listDirectory,
   resolveSafePath,
@@ -8,6 +9,8 @@ import {
 } from "@/lib/fs/storage";
 import { getCurrentSession } from "@/lib/auth/session";
 import { FeedbackModal } from "@/components/FeedbackModal";
+import { db } from "@/lib/db/client";
+import { fileUploads } from "@/lib/db/schema";
 
 export const dynamic = "force-dynamic";
 
@@ -82,12 +85,21 @@ export default async function FeedbackPage({
     // 형제 못 가져와도 페이지 자체는 동작
   }
 
+  // 업로더 이름 (헤더 표시용)
+  const [uploadRow] = await db
+    .select({ name: fileUploads.uploadedByName })
+    .from(fileUploads)
+    .where(eq(fileUploads.path, filePath))
+    .limit(1);
+  const uploaderName = uploadRow?.name ?? null;
+
   return (
     <FeedbackModal
       entry={entry}
       backHref={backHref}
       prevHref={prevHref}
       nextHref={nextHref}
+      uploaderName={uploaderName}
       currentUserId={session.sub}
       isAdmin={session.role === "admin"}
       role={session.role}

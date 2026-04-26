@@ -87,7 +87,10 @@ export default async function FilesPage({
 
   const videoPaths = entries.filter((e) => !e.isFolder).map((e) => e.path);
   const statsMap = await getFileStats(videoPaths);
-  const stats: Record<string, { commentCount: number; openCount: number }> = {};
+  const stats: Record<
+    string,
+    { commentCount: number; openCount: number; uploaderName?: string | null }
+  > = {};
   for (const [p, s] of statsMap) stats[p] = s;
   const segments =
     currentPath === "/" ? [] : currentPath.split("/").filter(Boolean);
