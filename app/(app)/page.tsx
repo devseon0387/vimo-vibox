@@ -92,32 +92,49 @@ export default async function FilesPage({
     { commentCount: number; openCount: number; uploaderName?: string | null }
   > = {};
   for (const [p, s] of statsMap) stats[p] = s;
-  const segments =
+  const allSegments =
     currentPath === "/" ? [] : currentPath.split("/").filter(Boolean);
-  const currentName = segments.length === 0 ? "파일" : segments[segments.length - 1];
+  // /Rendering 자체를 렌더링 zone 의 시작점으로 간주 — breadcrumb 의 'Rendering' 은 "렌더링" 으로 표시,
+  // 그 위 root("/")로 가는 링크는 노출하지 않음.
+  const isRenderingTree =
+    allSegments.length >= 1 && allSegments[0] === "Rendering";
+  const segments = allSegments;
+  const currentName = (() => {
+    if (segments.length === 0) return "파일";
+    if (isRenderingTree && segments.length === 1) return "렌더링";
+    return segments[segments.length - 1];
+  })();
 
   return (
     <div className="px-4 md:px-8 py-4 md:py-6 max-w-[1400px]">
-      {segments.length > 0 && (
+      {segments.length > 0 && !(isRenderingTree && segments.length === 1) && (
         <div className="flex items-center gap-1.5 text-[12.5px] text-text-muted mb-3 overflow-x-auto">
-          <Link href="/" className="hover:text-text transition-colors shrink-0">
-            파일
-          </Link>
+          {/* 렌더링 트리에선 "파일" 루트 안 보여줌 — Rendering 이 사실상 시작점 */}
+          {!isRenderingTree && (
+            <Link href="/" className="hover:text-text transition-colors shrink-0">
+              파일
+            </Link>
+          )}
           {segments.map((seg, i) => {
             const href =
               "/?path=" + encodeURIComponent("/" + segments.slice(0, i + 1).join("/"));
             const isLast = i === segments.length - 1;
+            // 렌더링 트리의 첫 segment(Rendering)는 클릭 가능한 '렌더링' 으로 표기
+            const displaySeg = isRenderingTree && i === 0 ? "렌더링" : seg;
+            const showSeparator = i > 0 || !isRenderingTree;
             return (
               <span key={i} className="flex items-center gap-1.5 shrink-0">
-                <ChevronRight size={13} className="text-text-faint" strokeWidth={2} />
+                {showSeparator && (
+                  <ChevronRight size={13} className="text-text-faint" strokeWidth={2} />
+                )}
                 {isLast ? (
-                  <span className="text-text font-medium truncate max-w-[200px]">{seg}</span>
+                  <span className="text-text font-medium truncate max-w-[200px]">{displaySeg}</span>
                 ) : (
                   <Link
                     href={href}
                     className="hover:text-text transition-colors truncate max-w-[120px]"
                   >
-                    {seg}
+                    {displaySeg}
                   </Link>
                 )}
               </span>
