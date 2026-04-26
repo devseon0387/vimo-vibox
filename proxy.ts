@@ -86,9 +86,10 @@ export const config = {
     // 인증 검사 대상: 공개 에셋·내장 라우트 제외한 모든 경로
     // 제외:
     //  - api/upload/* (청크 init/chunk/complete 모두, 스트리밍·라우트 자체 인증)
+    //  - api/sso/* (외부 ERP SSO 핸드오프 — 라우트 자체에서 JWT 검증)
     //  - s/*, api/s/* (공개 공유 링크)
     //  - _next/..., favicon, public
     //  - 루트 정적 이미지/아이콘 (logo.png 등) — Next/Image 최적화기의 내부 페치도 통과해야 함
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|avif)$|public|api/upload|api/s/|s/).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|avif)$|public|api/upload|api/sso|api/s/|s/).*)",
   ],
 };

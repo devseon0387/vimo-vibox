@@ -34,6 +34,11 @@ export function FilesPane({
   const { enqueue, uploads } = useUpload();
   const [view, setView] = useState<ViewMode>("list");
 
+  // 렌더링 zone 루트("/")에선 새 폴더 만들기 막고, 업로드는 자동으로 /Rendering 으로 보냄.
+  // 자료실 루트는 zone prefix 가 다르므로 영향 없음.
+  const isRenderingRoot = currentPath === "/" || currentPath === "";
+  const uploadTargetPath = isRenderingRoot ? "/Rendering" : currentPath;
+
   // 정렬
   const { config: sortConfig, setKey: setSortKey, toggleOrder, setFoldersFirst } =
     useSortConfig();
@@ -175,7 +180,8 @@ export function FilesPane({
   const runUpload = useCallback(
     (files: File[], conflictMode?: ConflictMode) => {
       // 글로벌 큐로 enqueue. 페이지 이동해도 진행 + 완료 토스트 + router.refresh 모두 Provider 가 처리
-      enqueue(currentPath, files, {
+      // 렌더링 root 에서는 자동으로 /Rendering 으로 보냄
+      enqueue(uploadTargetPath, files, {
         conflictMode,
         onComplete: (entry) => {
           if (entry.status === "done") {
@@ -199,14 +205,15 @@ export function FilesPane({
     async (files: File[]) => {
       if (files.length === 0) return;
 
-      // 폴더 업로드(__relPath 있는 파일 포함)인 경우 사전 충돌 검사
+      // 폴더 업로드(__relPath 있는 파일 포함)인 경우 사전 충돌 검사 — uploadTargetPath 기준
       const candidatePaths = files.map((f) => {
         const rel = (f as File & { __relPath?: string }).__relPath;
         const dirSeg = rel ? rel.split("/").slice(0, -1).join("/") : "";
         const subDir = dirSeg ? `/${dirSeg}` : "";
         const base =
-          (currentPath.endsWith("/") ? currentPath.slice(0, -1) : currentPath) +
-          subDir;
+          (uploadTargetPath.endsWith("/")
+            ? uploadTargetPath.slice(0, -1)
+            : uploadTargetPath) + subDir;
         return `${base}/${f.name}`;
       });
 
@@ -254,6 +261,7 @@ export function FilesPane({
           currentPath={currentPath}
           onUpload={doUpload}
           uploading={uploadingHere}
+          disableNewFolder={isRenderingRoot}
         />
         <div className="flex items-center gap-2 shrink-0">
           <SortDropdown

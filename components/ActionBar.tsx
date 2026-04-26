@@ -14,10 +14,13 @@ export function ActionBar({
   currentPath,
   onUpload,
   uploading,
+  /** 새 폴더 만들기 비활성 (예: 렌더링 zone root). 기본 false */
+  disableNewFolder,
 }: {
   currentPath: string;
   onUpload: (files: FilePathed[]) => void;
   uploading: boolean;
+  disableNewFolder?: boolean;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -92,12 +95,14 @@ export function ActionBar({
           <FolderUp size={14} strokeWidth={2} />
           폴더 업로드
         </button>
-        <button
-          onClick={handleNewFolder}
-          className="bg-white border border-border hover:border-border-hover text-text-muted hover:text-text transition-colors px-3.5 py-2 rounded-md text-[13px] font-medium flex items-center gap-1.5"
-        >
-          <FolderPlus size={14} strokeWidth={2} /> 새 폴더
-        </button>
+        {!disableNewFolder && (
+          <button
+            onClick={handleNewFolder}
+            className="bg-white border border-border hover:border-border-hover text-text-muted hover:text-text transition-colors px-3.5 py-2 rounded-md text-[13px] font-medium flex items-center gap-1.5"
+          >
+            <FolderPlus size={14} strokeWidth={2} /> 새 폴더
+          </button>
+        )}
 
         <input
           ref={inputRef}

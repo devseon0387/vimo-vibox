@@ -67,6 +67,14 @@ export async function POST(req: NextRequest) {
   if (!/^[^/\\:*?"<>|]+$/.test(name)) {
     return NextResponse.json({ error: "invalid folder name" }, { status: 400 });
   }
+  // 렌더링 zone 루트("/")에는 새 폴더 생성 금지 (Rendering 폴더만 허용)
+  // 'Rendering' 자체는 이미 존재하므로 createFolder 가 EEXIST 로 막힘 — 별도 처리 불필요
+  if ((parent === "/" || parent === "") && name !== "Rendering") {
+    return NextResponse.json(
+      { error: "렌더링 zone 루트에는 폴더를 만들 수 없어요. Rendering 폴더 안에서 작업하세요." },
+      { status: 403 },
+    );
+  }
   const target = (parent.endsWith("/") ? parent : parent + "/") + name;
   try {
     await createFolder(target);
