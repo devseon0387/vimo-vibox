@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   FolderOpen,
   Trash2,
@@ -15,6 +16,7 @@ import {
   Film,
   Layers,
   Activity,
+  Inbox,
 } from "lucide-react";
 
 import type { FeatureKey } from "@/lib/feature-badges";
@@ -30,8 +32,9 @@ type NavItem = {
   badge?: FeatureKey;
 };
 
-// VIMO Box 섹션 (팀 공용 + 검수 통계)
+// VIMO Box 섹션 (팀 공용 + 받은편지함 + 검수 통계)
 const vimoBoxItems: NavItem[] = [
+  { label: "받은편지함", icon: Inbox, href: "/inbox" },
   { label: "렌더링", icon: Film, href: "/" },
   { label: "자료실", icon: BookOpen, href: "/vimo-box/library" },
   { label: "검수 통계", icon: Sparkles, href: "/insights" },
@@ -71,7 +74,15 @@ function SectionLabel({
   );
 }
 
-function NavRow({ item, isActive }: { item: NavItem; isActive: boolean }) {
+function NavRow({
+  item,
+  isActive,
+  inboxCount,
+}: {
+  item: NavItem;
+  isActive: boolean;
+  inboxCount?: number;
+}) {
   const Icon = item.icon;
   const badge = useFeatureBadge(item.badge ?? "shortcut-help");
   const showBadge = item.badge ? badge.show : false;
@@ -95,6 +106,11 @@ function NavRow({ item, isActive }: { item: NavItem; isActive: boolean }) {
       )}
       <Icon size={15} strokeWidth={isActive ? 2.5 : 2} />
       <span className="flex-1 truncate">{item.label}</span>
+      {typeof inboxCount === "number" && inboxCount > 0 && (
+        <span className="text-[10.5px] font-bold tabular-nums text-white bg-rose-500 rounded-full px-1.5 py-[1px] leading-tight">
+          {inboxCount > 99 ? "99+" : inboxCount}
+        </span>
+      )}
       {showBadge && item.badge && <NewBadge feature={item.badge} />}
     </Link>
   );
@@ -104,6 +120,26 @@ export function SidebarNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
   const params = useSearchParams();
   const queryPath = params.get("path") ?? "/";
+
+  // 받은편지함 카운트 (60초 폴링)
+  const [inboxCount, setInboxCount] = useState<number | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const r = await fetch("/api/inbox");
+        if (!r.ok) return;
+        const data = (await r.json()) as { counts?: { total?: number } };
+        if (!cancelled) setInboxCount(data.counts?.total ?? 0);
+      } catch {}
+    };
+    load();
+    const t = setInterval(load, 60_000);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
+  }, []);
 
   const isItemActive = (item: NavItem) => {
     // 렌더링(/)은 루트 경로 + path=/ 일 때만 active (파트너 필터링·내부 경로 진입 구분)
@@ -118,7 +154,12 @@ export function SidebarNav({ isAdmin = false }: { isAdmin?: boolean }) {
       {/* VIMO Box 섹션 */}
       <SectionLabel icon={Layers} label="VIMO Box" />
       {vimoBoxItems.map((item) => (
-        <NavRow key={item.href} item={item} isActive={isItemActive(item)} />
+        <NavRow
+          key={item.href}
+          item={item}
+          isActive={isItemActive(item)}
+          inboxCount={item.href === "/inbox" ? inboxCount ?? undefined : undefined}
+        />
       ))}
 
       {/* 개인 */}

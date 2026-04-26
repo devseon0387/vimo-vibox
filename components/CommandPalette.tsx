@@ -55,16 +55,17 @@ function formatTime(ms: number): string {
 }
 
 const STATIC_PAGES: StaticItem[] = [
+  { kind: "page", label: "받은편지함", href: "/inbox", group: "이동" },
   { kind: "page", label: "VIMO Box", href: "/vimo-box", group: "이동" },
   { kind: "page", label: "자료실", href: "/vimo-box/library", group: "이동" },
   { kind: "page", label: "내 박스", href: "/my/box", group: "이동" },
   { kind: "page", label: "내 기록", href: "/my/stats", group: "이동" },
   { kind: "page", label: "공유 링크 관리", href: "/shares", group: "이동" },
   { kind: "page", label: "휴지통", href: "/trash", group: "이동" },
+  { kind: "page", label: "검수 통계", href: "/insights", group: "이동" },
   { kind: "page", label: "트래픽 통계", href: "/admin/stats", group: "관리" },
   { kind: "page", label: "스토리지 관리", href: "/admin/storage", group: "관리" },
   { kind: "page", label: "사용자 관리", href: "/admin/users", group: "관리" },
-  { kind: "page", label: "검수 인사이트", href: "/insights", group: "도구" },
 ];
 
 export function CommandPalette() {
