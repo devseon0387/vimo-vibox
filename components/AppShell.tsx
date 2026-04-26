@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import { useEffect } from "react";
+import { CommandPalette } from "./CommandPalette";
 
 export function AppShell({
   sidebar,
@@ -71,6 +72,7 @@ export function AppShell({
 
         {children}
       </main>
+      <CommandPalette />
     </div>
   );
 }
