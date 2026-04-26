@@ -3,7 +3,7 @@ import { ChevronRight } from "lucide-react";
 import { listDirectory, searchFiles } from "@/lib/fs/storage";
 import { FilesPane } from "@/components/FilesPane";
 import { SearchBar } from "@/components/SearchBar";
-import { FileTable } from "@/components/FileTable";
+import { WelcomeCard } from "@/components/WelcomeCard";
 import { getCurrentSession } from "@/lib/auth/session";
 import { getFileStats } from "@/lib/db/file-stats";
 
@@ -107,6 +107,8 @@ export default async function FilesPage({
         <h1 className="text-[22px] font-bold truncate">{currentName}</h1>
         <SearchBar />
       </div>
+
+      {currentPath === "/" && <WelcomeCard name={session?.name ?? null} />}
 
       <FilesPane
         entries={entries}

@@ -28,7 +28,11 @@ import { MoveDialog } from "./MoveDialog";
 import { ShareDialog } from "./ShareDialog";
 import { useToast } from "./Toast";
 
-type FileStats = { commentCount: number; openCount: number };
+type FileStats = {
+  commentCount: number;
+  openCount: number;
+  uploaderName?: string | null;
+};
 
 function formatSize(bytes: number): string {
   if (bytes === 0) return "—";
@@ -320,7 +324,13 @@ function Card({
         <div className="text-[13px] font-medium text-text truncate" title={entry.name}>
           {entry.name}
         </div>
-        <div className="text-[11.5px] text-text-muted mt-0.5">
+        <div className="text-[11.5px] text-text-muted mt-0.5 truncate">
+          {stats?.uploaderName && (
+            <>
+              <span className="text-text-soft">{stats.uploaderName}</span>
+              {" · "}
+            </>
+          )}
           {formatTime(entry.modifiedAt)} · {formatSize(entry.size)}
         </div>
       </div>
