@@ -35,7 +35,7 @@ type NavItem = {
 // VIMO Box 섹션 (팀 공용 + 받은편지함 + 검수 통계)
 const vimoBoxItems: NavItem[] = [
   { label: "받은편지함", icon: Inbox, href: "/inbox" },
-  { label: "렌더링", icon: Film, href: "/" },
+  { label: "렌더링", icon: Film, href: "/?path=/Rendering" },
   { label: "자료실", icon: BookOpen, href: "/vimo-box/library" },
   { label: "검수 통계", icon: Sparkles, href: "/insights" },
 ];
@@ -142,11 +142,16 @@ export function SidebarNav({ isAdmin = false }: { isAdmin?: boolean }) {
   }, []);
 
   const isItemActive = (item: NavItem) => {
-    // 렌더링(/)은 루트 경로 + path=/ 일 때만 active (파트너 필터링·내부 경로 진입 구분)
-    if (item.href === "/") {
-      return pathname === "/" && (queryPath === "/" || !queryPath);
+    // 렌더링: '/' 페이지에서 path=/Rendering 또는 그 하위일 때 active
+    if (item.href === "/?path=/Rendering") {
+      return (
+        pathname === "/" &&
+        (queryPath === "/Rendering" || queryPath.startsWith("/Rendering/"))
+      );
     }
-    return pathname.startsWith(item.href);
+    // 자료실 등은 path 와 무관하게 pathname 기반
+    const hrefPathOnly = item.href.split("?")[0];
+    return pathname.startsWith(hrefPathOnly) && hrefPathOnly !== "/";
   };
 
   return (

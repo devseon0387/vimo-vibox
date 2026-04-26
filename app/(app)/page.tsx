@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { inArray } from "drizzle-orm";
 import { ChevronRight } from "lucide-react";
 import { listDirectory, searchFiles } from "@/lib/fs/storage";
 import { FilesPane } from "@/components/FilesPane";
@@ -6,6 +7,8 @@ import { SearchBar } from "@/components/SearchBar";
 import { WelcomeCard } from "@/components/WelcomeCard";
 import { getCurrentSession } from "@/lib/auth/session";
 import { getFileStats } from "@/lib/db/file-stats";
+import { db } from "@/lib/db/client";
+import { fileUploads } from "@/lib/db/schema";
 
 export default async function FilesPage({
   searchParams,
@@ -64,7 +67,24 @@ export default async function FilesPage({
     );
   }
 
-  const entries = await listDirectory(currentPath);
+  let entries = await listDirectory(currentPath);
+
+  // partner 권한: 본인이 업로드한 파일만 보임 (폴더는 그대로 노출 — 진입은 가능, 안에서 다시 필터됨)
+  if (session?.role === "partner") {
+    const filePaths = entries.filter((e) => !e.isFolder).map((e) => e.path);
+    let ownedSet = new Set<string>();
+    if (filePaths.length > 0) {
+      const owned = await db
+        .select({ path: fileUploads.path, uploadedBy: fileUploads.uploadedBy })
+        .from(fileUploads)
+        .where(inArray(fileUploads.path, filePaths));
+      ownedSet = new Set(
+        owned.filter((o) => o.uploadedBy === session.sub).map((o) => o.path),
+      );
+    }
+    entries = entries.filter((e) => e.isFolder || ownedSet.has(e.path));
+  }
+
   const videoPaths = entries.filter((e) => !e.isFolder).map((e) => e.path);
   const statsMap = await getFileStats(videoPaths);
   const stats: Record<string, { commentCount: number; openCount: number }> = {};
