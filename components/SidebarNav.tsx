@@ -14,6 +14,7 @@ import {
   BookOpen,
   Film,
   Layers,
+  Activity,
 } from "lucide-react";
 
 type NavItem = {
@@ -23,28 +24,30 @@ type NavItem = {
   matchExact?: boolean;
 };
 
-// VIMO Box 섹션 (팀 공용)
+// VIMO Box 섹션 (팀 공용 + 검수 통계)
 const vimoBoxItems: NavItem[] = [
   { label: "렌더링", icon: Film, href: "/" },
   { label: "자료실", icon: BookOpen, href: "/vimo-box/library" },
+  { label: "검수 통계", icon: Sparkles, href: "/insights" },
 ];
 
 // 개인 섹션
 const personalItems: NavItem[] = [
   { label: "내 박스", icon: Package, href: "/my/box" },
+  { label: "내 기록", icon: Activity, href: "/my/stats" },
 ];
 
-// 공통
+// 일상 도구 (인사이트 분리됨)
 const commonItems: NavItem[] = [
   { label: "공유 링크", icon: LinkIcon, href: "/shares" },
   { label: "휴지통", icon: Trash2, href: "/trash" },
-  { label: "인사이트", icon: Sparkles, href: "/insights" },
 ];
 
+// 관리: 빈도 순 (트래픽 → 저장소 → 사용자)
 const adminItems: NavItem[] = [
-  { label: "사용자 관리", icon: Users, href: "/admin/users" },
   { label: "트래픽 통계", icon: BarChart3, href: "/admin/stats" },
   { label: "저장소 정리", icon: HardDrive, href: "/admin/storage" },
+  { label: "사용자 관리", icon: Users, href: "/admin/users" },
 ];
 
 function SectionLabel({
@@ -67,12 +70,18 @@ function NavRow({ item, isActive }: { item: NavItem; isActive: boolean }) {
   return (
     <Link
       href={item.href}
-      className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] mb-0.5 transition-colors ${
+      className={`relative flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] mb-0.5 transition-colors ${
         isActive
           ? "bg-accent-soft text-accent font-semibold"
           : "text-text-muted hover:bg-hover hover:text-text"
       }`}
     >
+      {isActive && (
+        <span
+          className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-md bg-accent"
+          aria-hidden
+        />
+      )}
       <Icon size={15} strokeWidth={isActive ? 2.5 : 2} />
       <span className="flex-1 truncate">{item.label}</span>
     </Link>
@@ -106,8 +115,8 @@ export function SidebarNav({ isAdmin = false }: { isAdmin?: boolean }) {
         <NavRow key={item.href} item={item} isActive={isItemActive(item)} />
       ))}
 
-      {/* 공통 도구 */}
-      <SectionLabel icon={FolderOpen} label="도구" />
+      {/* 일상 (공유·휴지통) */}
+      <SectionLabel icon={FolderOpen} label="일상" />
       {commonItems.map((item) => (
         <NavRow key={item.href} item={item} isActive={isItemActive(item)} />
       ))}
