@@ -43,15 +43,20 @@ export default async function FilesPage({
         </div>
 
         {results.length === 0 ? (
-          <div className="border border-dashed border-border rounded-lg p-12 text-center">
-            <div className="text-[14px] text-text-muted">
+          <div className="border-2 border-dashed border-border rounded-xl p-12 text-center bg-white">
+            <div className="text-[14px] text-text-muted mb-1">
               일치하는 파일이 없어요
+            </div>
+            <div className="text-[12px] text-text-faint">
+              검색어를 다른 표현으로 바꿔보거나 ⌘K 로 댓글·공유 링크까지 검색해보세요
             </div>
           </div>
         ) : (
-          <FileTable
+          // 검색 결과도 FilesPane 으로 — ActionBar(업로드)·정렬·다중 선택·뷰 토글 모두 살아있음.
+          // 업로드 시엔 currentPath('/')를 기본으로. 사용자는 결과 클릭으로 실제 폴더에 진입할 수 있음.
+          <FilesPane
             entries={results}
-            basePath={currentPath}
+            currentPath="/"
             session={sessionInfo}
           />
         )}

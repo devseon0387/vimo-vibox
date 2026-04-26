@@ -9,6 +9,8 @@ import { DropZone } from "./DropZone";
 import { FileTable } from "./FileTable";
 import { FileCardGrid } from "./FileCardGrid";
 import { ConflictDialog } from "./ConflictDialog";
+import { SortDropdown } from "./SortDropdown";
+import { useSortConfig, sortEntries } from "@/lib/file-sort";
 import { type ConflictMode } from "@/lib/upload";
 import { useUpload } from "@/lib/upload-store";
 import { useToast } from "./Toast";
@@ -32,6 +34,14 @@ export function FilesPane({
   const { enqueue, uploads } = useUpload();
   const [view, setView] = useState<ViewMode>("list");
 
+  // 정렬
+  const { config: sortConfig, setKey: setSortKey, toggleOrder, setFoldersFirst } =
+    useSortConfig();
+  const sortedEntries = useMemo(
+    () => sortEntries(entries, sortConfig),
+    [entries, sortConfig],
+  );
+
   // 이 폴더 대상 진행 중 업로드가 있나? (ActionBar 비활성화는 안 함 — 글로벌 업로드라 동시 가능. 단순 상태표시용)
   const uploadingHere = uploads.some(
     (u) => u.status === "running" && u.targetPath.startsWith(currentPath),
@@ -53,11 +63,13 @@ export function FilesPane({
         const next = new Set(prev);
         if (opts?.range && lastClickedPath) {
           // shift+click — lastClicked 와 path 사이의 모든 항목 선택
-          const idxA = entries.findIndex((e) => e.path === lastClickedPath);
-          const idxB = entries.findIndex((e) => e.path === path);
+          const idxA = sortedEntries.findIndex(
+            (e) => e.path === lastClickedPath,
+          );
+          const idxB = sortedEntries.findIndex((e) => e.path === path);
           if (idxA !== -1 && idxB !== -1) {
             const [from, to] = idxA < idxB ? [idxA, idxB] : [idxB, idxA];
-            for (let i = from; i <= to; i++) next.add(entries[i].path);
+            for (let i = from; i <= to; i++) next.add(sortedEntries[i].path);
             return next;
           }
         }
@@ -72,7 +84,7 @@ export function FilesPane({
       });
       setLastClickedPath(path);
     },
-    [entries, lastClickedPath],
+    [sortedEntries, lastClickedPath],
   );
 
   const clearSelect = useCallback(() => {
@@ -81,12 +93,12 @@ export function FilesPane({
   }, []);
 
   const selectAll = useCallback(() => {
-    setSelectedPaths(new Set(entries.map((e) => e.path)));
-  }, [entries]);
+    setSelectedPaths(new Set(sortedEntries.map((e) => e.path)));
+  }, [sortedEntries]);
 
   const selectedEntries = useMemo(
-    () => entries.filter((e) => selectedPaths.has(e.path)),
-    [entries, selectedPaths],
+    () => sortedEntries.filter((e) => selectedPaths.has(e.path)),
+    [sortedEntries, selectedPaths],
   );
 
   // ⌘A / Ctrl+A 전체 선택, Esc 해제
@@ -217,29 +229,37 @@ export function FilesPane({
           onUpload={doUpload}
           uploading={uploadingHere}
         />
-        <div className="flex items-center rounded-md border border-border bg-white p-0.5 shrink-0">
-          <button
-            onClick={() => setViewPersist("list")}
-            title="리스트 보기"
-            className={`px-1.5 py-1 rounded transition-colors ${
-              view === "list"
-                ? "bg-surface text-text"
-                : "text-text-soft hover:text-text"
-            }`}
-          >
-            <List size={15} strokeWidth={2} />
-          </button>
-          <button
-            onClick={() => setViewPersist("grid")}
-            title="카드 보기"
-            className={`px-1.5 py-1 rounded transition-colors ${
-              view === "grid"
-                ? "bg-surface text-text"
-                : "text-text-soft hover:text-text"
-            }`}
-          >
-            <LayoutGrid size={15} strokeWidth={2} />
-          </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <SortDropdown
+            config={sortConfig}
+            onChangeKey={setSortKey}
+            onToggleOrder={toggleOrder}
+            onToggleFoldersFirst={setFoldersFirst}
+          />
+          <div className="flex items-center rounded-md border border-border bg-white p-0.5">
+            <button
+              onClick={() => setViewPersist("list")}
+              title="리스트 보기"
+              className={`px-1.5 py-1 rounded transition-colors ${
+                view === "list"
+                  ? "bg-surface text-text"
+                  : "text-text-soft hover:text-text"
+              }`}
+            >
+              <List size={15} strokeWidth={2} />
+            </button>
+            <button
+              onClick={() => setViewPersist("grid")}
+              title="카드 보기"
+              className={`px-1.5 py-1 rounded transition-colors ${
+                view === "grid"
+                  ? "bg-surface text-text"
+                  : "text-text-soft hover:text-text"
+              }`}
+            >
+              <LayoutGrid size={15} strokeWidth={2} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -247,7 +267,7 @@ export function FilesPane({
 
       {view === "grid" ? (
         <FileCardGrid
-          entries={entries}
+          entries={sortedEntries}
           basePath={currentPath}
           session={session}
           stats={stats}
@@ -256,7 +276,7 @@ export function FilesPane({
         />
       ) : (
         <FileTable
-          entries={entries}
+          entries={sortedEntries}
           basePath={currentPath}
           session={session}
           selectedPaths={selectedPaths}

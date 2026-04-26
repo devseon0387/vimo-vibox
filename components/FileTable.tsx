@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useLongPress } from "@/lib/use-long-press";
 import { Thumbnail } from "./Thumbnail";
 import type { FileEntry } from "@/lib/fs/storage";
-import { Download, Trash2, Pencil, Link as LinkIcon, MoveRight, FolderOpen } from "lucide-react";
+import { Download, Trash2, Pencil, Link as LinkIcon, MoveRight, Upload as UploadIcon } from "lucide-react";
 import { useConfirm } from "./ConfirmDialog";
 import { usePrompt } from "./PromptDialog";
 import { humanError } from "@/lib/human-error";
@@ -227,17 +227,16 @@ export function FileTable({
   return (
     <>
       {empty ? (
-        <div className="border border-dashed border-border rounded-lg py-14 px-6 text-center bg-white">
-          <FolderOpen
-            size={32}
-            className="mx-auto text-text-faint mb-3"
-            strokeWidth={1.5}
-          />
-          <div className="text-[14px] text-text-muted">
-            {basePath === "/" ? "비어있어요" : "이 폴더가 비어있어요"}
+        <div className="border-2 border-dashed border-border rounded-xl py-16 px-6 text-center bg-white hover:border-accent/40 transition-colors">
+          <div className="mx-auto w-14 h-14 rounded-full bg-accent-soft text-accent grid place-items-center mb-4">
+            <UploadIcon size={26} strokeWidth={2} />
           </div>
-          <div className="text-[12px] text-text-faint mt-1">
-            파일을 드래그하거나 업로드 버튼을 눌러보세요
+          <div className="text-[15px] font-semibold text-text mb-1">
+            {basePath === "/" ? "아직 파일이 없어요" : "이 폴더가 비어있어요"}
+          </div>
+          <div className="text-[12.5px] text-text-muted">
+            파일을 여기로 끌어다 놓거나 위쪽{" "}
+            <span className="font-semibold text-text">업로드</span> 버튼을 눌러주세요
           </div>
         </div>
       ) : (
