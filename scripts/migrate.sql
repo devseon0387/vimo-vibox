@@ -203,3 +203,7 @@ CREATE TABLE IF NOT EXISTS client_share_tokens (
 );
 CREATE INDEX IF NOT EXISTS idx_client_share_tokens_client ON client_share_tokens(client_id);
 CREATE INDEX IF NOT EXISTS idx_client_share_tokens_token ON client_share_tokens(token);
+
+-- 2026-04-26: 비모 ERP 클라 import 매핑 (erp_client_id)
+ALTER TABLE clients ADD COLUMN erp_client_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_clients_erp_id ON clients(erp_client_id);

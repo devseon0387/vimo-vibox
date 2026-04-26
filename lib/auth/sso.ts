@@ -33,10 +33,13 @@ function getSsoSecret(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
+// 허용 issuer (외부 ERP 앱)
+const ALLOWED_ISSUERS = ["partner-erp", "vimo-erp"];
+
 export async function verifySsoToken(token: string): Promise<SsoPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getSsoSecret(), {
-      issuer: "partner-erp",
+      issuer: ALLOWED_ISSUERS,
       audience: "vibox",
     });
     if (

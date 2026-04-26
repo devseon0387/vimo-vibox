@@ -205,6 +205,7 @@ export type NewHlsAsset = typeof hlsAssets.$inferInsert;
 
 // ─── Client (외부 클라이언트 — 광고주·브랜드 등) ───
 // 한 클라가 여러 영상을 누적해서 받음. 한 영상이 여러 클라에 동시 공유될 수 있음 (M:N).
+// 비모 ERP 에서 가져온 경우 erpClientId 에 ERP 측 uuid 저장 (재import 멱등성)
 export const clients = sqliteTable("clients", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -212,6 +213,7 @@ export const clients = sqliteTable("clients", {
   contactEmail: text("contact_email"),
   notes: text("notes"),
   active: integer("active", { mode: "boolean" }).notNull().default(true),
+  erpClientId: text("erp_client_id"), // 비모 ERP clients.id 매핑
   createdBy: text("created_by")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
