@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { FileEntry } from "@/lib/fs/storage";
+import { useLongPress } from "@/lib/use-long-press";
 import {
   Download,
   Trash2,
@@ -132,7 +133,14 @@ function Card({
   hasSelection: boolean;
 }) {
   const [hover, setHover] = useState(false);
+  const longPress = useLongPress(
+    () => {
+      if (onToggleSelect) onToggleSelect(entry.path, { toggle: true });
+    },
+    { delayMs: 500 },
+  );
   const handleClick = (e: React.MouseEvent) => {
+    if (longPress.consumedClick()) return;
     if ((e.target as HTMLElement).closest("input[type=checkbox]")) return;
     if (e.shiftKey && onToggleSelect) {
       e.preventDefault();
@@ -172,9 +180,13 @@ function Card({
     return (
       <div
         onClick={handleClick}
+        onPointerDown={longPress.onPointerDown}
+        onPointerMove={longPress.onPointerMove}
+        onPointerUp={longPress.onPointerUp}
+        onPointerCancel={longPress.onPointerCancel}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
-        className={`group cursor-pointer ${deleting ? "opacity-40" : ""}`}
+        className={`group cursor-pointer select-none ${deleting ? "opacity-40" : ""}`}
       >
         <div
           className={`aspect-[16/10] bg-surface border rounded-lg flex items-center justify-center mb-2 transition-colors relative ${
@@ -224,9 +236,13 @@ function Card({
   return (
     <div
       onClick={handleClick}
+      onPointerDown={longPress.onPointerDown}
+      onPointerMove={longPress.onPointerMove}
+      onPointerUp={longPress.onPointerUp}
+      onPointerCancel={longPress.onPointerCancel}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      className={`group cursor-pointer ${deleting ? "opacity-40" : ""}`}
+      className={`group cursor-pointer select-none ${deleting ? "opacity-40" : ""}`}
     >
       <div
         className={`aspect-[16/10] rounded-lg overflow-hidden mb-2 relative border transition-colors ${

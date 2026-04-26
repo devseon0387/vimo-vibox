@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronLeft, ChevronUp, ChevronDown } from "lucide-react";
 import { useConfirm } from "./ConfirmDialog";
 import { useToast } from "./Toast";
 import {
@@ -178,6 +179,8 @@ export type ShareContext = {
 export function FeedbackModal({
   entry,
   backHref = "/",
+  prevHref,
+  nextHref,
   currentUserId,
   isAdmin,
   role = "member",
@@ -186,6 +189,10 @@ export function FeedbackModal({
 }: {
   entry: FileEntry | null;
   backHref?: string;
+  /** 같은 폴더의 이전 영상 (K/↑ 키) */
+  prevHref?: string;
+  /** 같은 폴더의 다음 영상 (J/↓ 키) */
+  nextHref?: string;
   currentUserId: string;
   isAdmin: boolean;
   role?: "admin" | "member" | "partner";
@@ -232,6 +239,33 @@ export function FeedbackModal({
   const { success, error: toastError } = useToast();
 
   const filePath = entry?.path ?? null;
+  const router = useRouter();
+
+  // 형제 영상 키 단축키: J/↓ 다음, K/↑ 이전 (입력 필드 외에서)
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if ((e.key === "j" || e.key === "ArrowDown") && nextHref) {
+        e.preventDefault();
+        router.push(nextHref);
+      } else if ((e.key === "k" || e.key === "ArrowUp") && prevHref) {
+        e.preventDefault();
+        router.push(prevHref);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, prevHref, nextHref, router]);
 
   const fetchComments = useCallback(async () => {
     if (!filePath) return;
@@ -918,9 +952,37 @@ export function FeedbackModal({
             </Link>
           )}
           <div className="w-px h-5 bg-slate-200" />
-          <h1 className="text-[14px] font-semibold text-slate-900 truncate">
+          <h1 className="text-[14px] font-semibold text-slate-900 truncate flex-1 min-w-0">
             {entry.name}
           </h1>
+          {!isGuest && (prevHref || nextHref) && (
+            <div className="hidden md:flex items-center gap-0.5 shrink-0">
+              <Link
+                href={prevHref ?? "#"}
+                aria-disabled={!prevHref}
+                className={`p-1.5 rounded inline-flex items-center gap-1 text-[12px] ${
+                  prevHref
+                    ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                    : "text-slate-300 pointer-events-none"
+                }`}
+                title="이전 영상 (K 또는 ↑)"
+              >
+                <ChevronUp size={15} strokeWidth={2.2} />
+              </Link>
+              <Link
+                href={nextHref ?? "#"}
+                aria-disabled={!nextHref}
+                className={`p-1.5 rounded inline-flex items-center gap-1 text-[12px] ${
+                  nextHref
+                    ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                    : "text-slate-300 pointer-events-none"
+                }`}
+                title="다음 영상 (J 또는 ↓)"
+              >
+                <ChevronDown size={15} strokeWidth={2.2} />
+              </Link>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col md:flex-row flex-1 min-h-0">

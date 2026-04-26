@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLongPress } from "@/lib/use-long-press";
 import { Thumbnail } from "./Thumbnail";
 import type { FileEntry } from "@/lib/fs/storage";
 import { Download, Trash2, Pencil, Link as LinkIcon, MoveRight, FolderOpen } from "lucide-react";
@@ -269,107 +270,20 @@ export function FileTable({
               {rows.map((entry) => {
                 const isSelected = selectedPaths?.has(entry.path) ?? false;
                 return (
-                <tr
+                <FileRow
                   key={entry.path}
-                  onClick={(e) => {
-                    // 체크박스 영역 클릭은 별도 처리
-                    if (
-                      (e.target as HTMLElement).closest("input[type=checkbox]")
-                    ) {
-                      return;
-                    }
-                    if (e.shiftKey && onToggleSelect) {
-                      e.preventDefault();
-                      onToggleSelect(entry.path, { range: true });
-                      return;
-                    }
-                    if ((e.metaKey || e.ctrlKey) && onToggleSelect) {
-                      onToggleSelect(entry.path);
-                      return;
-                    }
-                    if ((selectedPaths?.size ?? 0) > 0 && onToggleSelect) {
-                      onToggleSelect(entry.path);
-                      return;
-                    }
-                    onOpen(entry);
-                  }}
-                  className={`border-b border-[#f5f5f5] hover:bg-surface cursor-pointer transition-colors ${
-                    deleting === entry.path ? "opacity-40" : ""
-                  } ${isSelected ? "bg-accent-soft hover:bg-accent-soft" : ""}`}
-                >
-                  <td className="px-3 py-2.5 w-[36px]">
-                    {onToggleSelect && (
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={(e) =>
-                          onToggleSelect(entry.path, {
-                            range: (e.nativeEvent as MouseEvent).shiftKey,
-                          })
-                        }
-                        className="cursor-pointer"
-                        aria-label={`${entry.name} 선택`}
-                      />
-                    )}
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <div className="flex items-center gap-2.5">
-                      <Thumbnail kind={entry.kind} path={entry.path} />
-                      <span className="text-text">{entry.name}</span>
-                    </div>
-                  </td>
-                  <td
-                    className="px-4 py-2.5 text-text-soft"
-                    title={new Date(entry.modifiedAt).toLocaleString("ko-KR")}
-                  >
-                    {formatTime(entry.modifiedAt)}
-                  </td>
-                  <td className="px-4 py-2.5 text-text-soft">
-                    {entry.isFolder ? "—" : formatSize(entry.size)}
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <div className="flex gap-0.5 items-center">
-                      <button
-                        onClick={(e) => onRename(entry, e)}
-                        title="이름 변경"
-                        className="p-1.5 rounded hover:bg-hover text-text-soft hover:text-text"
-                      >
-                        <Pencil size={14} strokeWidth={2} />
-                      </button>
-                      <button
-                        onClick={(e) => onMove(entry, e)}
-                        title="이동"
-                        className="p-1.5 rounded hover:bg-hover text-text-soft hover:text-text"
-                      >
-                        <MoveRight size={14} strokeWidth={2} />
-                      </button>
-                      {!entry.isFolder && (
-                        <button
-                          onClick={(e) => onShare(entry, e)}
-                          title="공유 링크"
-                          className="p-1.5 rounded hover:bg-hover text-text-soft hover:text-accent"
-                        >
-                          <LinkIcon size={14} strokeWidth={2} />
-                        </button>
-                      )}
-                      <button
-                        onClick={(e) => onDownload(entry, e)}
-                        title={entry.isFolder ? "ZIP 다운로드" : "다운로드"}
-                        className="p-1.5 rounded hover:bg-hover text-text-soft hover:text-accent"
-                      >
-                        <Download size={14} strokeWidth={2} />
-                      </button>
-                      <button
-                        onClick={(e) => onDelete(entry, e)}
-                        title="삭제"
-                        className="p-1.5 rounded hover:bg-danger-soft text-text-soft hover:text-danger"
-                      >
-                        <Trash2 size={14} strokeWidth={2} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                  entry={entry}
+                  isSelected={isSelected}
+                  deleting={deleting === entry.path}
+                  selectedPaths={selectedPaths}
+                  onToggleSelect={onToggleSelect}
+                  onOpen={onOpen}
+                  onRename={onRename}
+                  onMove={onMove}
+                  onShare={onShare}
+                  onDownload={onDownload}
+                  onDelete={onDelete}
+                />
                 );
               })}
             </tbody>
@@ -396,5 +310,146 @@ export function FileTable({
         onClose={() => setShareEntry(null)}
       />
     </>
+  );
+}
+
+function FileRow({
+  entry,
+  isSelected,
+  deleting,
+  selectedPaths,
+  onToggleSelect,
+  onOpen,
+  onRename,
+  onMove,
+  onShare,
+  onDownload,
+  onDelete,
+}: {
+  entry: FileEntry;
+  isSelected: boolean;
+  deleting: boolean;
+  selectedPaths?: Set<string>;
+  onToggleSelect?: (
+    path: string,
+    opts?: { range?: boolean; toggle?: boolean },
+  ) => void;
+  onOpen: (e: FileEntry) => void;
+  onRename: (e: FileEntry, ev: React.MouseEvent) => void;
+  onMove: (e: FileEntry, ev: React.MouseEvent) => void;
+  onShare: (e: FileEntry, ev: React.MouseEvent) => void;
+  onDownload: (e: FileEntry, ev: React.MouseEvent) => void;
+  onDelete: (e: FileEntry, ev: React.MouseEvent) => void;
+}) {
+  const longPress = useLongPress(
+    () => {
+      if (onToggleSelect) onToggleSelect(entry.path, { toggle: true });
+    },
+    { delayMs: 500 },
+  );
+
+  const handleClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
+    if (longPress.consumedClick()) return;
+    if ((e.target as HTMLElement).closest("input[type=checkbox]")) return;
+    if (e.shiftKey && onToggleSelect) {
+      e.preventDefault();
+      onToggleSelect(entry.path, { range: true });
+      return;
+    }
+    if ((e.metaKey || e.ctrlKey) && onToggleSelect) {
+      onToggleSelect(entry.path);
+      return;
+    }
+    if ((selectedPaths?.size ?? 0) > 0 && onToggleSelect) {
+      onToggleSelect(entry.path);
+      return;
+    }
+    onOpen(entry);
+  };
+
+  return (
+    <tr
+      onClick={handleClick}
+      onPointerDown={longPress.onPointerDown}
+      onPointerMove={longPress.onPointerMove}
+      onPointerUp={longPress.onPointerUp}
+      onPointerCancel={longPress.onPointerCancel}
+      className={`border-b border-[#f5f5f5] hover:bg-surface cursor-pointer transition-colors select-none ${
+        deleting ? "opacity-40" : ""
+      } ${isSelected ? "bg-accent-soft hover:bg-accent-soft" : ""}`}
+    >
+      <td className="px-3 py-2.5 w-[36px]">
+        {onToggleSelect && (
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) =>
+              onToggleSelect(entry.path, {
+                range: (e.nativeEvent as MouseEvent).shiftKey,
+              })
+            }
+            className="cursor-pointer"
+            aria-label={`${entry.name} 선택`}
+          />
+        )}
+      </td>
+      <td className="px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <Thumbnail kind={entry.kind} path={entry.path} />
+          <span className="text-text">{entry.name}</span>
+        </div>
+      </td>
+      <td
+        className="px-4 py-2.5 text-text-soft"
+        title={new Date(entry.modifiedAt).toLocaleString("ko-KR")}
+      >
+        {formatTime(entry.modifiedAt)}
+      </td>
+      <td className="px-4 py-2.5 text-text-soft">
+        {entry.isFolder ? "—" : formatSize(entry.size)}
+      </td>
+      <td className="px-4 py-2.5">
+        <div className="flex gap-0.5 items-center">
+          <button
+            onClick={(e) => onRename(entry, e)}
+            title="이름 변경"
+            className="p-1.5 rounded hover:bg-hover text-text-soft hover:text-text"
+          >
+            <Pencil size={14} strokeWidth={2} />
+          </button>
+          <button
+            onClick={(e) => onMove(entry, e)}
+            title="이동"
+            className="p-1.5 rounded hover:bg-hover text-text-soft hover:text-text"
+          >
+            <MoveRight size={14} strokeWidth={2} />
+          </button>
+          {!entry.isFolder && (
+            <button
+              onClick={(e) => onShare(entry, e)}
+              title="공유 링크"
+              className="p-1.5 rounded hover:bg-hover text-text-soft hover:text-accent"
+            >
+              <LinkIcon size={14} strokeWidth={2} />
+            </button>
+          )}
+          <button
+            onClick={(e) => onDownload(entry, e)}
+            title={entry.isFolder ? "ZIP 다운로드" : "다운로드"}
+            className="p-1.5 rounded hover:bg-hover text-text-soft hover:text-accent"
+          >
+            <Download size={14} strokeWidth={2} />
+          </button>
+          <button
+            onClick={(e) => onDelete(entry, e)}
+            title="삭제"
+            className="p-1.5 rounded hover:bg-danger-soft text-text-soft hover:text-danger"
+          >
+            <Trash2 size={14} strokeWidth={2} />
+          </button>
+        </div>
+      </td>
+    </tr>
   );
 }

@@ -1,7 +1,11 @@
 import { notFound } from "next/navigation";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { resolveSafePath, type FileEntry } from "@/lib/fs/storage";
+import {
+  listDirectory,
+  resolveSafePath,
+  type FileEntry,
+} from "@/lib/fs/storage";
 import { getCurrentSession } from "@/lib/auth/session";
 import { FeedbackModal } from "@/components/FeedbackModal";
 
@@ -59,10 +63,31 @@ export default async function FeedbackPage({
   const backHref =
     parentPath === "/" ? "/" : `/?path=${encodeURIComponent(parentPath)}`;
 
+  // 형제 영상 prev/next — J/K 키 단축키 네비용
+  let prevHref: string | undefined;
+  let nextHref: string | undefined;
+  try {
+    const siblings = await listDirectory(parentPath);
+    const videos = siblings
+      .filter((e) => !e.isFolder && e.kind === "video")
+      .sort((a, b) => a.name.localeCompare(b.name, "ko"));
+    const idx = videos.findIndex((v) => v.path === filePath);
+    if (idx > 0) {
+      prevHref = `/vimo-box?path=${encodeURIComponent(videos[idx - 1].path)}`;
+    }
+    if (idx >= 0 && idx < videos.length - 1) {
+      nextHref = `/vimo-box?path=${encodeURIComponent(videos[idx + 1].path)}`;
+    }
+  } catch {
+    // 형제 못 가져와도 페이지 자체는 동작
+  }
+
   return (
     <FeedbackModal
       entry={entry}
       backHref={backHref}
+      prevHref={prevHref}
+      nextHref={nextHref}
       currentUserId={session.sub}
       isAdmin={session.role === "admin"}
       role={session.role}

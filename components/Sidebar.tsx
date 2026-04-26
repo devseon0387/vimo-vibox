@@ -4,6 +4,7 @@ import { LogOut } from "lucide-react";
 import { getCurrentSession } from "@/lib/auth/session";
 import { logoutAction } from "@/app/login/actions";
 import { SidebarNav } from "./SidebarNav";
+import { SidebarSearchTrigger } from "./SidebarSearchTrigger";
 
 export async function Sidebar() {
   const session = await getCurrentSession();
@@ -27,6 +28,7 @@ export async function Sidebar() {
         </Link>
       </div>
 
+      <SidebarSearchTrigger />
       <SidebarNav isAdmin={session?.role === "admin"} />
 
       <div className="border-t border-border px-4 py-3 flex items-center gap-3">
