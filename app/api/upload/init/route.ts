@@ -41,12 +41,20 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   if (!body) return Response.json({ error: "invalid body" }, { status: 400 });
 
-  const { fileId, filename, totalSize, totalChunks, path: targetPath } = body as {
+  const {
+    fileId,
+    filename,
+    totalSize,
+    totalChunks,
+    path: targetPath,
+    conflictMode,
+  } = body as {
     fileId?: string;
     filename?: string;
     totalSize?: number;
     totalChunks?: number;
     path?: string;
+    conflictMode?: "overwrite" | "autonumber" | "skip";
   };
 
   if (
@@ -133,6 +141,12 @@ export async function POST(req: NextRequest) {
       targetPath,
       userId: session.sub,
       createdAt: Date.now(),
+      conflictMode:
+        conflictMode === "overwrite" ||
+        conflictMode === "autonumber" ||
+        conflictMode === "skip"
+          ? conflictMode
+          : undefined,
     });
     return Response.json({ ok: true });
   } catch (e: unknown) {

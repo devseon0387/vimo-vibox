@@ -10,7 +10,8 @@ import { DropZone } from "./DropZone";
 import { FileTable } from "./FileTable";
 import { FileCardGrid } from "./FileCardGrid";
 import { UploadProgress, type UploadState } from "./UploadProgress";
-import { startUpload } from "@/lib/upload";
+import { ConflictDialog } from "./ConflictDialog";
+import { startUpload, type ConflictMode } from "@/lib/upload";
 import { useToast } from "./Toast";
 
 type ViewMode = "list" | "grid";
@@ -123,9 +124,15 @@ export function FilesPane({
     } catch {}
   };
 
-  const doUpload = useCallback(
-    async (files: File[]) => {
-      if (files.length === 0) return;
+  // 폴더 업로드 충돌 처리 — 사용자가 모드 선택할 때까지 대기
+  const [pendingConflict, setPendingConflict] = useState<{
+    files: File[];
+    conflicts: string[];
+    resolve: (mode: ConflictMode | null) => void;
+  } | null>(null);
+
+  const runUpload = useCallback(
+    async (files: File[], conflictMode?: ConflictMode) => {
       const total = files.reduce((s, f) => s + f.size, 0);
       setUploadState({ files, sent: 0, total, startedAt: Date.now() });
 
@@ -148,6 +155,7 @@ export function FilesPane({
               : prev,
           );
         },
+        { conflictMode },
       );
       cancelRef.current = h.cancel;
       const res = await h.done;
@@ -171,6 +179,58 @@ export function FilesPane({
       router.refresh();
     },
     [currentPath, router, toast],
+  );
+
+  const doUpload = useCallback(
+    async (files: File[]) => {
+      if (files.length === 0) return;
+
+      // 폴더 업로드(__relPath 있는 파일 포함)인 경우 사전 충돌 검사
+      const candidatePaths = files.map((f) => {
+        const rel = (f as File & { __relPath?: string }).__relPath;
+        const dirSeg = rel ? rel.split("/").slice(0, -1).join("/") : "";
+        const subDir = dirSeg ? `/${dirSeg}` : "";
+        const base =
+          (currentPath.endsWith("/") ? currentPath.slice(0, -1) : currentPath) +
+          subDir;
+        return `${base}/${f.name}`;
+      });
+
+      let existing: string[] = [];
+      try {
+        const r = await fetch("/api/files/check", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paths: candidatePaths }),
+        });
+        if (r.ok) {
+          const data = (await r.json()) as { existing: string[] };
+          existing = data.existing ?? [];
+        }
+      } catch {
+        // 사전 체크 실패해도 업로드 자체는 진행 (서버가 autonumber 로 처리)
+      }
+
+      let conflictMode: ConflictMode | undefined;
+      if (existing.length > 0) {
+        conflictMode = await new Promise<ConflictMode | null>((resolve) => {
+          setPendingConflict({
+            files,
+            conflicts: existing,
+            resolve,
+          });
+        }) ?? undefined;
+        setPendingConflict(null);
+        if (conflictMode === undefined) {
+          // 취소
+          toast.info("업로드 취소됨");
+          return;
+        }
+      }
+
+      await runUpload(files, conflictMode);
+    },
+    [currentPath, runUpload, toast],
   );
 
   return (
@@ -231,6 +291,12 @@ export function FilesPane({
       <UploadProgress
         state={uploadState}
         onCancel={() => cancelRef.current?.()}
+      />
+      <ConflictDialog
+        open={!!pendingConflict}
+        conflicts={pendingConflict?.conflicts ?? []}
+        onChoose={(mode) => pendingConflict?.resolve(mode)}
+        onCancel={() => pendingConflict?.resolve(null)}
       />
     </>
   );

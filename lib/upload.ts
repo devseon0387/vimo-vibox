@@ -61,6 +61,13 @@ function genFileId(): string {
   });
 }
 
+export type ConflictMode = "overwrite" | "autonumber" | "skip";
+
+export type UploadOptions = {
+  /** 같은 이름 파일 충돌 시 처리. 기본 'autonumber' (하위호환) */
+  conflictMode?: ConflictMode;
+};
+
 /**
  * 청크 단위로 업로드. init → chunks(병렬) → complete 3단계.
  * onProgress: (이제까지 업로드한 누적 바이트, 전체 바이트)
@@ -71,6 +78,7 @@ export function startUpload(
   files: File[],
   onProgress: (sent: number, total: number) => void,
   onStats?: (stats: UploadStats) => void,
+  options?: UploadOptions,
 ): UploadHandle {
   const totalBytes = files.reduce((s, f) => s + f.size, 0);
   let sentAcrossFiles = 0;
@@ -134,6 +142,7 @@ export function startUpload(
         (sentInFile) => reportWithStats(sentAcrossFiles + sentInFile),
         markShard,
         abortController.signal,
+        options?.conflictMode,
       );
 
       if (!res.ok) {
@@ -160,6 +169,7 @@ async function uploadOneFile(
   onFileProgress: (sentInFile: number) => void,
   markShard: (index: number) => void,
   signal: AbortSignal,
+  conflictMode?: ConflictMode,
 ): Promise<{ ok: boolean; error?: string; saved?: { name: string; size: number; path: string } }> {
   const fileId = genFileId();
   const totalChunks = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
@@ -175,6 +185,7 @@ async function uploadOneFile(
         totalSize: file.size,
         totalChunks,
         path: targetPath,
+        conflictMode,
       }),
       signal,
     });

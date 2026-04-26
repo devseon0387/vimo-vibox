@@ -178,6 +178,8 @@ export const encodingJobs = sqliteTable("encoding_jobs", {
   finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
   error: text("error"),
   durationSec: integer("duration_sec"),
+  // 재시도 횟수 (실패 시 자동 재시도, 최대 3회 후 failed 확정)
+  attempts: integer("attempts").notNull().default(0),
 });
 
 // HLS 자산 메타 (file_path → fingerprint 매핑)

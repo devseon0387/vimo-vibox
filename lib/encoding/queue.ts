@@ -21,6 +21,8 @@ import { resolveSafePath } from "@/lib/fs/storage";
  */
 
 const MAX_WORKERS = 2;
+const MAX_AUTO_RETRIES = 3; // 자동 재시도 한도 (수동은 별개)
+const RETRY_BACKOFF_MS = [10_000, 30_000, 60_000]; // 1차 10s, 2차 30s, 3차 60s
 
 let activeWorkers = 0;
 let starting = false;
@@ -44,6 +46,7 @@ export type EncodingJobView = {
   finishedAt: number | null;
   error: string | null;
   durationSec: number | null;
+  attempts: number;
 };
 
 function toView(row: typeof encodingJobs.$inferSelect): EncodingJobView {
@@ -58,6 +61,7 @@ function toView(row: typeof encodingJobs.$inferSelect): EncodingJobView {
     finishedAt: row.finishedAt ? row.finishedAt.getTime() : null,
     error: row.error,
     durationSec: row.durationSec,
+    attempts: row.attempts ?? 0,
   };
 }
 
@@ -188,11 +192,42 @@ async function runJob(jobId: string, filePath: string): Promise<void> {
       .where(eq(encodingJobs.id, jobId));
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "unknown";
-    await db
-      .update(encodingJobs)
-      .set({ status: "failed", finishedAt: new Date(), error: msg.slice(0, 1000) })
+    // 현재 attempts 조회 → MAX_AUTO_RETRIES 미만이면 backoff 후 재큐잉
+    const [current] = await db
+      .select({ attempts: encodingJobs.attempts })
+      .from(encodingJobs)
       .where(eq(encodingJobs.id, jobId))
-      .catch(() => {});
+      .limit(1)
+      .catch(() => [{ attempts: MAX_AUTO_RETRIES }]);
+    const nextAttempts = (current?.attempts ?? 0) + 1;
+    if (nextAttempts < MAX_AUTO_RETRIES) {
+      const backoff =
+        RETRY_BACKOFF_MS[Math.min(nextAttempts - 1, RETRY_BACKOFF_MS.length - 1)];
+      await db
+        .update(encodingJobs)
+        .set({
+          status: "queued",
+          progress: 0,
+          startedAt: null,
+          error: `attempt ${nextAttempts}: ${msg.slice(0, 500)}`,
+          attempts: nextAttempts,
+        })
+        .where(eq(encodingJobs.id, jobId))
+        .catch(() => {});
+      // backoff 후 워커가 자연스럽게 집어가도록 시간 지연만 — tryStart 는 finally 에서 호출됨
+      setTimeout(() => void tryStart(), backoff);
+    } else {
+      await db
+        .update(encodingJobs)
+        .set({
+          status: "failed",
+          finishedAt: new Date(),
+          error: msg.slice(0, 1000),
+          attempts: nextAttempts,
+        })
+        .where(eq(encodingJobs.id, jobId))
+        .catch(() => {});
+    }
   } finally {
     activeWorkers--;
     void tryStart();
@@ -220,6 +255,42 @@ export async function hydrate(): Promise<void> {
   }
 
   void tryStart();
+}
+
+/**
+ * 실패한 잡을 수동으로 다시 큐에 올림 (attempts 리셋).
+ * 또는 done 잡을 강제로 다시 인코딩.
+ */
+export async function retryJob(jobId: string): Promise<EncodingJobView | null> {
+  await ensureHydrated();
+  const [row] = await db
+    .select()
+    .from(encodingJobs)
+    .where(eq(encodingJobs.id, jobId))
+    .limit(1);
+  if (!row) return null;
+  if (row.status === "running" || row.status === "queued") return toView(row);
+
+  await db
+    .update(encodingJobs)
+    .set({
+      status: "queued",
+      progress: 0,
+      startedAt: null,
+      finishedAt: null,
+      error: null,
+      attempts: 0,
+    })
+    .where(eq(encodingJobs.id, jobId));
+
+  void tryStart();
+
+  const [updated] = await db
+    .select()
+    .from(encodingJobs)
+    .where(eq(encodingJobs.id, jobId))
+    .limit(1);
+  return updated ? toView(updated) : null;
 }
 
 /** 특정 파일의 인코딩 상태 조회 (UI 배지용) */

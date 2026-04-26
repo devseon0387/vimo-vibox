@@ -27,6 +27,7 @@ import {
   Flame,
   Copy,
   Film,
+  RotateCcw,
 } from "lucide-react";
 
 type DiskIO = {
@@ -2013,17 +2014,37 @@ function EncodingCard({
           </div>
         )}
         {encoding.recentFailed.length > 0 && (
-          <div className="space-y-0.5 pt-1 border-t border-border/40 mt-1">
+          <div className="space-y-1 pt-1 border-t border-border/40 mt-1">
             <div className="text-[10.5px] font-semibold text-rose-600">
               최근 실패
             </div>
             {encoding.recentFailed.slice(0, 3).map((f) => (
               <div
                 key={f.id}
-                className="font-mono text-[10.5px] text-text-faint truncate"
+                className="flex items-center gap-1.5"
                 title={`${f.filePath}\n${f.error ?? ""}`}
               >
-                {f.filePath.replace(/^\//, "")}
+                <span className="font-mono text-[10.5px] text-text-faint truncate flex-1 min-w-0">
+                  {f.filePath.replace(/^\//, "")}
+                </span>
+                <button
+                  onClick={async () => {
+                    const r = await fetch(
+                      `/api/admin/encode/${f.id}/retry`,
+                      { method: "POST" },
+                    );
+                    if (!r.ok) {
+                      alert("재시도 실패");
+                      return;
+                    }
+                    // 차회 health 폴링이 알아서 갱신
+                  }}
+                  className="shrink-0 inline-flex items-center gap-0.5 text-[10.5px] text-text-soft hover:text-accent px-1 py-0.5 rounded hover:bg-hover"
+                  title="재시도"
+                >
+                  <RotateCcw size={10} strokeWidth={2.4} />
+                  재시도
+                </button>
               </div>
             ))}
           </div>

@@ -148,6 +148,7 @@ CREATE TABLE IF NOT EXISTS encoding_jobs (
 );
 CREATE INDEX IF NOT EXISTS idx_encoding_status ON encoding_jobs(status);
 CREATE INDEX IF NOT EXISTS idx_encoding_file ON encoding_jobs(file_path);
+ALTER TABLE encoding_jobs ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0;
 
 -- hls_assets: 변환 완료된 HLS 자산 레지스트리 (file_path → fingerprint)
 CREATE TABLE IF NOT EXISTS hls_assets (
