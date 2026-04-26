@@ -394,10 +394,31 @@ export function FileCardGrid({
         showToast("삭제 실패: " + (body.error ?? res.statusText), "error");
         return;
       }
+      const body = await res.json().catch(() => ({}));
+      const trashId: string | undefined = body?.trashId;
       showToast(
         <>
           <span className="font-semibold">{entry.name}</span> 삭제됨
         </>,
+        {
+          kind: "success",
+          action: trashId
+            ? {
+                label: "되돌리기",
+                onClick: async () => {
+                  const r = await fetch(`/api/trash/${trashId}`, {
+                    method: "POST",
+                  });
+                  if (r.ok) {
+                    showToast("복원됨");
+                    router.refresh();
+                  } else {
+                    showToast("복원 실패", "error");
+                  }
+                },
+              }
+            : undefined,
+        },
       );
       router.refresh();
     } finally {

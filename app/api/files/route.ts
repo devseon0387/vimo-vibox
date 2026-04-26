@@ -116,8 +116,12 @@ export async function DELETE(req: NextRequest) {
   }
 
   try {
-    await moveToTrash(rel, session!.sub, session!.name ?? session!.username);
-    return NextResponse.json({ ok: true });
+    const trashId = await moveToTrash(
+      rel,
+      session!.sub,
+      session!.name ?? session!.username,
+    );
+    return NextResponse.json({ ok: true, trashId });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "unknown";
     return NextResponse.json({ error: msg }, { status: 400 });

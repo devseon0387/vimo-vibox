@@ -66,20 +66,44 @@ export function BulkActionBar({
 
     let success = 0;
     let failed = 0;
+    const trashIds: string[] = [];
     for (const entry of selected) {
       try {
         const res = await fetch(
           `/api/files?path=${encodeURIComponent(entry.path)}`,
           { method: "DELETE" },
         );
-        if (res.ok) success++;
-        else failed++;
+        if (res.ok) {
+          success++;
+          const body = await res.json().catch(() => ({}));
+          if (body?.trashId) trashIds.push(body.trashId);
+        } else failed++;
       } catch {
         failed++;
       }
     }
     if (failed === 0) {
-      toast.success(`${success}개 항목 삭제됨`);
+      toast.success(`${success}개 항목 삭제됨`, {
+        action:
+          trashIds.length > 0
+            ? {
+                label: "모두 되돌리기",
+                onClick: async () => {
+                  let restored = 0;
+                  for (const id of trashIds) {
+                    try {
+                      const r = await fetch(`/api/trash/${id}`, {
+                        method: "POST",
+                      });
+                      if (r.ok) restored++;
+                    } catch {}
+                  }
+                  toast.info(`${restored}개 복원됨`);
+                  router.refresh();
+                },
+              }
+            : undefined,
+      });
     } else {
       toast.error(`${success}개 삭제, ${failed}개 실패`);
     }
