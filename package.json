@@ -11,6 +11,8 @@
     "seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
+    "@types/archiver": "^7.0.0",
+    "archiver": "^7.0.1",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.9.0",
     "busboy": "^1.6.0",

@@ -363,10 +363,14 @@ export function FileCardGrid({
 
   const onDownload = (entry: FileEntry, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (entry.isFolder) return;
     const a = document.createElement("a");
-    a.href = `/api/download?path=${encodeURIComponent(entry.path)}`;
-    a.download = entry.name;
+    if (entry.isFolder) {
+      a.href = `/api/download/zip?path=${encodeURIComponent(entry.path)}`;
+      a.download = `${entry.name}.zip`;
+    } else {
+      a.href = `/api/download?path=${encodeURIComponent(entry.path)}`;
+      a.download = entry.name;
+    }
     a.click();
   };
 

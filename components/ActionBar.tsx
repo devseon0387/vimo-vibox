@@ -2,9 +2,12 @@
 
 import { useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, FolderPlus } from "lucide-react";
+import { Upload, FolderPlus, FolderUp } from "lucide-react";
 import { usePrompt } from "./PromptDialog";
 import { useToast } from "./Toast";
+
+// FilePathed: 폴더 업로드 시 webkitRelativePath 보존
+export type FilePathed = File & { __relPath?: string };
 
 export function ActionBar({
   currentPath,
@@ -12,11 +15,12 @@ export function ActionBar({
   uploading,
 }: {
   currentPath: string;
-  onUpload: (files: File[]) => void;
+  onUpload: (files: FilePathed[]) => void;
   uploading: boolean;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const folderInputRef = useRef<HTMLInputElement | null>(null);
   const { promptInput, dialog } = usePrompt();
   const toast = useToast();
 
@@ -24,6 +28,18 @@ export function ActionBar({
     if (!fileList || fileList.length === 0) return;
     onUpload(Array.from(fileList));
     if (inputRef.current) inputRef.current.value = "";
+  };
+
+  const handleFolder = (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+    // webkitRelativePath = "myFolder/sub/file.mp4" 형식. 빈 값이면 일반 파일
+    const tagged: FilePathed[] = Array.from(fileList).map((f) => {
+      const rel = (f as File & { webkitRelativePath?: string })
+        .webkitRelativePath;
+      return Object.assign(f, { __relPath: rel || undefined });
+    });
+    onUpload(tagged);
+    if (folderInputRef.current) folderInputRef.current.value = "";
   };
 
   const handleNewFolder = async () => {
@@ -67,6 +83,15 @@ export function ActionBar({
           업로드
         </button>
         <button
+          onClick={() => folderInputRef.current?.click()}
+          disabled={uploading}
+          title="폴더 통째로 업로드 (구조 보존)"
+          className="bg-white border border-border hover:border-border-hover text-text-muted hover:text-text disabled:opacity-60 transition-colors px-3.5 py-2 rounded-md text-[13px] font-medium flex items-center gap-1.5"
+        >
+          <FolderUp size={14} strokeWidth={2} />
+          폴더 업로드
+        </button>
+        <button
           onClick={handleNewFolder}
           className="bg-white border border-border hover:border-border-hover text-text-muted hover:text-text transition-colors px-3.5 py-2 rounded-md text-[13px] font-medium flex items-center gap-1.5"
         >
@@ -79,6 +104,16 @@ export function ActionBar({
           multiple
           className="hidden"
           onChange={(e) => handleFiles(e.target.files)}
+        />
+        <input
+          ref={folderInputRef}
+          type="file"
+          // @ts-expect-error — webkitdirectory 는 비표준 속성
+          webkitdirectory=""
+          directory=""
+          multiple
+          className="hidden"
+          onChange={(e) => handleFolder(e.target.files)}
         />
       </div>
       {dialog}

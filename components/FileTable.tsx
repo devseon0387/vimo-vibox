@@ -167,10 +167,14 @@ export function FileTable({
 
   const onDownload = (entry: FileEntry, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (entry.isFolder) return;
     const a = document.createElement("a");
-    a.href = `/api/download?path=${encodeURIComponent(entry.path)}`;
-    a.download = entry.name;
+    if (entry.isFolder) {
+      a.href = `/api/download/zip?path=${encodeURIComponent(entry.path)}`;
+      a.download = `${entry.name}.zip`;
+    } else {
+      a.href = `/api/download?path=${encodeURIComponent(entry.path)}`;
+      a.download = entry.name;
+    }
     a.click();
   };
 
@@ -266,23 +270,21 @@ export function FileTable({
                         <MoveRight size={14} strokeWidth={2} />
                       </button>
                       {!entry.isFolder && (
-                        <>
-                          <button
-                            onClick={(e) => onShare(entry, e)}
-                            title="공유 링크"
-                            className="p-1.5 rounded hover:bg-hover text-text-soft hover:text-accent"
-                          >
-                            <LinkIcon size={14} strokeWidth={2} />
-                          </button>
-                          <button
-                            onClick={(e) => onDownload(entry, e)}
-                            title="다운로드"
-                            className="p-1.5 rounded hover:bg-hover text-text-soft hover:text-accent"
-                          >
-                            <Download size={14} strokeWidth={2} />
-                          </button>
-                        </>
+                        <button
+                          onClick={(e) => onShare(entry, e)}
+                          title="공유 링크"
+                          className="p-1.5 rounded hover:bg-hover text-text-soft hover:text-accent"
+                        >
+                          <LinkIcon size={14} strokeWidth={2} />
+                        </button>
                       )}
+                      <button
+                        onClick={(e) => onDownload(entry, e)}
+                        title={entry.isFolder ? "ZIP 다운로드" : "다운로드"}
+                        className="p-1.5 rounded hover:bg-hover text-text-soft hover:text-accent"
+                      >
+                        <Download size={14} strokeWidth={2} />
+                      </button>
                       <button
                         onClick={(e) => onDelete(entry, e)}
                         title="삭제"

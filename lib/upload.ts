@@ -115,9 +115,22 @@ export function startUpload(
     for (const file of files) {
       if (aborted) return { ok: false, error: "aborted" };
 
+      // 폴더 업로드 시 __relPath 가 있으면 그 경로에서 dirname 만 떼어내 targetPath 에 합침
+      // 예: __relPath = "myProj/sub/a.mp4" → 실제 업로드 위치 = targetPath + "/myProj/sub"
+      const rel = (file as File & { __relPath?: string }).__relPath;
+      let perFileTarget = targetPath;
+      if (rel) {
+        const lastSlash = rel.lastIndexOf("/");
+        if (lastSlash > 0) {
+          const subDir = rel.slice(0, lastSlash);
+          perFileTarget =
+            (targetPath.endsWith("/") ? targetPath : targetPath + "/") + subDir;
+        }
+      }
+
       const res = await uploadOneFile(
         file,
-        targetPath,
+        perFileTarget,
         (sentInFile) => reportWithStats(sentAcrossFiles + sentInFile),
         markShard,
         abortController.signal,
