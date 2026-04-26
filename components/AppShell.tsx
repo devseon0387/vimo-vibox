@@ -7,6 +7,7 @@ import { Menu } from "lucide-react";
 import { useEffect } from "react";
 import { CommandPalette } from "./CommandPalette";
 import { ShortcutHelp } from "./ShortcutHelp";
+import { InboxDesktopNotifier } from "./InboxDesktopNotifier";
 
 export function AppShell({
   sidebar,
@@ -75,6 +76,7 @@ export function AppShell({
       </main>
       <CommandPalette />
       <ShortcutHelp />
+      <InboxDesktopNotifier />
     </div>
   );
 }

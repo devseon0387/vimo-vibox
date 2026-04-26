@@ -6,6 +6,7 @@ import { logoutAction } from "@/app/login/actions";
 import { SidebarNav } from "./SidebarNav";
 import { SidebarSearchTrigger } from "./SidebarSearchTrigger";
 import { SidebarShortcutHint } from "./SidebarShortcutHint";
+import { NotifyToggle } from "./InboxDesktopNotifier";
 
 export async function Sidebar() {
   const session = await getCurrentSession();
@@ -32,6 +33,9 @@ export async function Sidebar() {
       <SidebarSearchTrigger />
       <SidebarNav isAdmin={session?.role === "admin"} />
       <SidebarShortcutHint />
+      <div className="px-3 pb-2 flex justify-end">
+        <NotifyToggle />
+      </div>
 
       <div className="border-t border-border px-4 py-3 flex items-center gap-3">
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-purple text-white grid place-items-center text-[11px] font-bold shrink-0">
