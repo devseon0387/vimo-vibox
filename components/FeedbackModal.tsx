@@ -224,6 +224,7 @@ export function FeedbackModal({
     { left: string; top: string; flipUp?: boolean } | null
   >(null);
   const videoWrapRef = useRef<HTMLDivElement>(null);
+  const [seekingNow, setSeekingNow] = useState(false);
   const [hlsManifestUrl, setHlsManifestUrl] = useState<string | null>(null);
   const [hlsStatus, setHlsStatus] = useState<
     | { kind: "checking" }
@@ -1025,7 +1026,40 @@ export function FeedbackModal({
                 }
                 onPlay={() => setPlaying(true)}
                 onPause={() => setPlaying(false)}
+                onSeeking={() => setSeekingNow(true)}
+                onSeeked={() => setSeekingNow(false)}
+                onWaiting={() => setSeekingNow(true)}
+                onPlaying={() => setSeekingNow(false)}
+                onCanPlay={() => setSeekingNow(false)}
               />
+              {/* 시킹·버퍼링 스피너 — HLS 세그먼트 fetch 동안 시각적 피드백 */}
+              {seekingNow && (
+                <div className="absolute inset-0 z-15 grid place-items-center pointer-events-none">
+                  <div className="bg-black/60 backdrop-blur rounded-full px-3 py-2 flex items-center gap-2 text-white text-[11.5px] font-semibold">
+                    <svg
+                      className="w-4 h-4 animate-spin"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeOpacity="0.25"
+                        strokeWidth="3"
+                      />
+                      <path
+                        d="M22 12a10 10 0 0 1-10 10"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    버퍼링 중…
+                  </div>
+                </div>
+              )}
               {/* HLS 인코딩 진행 중 카드 (영상 위 중앙, 큰 게이지) */}
               {hlsStatus.kind === "encoding" && (
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur text-white rounded-lg px-4 py-3 z-20 w-[min(90%,360px)] shadow-xl border border-white/10">
