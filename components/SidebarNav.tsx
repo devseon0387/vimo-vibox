@@ -17,11 +17,17 @@ import {
   Activity,
 } from "lucide-react";
 
+import type { FeatureKey } from "@/lib/feature-badges";
+import { NewBadge } from "./NewBadge";
+import { useFeatureBadge } from "@/lib/feature-badges";
+
 type NavItem = {
   label: string;
   icon: typeof FolderOpen;
   href: string;
   matchExact?: boolean;
+  /** 신기능 NEW 배지를 위한 feature key */
+  badge?: FeatureKey;
 };
 
 // VIMO Box 섹션 (팀 공용 + 검수 통계)
@@ -34,7 +40,7 @@ const vimoBoxItems: NavItem[] = [
 // 개인 섹션
 const personalItems: NavItem[] = [
   { label: "내 박스", icon: Package, href: "/my/box" },
-  { label: "내 기록", icon: Activity, href: "/my/stats" },
+  { label: "내 기록", icon: Activity, href: "/my/stats", badge: "my-stats" },
 ];
 
 // 일상 도구 (인사이트 분리됨)
@@ -67,9 +73,14 @@ function SectionLabel({
 
 function NavRow({ item, isActive }: { item: NavItem; isActive: boolean }) {
   const Icon = item.icon;
+  const badge = useFeatureBadge(item.badge ?? "shortcut-help");
+  const showBadge = item.badge ? badge.show : false;
   return (
     <Link
       href={item.href}
+      onClick={() => {
+        if (item.badge) badge.markSeen();
+      }}
       className={`relative flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] mb-0.5 transition-colors ${
         isActive
           ? "bg-accent-soft text-accent font-semibold"
@@ -84,6 +95,7 @@ function NavRow({ item, isActive }: { item: NavItem; isActive: boolean }) {
       )}
       <Icon size={15} strokeWidth={isActive ? 2.5 : 2} />
       <span className="flex-1 truncate">{item.label}</span>
+      {showBadge && item.badge && <NewBadge feature={item.badge} />}
     </Link>
   );
 }

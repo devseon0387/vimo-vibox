@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Menu } from "lucide-react";
 import { useEffect } from "react";
 import { CommandPalette } from "./CommandPalette";
+import { ShortcutHelp } from "./ShortcutHelp";
 
 export function AppShell({
   sidebar,
@@ -73,6 +74,7 @@ export function AppShell({
         {children}
       </main>
       <CommandPalette />
+      <ShortcutHelp />
     </div>
   );
 }
