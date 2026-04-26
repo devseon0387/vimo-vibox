@@ -149,6 +149,14 @@ function formatTc(ms: number): string {
   return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
+function formatEta(sec: number): string {
+  if (sec < 60) return `${sec}초`;
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  if (m < 10) return `${m}분 ${s}초`;
+  return `${m}분`;
+}
+
 function formatRelative(ms: number): string {
   const diff = Date.now() - ms;
   if (diff < 60_000) return "방금";
@@ -174,6 +182,7 @@ export function FeedbackModal({
   isAdmin,
   role = "member",
   shareContext,
+  initialSeekMs,
 }: {
   entry: FileEntry | null;
   backHref?: string;
@@ -181,6 +190,8 @@ export function FeedbackModal({
   isAdmin: boolean;
   role?: "admin" | "member" | "partner";
   shareContext?: ShareContext;
+  /** ⌘K 댓글 결과 클릭 등으로 영상 열 때 자동 시크할 ms */
+  initialSeekMs?: number;
 }) {
   const isGuest = !!shareContext;
   const effectiveRole = isGuest ? "partner" : role;
@@ -210,9 +221,13 @@ export function FeedbackModal({
   const [hlsStatus, setHlsStatus] = useState<
     | { kind: "checking" }
     | { kind: "ready"; url: string }
-    | { kind: "encoding"; progress: number }
+    | { kind: "encoding"; progress: number; etaSec: number | null }
     | { kind: "fallback" }
   >({ kind: "checking" });
+  // 인코딩 ETA 계산용 — 최초 진행률 본 시각·값을 ref 로 들고, 변화율 → 남은 시간
+  const encodingFirstSampleRef = useRef<{ at: number; pct: number } | null>(
+    null,
+  );
   const { confirm, dialog: confirmDialog } = useConfirm();
   const { success, error: toastError } = useToast();
 
@@ -279,12 +294,30 @@ export function FeedbackModal({
         if (data.ready && data.manifestUrl) {
           setHlsManifestUrl(data.manifestUrl);
           setHlsStatus({ kind: "ready", url: data.manifestUrl });
+          encodingFirstSampleRef.current = null;
         } else if (data.status === "queued" || data.status === "running") {
-          setHlsStatus({ kind: "encoding", progress: data.progress ?? 0 });
-          // 인코딩 중이면 5초 후 재확인
+          const pct = Number(data.progress ?? 0);
+          const now = Date.now();
+          if (
+            !encodingFirstSampleRef.current ||
+            pct < encodingFirstSampleRef.current.pct
+          ) {
+            // 첫 샘플 또는 진행률이 거꾸로 갔으면 (재시작) 리셋
+            encodingFirstSampleRef.current = { at: now, pct };
+          }
+          const first = encodingFirstSampleRef.current;
+          const elapsed = (now - first.at) / 1000;
+          const advanced = pct - first.pct;
+          let etaSec: number | null = null;
+          if (advanced >= 1 && elapsed >= 5) {
+            const rate = advanced / elapsed; // %/sec
+            etaSec = Math.max(0, Math.round((100 - pct) / rate));
+          }
+          setHlsStatus({ kind: "encoding", progress: pct, etaSec });
           pollTimer = setTimeout(check, 5000);
         } else {
           setHlsStatus({ kind: "fallback" });
+          encodingFirstSampleRef.current = null;
         }
       } catch {
         if (!cancelled) setHlsStatus({ kind: "fallback" });
@@ -917,6 +950,13 @@ export function FeedbackModal({
                 onLoadedMetadata={(e) => {
                   setDuration(e.currentTarget.duration * 1000);
                   setMuted(e.currentTarget.muted);
+                  if (
+                    initialSeekMs &&
+                    initialSeekMs > 0 &&
+                    e.currentTarget.duration > 0
+                  ) {
+                    e.currentTarget.currentTime = initialSeekMs / 1000;
+                  }
                 }}
                 onTimeUpdate={(e) =>
                   setCurrentTime(e.currentTarget.currentTime * 1000)
@@ -924,11 +964,32 @@ export function FeedbackModal({
                 onPlay={() => setPlaying(true)}
                 onPause={() => setPlaying(false)}
               />
-              {/* HLS 인코딩 진행 중 배지 */}
+              {/* HLS 인코딩 진행 중 카드 (영상 위 중앙, 큰 게이지) */}
               {hlsStatus.kind === "encoding" && (
-                <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-amber-500/90 text-black px-2.5 py-1 rounded text-[11px] font-bold inline-flex items-center gap-1.5 z-20">
-                  <span className="inline-block w-2 h-2 rounded-full bg-amber-200 animate-pulse" />
-                  스트리밍 최적화 중 {hlsStatus.progress}% (원본 재생 중)
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur text-white rounded-lg px-4 py-3 z-20 w-[min(90%,360px)] shadow-xl border border-white/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                    <span className="text-[12.5px] font-bold tracking-tight">
+                      스트리밍 최적화 중
+                    </span>
+                    <span className="ml-auto text-[12.5px] font-mono tabular-nums text-amber-300">
+                      {hlsStatus.progress}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-white/15 rounded-full overflow-hidden mb-2">
+                    <div
+                      className="h-full bg-amber-400 transition-[width] duration-500"
+                      style={{ width: `${hlsStatus.progress}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[10.5px] text-white/70">
+                    <span>
+                      {hlsStatus.etaSec != null
+                        ? `약 ${formatEta(hlsStatus.etaSec)} 남음`
+                        : "남은 시간 계산 중…"}
+                    </span>
+                    <span>지금은 원본으로 재생 중</span>
+                  </div>
                 </div>
               )}
 

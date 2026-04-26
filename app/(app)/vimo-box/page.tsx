@@ -19,10 +19,11 @@ function detectKind(name: string): FileEntry["kind"] {
 export default async function FeedbackPage({
   searchParams,
 }: {
-  searchParams: Promise<{ path?: string }>;
+  searchParams: Promise<{ path?: string; t?: string }>;
 }) {
   const sp = await searchParams;
   const filePath = sp.path;
+  const initialSeekMs = sp.t ? Number(sp.t) : undefined;
   if (!filePath) notFound();
 
   let abs: string;
@@ -65,6 +66,7 @@ export default async function FeedbackPage({
       currentUserId={session.sub}
       isAdmin={session.role === "admin"}
       role={session.role}
+      initialSeekMs={Number.isFinite(initialSeekMs) ? initialSeekMs : undefined}
     />
   );
 }

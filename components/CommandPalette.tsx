@@ -12,10 +12,27 @@ import {
   File as FileIcon,
   Compass,
   ArrowRight,
+  MessageSquare,
+  Link as LinkIcon,
 } from "lucide-react";
 import type { FileEntry } from "@/lib/fs/storage";
 
 type SearchResult = FileEntry;
+
+type CommentHit = {
+  id: string;
+  filePath: string;
+  body: string;
+  authorName: string;
+  videoTimeMs: number;
+  createdAt: number;
+};
+type ShareHit = {
+  token: string;
+  title: string | null;
+  filePath: string;
+  createdAt: number;
+};
 
 type StaticItem = {
   kind: "page";
@@ -26,7 +43,16 @@ type StaticItem = {
 
 type ResultItem =
   | { kind: "file"; entry: SearchResult }
+  | { kind: "comment"; hit: CommentHit }
+  | { kind: "share"; hit: ShareHit }
   | StaticItem;
+
+function formatTime(ms: number): string {
+  const total = Math.floor(ms / 1000);
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
 
 const STATIC_PAGES: StaticItem[] = [
   { kind: "page", label: "VIMO Box", href: "/vimo-box", group: "이동" },
@@ -46,6 +72,8 @@ export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [files, setFiles] = useState<SearchResult[]>([]);
+  const [cmts, setCmts] = useState<CommentHit[]>([]);
+  const [shares, setShares] = useState<ShareHit[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -70,6 +98,8 @@ export function CommandPalette() {
     if (open) {
       setQuery("");
       setFiles([]);
+      setCmts([]);
+      setShares([]);
       setActiveIdx(0);
       // requestAnimationFrame 으로 모달 mount 후 포커스
       requestAnimationFrame(() => inputRef.current?.focus());
@@ -85,12 +115,14 @@ export function CommandPalette() {
     };
   }, [open]);
 
-  // 검색 (250ms debounce)
+  // 검색 (250ms debounce) — 통합 검색
   useEffect(() => {
     if (!open) return;
     const q = query.trim();
     if (!q) {
       setFiles([]);
+      setCmts([]);
+      setShares([]);
       setLoading(false);
       return;
     }
@@ -100,15 +132,24 @@ export function CommandPalette() {
       const ac = new AbortController();
       abortRef.current = ac;
       try {
-        const r = await fetch(
-          `/api/files/search?q=${encodeURIComponent(q)}`,
-          { signal: ac.signal },
-        );
+        const r = await fetch(`/api/search?q=${encodeURIComponent(q)}`, {
+          signal: ac.signal,
+        });
         if (!r.ok) throw new Error("search failed");
-        const data = (await r.json()) as { results: SearchResult[] };
-        setFiles(data.results.slice(0, 30));
+        const data = (await r.json()) as {
+          files: SearchResult[];
+          comments: CommentHit[];
+          shares: ShareHit[];
+        };
+        setFiles(data.files.slice(0, 15));
+        setCmts(data.comments.slice(0, 10));
+        setShares(data.shares.slice(0, 8));
       } catch (e) {
-        if ((e as Error).name !== "AbortError") setFiles([]);
+        if ((e as Error).name !== "AbortError") {
+          setFiles([]);
+          setCmts([]);
+          setShares([]);
+        }
       } finally {
         setLoading(false);
       }
@@ -116,7 +157,7 @@ export function CommandPalette() {
     return () => clearTimeout(t);
   }, [open, query]);
 
-  // 통합 결과 (정적 페이지 필터 + 파일)
+  // 통합 결과 (정적 페이지 + 파일 + 댓글 + 공유)
   const items = useMemo<ResultItem[]>(() => {
     const q = query.trim().toLowerCase();
     const out: ResultItem[] = [];
@@ -129,8 +170,10 @@ export function CommandPalette() {
     );
     for (const p of matchedPages) out.push(p);
     for (const f of files) out.push({ kind: "file", entry: f });
+    for (const c of cmts) out.push({ kind: "comment", hit: c });
+    for (const s of shares) out.push({ kind: "share", hit: s });
     return out;
-  }, [files, query]);
+  }, [files, cmts, shares, query]);
 
   useEffect(() => {
     setActiveIdx(0);
@@ -141,23 +184,35 @@ export function CommandPalette() {
       setOpen(false);
       if (it.kind === "page") {
         router.push(it.href);
-      } else {
-        // 파일·폴더: 폴더면 폴더 진입, 파일이면 단일 검수 모달 페이지
-        const e = it.entry;
-        const zonePrefix = e.path.startsWith("/library")
+        return;
+      }
+      if (it.kind === "comment") {
+        // 영상 페이지로 + 댓글 시간으로 자동 시크
+        router.push(
+          `/vimo-box?path=${encodeURIComponent(it.hit.filePath)}&t=${it.hit.videoTimeMs}`,
+        );
+        return;
+      }
+      if (it.kind === "share") {
+        window.open(`/s/${it.hit.token}`, "_blank", "noopener");
+        return;
+      }
+      // 파일·폴더
+      const e = it.entry;
+      if (e.isFolder) {
+        const folderPrefix = e.path.startsWith("/library")
           ? "/vimo-box/library"
           : e.path.startsWith("/personal")
             ? "/my/box"
             : "/vimo-box";
-        if (e.isFolder) {
-          // /vimo-box?path=/foo 형태
-          const sub = e.path
-            .replace(/^\/library/, "")
-            .replace(/^\/personal\/[^/]+/, "");
-          router.push(`${zonePrefix}${sub ? `?path=${encodeURIComponent(sub)}` : ""}`);
-        } else {
-          router.push(`/v?path=${encodeURIComponent(e.path)}`);
-        }
+        const sub = e.path
+          .replace(/^\/library/, "")
+          .replace(/^\/personal\/[^/]+/, "");
+        router.push(
+          `${folderPrefix}${sub ? `?path=${encodeURIComponent(sub)}` : ""}`,
+        );
+      } else {
+        router.push(`/vimo-box?path=${encodeURIComponent(e.path)}`);
       }
     },
     [router],
@@ -200,12 +255,11 @@ export function CommandPalette() {
     [];
   let currentGroup: string | null = null;
   items.forEach((it, idx) => {
-    const g =
-      it.kind === "page"
-        ? it.group
-        : it.entry.isFolder
-          ? "폴더"
-          : "파일";
+    let g: string;
+    if (it.kind === "page") g = it.group;
+    else if (it.kind === "comment") g = "댓글";
+    else if (it.kind === "share") g = "공유 링크";
+    else g = it.entry.isFolder ? "폴더" : "파일";
     if (g !== currentGroup) {
       grouped.push({ title: g, items: [] });
       currentGroup = g;
@@ -265,18 +319,54 @@ export function CommandPalette() {
                   <span className="shrink-0">
                     {item.kind === "page" ? (
                       <Compass size={16} strokeWidth={2} className="text-text-soft" />
+                    ) : item.kind === "comment" ? (
+                      <MessageSquare
+                        size={16}
+                        strokeWidth={2}
+                        className="text-text-soft"
+                      />
+                    ) : item.kind === "share" ? (
+                      <LinkIcon size={16} strokeWidth={2} className="text-text-soft" />
                     ) : (
                       <KindIcon entry={item.entry} />
                     )}
                   </span>
                   <span className="flex-1 min-w-0">
-                    <span className="block text-[13.5px] text-text truncate">
-                      {item.kind === "page" ? item.label : item.entry.name}
-                    </span>
-                    {item.kind === "file" && (
-                      <span className="block text-[11px] text-text-faint truncate font-mono">
-                        {item.entry.path}
+                    {item.kind === "page" && (
+                      <span className="block text-[13.5px] text-text truncate">
+                        {item.label}
                       </span>
+                    )}
+                    {item.kind === "file" && (
+                      <>
+                        <span className="block text-[13.5px] text-text truncate">
+                          {item.entry.name}
+                        </span>
+                        <span className="block text-[11px] text-text-faint truncate font-mono">
+                          {item.entry.path}
+                        </span>
+                      </>
+                    )}
+                    {item.kind === "comment" && (
+                      <>
+                        <span className="block text-[13.5px] text-text truncate">
+                          {item.hit.body}
+                        </span>
+                        <span className="block text-[11px] text-text-faint truncate">
+                          {item.hit.authorName} · {formatTime(item.hit.videoTimeMs)} ·{" "}
+                          {item.hit.filePath.split("/").pop()}
+                        </span>
+                      </>
+                    )}
+                    {item.kind === "share" && (
+                      <>
+                        <span className="block text-[13.5px] text-text truncate">
+                          {item.hit.title || item.hit.filePath.split("/").pop() || "공유"}
+                        </span>
+                        <span className="block text-[11px] text-text-faint truncate font-mono">
+                          /s/{item.hit.token.slice(0, 12)}…
+                        </span>
+                      </>
                     )}
                   </span>
                   {activeIdx === idx && (
