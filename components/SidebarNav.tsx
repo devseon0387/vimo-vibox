@@ -17,6 +17,7 @@ import {
   Layers,
   Activity,
   Inbox,
+  Building2,
 } from "lucide-react";
 
 import type { FeatureKey } from "@/lib/feature-badges";
@@ -48,6 +49,7 @@ const personalItems: NavItem[] = [
 
 // 일상 도구 (인사이트 분리됨)
 const commonItems: NavItem[] = [
+  { label: "클라이언트", icon: Building2, href: "/admin/clients", badge: "clients" },
   { label: "공유 링크", icon: LinkIcon, href: "/shares" },
   { label: "휴지통", icon: Trash2, href: "/trash" },
 ];

@@ -203,6 +203,73 @@ export type NewEncodingJob = typeof encodingJobs.$inferInsert;
 export type HlsAsset = typeof hlsAssets.$inferSelect;
 export type NewHlsAsset = typeof hlsAssets.$inferInsert;
 
+// ─── Client (외부 클라이언트 — 광고주·브랜드 등) ───
+// 한 클라가 여러 영상을 누적해서 받음. 한 영상이 여러 클라에 동시 공유될 수 있음 (M:N).
+export const clients = sqliteTable("clients", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(), // /c/{slug}
+  contactEmail: text("contact_email"),
+  notes: text("notes"),
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+export const clientVideos = sqliteTable("client_videos", {
+  id: text("id").primaryKey(),
+  clientId: text("client_id")
+    .notNull()
+    .references(() => clients.id, { onDelete: "cascade" }),
+  filePath: text("file_path").notNull(), // 실제 파일 경로 (/Rendering/...)
+  addedAt: integer("added_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  addedBy: text("added_by")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  status: text("status", {
+    enum: ["draft", "sent", "approved", "archived"],
+  })
+    .notNull()
+    .default("draft"),
+  displayOrder: integer("display_order").notNull().default(0),
+});
+
+// 클라당 누적 공유 토큰 (한 토큰이 그 클라의 모든 영상 노출)
+export const clientShareTokens = sqliteTable("client_share_tokens", {
+  id: text("id").primaryKey(),
+  clientId: text("client_id")
+    .notNull()
+    .references(() => clients.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  allowComments: integer("allow_comments", { mode: "boolean" })
+    .notNull()
+    .default(true),
+  allowDownload: integer("allow_download", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }),
+  revokedAt: integer("revoked_at", { mode: "timestamp_ms" }),
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+export type Client = typeof clients.$inferSelect;
+export type NewClient = typeof clients.$inferInsert;
+export type ClientVideo = typeof clientVideos.$inferSelect;
+export type NewClientVideo = typeof clientVideos.$inferInsert;
+export type ClientShareToken = typeof clientShareTokens.$inferSelect;
+export type NewClientShareToken = typeof clientShareTokens.$inferInsert;
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type ShareLink = typeof shareLinks.$inferSelect;

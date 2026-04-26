@@ -16,7 +16,8 @@ export type FeatureKey =
   | "undo-toast"
   | "shortcut-help"
   | "my-stats"
-  | "encoding-card";
+  | "encoding-card"
+  | "clients";
 
 type Feature = {
   key: FeatureKey;
@@ -35,6 +36,7 @@ export const FEATURES: Record<FeatureKey, Feature> = {
   "shortcut-help": { key: "shortcut-help", releasedAt: "2026-04-26", expireDays: 21 },
   "my-stats": { key: "my-stats", releasedAt: "2026-04-25", expireDays: 21 },
   "encoding-card": { key: "encoding-card", releasedAt: "2026-04-25", expireDays: 21 },
+  clients: { key: "clients", releasedAt: "2026-04-26", expireDays: 21 },
 };
 
 const STORAGE_KEY = "vibox.seenFeatures";

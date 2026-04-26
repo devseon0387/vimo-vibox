@@ -60,6 +60,7 @@ const STATIC_PAGES: StaticItem[] = [
   { kind: "page", label: "자료실", href: "/vimo-box/library", group: "이동" },
   { kind: "page", label: "내 박스", href: "/my/box", group: "이동" },
   { kind: "page", label: "내 기록", href: "/my/stats", group: "이동" },
+  { kind: "page", label: "클라이언트", href: "/admin/clients", group: "이동" },
   { kind: "page", label: "공유 링크 관리", href: "/shares", group: "이동" },
   { kind: "page", label: "휴지통", href: "/trash", group: "이동" },
   { kind: "page", label: "검수 통계", href: "/insights", group: "이동" },

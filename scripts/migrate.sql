@@ -160,3 +160,46 @@ CREATE TABLE IF NOT EXISTS hls_assets (
   created_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_hls_file ON hls_assets(file_path);
+
+-- ─── 클라이언트 (외부 광고주·브랜드) ───
+CREATE TABLE IF NOT EXISTS clients (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  slug TEXT NOT NULL UNIQUE,
+  contact_email TEXT,
+  notes TEXT,
+  active INTEGER NOT NULL DEFAULT 1,
+  created_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_clients_slug ON clients(slug);
+CREATE INDEX IF NOT EXISTS idx_clients_active ON clients(active);
+
+-- M:N 매핑 (한 영상 ↔ 여러 클라)
+CREATE TABLE IF NOT EXISTS client_videos (
+  id TEXT PRIMARY KEY,
+  client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  file_path TEXT NOT NULL,
+  added_at INTEGER NOT NULL,
+  added_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'draft',  -- draft | sent | approved | archived
+  display_order INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_client_videos_client ON client_videos(client_id);
+CREATE INDEX IF NOT EXISTS idx_client_videos_path ON client_videos(file_path);
+-- 동일 (client_id, file_path) 중복 방지
+CREATE UNIQUE INDEX IF NOT EXISTS idx_client_videos_unique ON client_videos(client_id, file_path);
+
+CREATE TABLE IF NOT EXISTS client_share_tokens (
+  id TEXT PRIMARY KEY,
+  client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  token TEXT NOT NULL UNIQUE,
+  allow_comments INTEGER NOT NULL DEFAULT 1,
+  allow_download INTEGER NOT NULL DEFAULT 0,
+  expires_at INTEGER,
+  revoked_at INTEGER,
+  created_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_client_share_tokens_client ON client_share_tokens(client_id);
+CREATE INDEX IF NOT EXISTS idx_client_share_tokens_token ON client_share_tokens(token);
