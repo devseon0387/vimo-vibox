@@ -23,6 +23,7 @@ import { randomBytes } from "node:crypto";
 import { db } from "@/lib/db/client";
 import { fileUploads, shareLinks } from "@/lib/db/schema";
 import { getCurrentSession } from "@/lib/auth/session";
+import { canAccessFile } from "@/lib/auth/access";
 import { corsHeaders, preflight } from "@/lib/auth/cors";
 
 export async function OPTIONS(req: NextRequest) {
@@ -35,6 +36,11 @@ export async function POST(req: NextRequest) {
   const session = await getCurrentSession();
   if (!session) {
     return Response.json({ error: "unauthorized" }, { status: 401, headers: cors });
+  }
+  // staff(admin/member)만 외부 공유 링크 생성 가능 — partner는 본인 업로드만 보는데
+  // 외부 공유 링크 발급 권한까지 주면 우회 통로가 됨
+  if (session.role !== "admin" && session.role !== "member") {
+    return Response.json({ error: "manager only" }, { status: 403, headers: cors });
   }
 
   const body = await req.json().catch(() => null);
@@ -78,6 +84,18 @@ export async function POST(req: NextRequest) {
       { error: "no files found for share link" },
       { status: 404, headers: cors }
     );
+  }
+
+  // 각 path 접근 권한 체크 — 호출자가 실제 그 파일을 볼 수 있는지
+  // staff라도 personal zone 다른 유저 폴더는 접근 불가, partner면 본인 업로드만
+  // explicitPaths로 임의 경로 넣어 우회하는 시나리오 차단
+  for (const p of paths) {
+    if (!(await canAccessFile(session, p))) {
+      return Response.json(
+        { error: "forbidden", path: p },
+        { status: 403, headers: cors }
+      );
+    }
   }
 
   const token = randomBytes(16).toString("hex");
