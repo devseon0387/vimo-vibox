@@ -1023,7 +1023,7 @@ export function FeedbackModal({
         <div className="flex flex-col md:flex-row flex-1 min-h-0">
           {/* 좌: 비디오 + 타임라인 (모바일에선 상단 고정, 나머지 공간은 댓글) */}
           <div className="shrink-0 md:shrink md:flex-1 min-w-0 flex flex-col bg-slate-100">
-            <div className="flex-1 md:flex-[5] min-h-0 flex items-center md:items-end justify-center bg-slate-100 overflow-hidden">
+            <div className="flex-1 md:flex-[5] min-h-0 flex items-start justify-center bg-slate-100 overflow-hidden">
               <div
                 ref={videoWrapRef}
                 className={`relative overflow-hidden bg-black max-w-full max-h-full ${
@@ -3064,6 +3064,10 @@ function AnnotationOverlay({
             zIndex: 4,
           }}
         />
+        {(() => {
+          // 라벨이 영상 프레임 밖으로 잘리지 않도록 박스 위/아래 자동 플립
+          const flipUp = bbox.y + bbox.h > 0.82;
+          return (
         <div
           onClick={(e) => {
             e.stopPropagation();
@@ -3072,8 +3076,12 @@ function AnnotationOverlay({
           className="absolute cursor-pointer"
           style={{
             left: `${(bbox.x + bbox.w / 2) * 100}%`,
-            top: `${(bbox.y + bbox.h) * 100}%`,
-            transform: "translate(-50%, 8px)",
+            top: flipUp
+              ? `${bbox.y * 100}%`
+              : `${(bbox.y + bbox.h) * 100}%`,
+            transform: flipUp
+              ? "translate(-50%, calc(-100% - 8px))"
+              : "translate(-50%, 8px)",
             zIndex: 5,
           }}
         >
@@ -3101,6 +3109,8 @@ function AnnotationOverlay({
             )}
           </span>
         </div>
+          );
+        })()}
       </>
     );
   }
@@ -3209,7 +3219,10 @@ function AnnotationOverlay({
           })}
         </g>
       </svg>
-      {body?.trim() && (
+      {body?.trim() && (() => {
+        // 라벨이 영상 프레임 밖으로 잘리지 않도록 박스 위/아래 자동 플립
+        const flipUp = bounds.y + bounds.h > 0.82;
+        return (
         <div
           onClick={(e) => {
             e.stopPropagation();
@@ -3218,8 +3231,12 @@ function AnnotationOverlay({
           className="absolute cursor-pointer"
           style={{
             left: `${(bounds.x + bounds.w / 2) * 100}%`,
-            top: `${(bounds.y + bounds.h) * 100}%`,
-            transform: "translate(-50%, 8px)",
+            top: flipUp
+              ? `${bounds.y * 100}%`
+              : `${(bounds.y + bounds.h) * 100}%`,
+            transform: flipUp
+              ? "translate(-50%, calc(-100% - 8px))"
+              : "translate(-50%, 8px)",
             zIndex: 5,
             maxWidth: "70%",
           }}
@@ -3240,7 +3257,8 @@ function AnnotationOverlay({
             {body.trim()}
           </span>
         </div>
-      )}
+        );
+      })()}
     </>
   );
 }

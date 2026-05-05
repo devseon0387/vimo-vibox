@@ -118,15 +118,17 @@ export function SharePageClient({
             if (n) onSetGuestName(n);
           }}
         />
-        <FeedbackModal
-          key={activeFile.path}
-          entry={toFileEntry(activeFile)}
-          backHref="#"
-          currentUserId="guest"
-          isAdmin={false}
-          role="partner"
-          shareContext={shareContext}
-        />
+        <div className="h-screen overflow-hidden">
+          <FeedbackModal
+            key={activeFile.path}
+            entry={toFileEntry(activeFile)}
+            backHref="#"
+            currentUserId="guest"
+            isAdmin={false}
+            role="partner"
+            shareContext={shareContext}
+          />
+        </div>
       </>
     );
   }

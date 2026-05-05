@@ -161,25 +161,38 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
 
       // 완료 처리
       handle.done.then((res) => {
-        setUploads((prev) => {
-          const cur = prev.find((u) => u.id === id);
-          if (!cur) return prev;
-          let nextStatus: UploadStatus = "done";
-          if (!res.ok) {
-            nextStatus = res.error === "aborted" ? "cancelled" : "failed";
-          }
-          const updated: UploadEntry = {
-            ...cur,
-            status: nextStatus,
-            finishedAt: Date.now(),
-            error: res.ok ? undefined : res.error,
-          };
-          // 완료 콜백
-          try {
-            options?.onComplete?.(updated);
-          } catch {}
-          return prev.map((u) => (u.id === id ? updated : u));
-        });
+        const nextStatus: UploadStatus = res.ok
+          ? "done"
+          : res.error === "aborted"
+            ? "cancelled"
+            : "failed";
+        const finishedAt = Date.now();
+        // 콜백용 최종 entry — state 외부에서 미리 구성
+        // (progress 필드는 완료 시점이라 sent ≒ total 로 가정)
+        const finalEntry: UploadEntry = {
+          ...entry,
+          sent: entry.total,
+          status: nextStatus,
+          finishedAt,
+          error: res.ok ? undefined : res.error,
+        };
+        setUploads((prev) =>
+          prev.map((u) =>
+            u.id === id
+              ? {
+                  ...u,
+                  status: nextStatus,
+                  finishedAt,
+                  error: res.ok ? undefined : res.error,
+                }
+              : u,
+          ),
+        );
+        // 콜백은 updater 밖에서 — updater 안에서 호출하면
+        // 다른 컴포넌트의 setState 가 렌더 중 트리거되어 React 경고 발생
+        try {
+          options?.onComplete?.(finalEntry);
+        } catch {}
         // 모든 상태(완료/취소/실패)는 일정 시간 후 자동 dismiss
         scheduleDismiss(id);
 
