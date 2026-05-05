@@ -8,8 +8,9 @@ import type { Stats } from "node:fs";
  * - rendering : 비모 팀 검수 파이프라인 (기존 /Shared/). prefix 없는 레거시 경로도 여기로 폴백.
  * - library   : 자료실 (팀 공용 레퍼런스 — staff만 쓰기)
  * - personal  : 개인 드라이브 (/personal/{userId}/...)
+ * - notes     : 개발 노트 (admin 전용 .md, SEON Hub 동기화 대상)
  */
-export type Zone = "rendering" | "library" | "personal";
+export type Zone = "rendering" | "library" | "personal" | "notes";
 
 /** rendering zone 의 디스크 루트 = STORAGE_ROOT env */
 export function getStorageRoot(): string {
@@ -25,6 +26,7 @@ export function getZoneRoot(zone: Zone): string {
   const base = path.dirname(renderingRoot);
   if (zone === "library") return path.join(base, "Library");
   if (zone === "personal") return path.join(base, "Personal");
+  if (zone === "notes") return path.join(base, "Notes");
   throw new Error(`unknown zone: ${zone}`);
 }
 
@@ -311,6 +313,11 @@ export type ChunkUploadMeta = {
 
 /** 청크 임시 저장소 루트 (STORAGE_ROOT 안, 점으로 시작해 listDirectory에서 필터됨) */
 export function getUploadTempRoot(): string {
+  // 청크 임시 디렉토리는 외장 디스크 대신 내장 SSD/별도 경로에 두면
+  // 외장 USB SSD R/W 경합이 사라져 업로드 throughput 이 크게 개선됨.
+  // UPLOAD_TEMP_ROOT env 로 오버라이드 가능. 미설정 시 외장 디스크 폴백.
+  const override = process.env.UPLOAD_TEMP_ROOT;
+  if (override) return path.resolve(override);
   return path.join(getStorageRoot(), ".vibox", "uploads");
 }
 

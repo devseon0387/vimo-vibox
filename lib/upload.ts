@@ -16,9 +16,11 @@ export type UploadStats = {
   peakBytesPerSec: number;
 };
 
-const CHUNK_SIZE = 50 * 1024 * 1024; // 50MB — 끝자락 꼬리 효과 완화 (더 많은 청크로 병렬 유지)
-const CONCURRENCY = 18; // 3 도메인 × 6 연결 — 브라우저 origin당 최대치 전부 활용
-const MAX_RETRIES = 3;
+// 청크: 50MB, 동시 18 (3 hostname × 6 origin-conn 한계 활용).
+// 작은 청크(10MB)는 cloudflared multiplex overhead 더 커서 오히려 느림 (실측 확인).
+const CHUNK_SIZE = 50 * 1024 * 1024; // 50MB
+const CONCURRENCY = 18;
+const MAX_RETRIES = 4;
 
 // 도메인 샤딩 — 브라우저의 origin당 6 TCP 연결 제한 우회
 // 청크를 3개 호스트에 분산해서 18 TCP 연결 확보

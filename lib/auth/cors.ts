@@ -18,13 +18,24 @@ export function isAllowedOrigin(origin: string | null): boolean {
   return getAllowedOrigins().includes(origin);
 }
 
+/**
+ * 업로드 샤딩(u1/u2.vibox.cloud)에서 같은 zone 의 subdomain 간 호출이
+ * CORS 통과하도록 *.vibox.cloud 를 자동 허용. ERP 화이트리스트와는 별개.
+ */
+function isSameZoneOrigin(origin: string): boolean {
+  return /^https:\/\/(?:[a-z0-9-]+\.)*vibox\.cloud$/i.test(origin);
+}
+
 export function corsHeaders(origin: string | null): Record<string, string> {
-  if (!origin || !isAllowedOrigin(origin)) return {};
+  if (!origin) return {};
+  if (!isAllowedOrigin(origin) && !isSameZoneOrigin(origin)) return {};
   return {
     "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    // preflight 캐시 24시간 — 매 청크마다 OPTIONS 안 보내도록
+    "Access-Control-Max-Age": "86400",
     Vary: "Origin",
   };
 }
