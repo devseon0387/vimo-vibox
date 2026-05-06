@@ -16,21 +16,18 @@ export type UploadStats = {
   peakBytesPerSec: number;
 };
 
-// 청크: 50MB, 동시 18 (3 hostname × 6 origin-conn 한계 활용).
-// 작은 청크(10MB)는 cloudflared multiplex overhead 더 커서 오히려 느림 (실측 확인).
-const CHUNK_SIZE = 50 * 1024 * 1024; // 50MB
-const CONCURRENCY = 18;
+// 청크/동시성 튜닝:
+// - 단일 hostname 6 conn 으로 self-test 105 MB/s, cross-origin 18 분배는 27 MB/s.
+//   cross-origin overhead (CORS preflight, cookie 처리) 가 오히려 손해.
+// - 그래서 단일 hostname 으로 6 conn 만 활용. 청크 95MB (CF Free body 100MB 한계 안전).
+// - 큰 청크가 cloudflared multiplex overhead 적고 TCP slow start 후 큰 window 활용 가능.
+const CHUNK_SIZE = 95 * 1024 * 1024; // 95MB (CF Free 100MB body limit 안전 마진)
+const CONCURRENCY = 6; // 브라우저 origin당 6 conn 한계 = 단일 hostname 모두 활용
 const MAX_RETRIES = 4;
 
-// 도메인 샤딩 — 브라우저의 origin당 6 TCP 연결 제한 우회
-// 청크를 3개 호스트에 분산해서 18 TCP 연결 확보
-// HTTP/3 활성화된 브라우저에선 단일 QUIC 연결도 활용
+// 단일 hostname 으로 6 conn 사용 (cross-origin overhead 회피).
+// u1/u2 sub-domain 분배는 self-test 결과 cross-origin overhead 로 더 느림.
 function getShards(): string[] {
-  if (typeof window === "undefined") return [""];
-  const host = window.location.hostname;
-  if (host === "vibox.cloud") {
-    return ["", "https://u1.vibox.cloud", "https://u2.vibox.cloud"];
-  }
   return [""];
 }
 
