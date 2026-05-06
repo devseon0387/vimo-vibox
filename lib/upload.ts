@@ -17,17 +17,22 @@ export type UploadStats = {
 };
 
 // 청크/동시성 튜닝:
-// - 단일 hostname 6 conn 으로 self-test 105 MB/s, cross-origin 18 분배는 27 MB/s.
-//   cross-origin overhead (CORS preflight, cookie 처리) 가 오히려 손해.
-// - 그래서 단일 hostname 으로 6 conn 만 활용. 청크 95MB (CF Free body 100MB 한계 안전).
-// - 큰 청크가 cloudflared multiplex overhead 적고 TCP slow start 후 큰 window 활용 가능.
-const CHUNK_SIZE = 95 * 1024 * 1024; // 95MB (CF Free 100MB body limit 안전 마진)
-const CONCURRENCY = 6; // 브라우저 origin당 6 conn 한계 = 단일 hostname 모두 활용
+// - 95MB × 18 동시 (3 hostname × 6 origin-conn) — 각 hostname 이 별도 cloudflared
+//   tunnel 로 라우팅되어 backbone 12 conn 풀 분리 (vimo-cloud / vibox-u1 / vibox-u2).
+// - 청크 95MB: CF Free body 100MB 한계 안전 마진 + TCP slow start 후 큰 window 활용.
+// - CORS Max-Age 24h 캐시로 매 청크마다 OPTIONS preflight 안 보냄.
+const CHUNK_SIZE = 95 * 1024 * 1024; // 95MB
+const CONCURRENCY = 18; // 3 hostname × 6 origin-conn
 const MAX_RETRIES = 4;
 
-// 단일 hostname 으로 6 conn 사용 (cross-origin overhead 회피).
-// u1/u2 sub-domain 분배는 self-test 결과 cross-origin overhead 로 더 느림.
+// 도메인 샤딩 — 브라우저 origin당 6 TCP 연결 한계 우회.
+// 3 hostname 각각 별도 cloudflared tunnel 로 라우팅되어 backbone 12 conn 풀 활용.
 function getShards(): string[] {
+  if (typeof window === "undefined") return [""];
+  const host = window.location.hostname;
+  if (host === "vibox.cloud") {
+    return ["", "https://u1.vibox.cloud", "https://u2.vibox.cloud"];
+  }
   return [""];
 }
 
