@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>Vibox — 버전 표시 위치 시안</title>
+<style>
+  :root {
+    --bg: #faf9f7;
+    --surface: #f5f5f5;
+    --border: #ececec;
+    --border-hover: #d4d4d4;
+    --text: #1c1917;
+    --text-soft: #57534e;
+    --text-muted: #78716c;
+    --text-faint: #a8a29e;
+    --hover: #f0f0f0;
+    --accent: #e85008;
+    --accent-soft: #fef0e8;
+    --accent-hover: #c8430a;
+    --success: #16a34a;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", sans-serif;
+    font-size: 14px;
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 36px 28px 120px; }
+  h1 { font-size: 22px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .sub { color: var(--text-muted); font-size: 13px; margin-bottom: 30px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .variant {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+  }
+  .vhead {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+  }
+  .vhead h3 {
+    font-size: 16px; font-weight: 700; margin: 0;
+  }
+  .vhead .pick {
+    font-size: 10.5px; font-weight: 700;
+    background: var(--surface);
+    color: var(--text-soft);
+    padding: 3px 8px; border-radius: 999px;
+  }
+  .vhead .pick.recommend { background: var(--accent-soft); color: var(--accent); }
+  .vhead .pick.minimal { background: #ecfeff; color: #0369a1; }
+  .vdesc {
+    color: var(--text-soft); font-size: 12.5px; line-height: 1.55;
+    margin: 0 0 14px;
+  }
+  .pros-cons {
+    display: flex; gap: 14px; margin-top: 12px;
+    font-size: 12px;
+  }
+  .pros-cons div {
+    flex: 1;
+    background: var(--surface);
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: var(--text-soft);
+  }
+  .pros-cons strong { color: var(--text); display: block; margin-bottom: 2px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* === Vibox-like layout shell === */
+  .browser {
+    height: 460px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    background: white;
+    position: relative;
+  }
+  .rail {
+    width: 60px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding: 14px 0;
+  }
+  .logo-block {
+    width: 32px; height: 32px;
+    background: var(--accent); color: white;
+    border-radius: 7px;
+    display: grid; place-items: center;
+    font-weight: 800; font-size: 14px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .rail-item {
+    width: 40px; padding: 8px 0;
+    border-radius: 6px;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 2px;
+    color: var(--text-faint);
+    font-size: 9px;
+    cursor: pointer;
+  }
+  .rail-item.active { color: var(--accent); background: var(--accent-soft); }
+  .rail-item .dot { width: 16px; height: 16px; background: currentColor; border-radius: 3px; opacity: 0.85; }
+  .rail-spacer { flex: 1; }
+  .main {
+    flex: 1;
+    display: flex; flex-direction: column;
+    min-width: 0;
+  }
+  .topbar {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12.5px;
+    color: var(--text-soft);
+    background: white;
+  }
+  .topbar .crumb { font-weight: 600; color: var(--text); }
+  .topbar .sep { color: var(--text-faint); }
+  .topbar-spacer { flex: 1; }
+  .topbar-search {
+    background: var(--surface);
+    padding: 5px 12px;
+    border-radius: 6px;
+    color: var(--text-faint);
+    font-size: 12px;
+    width: 160px;
+  }
+  .topbar-user {
+    width: 26px; height: 26px;
+    background: linear-gradient(135deg, #fda4af, #fb923c);
+    border-radius: 50%;
+    display: grid; place-items: center;
+    color: white; font-size: 11px; font-weight: 700;
+    cursor: pointer;
+    position: relative;
+  }
+  .filearea {
+    flex: 1;
+    padding: 14px 18px;
+    background: white;
+    overflow: auto;
+    position: relative;
+  }
+  .file-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 100px 80px;
+    gap: 10px; align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid #f5f5f5;
+    font-size: 12.5px;
+    color: var(--text);
+  }
+  .file-row .thumb { width: 24px; height: 24px; background: var(--surface); border-radius: 4px; }
+  .file-row.folder .thumb { background: #fef3c7; }
+  .file-row .meta { color: var(--text-faint); font-size: 11px; }
+  .statusbar-mock {
+    padding: 8px 14px;
+    border-top: 1px solid var(--border);
+    background: white;
+    display: flex; align-items: center; gap: 12px;
+    font-size: 10.5px;
+    color: var(--text-soft);
+  }
+  .statusbar-mock .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+  .statusbar-mock kbd {
+    padding: 1px 5px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-size: 9.5px;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    color: var(--text-soft);
+  }
+  .statusbar-mock .sp { flex: 1; }
+
+  /* === A: Rail footer === */
+  .a-rail-footer {
+    color: var(--text-faint);
+    font-size: 9.5px;
+    text-align: center;
+    padding: 8px 0 0;
+    line-height: 1.3;
+    cursor: pointer;
+  }
+  .a-rail-footer:hover { color: var(--text-soft); }
+  .a-rail-footer .v { font-weight: 700; color: var(--text-soft); font-family: ui-monospace, monospace; }
+
+  /* === B: Status bar 우측 === */
+  .b-statusver {
+    color: var(--text-faint);
+    font-family: ui-monospace, monospace;
+    font-size: 10px;
+    padding: 1px 6px;
+    background: var(--surface);
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .b-statusver:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* === C: 로고 옆 배지 === */
+  .c-logo-badge {
+    position: absolute;
+    bottom: -3px; right: -8px;
+    background: white;
+    border: 1px solid var(--border);
+    color: var(--text-soft);
+    font-size: 8.5px;
+    font-weight: 800;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-family: ui-monospace, monospace;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+
+  /* === D: User menu (오버레이) === */
+  .d-usermenu {
+    position: absolute;
+    top: 38px; right: 14px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 220px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+    font-size: 12.5px;
+    padding: 4px;
+    z-index: 5;
+  }
+  .d-usermenu .head {
+    padding: 10px 12px 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .d-usermenu .name { font-weight: 700; }
+  .d-usermenu .mail { font-size: 11px; color: var(--text-muted); }
+  .d-usermenu .row {
+    padding: 6px 12px;
+    border-radius: 4px;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .d-usermenu .row:hover { background: var(--accent-soft); color: var(--accent); }
+  .d-usermenu .footer {
+    padding: 8px 12px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+    color: var(--text-faint);
+    font-size: 10.5px;
+    display: flex; justify-content: space-between;
+    font-family: ui-monospace, monospace;
+  }
+
+  /* === E: About modal === */
+  .e-modal-bg {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.25);
+    backdrop-filter: blur(2px);
+    display: grid; place-items: center;
+    z-index: 5;
+  }
+  .e-modal {
+    background: white;
+    border-radius: 12px;
+    width: 320px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.20);
+  }
+  .e-modal .logo {
+    width: 48px; height: 48px;
+    background: var(--accent); color: white;
+    border-radius: 12px;
+    display: grid; place-items: center;
+    margin: 0 auto 14px;
+    font-size: 20px; font-weight: 800;
+  }
+  .e-modal .name { font-size: 17px; font-weight: 700; margin-bottom: 2px; }
+  .e-modal .tagline { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+  .e-modal .vbox {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--text-soft);
+    margin-bottom: 14px;
+    text-align: left;
+    display: grid; grid-template-columns: 1fr auto; gap: 4px 12px;
+  }
+  .e-modal .vbox .k { color: var(--text-muted); }
+  .e-modal .vbox .v { color: var(--text); font-weight: 600; }
+  .e-modal .closebtn {
+    background: var(--accent); color: white; border: 0;
+    padding: 7px 18px; border-radius: 6px; font-size: 12.5px; font-weight: 600;
+    cursor: pointer;
+  }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>버전 표시 위치 시안</h1>
+  <p class="sub">v0.1.0을 어디에 보여줄지 5가지 방식 비교. 버전 정보 = `0.1.0` (package.json) + `<git short SHA>` (커밋) + `<deploy time>`.</p>
+
+  <div class="grid">
+
+    <!-- A: Rail footer -->
+    <div class="variant">
+      <div class="vhead">
+        <h3>① Rail footer (좌측 사이드바 하단)</h3>
+        <span class="pick">VS Code 스타일</span>
+      </div>
+      <p class="vdesc">사이드바 가장 아래. 늘 보이지만 시선이 잘 안 가는 자리. 클릭하면 changelog/release notes로.</p>
+      <div class="browser">
+        <aside class="rail">
+          <div class="logo-block">V</div>
+          <div class="rail-item active"><div class="dot"></div>비모</div>
+          <div class="rail-item"><div class="dot"></div>박스</div>
+          <div class="rail-item"><div class="dot"></div>노트</div>
+          <div class="rail-spacer"></div>
+          <div class="a-rail-footer">
+            Vibox<br><span class="v">v0.1.0</span>
+          </div>
+        </aside>
+        <div class="main">
+          <div class="topbar">
+            <span class="crumb">비모</span>
+            <span class="sep">›</span>
+            <span class="crumb">2026-04 클라이언트A</span>
+            <div class="topbar-spacer"></div>
+            <div class="topbar-search">⌘K · 검색</div>
+            <div class="topbar-user">SE</div>
+          </div>
+          <div class="filearea">
+            <div class="file-row folder"><div class="thumb"></div><div>인터뷰 컷</div><div class="meta">어제</div><div class="meta">—</div></div>
+            <div class="file-row"><div class="thumb"></div><div>홍보영상_v3.mp4</div><div class="meta">3시간 전</div><div class="meta">428 MB</div></div>
+            <div class="file-row"><div class="thumb"></div><div>썸네일_안.png</div><div class="meta">오늘 14:22</div><div class="meta">2.4 MB</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div><strong>장점</strong> 항상 표시. 메인 영역 깨끗.</div>
+        <div><strong>단점</strong> 좁은 rail에 텍스트 비좁음. 모바일 비박스에선 더 압박.</div>
+      </div>
+    </div>
+
+    <!-- B: Status bar 오른쪽 -->
+    <div class="variant">
+      <div class="vhead">
+        <h3>② Status bar 우측 끝</h3>
+        <span class="pick recommend">권장 — 이미 만든 자리</span>
+      </div>
+      <p class="vdesc">방금 만든 하단 status bar의 단축키 힌트 옆. 이미 시스템 상태가 모이는 자리라 자연스러움. 클릭 시 about 모달.</p>
+      <div class="browser">
+        <aside class="rail">
+          <div class="logo-block">V</div>
+          <div class="rail-item active"><div class="dot"></div>비모</div>
+          <div class="rail-item"><div class="dot"></div>박스</div>
+          <div class="rail-item"><div class="dot"></div>노트</div>
+          <div class="rail-spacer"></div>
+        </aside>
+        <div class="main">
+          <div class="topbar">
+            <span class="crumb">비모</span>
+            <span class="sep">›</span>
+            <span class="crumb">2026-04 클라이언트A</span>
+            <div class="topbar-spacer"></div>
+            <div class="topbar-search">⌘K · 검색</div>
+            <div class="topbar-user">SE</div>
+          </div>
+          <div class="filearea">
+            <div class="file-row folder"><div class="thumb"></div><div>인터뷰 컷</div><div class="meta">어제</div><div class="meta">—</div></div>
+            <div class="file-row"><div class="thumb"></div><div>홍보영상_v3.mp4</div><div class="meta">3시간 전</div><div class="meta">428 MB</div></div>
+          </div>
+          <div class="statusbar-mock">
+            <span><b style="color: var(--text)">3</b>개 항목</span>
+            <span style="color: var(--text-faint)">|</span>
+            <span><span class="dot"></span> Litestream</span>
+            <span><span class="dot"></span> 디스크 12%</span>
+            <div class="sp"></div>
+            <kbd>↑↓</kbd> 이동
+            <span style="opacity:0.4">·</span>
+            <kbd>Space</kbd> 미리보기
+            <span style="opacity:0.4">·</span>
+            <span class="b-statusver">v0.1.0</span>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div><strong>장점</strong> 이미 status bar 있음. 추가 공간 0. tooltip으로 빌드 SHA/시각.</div>
+        <div><strong>단점</strong> status bar가 안 보이는 화면(폼 전용 등)에선 사라짐.</div>
+      </div>
+    </div>
+
+    <!-- C: 로고 옆 배지 -->
+    <div class="variant">
+      <div class="vhead">
+        <h3>③ 로고 옆 배지</h3>
+        <span class="pick minimal">눈에 잘 띔 (장단점 동시)</span>
+      </div>
+      <p class="vdesc">좌측 V 로고 우측 하단에 작은 배지. Notion/Linear 일부 워크스페이스 스타일. 베타/알파 강조에 적합.</p>
+      <div class="browser">
+        <aside class="rail">
+          <div class="logo-block">
+            V
+            <span class="c-logo-badge">v0.1</span>
+          </div>
+          <div class="rail-item active"><div class="dot"></div>비모</div>
+          <div class="rail-item"><div class="dot"></div>박스</div>
+          <div class="rail-item"><div class="dot"></div>노트</div>
+          <div class="rail-spacer"></div>
+        </aside>
+        <div class="main">
+          <div class="topbar">
+            <span class="crumb">비모</span>
+            <span class="sep">›</span>
+            <span class="crumb">2026-04 클라이언트A</span>
+            <div class="topbar-spacer"></div>
+            <div class="topbar-search">⌘K · 검색</div>
+            <div class="topbar-user">SE</div>
+          </div>
+          <div class="filearea">
+            <div class="file-row folder"><div class="thumb"></div><div>인터뷰 컷</div><div class="meta">어제</div><div class="meta">—</div></div>
+            <div class="file-row"><div class="thumb"></div><div>홍보영상_v3.mp4</div><div class="meta">3시간 전</div><div class="meta">428 MB</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div><strong>장점</strong> 첫눈에 보임. "지금은 v0.1"이라는 인지 명확. 베타/얼리 단계 표시 좋음.</div>
+        <div><strong>단점</strong> 1.0 도달 후엔 어색. 시각적 노이즈 (대규모 표시는 부적절).</div>
+      </div>
+    </div>
+
+    <!-- D: User menu -->
+    <div class="variant">
+      <div class="vhead">
+        <h3>④ 사용자 메뉴 footer</h3>
+        <span class="pick">Slack 스타일</span>
+      </div>
+      <p class="vdesc">우상단 아바타 클릭 시 펼쳐지는 메뉴 가장 아래. 평소엔 안 보임. 정보 위계 낮은 자리.</p>
+      <div class="browser">
+        <aside class="rail">
+          <div class="logo-block">V</div>
+          <div class="rail-item active"><div class="dot"></div>비모</div>
+          <div class="rail-item"><div class="dot"></div>박스</div>
+          <div class="rail-item"><div class="dot"></div>노트</div>
+          <div class="rail-spacer"></div>
+        </aside>
+        <div class="main">
+          <div class="topbar">
+            <span class="crumb">비모</span>
+            <span class="sep">›</span>
+            <span class="crumb">2026-04 클라이언트A</span>
+            <div class="topbar-spacer"></div>
+            <div class="topbar-search">⌘K · 검색</div>
+            <div class="topbar-user">SE</div>
+          </div>
+          <div class="filearea">
+            <div class="file-row folder"><div class="thumb"></div><div>인터뷰 컷</div><div class="meta">어제</div><div class="meta">—</div></div>
+            <div class="file-row"><div class="thumb"></div><div>홍보영상_v3.mp4</div><div class="meta">3시간 전</div><div class="meta">428 MB</div></div>
+          </div>
+          <div class="d-usermenu">
+            <div class="head">
+              <div class="name">세온</div>
+              <div class="mail">seon@vi-mo.kr</div>
+            </div>
+            <div class="row">계정 설정</div>
+            <div class="row">키보드 단축키</div>
+            <div class="row">로그아웃</div>
+            <div class="footer">
+              <span>Vibox</span>
+              <span>v0.1.0 · a3f9c2</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div><strong>장점</strong> 평소 안 보임. 깨끗. 클릭 1회 cost.</div>
+        <div><strong>단점</strong> 발견 어려움. "지금 어떤 버전 돌아가나?" 즉시 답 X.</div>
+      </div>
+    </div>
+
+    <!-- E: About modal -->
+    <div class="variant">
+      <div class="vhead">
+        <h3>⑤ About 모달 (⌘K → "버전")</h3>
+        <span class="pick">상세 정보 카드</span>
+      </div>
+      <p class="vdesc">평소엔 어디에도 안 보임. CommandPalette에서 "버전"/"about" 검색 시 모달. 또는 다른 시안과 조합 (B + E가 흔한 패턴).</p>
+      <div class="browser">
+        <aside class="rail">
+          <div class="logo-block">V</div>
+          <div class="rail-item active"><div class="dot"></div>비모</div>
+          <div class="rail-item"><div class="dot"></div>박스</div>
+          <div class="rail-item"><div class="dot"></div>노트</div>
+          <div class="rail-spacer"></div>
+        </aside>
+        <div class="main">
+          <div class="topbar">
+            <span class="crumb">비모</span>
+            <span class="sep">›</span>
+            <span class="crumb">2026-04 클라이언트A</span>
+            <div class="topbar-spacer"></div>
+            <div class="topbar-search">⌘K · 검색</div>
+            <div class="topbar-user">SE</div>
+          </div>
+          <div class="filearea">
+            <div class="file-row folder"><div class="thumb"></div><div>인터뷰 컷</div><div class="meta">어제</div><div class="meta">—</div></div>
+          </div>
+          <div class="e-modal-bg">
+            <div class="e-modal">
+              <div class="logo">V</div>
+              <div class="name">Vibox</div>
+              <div class="tagline">내부 팀 파일 공유 · Mac mini · vibox.cloud</div>
+              <div class="vbox">
+                <span class="k">Version</span><span class="v">0.1.0</span>
+                <span class="k">Build</span><span class="v">a3f9c2</span>
+                <span class="k">Deployed</span><span class="v">2026-05-02 22:32</span>
+                <span class="k">Node</span><span class="v">v22.18.0</span>
+                <span class="k">Next.js</span><span class="v">16.0.0</span>
+              </div>
+              <button class="closebtn">확인</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div><strong>장점</strong> 풍부한 정보 (build SHA, deploy 시각, Node/Next.js). 디버깅 시 유용.</div>
+        <div><strong>단점</strong> 단독으론 발견 어려움. 다른 시안과 조합 필요 (예: B 클릭 → E 펼침).</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="margin-top: 32px; padding: 18px 22px; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 10px; color: var(--text);">
+    <strong style="font-size: 14px;">개인 추천: ② + ⑤ 조합</strong>
+    <p style="font-size: 12.5px; color: var(--text-soft); margin: 6px 0 0; line-height: 1.5;">
+      평소엔 status bar 우측에 <code>v0.1.0</code> 작게. 클릭하면 ⑤ About 모달 펼침 (build SHA, deploy 시각, Node 버전).
+      가벼운 항상-노출 + 클릭 시 풍부한 정보 = 대부분 SaaS의 표준 패턴.
+    </p>
+  </div>
+
+</div>
+</body>
+</html>

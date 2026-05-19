@@ -19,8 +19,24 @@ const SECTIONS: ShortcutSection[] = [
     ],
   },
   {
-    title: "파일 리스트",
+    title: "파일 네비게이션",
     shortcuts: [
+      { keys: ["↑"], desc: "이전 항목으로 focus" },
+      { keys: ["↓"], desc: "다음 항목으로 focus" },
+      { keys: ["←", "→"], desc: "그리드 모드: 좌우 컬럼 이동" },
+      { keys: ["Home"], desc: "첫 항목으로" },
+      { keys: ["End"], desc: "마지막 항목으로" },
+      { keys: ["Enter"], desc: "열기 (folder navigate / file preview / video page)" },
+      { keys: ["Space"], desc: "Quick Look 미리보기 (image / video / audio / pdf)" },
+    ],
+  },
+  {
+    title: "파일 작업",
+    shortcuts: [
+      { keys: ["우클릭"], desc: "컨텍스트 메뉴 (열기/이름변경/이동/공유/삭제 등)" },
+      { keys: ["F2"], desc: "이름 변경" },
+      { keys: ["Delete"], desc: "삭제 (휴지통으로)" },
+      { keys: ["⌫"], desc: "삭제 (Backspace)" },
       { keys: ["⌘", "A"], desc: "전체 선택" },
       { keys: ["Shift", "+클릭"], desc: "범위 선택" },
       { keys: ["⌘", "+클릭"], desc: "토글 선택" },
@@ -28,7 +44,16 @@ const SECTIONS: ShortcutSection[] = [
     ],
   },
   {
-    title: "영상 검수",
+    title: "Quick Look 미리보기",
+    shortcuts: [
+      { keys: ["←"], desc: "이전 미디어" },
+      { keys: ["→"], desc: "다음 미디어" },
+      { keys: ["Space"], desc: "닫기" },
+      { keys: ["Esc"], desc: "닫기" },
+    ],
+  },
+  {
+    title: "영상 검수 (/vimo-box)",
     shortcuts: [
       { keys: ["J"], desc: "다음 영상" },
       { keys: ["K"], desc: "이전 영상" },

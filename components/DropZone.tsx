@@ -35,6 +35,8 @@ async function walkEntry(
   }
 }
 
+const FADE_MS = 150;
+
 /** 파일이 body로 드래그될 때 오버레이 띄우고, 드롭 시 onFiles 호출. */
 export function DropZone({
   onFiles,
@@ -42,7 +44,24 @@ export function DropZone({
   onFiles: (files: File[]) => void;
 }) {
   const [visible, setVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [exiting, setExiting] = useState(false);
   const [over, setOver] = useState(false);
+
+  // visible 변화에 따라 mount/exit 처리
+  useEffect(() => {
+    if (visible) {
+      setMounted(true);
+      setExiting(false);
+    } else if (mounted) {
+      setExiting(true);
+      const t = setTimeout(() => {
+        setMounted(false);
+        setExiting(false);
+      }, FADE_MS);
+      return () => clearTimeout(t);
+    }
+  }, [visible, mounted]);
 
   useEffect(() => {
     let dragCounter = 0;
@@ -105,13 +124,18 @@ export function DropZone({
     };
   }, [onFiles]);
 
-  if (!visible) return null;
+  if (!mounted) return null;
 
   return (
     <div
       className="fixed inset-0 z-40 pointer-events-none"
       onDragEnter={() => setOver(true)}
       onDragLeave={() => setOver(false)}
+      style={{
+        animation: exiting
+          ? `fade-out ${FADE_MS}ms ease-in both`
+          : `fade-in ${FADE_MS}ms ease-out both`,
+      }}
     >
       <div
         className={`absolute inset-4 rounded-2xl border-4 border-dashed transition-colors ${

@@ -1,5 +1,39 @@
 -- Vibox 스키마 마이그레이션 (멱등)
 -- 재실행해도 안전하도록 모든 DDL은 IF NOT EXISTS 사용
+-- 새 머신/DR 시 처음부터 실행해도 동작해야 함 (FK 의존성 순서 주의)
+
+-- 2026-05-02 추가: DR 안전성을 위해 base 테이블 (users, share_links) 명시적 정의
+-- 이전엔 lib/db/migrations.ts에서만 생성되어 fresh DB에서 이 파일 단독 실행 시 FK 깨짐.
+
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY,
+  username TEXT NOT NULL UNIQUE,
+  email TEXT,
+  name TEXT,
+  password_hash TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'member',  -- admin | member | partner
+  quota_gb INTEGER NOT NULL DEFAULT 100,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+
+CREATE TABLE IF NOT EXISTS share_links (
+  id TEXT PRIMARY KEY,
+  token TEXT NOT NULL UNIQUE,
+  file_path TEXT NOT NULL,
+  title TEXT,
+  paths TEXT,                               -- JSON array (다중 파일)
+  mode TEXT NOT NULL DEFAULT 'preview',     -- preview | full
+  allow_comments INTEGER NOT NULL DEFAULT 0,
+  allow_download INTEGER NOT NULL DEFAULT 1,
+  created_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  expires_at INTEGER,
+  password_hash TEXT,
+  download_count INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_share_links_token ON share_links(token);
+CREATE INDEX IF NOT EXISTS idx_share_links_created_by ON share_links(created_by);
 
 -- 2026-04-20: 휴지통 테이블
 CREATE TABLE IF NOT EXISTS trash_items (
@@ -207,3 +241,43 @@ CREATE INDEX IF NOT EXISTS idx_client_share_tokens_token ON client_share_tokens(
 -- 2026-04-26: 비모 ERP 클라 import 매핑 (erp_client_id)
 ALTER TABLE clients ADD COLUMN erp_client_id TEXT;
 CREATE INDEX IF NOT EXISTS idx_clients_erp_id ON clients(erp_client_id);
+
+-- 2026-05-02: 외부 API 토큰 (Claude → 비박스 노트 저장 등)
+CREATE TABLE IF NOT EXISTS api_tokens (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  token_hash TEXT NOT NULL UNIQUE,
+  prefix TEXT NOT NULL,
+  scopes TEXT NOT NULL DEFAULT '[]',
+  created_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at INTEGER NOT NULL,
+  last_used_at INTEGER,
+  revoked_at INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_api_tokens_hash ON api_tokens(token_hash);
+CREATE INDEX IF NOT EXISTS idx_api_tokens_created_by ON api_tokens(created_by);
+
+-- 2026-05-02: 공유 링크 시청 트래킹 (admin only intel)
+CREATE TABLE IF NOT EXISTS share_views (
+  id TEXT PRIMARY KEY,
+  share_token TEXT NOT NULL,
+  file_path TEXT NOT NULL,
+  visitor_id TEXT NOT NULL,
+  ip TEXT,
+  user_agent TEXT,
+  opened_at INTEGER NOT NULL,
+  last_event_at INTEGER NOT NULL,
+  max_position_sec REAL NOT NULL DEFAULT 0,
+  total_watch_sec REAL NOT NULL DEFAULT 0,
+  duration_sec REAL,
+  completed INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_share_views_token ON share_views(share_token);
+CREATE INDEX IF NOT EXISTS idx_share_views_token_path ON share_views(share_token, file_path);
+CREATE INDEX IF NOT EXISTS idx_share_views_last_event ON share_views(last_event_at);
+
+-- 2026-05-02: (token, visitor, path) 동시 ping race로 중복 row 생성 방지
+-- 기존 idx_share_views_visitor (non-unique) 대체. drizzle insert에 onConflictDoUpdate 사용.
+DROP INDEX IF EXISTS idx_share_views_visitor;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_share_views_visitor_unique
+  ON share_views(share_token, visitor_id, file_path);

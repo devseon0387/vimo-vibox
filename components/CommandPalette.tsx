@@ -14,8 +14,10 @@ import {
   ArrowRight,
   MessageSquare,
   Link as LinkIcon,
+  StickyNote,
 } from "lucide-react";
 import type { FileEntry } from "@/lib/fs/storage";
+import type { NoteHit } from "@/lib/notes";
 
 type SearchResult = FileEntry;
 
@@ -45,6 +47,7 @@ type ResultItem =
   | { kind: "file"; entry: SearchResult }
   | { kind: "comment"; hit: CommentHit }
   | { kind: "share"; hit: ShareHit }
+  | { kind: "note"; hit: NoteHit }
   | StaticItem;
 
 function formatTime(ms: number): string {
@@ -76,6 +79,7 @@ export function CommandPalette() {
   const [files, setFiles] = useState<SearchResult[]>([]);
   const [cmts, setCmts] = useState<CommentHit[]>([]);
   const [shares, setShares] = useState<ShareHit[]>([]);
+  const [notes, setNotes] = useState<NoteHit[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -102,6 +106,7 @@ export function CommandPalette() {
       setFiles([]);
       setCmts([]);
       setShares([]);
+      setNotes([]);
       setActiveIdx(0);
       // requestAnimationFrame 으로 모달 mount 후 포커스
       requestAnimationFrame(() => inputRef.current?.focus());
@@ -125,6 +130,7 @@ export function CommandPalette() {
       setFiles([]);
       setCmts([]);
       setShares([]);
+      setNotes([]);
       setLoading(false);
       return;
     }
@@ -142,15 +148,18 @@ export function CommandPalette() {
           files: SearchResult[];
           comments: CommentHit[];
           shares: ShareHit[];
+          notes?: NoteHit[];
         };
         setFiles(data.files.slice(0, 15));
         setCmts(data.comments.slice(0, 10));
         setShares(data.shares.slice(0, 8));
+        setNotes((data.notes ?? []).slice(0, 8));
       } catch (e) {
         if ((e as Error).name !== "AbortError") {
           setFiles([]);
           setCmts([]);
           setShares([]);
+          setNotes([]);
         }
       } finally {
         setLoading(false);
@@ -171,11 +180,12 @@ export function CommandPalette() {
       p.label.toLowerCase().includes(q),
     );
     for (const p of matchedPages) out.push(p);
+    for (const n of notes) out.push({ kind: "note", hit: n });
     for (const f of files) out.push({ kind: "file", entry: f });
     for (const c of cmts) out.push({ kind: "comment", hit: c });
     for (const s of shares) out.push({ kind: "share", hit: s });
     return out;
-  }, [files, cmts, shares, query]);
+  }, [files, cmts, shares, notes, query]);
 
   useEffect(() => {
     setActiveIdx(0);
@@ -197,6 +207,10 @@ export function CommandPalette() {
       }
       if (it.kind === "share") {
         window.open(`/s/${it.hit.token}`, "_blank", "noopener");
+        return;
+      }
+      if (it.kind === "note") {
+        router.push(`/dev/notes?id=${encodeURIComponent(it.hit.id)}`);
         return;
       }
       // 파일·폴더
@@ -261,6 +275,7 @@ export function CommandPalette() {
     if (it.kind === "page") g = it.group;
     else if (it.kind === "comment") g = "댓글";
     else if (it.kind === "share") g = "공유 링크";
+    else if (it.kind === "note") g = "노트";
     else g = it.entry.isFolder ? "폴더" : "파일";
     if (g !== currentGroup) {
       grouped.push({ title: g, items: [] });
@@ -329,6 +344,8 @@ export function CommandPalette() {
                       />
                     ) : item.kind === "share" ? (
                       <LinkIcon size={16} strokeWidth={2} className="text-text-soft" />
+                    ) : item.kind === "note" ? (
+                      <StickyNote size={16} strokeWidth={2} className="text-accent" />
                     ) : (
                       <KindIcon entry={item.entry} />
                     )}
@@ -367,6 +384,16 @@ export function CommandPalette() {
                         </span>
                         <span className="block text-[11px] text-text-faint truncate font-mono">
                           /s/{item.hit.token.slice(0, 12)}…
+                        </span>
+                      </>
+                    )}
+                    {item.kind === "note" && (
+                      <>
+                        <span className="block text-[13.5px] text-text truncate">
+                          {item.hit.title}
+                        </span>
+                        <span className="block text-[11px] text-text-faint truncate">
+                          {item.hit.folder}/ · {item.hit.snippet}
                         </span>
                       </>
                     )}

@@ -17,21 +17,26 @@ export type UploadStats = {
 };
 
 // 청크/동시성 튜닝:
-// - 95MB × 18 동시 (3 hostname × 6 origin-conn) — 각 hostname 이 별도 cloudflared
-//   tunnel 로 라우팅되어 backbone 12 conn 풀 분리 (vimo-cloud / vibox-u1 / vibox-u2).
+// - 95MB × 18 동시. 메인(vibox.cloud)은 CF Tunnel 경유, u1/u2 는 UPnP 직결(:8443)
+//   로 라우팅되어 cloudflared backbone cap 우회 → 사용자 ISP 천장(~50 MB/s) 활용.
 // - 청크 95MB: CF Free body 100MB 한계 안전 마진 + TCP slow start 후 큰 window 활용.
 // - CORS Max-Age 24h 캐시로 매 청크마다 OPTIONS preflight 안 보냄.
-const CHUNK_SIZE = 95 * 1024 * 1024; // 95MB
-const CONCURRENCY = 18; // 3 hostname × 6 origin-conn
+const CHUNK_SIZE = 95 * 1024 * 1024; // 95MB — TCP CC ramp-up 완전 활용
+const CONCURRENCY = 24; // 4 origin × 6 origin-conn
 const MAX_RETRIES = 4;
 
-// 도메인 샤딩 — 브라우저 origin당 6 TCP 연결 한계 우회.
-// 3 hostname 각각 별도 cloudflared tunnel 로 라우팅되어 backbone 12 conn 풀 활용.
+// 도메인 샤딩 — 청크 전부 u1/u2 직결로. (vibox.cloud=CF tunnel은 메인 앱 전용)
+// 4 origin (u1/u2 × 8443/18443) → 브라우저 6 conn × 4 = 24 TCP, 전부 ISP 직결.
 function getShards(): string[] {
   if (typeof window === "undefined") return [""];
   const host = window.location.hostname;
   if (host === "vibox.cloud") {
-    return ["", "https://u1.vibox.cloud", "https://u2.vibox.cloud"];
+    return [
+      "https://u1.vibox.cloud:8443",
+      "https://u2.vibox.cloud:8443",
+      "https://u1.vibox.cloud:18443",
+      "https://u2.vibox.cloud:18443",
+    ];
   }
   return [""];
 }

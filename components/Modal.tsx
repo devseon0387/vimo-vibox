@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
+
+const EXIT_MS = 200;
 
 export function Modal({
   open,
@@ -16,8 +18,27 @@ export function Modal({
   children: React.ReactNode;
   maxWidth?: string;
 }) {
+  const [mounted, setMounted] = useState(open);
+  const [exiting, setExiting] = useState(false);
+
+  // open 변화 감지: open=true → 즉시 mount, open=false → exit 후 unmount
   useEffect(() => {
-    if (!open) return;
+    if (open) {
+      setMounted(true);
+      setExiting(false);
+    } else if (mounted) {
+      setExiting(true);
+      const t = setTimeout(() => {
+        setMounted(false);
+        setExiting(false);
+      }, EXIT_MS);
+      return () => clearTimeout(t);
+    }
+  }, [open, mounted]);
+
+  // Esc 키 + body overflow lock — 보이는 동안만
+  useEffect(() => {
+    if (!mounted) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
@@ -27,20 +48,28 @@ export function Modal({
       window.removeEventListener("keydown", handler);
       document.body.style.overflow = "";
     };
-  }, [open, onClose]);
+  }, [mounted, onClose]);
 
-  if (!open) return null;
+  if (!mounted) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8">
       <div
         className="absolute inset-0 bg-black/60"
         onClick={onClose}
-        style={{ animation: "backdrop-in 180ms ease-out both" }}
+        style={{
+          animation: exiting
+            ? "backdrop-out 180ms ease-in both"
+            : "backdrop-in 180ms ease-out both",
+        }}
       />
       <div
         className={`relative bg-white rounded-xl shadow-2xl w-full ${maxWidth} max-h-full overflow-hidden flex flex-col`}
-        style={{ animation: "dialog-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both" }}
+        style={{
+          animation: exiting
+            ? "dialog-out 200ms cubic-bezier(0.4, 0, 1, 1) both"
+            : "dialog-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both",
+        }}
       >
         {title && (
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-border">

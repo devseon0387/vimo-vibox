@@ -1,5 +1,5 @@
 import { SignJWT, jwtVerify } from "jose";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 const SESSION_COOKIE = "vimo_session";
 const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30일
@@ -34,12 +34,26 @@ export async function verifySession(token: string): Promise<SessionPayload | nul
   }
 }
 
-/** 서버 컴포넌트·서버 액션에서 사용 */
+/** 서버 컴포넌트·서버 액션·API 라우트에서 사용. cookie 우선, Bearer 토큰 fallback (데스크탑 앱). */
 export async function getCurrentSession(): Promise<SessionPayload | null> {
   const store = await cookies();
-  const token = store.get(SESSION_COOKIE)?.value;
-  if (!token) return null;
-  return await verifySession(token);
+  const cookieToken = store.get(SESSION_COOKIE)?.value;
+  if (cookieToken) {
+    const sess = await verifySession(cookieToken);
+    if (sess) return sess;
+  }
+  // Bearer 토큰 (데스크탑 앱이 Authorization 헤더로 전송)
+  try {
+    const h = await headers();
+    const auth = h.get("authorization") ?? h.get("Authorization");
+    if (auth?.startsWith("Bearer ")) {
+      const bearerToken = auth.slice(7).trim();
+      if (bearerToken) return await verifySession(bearerToken);
+    }
+  } catch {
+    // headers() may not be available in all contexts
+  }
+  return null;
 }
 
 type CookieOpts = {

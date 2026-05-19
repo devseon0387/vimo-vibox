@@ -80,6 +80,81 @@ export function HlsVideo({
     };
   }, [manifestUrl]);
 
+  // share view tracking — shareToken 있을 때만
+  useEffect(() => {
+    if (!shareToken || !filePath) return;
+    const v = ref.current;
+    if (!v) return;
+
+    let lastTickAt = 0;
+    let watchAccumulated = 0;
+    let lastPosition = 0;
+    let openedSent = false;
+
+    const send = (extraDelta = 0, force = false) => {
+      const now = Date.now();
+      if (!force && now - lastTickAt < 9000) return;
+      lastTickAt = now;
+      const payload = {
+        filePath,
+        positionSec: v.currentTime,
+        durationSec: Number.isFinite(v.duration) ? v.duration : null,
+        watchedDeltaSec: watchAccumulated + extraDelta,
+      };
+      watchAccumulated = 0;
+      void fetch(`/api/s/${encodeURIComponent(shareToken)}/ping`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+        keepalive: true,
+      }).catch(() => {});
+    };
+
+    const onPlay = () => {
+      lastPosition = v.currentTime;
+      if (!openedSent) {
+        openedSent = true;
+        send(0, true);
+      }
+    };
+    const onTimeUpdate = () => {
+      if (v.paused) return;
+      const dt = v.currentTime - lastPosition;
+      // 정상 재생만 누적 (seek은 큰 점프라 제외)
+      if (dt > 0 && dt < 2.5) watchAccumulated += dt;
+      lastPosition = v.currentTime;
+      send();
+    };
+    const onPause = () => send(0, true);
+    const onSeeked = () => {
+      lastPosition = v.currentTime;
+    };
+    const onEnded = () => send(0, true);
+    const onUnload = () => send(0, true);
+    // 모바일 Safari/Chrome: 탭 이동·홈버튼 등 백그라운드 전환 시 pagehide가 안 뜨고
+    // visibilitychange만 발생. 두 이벤트 모두 잡아야 시청 시간 정확.
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") send(0, true);
+    };
+
+    v.addEventListener("play", onPlay);
+    v.addEventListener("timeupdate", onTimeUpdate);
+    v.addEventListener("pause", onPause);
+    v.addEventListener("seeked", onSeeked);
+    v.addEventListener("ended", onEnded);
+    window.addEventListener("pagehide", onUnload);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      v.removeEventListener("play", onPlay);
+      v.removeEventListener("timeupdate", onTimeUpdate);
+      v.removeEventListener("pause", onPause);
+      v.removeEventListener("seeked", onSeeked);
+      v.removeEventListener("ended", onEnded);
+      window.removeEventListener("pagehide", onUnload);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [shareToken, filePath, manifestUrl]);
+
   return (
     <div className="relative w-full h-full">
       <video

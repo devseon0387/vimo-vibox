@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vibox 메뉴 와이어프레임 (Variant A 기반)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 60px; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #1c1c1c; color: #f5f5f5; }
+button { font-family: inherit; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+
+.compare-nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(20,20,20,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 14px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: 'Inter', sans-serif;
+}
+.compare-nav .label {
+  font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+}
+.compare-nav .jumps { display: flex; gap: 6px; flex-wrap: wrap; }
+.compare-nav .jumps a {
+  padding: 8px 14px; border-radius: 999px;
+  font-size: 12px; letter-spacing: 0.06em;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.75);
+  transition: all 0.25s;
+}
+.compare-nav .jumps a:hover { background: rgba(255,255,255,0.14); color: #fff; }
+
+.section-meta {
+  padding: 56px 48px 28px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.section-meta .name {
+  display: block; font-family: 'Inter', sans-serif;
+  font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
+  font-weight: 700; color: rgba(255,255,255,0.4);
+  margin-bottom: 12px;
+}
+.section-meta h1 {
+  font-family: 'Inter', sans-serif;
+  font-size: 26px; font-weight: 800; color: #fff;
+  margin-bottom: 8px; letter-spacing: -0.02em;
+}
+.section-meta .desc {
+  color: rgba(255,255,255,0.6);
+  font-size: 14px; line-height: 1.55; max-width: 720px;
+}
+
+.screens-wrap { padding: 36px 48px 80px; background: #1c1c1c; display: flex; flex-direction: column; gap: 36px; }
+.screen-label {
+  font-family: 'Inter', sans-serif; font-size: 11px;
+  letter-spacing: 0.3em; text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 12px;
+}
+.screen-label .role {
+  padding: 2px 8px; border-radius: 4px;
+  background: rgba(255,255,255,0.08);
+  font-size: 10px; color: rgba(255,255,255,0.7);
+  letter-spacing: 0.1em;
+}
+.screen {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2);
+  height: 720px;
+  display: flex; flex-direction: column;
+}
+.screen-chrome {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 14px;
+  background: #f5f5f5;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  flex-shrink: 0;
+}
+.screen-chrome .dot { width: 12px; height: 12px; border-radius: 50%; }
+.screen-chrome .dot:nth-child(1) { background: #FF5F57; }
+.screen-chrome .dot:nth-child(2) { background: #FEBC2E; }
+.screen-chrome .dot:nth-child(3) { background: #28C840; }
+.screen-chrome .url {
+  margin-left: 16px; font-family: 'Inter', sans-serif; font-size: 11px;
+  color: #888; letter-spacing: 0.05em;
+}
+.screen-body { flex: 1; display: flex; min-height: 0; }
+
+/* Variant A 스타일 (메뉴 시안에서 가져옴) */
+:root {
+  --bg: #ffffff;
+  --bg-soft: #F7F7F5;
+  --bg-rail: #F4F4F2;
+  --bg-hover: #EFEEEB;
+  --text: #1F1F1F;
+  --text-sub: #5F5E5C;
+  --text-muted: #999895;
+  --border: #E6E5E2;
+  --accent: #0061FE;
+  --accent-soft: #E6EFFF;
+  --warn: #F59E0B;
+  --warn-soft: #FEF3C7;
+  --danger: #DC2626;
+  --danger-soft: #FEE2E2;
+  --success: #059669;
+  --success-soft: #D1FAE5;
+}
+.screen-body { font-family: 'Inter', 'Noto Sans KR', sans-serif; }
+
+/* Rail */
+.rail {
+  width: 84px; flex-shrink: 0;
+  background: var(--bg-rail);
+  border-right: 1px solid var(--border);
+  padding: 16px 8px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.rail-item {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 12px 4px; border-radius: 8px;
+  color: var(--text-sub); cursor: pointer;
+  transition: all 0.15s; position: relative;
+}
+.rail-item:hover { background: var(--bg-hover); }
+.rail-item.active {
+  background: var(--bg); color: var(--accent);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.rail-item i { font-size: 18px; }
+.rail-item .rail-label {
+  font-size: 11px; font-weight: 500; letter-spacing: 0.02em;
+}
+.rail-item.admin::after {
+  content: ''; position: absolute; top: 8px; right: 12px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); opacity: 0.5;
+}
+.rail-item.disabled { opacity: 0.3; cursor: not-allowed; }
+.rail-divider { height: 1px; background: var(--border); margin: 8px 12px; }
+.rail-bottom { margin-top: auto; }
+.rail-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #4080FF);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; margin: 0 auto;
+}
+
+/* Menu */
+.menu {
+  width: 240px; flex-shrink: 0;
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+  padding: 18px 12px;
+  display: flex; flex-direction: column;
+}
+.menu-h {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 10px; margin-bottom: 12px;
+}
+.menu-h-title { font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+.menu-h-icon {
+  color: var(--text-muted); cursor: pointer;
+  width: 24px; height: 24px; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+}
+.menu-h-icon:hover { background: var(--bg-hover); color: var(--text); }
+.menu-search {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; background: var(--bg-soft);
+  border-radius: 6px; margin-bottom: 12px;
+  font-size: 12.5px; color: var(--text-muted);
+}
+.menu-search kbd {
+  margin-left: auto; font-size: 10px;
+  padding: 1px 5px; background: var(--bg);
+  border: 1px solid var(--border); border-radius: 3px;
+  color: var(--text-muted); font-family: inherit;
+}
+.menu-section {
+  font-size: 11px; font-weight: 600; color: var(--text-muted);
+  letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 12px 10px 6px;
+}
+.menu-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: 6px;
+  font-size: 13.5px; color: var(--text-sub);
+  cursor: pointer; margin-bottom: 1px;
+}
+.menu-item:hover { background: var(--bg-soft); }
+.menu-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.menu-item i { width: 16px; text-align: center; opacity: 0.85; }
+.menu-item .badge { margin-left: auto; font-size: 11px; color: var(--text-muted); }
+.menu-item.active .badge { color: var(--accent); }
+.menu-item.indent { padding-left: 28px; font-size: 13px; }
+.menu-item.indent.indent-2 { padding-left: 44px; }
+
+/* Main */
+.main {
+  flex: 1; background: var(--bg); padding: 24px 32px;
+  overflow: auto; min-width: 0;
+}
+.main-h {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.main-bc { font-size: 13px; color: var(--text-sub); }
+.main-bc a:hover { color: var(--accent); }
+.main-bc .crumb-current { color: var(--text); font-weight: 600; }
+.main-actions { display: flex; gap: 8px; }
+.btn {
+  font-size: 13px; padding: 7px 14px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--bg);
+  color: var(--text-sub); display: inline-flex; align-items: center; gap: 6px;
+  font-weight: 500;
+}
+.btn:hover { background: var(--bg-soft); color: var(--text); }
+.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn.primary:hover { background: #0050CC; color: #fff; }
+.btn.danger { color: var(--danger); }
+.btn.danger:hover { background: var(--danger-soft); }
+.btn.icon-only { padding: 7px 9px; }
+
+/* File table */
+.file-table { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.file-table-head {
+  display: grid; grid-template-columns: auto 1fr 100px 140px 80px;
+  gap: 12px; padding: 10px 16px;
+  background: var(--bg-soft);
+  font-size: 11px; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
+  border-bottom: 1px solid var(--border);
+}
+.file-row {
+  display: grid; grid-template-columns: auto 1fr 100px 140px 80px;
+  align-items: center; gap: 12px;
+  padding: 11px 16px; border-top: 1px solid var(--border);
+  font-size: 13px; cursor: pointer;
+}
+.file-row:first-child { border-top: 0; }
+.file-row:hover { background: var(--bg-soft); }
+.file-row .icon { font-size: 16px; width: 18px; text-align: center; }
+.file-row .icon.folder { color: #4A8FFF; }
+.file-row .icon.video { color: #E8615F; }
+.file-row .icon.image { color: #10B981; }
+.file-row .icon.doc { color: #6B7280; }
+.file-row .icon.note { color: #8B5CF6; }
+.file-row .icon.audio { color: #F59E0B; }
+.file-row .name { color: var(--text); }
+.file-row .size, .file-row .date { color: var(--text-muted); font-size: 12px; }
+.file-row .meta { color: var(--text-muted); font-size: 11px; }
+.file-row .badge-share {
+  font-size: 10px; padding: 2px 6px; border-radius: 4px;
+  background: var(--success-soft); color: var(--success);
+  font-weight: 500;
+}
+.file-row .badge-pin {
+  font-size: 10px; padding: 2px 6px; border-radius: 4px;
+  background: var(--warn-soft); color: var(--warn);
+  font-weight: 500;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center; padding: 80px 20px;
+  color: var(--text-muted);
+}
+.empty-state .empty-icon { font-size: 56px; opacity: 0.3; margin-bottom: 16px; }
+.empty-state h3 { font-size: 18px; color: var(--text-sub); margin-bottom: 8px; }
+.empty-state p { font-size: 14px; max-width: 360px; margin: 0 auto 18px; }
+
+/* Admin tables */
+.admin-card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 20px; margin-bottom: 16px;
+}
+.admin-card-h {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.admin-card-h h3 { font-size: 14px; font-weight: 600; color: var(--text); }
+.admin-card-h .actions { display: flex; gap: 6px; }
+.admin-card-h .add-btn { font-size: 12px; padding: 4px 10px; border-radius: 4px; background: var(--accent); color: #fff; border: 0; }
+.admin-table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+}
+.admin-table th {
+  text-align: left; padding: 8px 12px;
+  font-size: 11px; color: var(--text-muted);
+  font-weight: 600; letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+.admin-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.admin-table td.muted { color: var(--text-muted); font-size: 12px; }
+.admin-table tr:last-child td { border-bottom: 0; }
+.admin-table .role-pill {
+  font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 500;
+}
+.admin-table .role-pill.admin { background: #FEF3C7; color: #B45309; }
+.admin-table .role-pill.member { background: #DBEAFE; color: #1D4ED8; }
+.admin-table .role-pill.partner { background: #F3E8FF; color: #7E22CE; }
+.admin-table .status { font-size: 11px; }
+.admin-table .status.active { color: var(--success); }
+.admin-table .status.inactive { color: var(--text-muted); }
+
+/* Stats grid */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px;
+}
+.stat-card .stat-label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; }
+.stat-card .stat-value { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 4px; letter-spacing: -0.02em; }
+.stat-card .stat-trend { font-size: 11px; color: var(--success); }
+.stat-card .stat-trend.down { color: var(--danger); }
+</style>
+</head>
+<body>
+
+<nav class="compare-nav">
+  <span class="label">Vibox · 메뉴 와이어프레임 (시안 A)</span>
+  <div class="jumps">
+    <a href="#owner-home-rendering">owner: 홈/렌더링</a>
+    <a href="#owner-home-library">owner: 홈/자료실</a>
+    <a href="#owner-dev">owner: 개발</a>
+    <a href="#owner-mybox">owner: 내 박스</a>
+    <a href="#owner-admin">owner: 관리</a>
+    <a href="#manager">매니저 시점</a>
+    <a href="#partner">파트너 시점</a>
+  </div>
+</nav>
+
+<!-- ============================================================
+     세온 (OWNER) 시점
+     ============================================================ -->
+<div class="section-meta">
+  <span class="name">세온 (Owner / Admin) 시점</span>
+  <h1>모든 4개 레일 항목 접근 가능</h1>
+  <p class="desc">홈 · 개발 · 내 박스 · 관리. 개발/관리는 admin 사용자에게만 보임. 각 레일 클릭 시 옆 메뉴가 바뀜.</p>
+</div>
+
+<div class="screens-wrap">
+
+  <!-- 1.1 owner / 홈 / 렌더링 -->
+  <div>
+    <div class="screen-label">
+      <span>1.1 홈 / 렌더링 폴더</span>
+      <span class="role">OWNER</span>
+    </div>
+    <div class="screen">
+      <div class="screen-chrome">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <span class="url">vibox.cloud/home/rendering</span>
+      </div>
+      <div class="screen-body">
+        <aside class="rail">
+          <div class="rail-item active"><i class="fas fa-house"></i><span class="rail-label">홈</span></div>
+          <div class="rail-item admin"><i class="fas fa-code"></i><span class="rail-label">개발</span></div>
+          <div class="rail-item"><i class="fas fa-box"></i><span class="rail-label">내 박스</span></div>
+          <div class="rail-divider"></div>
+          <div class="rail-item admin"><i class="fas fa-gear"></i><span class="rail-label">관리</span></div>
+          <div class="rail-bottom"><div class="rail-avatar">세</div></div>
+        </aside>
+        <nav class="menu">
+          <div class="menu-h"><span class="menu-h-title">홈</span></div>
+          <div class="menu-search"><i class="fas fa-search"></i> 파일 검색 <kbd>⌘K</kbd></div>
+          <div class="menu-section">팀 작업</div>
+          <div class="menu-item active"><i class="fas fa-folder-open"></i> 렌더링 폴더 <span class="badge">128</span></div>
+          <div class="menu-item"><i class="fas fa-book"></i> 자료실 <span class="badge">42</span></div>
+          <div class="menu-section">바로가기</div>
+          <div class="menu-item"><i class="fas fa-star"></i> 면역항암 시리즈</div>
+          <div class="menu-item"><i class="fas fa-star"></i> 위암 캠페인</div>
+          <div class="menu-item"><i class="fas fa-clock"></i> 최근 본 파일</div>
+          <div class="menu-item"><i class="fas fa-share"></i> 내 공유 링크</div>
+        </nav>
+        <main class="main">
+          <div class="main-h">
+            <div class="main-bc"><a href="#">홈</a> / <span class="crumb-current">렌더링 폴더</span></div>
+            <div class="main-actions">
+              <button class="btn"><i class="fas fa-folder-plus"></i> 새 폴더</button>
+              <button class="btn primary"><i class="fas fa-upload"></i> 업로드</button>
+            </div>
+          </div>
+          <div class="file-table">
+            <div class="file-table-head">
+              <div></div><div>이름</div><div>크기</div><div>수정일시</div><div>상태</div>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-folder icon folder"></i>
+              <span class="name">2026-04 면역항암 시리즈</span>
+              <span class="size">12 항목</span>
+              <span class="date">11:30</span>
+              <span class="badge-pin">📌 핀</span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-folder icon folder"></i>
+              <span class="name">2026-04 위암 캠페인</span>
+              <span class="size">8 항목</span>
+              <span class="date">어제</span>
+              <span></span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-folder icon folder"></i>
+              <span class="name">2026-03 신규 클라이언트</span>
+              <span class="size">4 항목</span>
+              <span class="date">2일 전</span>
+              <span></span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-film icon video"></i>
+              <span class="name">면역항암제 누구나 사용 가능할까.mp4</span>
+              <span class="size">1.2GB</span>
+              <span class="date">11:15</span>
+              <span class="badge-share">🔗 공유 중</span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-film icon video"></i>
+              <span class="name">위암 치료 1편.mp4</span>
+              <span class="size">890MB</span>
+              <span class="date">어제</span>
+              <span></span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-film icon video"></i>
+              <span class="name">고대구로병원 인터뷰.mp4</span>
+              <span class="size">2.1GB</span>
+              <span class="date">3일 전</span>
+              <span class="badge-share">🔗 공유 중</span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-image icon image"></i>
+              <span class="name">썸네일 후보 모음.zip</span>
+              <span class="size">156MB</span>
+              <span class="date">3일 전</span>
+              <span></span>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1.2 owner / 홈 / 자료실 -->
+  <div id="owner-home-library">
+    <div class="screen-label">
+      <span>1.2 홈 / 자료실</span>
+      <span class="role">OWNER</span>
+    </div>
+    <div class="screen">
+      <div class="screen-chrome">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <span class="url">vibox.cloud/home/library</span>
+      </div>
+      <div class="screen-body">
+        <aside class="rail">
+          <div class="rail-item active"><i class="fas fa-house"></i><span class="rail-label">홈</span></div>
+          <div class="rail-item admin"><i class="fas fa-code"></i><span class="rail-label">개발</span></div>
+          <div class="rail-item"><i class="fas fa-box"></i><span class="rail-label">내 박스</span></div>
+          <div class="rail-divider"></div>
+          <div class="rail-item admin"><i class="fas fa-gear"></i><span class="rail-label">관리</span></div>
+          <div class="rail-bottom"><div class="rail-avatar">세</div></div>
+        </aside>
+        <nav class="menu">
+          <div class="menu-h"><span class="menu-h-title">홈</span></div>
+          <div class="menu-search"><i class="fas fa-search"></i> 파일 검색 <kbd>⌘K</kbd></div>
+          <div class="menu-section">팀 작업</div>
+          <div class="menu-item"><i class="fas fa-folder-open"></i> 렌더링 폴더 <span class="badge">128</span></div>
+          <div class="menu-item active"><i class="fas fa-book"></i> 자료실 <span class="badge">42</span></div>
+          <div class="menu-section">바로가기</div>
+          <div class="menu-item"><i class="fas fa-star"></i> 면역항암 시리즈</div>
+          <div class="menu-item"><i class="fas fa-star"></i> 위암 캠페인</div>
+          <div class="menu-item"><i class="fas fa-clock"></i> 최근 본 파일</div>
+        </nav>
+        <main class="main">
+          <div class="main-h">
+            <div class="main-bc"><a href="#">홈</a> / <span class="crumb-current">자료실</span></div>
+            <div class="main-actions">
+              <button class="btn"><i class="fas fa-folder-plus"></i> 새 폴더</button>
+              <button class="btn primary"><i class="fas fa-upload"></i> 업로드</button>
+            </div>
+          </div>
+          <div class="file-table">
+            <div class="file-table-head">
+              <div></div><div>이름</div><div>크기</div><div>수정일시</div><div></div>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-folder icon folder"></i>
+              <span class="name">의료법 가이드라인</span>
+              <span class="size">8 항목</span>
+              <span class="date">2026-03</span>
+              <span></span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-folder icon folder"></i>
+              <span class="name">영상 레퍼런스 모음</span>
+              <span class="size">24 항목</span>
+              <span class="date">2026-04</span>
+              <span></span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-folder icon folder"></i>
+              <span class="name">음원 라이브러리</span>
+              <span class="size">156 항목</span>
+              <span class="date">2026-04</span>
+              <span></span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-file-pdf icon doc"></i>
+              <span class="name">2026 콘텐츠 전략.pdf</span>
+              <span class="size">12MB</span>
+              <span class="date">2026-04</span>
+              <span></span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-file-lines icon note"></i>
+              <span class="name">BGM 추천 리스트.md</span>
+              <span class="size">8KB</span>
+              <span class="date">3일 전</span>
+              <span></span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-file-image icon image"></i>
+              <span class="name">의료진 출연 동의서 양식.docx</span>
+              <span class="size">128KB</span>
+              <span class="date">2026-03</span>
+              <span></span>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1.3 owner / 개발 -->
+  <div id="owner-dev">
+    <div class="screen-label">
+      <span>1.3 개발 / 노트</span>
+      <span class="role">OWNER</span>
+      <span class="role" style="background:rgba(255,200,0,0.15);color:#FFD89B;">ADMIN ONLY</span>
+    </div>
+    <div class="screen">
+      <div class="screen-chrome">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <span class="url">vibox.cloud/dev/notes</span>
+      </div>
+      <div class="screen-body">
+        <aside class="rail">
+          <div class="rail-item"><i class="fas fa-house"></i><span class="rail-label">홈</span></div>
+          <div class="rail-item active admin"><i class="fas fa-code"></i><span class="rail-label">개발</span></div>
+          <div class="rail-item"><i class="fas fa-box"></i><span class="rail-label">내 박스</span></div>
+          <div class="rail-divider"></div>
+          <div class="rail-item admin"><i class="fas fa-gear"></i><span class="rail-label">관리</span></div>
+          <div class="rail-bottom"><div class="rail-avatar">세</div></div>
+        </aside>
+        <nav class="menu">
+          <div class="menu-h">
+            <span class="menu-h-title">개발</span>
+            <span class="menu-h-icon" title="SEON Hub에서 편집"><i class="fas fa-arrow-up-right-from-square"></i></span>
+          </div>
+          <div class="menu-search"><i class="fas fa-search"></i> 노트 검색 <kbd>⌘K</kbd></div>
+          <div class="menu-section">노트 빠른 접근</div>
+          <div class="menu-item"><i class="fas fa-clock"></i> 최근 노트</div>
+          <div class="menu-item"><i class="fas fa-star"></i> 즐겨찾기 <span class="badge">8</span></div>
+          <div class="menu-item"><i class="fas fa-tag"></i> 태그</div>
+          <div class="menu-section">폴더</div>
+          <div class="menu-item"><i class="fas fa-folder"></i> 회의 <span class="badge">12</span></div>
+          <div class="menu-item active"><i class="fas fa-folder-open"></i> 프로젝트 <span class="badge">24</span></div>
+          <div class="menu-item indent"><i class="fas fa-folder"></i> 비박스 <span class="badge">8</span></div>
+          <div class="menu-item indent"><i class="fas fa-folder"></i> Plan High <span class="badge">4</span></div>
+          <div class="menu-item indent"><i class="fas fa-folder"></i> SEON Hub <span class="badge">3</span></div>
+          <div class="menu-item"><i class="fas fa-folder"></i> 마케팅 <span class="badge">71</span></div>
+          <div class="menu-item"><i class="fas fa-folder"></i> 일기 <span class="badge">5</span></div>
+        </nav>
+        <main class="main">
+          <div class="main-h">
+            <div class="main-bc">
+              <a href="#">개발</a> / <a href="#">프로젝트</a> / <span class="crumb-current">비박스</span>
+            </div>
+            <div class="main-actions">
+              <button class="btn"><i class="fas fa-arrow-up-right-from-square"></i> SEON Hub에서 편집</button>
+              <button class="btn primary"><i class="fas fa-plus"></i> 새 노트</button>
+            </div>
+          </div>
+          <div class="file-table">
+            <div class="file-table-head">
+              <div></div><div>제목</div><div>태그</div><div>수정일시</div><div></div>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-file-lines icon note"></i>
+              <span class="name">코드 리뷰</span>
+              <span class="meta">#review #security</span>
+              <span class="date">11:30</span>
+              <span class="badge-pin">📌</span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-file-lines icon note"></i>
+              <span class="name">Phase C 진행상황</span>
+              <span class="meta">#client</span>
+              <span class="date">어제</span>
+              <span></span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-file-lines icon note"></i>
+              <span class="name">보안 가이드라인</span>
+              <span class="meta">#security</span>
+              <span class="date">3일 전</span>
+              <span></span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-file-lines icon note"></i>
+              <span class="name">배포 노트 26-04</span>
+              <span class="meta">#deploy</span>
+              <span class="date">5일 전</span>
+              <span class="badge-share">🔗 공유</span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-file-lines icon note"></i>
+              <span class="name">Mac mini 셋업 가이드</span>
+              <span class="meta">#infra</span>
+              <span class="date">2026-04-30</span>
+              <span></span>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1.4 owner / 내 박스 -->
+  <div id="owner-mybox">
+    <div class="screen-label">
+      <span>1.4 내 박스 (개인 드라이브)</span>
+      <span class="role">OWNER</span>
+    </div>
+    <div class="screen">
+      <div class="screen-chrome">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <span class="url">vibox.cloud/mybox</span>
+      </div>
+      <div class="screen-body">
+        <aside class="rail">
+          <div class="rail-item"><i class="fas fa-house"></i><span class="rail-label">홈</span></div>
+          <div class="rail-item admin"><i class="fas fa-code"></i><span class="rail-label">개발</span></div>
+          <div class="rail-item active"><i class="fas fa-box"></i><span class="rail-label">내 박스</span></div>
+          <div class="rail-divider"></div>
+          <div class="rail-item admin"><i class="fas fa-gear"></i><span class="rail-label">관리</span></div>
+          <div class="rail-bottom"><div class="rail-avatar">세</div></div>
+        </aside>
+        <nav class="menu">
+          <div class="menu-h">
+            <span class="menu-h-title">내 박스</span>
+            <span class="menu-h-icon"><i class="fas fa-folder-plus"></i></span>
+          </div>
+          <div class="menu-search"><i class="fas fa-search"></i> 검색 <kbd>⌘K</kbd></div>
+          <div class="menu-section">사용량</div>
+          <div style="padding:6px 10px;font-size:12px;color:var(--text-muted);">
+            12.4 GB / 100 GB
+            <div style="margin-top:6px;height:4px;background:var(--bg-soft);border-radius:2px;overflow:hidden;">
+              <div style="width:12.4%;height:100%;background:var(--accent);"></div>
+            </div>
+          </div>
+          <div class="menu-section">바로가기</div>
+          <div class="menu-item active"><i class="fas fa-folder-open"></i> 모든 파일</div>
+          <div class="menu-item"><i class="fas fa-clock"></i> 최근</div>
+          <div class="menu-item"><i class="fas fa-star"></i> 즐겨찾기</div>
+          <div class="menu-item"><i class="fas fa-trash"></i> 휴지통</div>
+        </nav>
+        <main class="main">
+          <div class="main-h">
+            <div class="main-bc"><span class="crumb-current">내 박스</span></div>
+            <div class="main-actions">
+              <button class="btn"><i class="fas fa-folder-plus"></i> 새 폴더</button>
+              <button class="btn primary"><i class="fas fa-upload"></i> 업로드</button>
+            </div>
+          </div>
+          <div class="file-table">
+            <div class="file-table-head">
+              <div></div><div>이름</div><div>크기</div><div>수정일시</div><div></div>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-folder icon folder"></i>
+              <span class="name">개인 사진</span>
+              <span class="size">324 항목</span>
+              <span class="date">어제</span>
+              <span></span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-folder icon folder"></i>
+              <span class="name">계약서·서류</span>
+              <span class="size">42 항목</span>
+              <span class="date">2026-04</span>
+              <span></span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-folder icon folder"></i>
+              <span class="name">참고 영상</span>
+              <span class="size">18 항목</span>
+              <span class="date">2일 전</span>
+              <span></span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-file-pdf icon doc"></i>
+              <span class="name">2026 사업자 등록증.pdf</span>
+              <span class="size">2.4MB</span>
+              <span class="date">2026-04</span>
+              <span></span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-file-image icon image"></i>
+              <span class="name">프로필 사진.jpg</span>
+              <span class="size">580KB</span>
+              <span class="date">2026-04</span>
+              <span></span>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1.5 owner / 관리 -->
+  <div id="owner-admin">
+    <div class="screen-label">
+      <span>1.5 관리 (Admin)</span>
+      <span class="role">OWNER</span>
+      <span class="role" style="background:rgba(255,200,0,0.15);color:#FFD89B;">ADMIN ONLY</span>
+    </div>
+    <div class="screen">
+      <div class="screen-chrome">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <span class="url">vibox.cloud/admin/users</span>
+      </div>
+      <div class="screen-body">
+        <aside class="rail">
+          <div class="rail-item"><i class="fas fa-house"></i><span class="rail-label">홈</span></div>
+          <div class="rail-item admin"><i class="fas fa-code"></i><span class="rail-label">개발</span></div>
+          <div class="rail-item"><i class="fas fa-box"></i><span class="rail-label">내 박스</span></div>
+          <div class="rail-divider"></div>
+          <div class="rail-item active admin"><i class="fas fa-gear"></i><span class="rail-label">관리</span></div>
+          <div class="rail-bottom"><div class="rail-avatar">세</div></div>
+        </aside>
+        <nav class="menu">
+          <div class="menu-h"><span class="menu-h-title">관리</span></div>
+          <div class="menu-section">팀</div>
+          <div class="menu-item active"><i class="fas fa-users"></i> 사용자 <span class="badge">8</span></div>
+          <div class="menu-item"><i class="fas fa-link"></i> 공유 링크 <span class="badge">12</span></div>
+          <div class="menu-item"><i class="fas fa-handshake"></i> 클라이언트 <span class="badge">5</span></div>
+          <div class="menu-section">시스템</div>
+          <div class="menu-item"><i class="fas fa-chart-line"></i> 통계</div>
+          <div class="menu-item"><i class="fas fa-server"></i> 스토리지</div>
+          <div class="menu-item"><i class="fas fa-trash"></i> 휴지통 관리</div>
+          <div class="menu-item"><i class="fas fa-clipboard-list"></i> 활동 로그</div>
+          <div class="menu-section">통합</div>
+          <div class="menu-item"><i class="fas fa-key"></i> API 키</div>
+          <div class="menu-item"><i class="fas fa-plug"></i> SEON Hub 연동</div>
+        </nav>
+        <main class="main">
+          <div class="main-h">
+            <div class="main-bc"><a href="#">관리</a> / <span class="crumb-current">사용자</span></div>
+            <div class="main-actions">
+              <button class="btn primary"><i class="fas fa-user-plus"></i> 사용자 추가</button>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">전체 사용자</div>
+              <div class="stat-value">8</div>
+              <div class="stat-trend">↑ 1 (이번 달)</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">활성 (30일)</div>
+              <div class="stat-value">7</div>
+              <div class="stat-trend">87%</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">스토리지 사용</div>
+              <div class="stat-value">186 GB</div>
+              <div class="stat-trend down">↑ 24 GB</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">트래픽 (월)</div>
+              <div class="stat-value">42 GB</div>
+              <div class="stat-trend">↓ -8 GB</div>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-h">
+              <h3>팀 멤버</h3>
+              <div class="actions">
+                <button class="btn"><i class="fas fa-filter"></i> 필터</button>
+              </div>
+            </div>
+            <table class="admin-table">
+              <thead>
+                <tr><th>이름</th><th>이메일</th><th>역할</th><th>스토리지</th><th>마지막 접속</th><th>상태</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>세온</strong></td>
+                  <td class="muted">seon@vi-mo.kr</td>
+                  <td><span class="role-pill admin">ADMIN</span></td>
+                  <td class="muted">12.4 GB</td>
+                  <td class="muted">방금</td>
+                  <td><span class="status active">● 활성</span></td>
+                </tr>
+                <tr>
+                  <td>김지현</td>
+                  <td class="muted">jihyun@vi-mo.kr</td>
+                  <td><span class="role-pill member">MEMBER</span></td>
+                  <td class="muted">28.6 GB</td>
+                  <td class="muted">1시간 전</td>
+                  <td><span class="status active">● 활성</span></td>
+                </tr>
+                <tr>
+                  <td>박철수</td>
+                  <td class="muted">cs.park@vi-mo.kr</td>
+                  <td><span class="role-pill member">MEMBER</span></td>
+                  <td class="muted">42.1 GB</td>
+                  <td class="muted">어제</td>
+                  <td><span class="status active">● 활성</span></td>
+                </tr>
+                <tr>
+                  <td>이정수</td>
+                  <td class="muted">js.lee@partner.com</td>
+                  <td><span class="role-pill partner">PARTNER</span></td>
+                  <td class="muted">8.2 GB</td>
+                  <td class="muted">3일 전</td>
+                  <td><span class="status active">● 활성</span></td>
+                </tr>
+                <tr>
+                  <td>최민영</td>
+                  <td class="muted">my.choi@partner.com</td>
+                  <td><span class="role-pill partner">PARTNER</span></td>
+                  <td class="muted">2.1 GB</td>
+                  <td class="muted">2주 전</td>
+                  <td><span class="status inactive">○ 휴면</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================
+     매니저 시점
+     ============================================================ -->
+<div class="section-meta" id="manager">
+  <span class="name">매니저 (Member) 시점</span>
+  <h1>홈 + 내 박스만. 개발 / 관리 안 보임.</h1>
+  <p class="desc">팀 영상 작업 + 자기 개인 드라이브. admin 항목은 레일에서 아예 안 보임 (메뉴 자체 사라짐, 흔적 없음).</p>
+</div>
+
+<div class="screens-wrap">
+  <div>
+    <div class="screen-label">
+      <span>2.1 매니저 / 홈 / 렌더링</span>
+      <span class="role">MEMBER</span>
+    </div>
+    <div class="screen">
+      <div class="screen-chrome">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <span class="url">vibox.cloud/home/rendering</span>
+      </div>
+      <div class="screen-body">
+        <aside class="rail">
+          <div class="rail-item active"><i class="fas fa-house"></i><span class="rail-label">홈</span></div>
+          <div class="rail-item"><i class="fas fa-box"></i><span class="rail-label">내 박스</span></div>
+          <div class="rail-bottom"><div class="rail-avatar" style="background:linear-gradient(135deg,#10B981,#059669);">김</div></div>
+        </aside>
+        <nav class="menu">
+          <div class="menu-h"><span class="menu-h-title">홈</span></div>
+          <div class="menu-search"><i class="fas fa-search"></i> 파일 검색 <kbd>⌘K</kbd></div>
+          <div class="menu-section">팀 작업</div>
+          <div class="menu-item active"><i class="fas fa-folder-open"></i> 렌더링 폴더 <span class="badge">128</span></div>
+          <div class="menu-item"><i class="fas fa-book"></i> 자료실 <span class="badge">42</span></div>
+          <div class="menu-section">바로가기</div>
+          <div class="menu-item"><i class="fas fa-clock"></i> 최근 본 파일</div>
+          <div class="menu-item"><i class="fas fa-share"></i> 내 공유 링크</div>
+        </nav>
+        <main class="main">
+          <div class="main-h">
+            <div class="main-bc"><a href="#">홈</a> / <span class="crumb-current">렌더링 폴더</span></div>
+            <div class="main-actions">
+              <button class="btn"><i class="fas fa-folder-plus"></i> 새 폴더</button>
+              <button class="btn primary"><i class="fas fa-upload"></i> 업로드</button>
+            </div>
+          </div>
+          <div class="file-table">
+            <div class="file-table-head">
+              <div></div><div>이름</div><div>크기</div><div>수정일시</div><div>상태</div>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-folder icon folder"></i>
+              <span class="name">2026-04 면역항암 시리즈</span>
+              <span class="size">12 항목</span>
+              <span class="date">11:30</span>
+              <span></span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-folder icon folder"></i>
+              <span class="name">2026-04 위암 캠페인</span>
+              <span class="size">8 항목</span>
+              <span class="date">어제</span>
+              <span></span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-film icon video"></i>
+              <span class="name">면역항암제 누구나 사용 가능할까.mp4</span>
+              <span class="size">1.2GB</span>
+              <span class="date">11:15</span>
+              <span class="badge-share">🔗 공유 중</span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-film icon video"></i>
+              <span class="name">위암 치료 1편.mp4</span>
+              <span class="size">890MB</span>
+              <span class="date">어제</span>
+              <span></span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-film icon video"></i>
+              <span class="name">고대구로병원 인터뷰.mp4</span>
+              <span class="size">2.1GB</span>
+              <span class="date">3일 전</span>
+              <span class="badge-share">🔗 공유 중</span>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     파트너 시점
+     ============================================================ -->
+<div class="section-meta" id="partner">
+  <span class="name">파트너 시점</span>
+  <h1>홈에서 본인 업로드만 보임 + 내 박스</h1>
+  <p class="desc">파트너는 외부 협력자. 자기가 올린 파일만 볼 수 있고, 다른 멤버 작업은 보이지 않음. 자료실은 읽기만 가능.</p>
+</div>
+
+<div class="screens-wrap">
+  <div>
+    <div class="screen-label">
+      <span>3.1 파트너 / 홈 / 렌더링 (본인 업로드만)</span>
+      <span class="role">PARTNER</span>
+    </div>
+    <div class="screen">
+      <div class="screen-chrome">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <span class="url">vibox.cloud/home/rendering</span>
+      </div>
+      <div class="screen-body">
+        <aside class="rail">
+          <div class="rail-item active"><i class="fas fa-house"></i><span class="rail-label">홈</span></div>
+          <div class="rail-item"><i class="fas fa-box"></i><span class="rail-label">내 박스</span></div>
+          <div class="rail-bottom"><div class="rail-avatar" style="background:linear-gradient(135deg,#8B5CF6,#7C3AED);">이</div></div>
+        </aside>
+        <nav class="menu">
+          <div class="menu-h"><span class="menu-h-title">홈</span></div>
+          <div class="menu-search"><i class="fas fa-search"></i> 파일 검색 <kbd>⌘K</kbd></div>
+          <div class="menu-section">내 작업</div>
+          <div class="menu-item active"><i class="fas fa-folder-open"></i> 렌더링 폴더 <span class="badge">3</span></div>
+          <div class="menu-item"><i class="fas fa-book"></i> 자료실 <span class="badge">42</span></div>
+          <div class="menu-section">바로가기</div>
+          <div class="menu-item"><i class="fas fa-clock"></i> 최근 업로드</div>
+        </nav>
+        <main class="main">
+          <div class="main-h">
+            <div class="main-bc"><a href="#">홈</a> / <span class="crumb-current">렌더링 폴더</span></div>
+            <div class="main-actions">
+              <button class="btn primary"><i class="fas fa-upload"></i> 업로드</button>
+            </div>
+          </div>
+          <div style="padding:14px 16px;background:#FEF3C7;border:1px solid #FCD34D;border-radius:8px;font-size:13px;color:#92400E;margin-bottom:16px;">
+            <i class="fas fa-info-circle" style="margin-right:8px;"></i>
+            본인이 업로드한 파일만 표시됩니다. 매니저가 올린 파일은 보이지 않아요.
+          </div>
+          <div class="file-table">
+            <div class="file-table-head">
+              <div></div><div>이름</div><div>크기</div><div>업로드</div><div>상태</div>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-film icon video"></i>
+              <span class="name">위암치료_가편집_v3.mp4</span>
+              <span class="size">3.2GB</span>
+              <span class="date">3일 전</span>
+              <span class="badge-share">🔗 공유</span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-film icon video"></i>
+              <span class="name">위암치료_가편집_v2.mp4</span>
+              <span class="size">2.8GB</span>
+              <span class="date">5일 전</span>
+              <span></span>
+            </div>
+            <div class="file-row">
+              <i class="fas fa-film icon video"></i>
+              <span class="name">위암치료_가편집_v1.mp4</span>
+              <span class="size">2.5GB</span>
+              <span class="date">2주 전</span>
+              <span></span>
+            </div>
+          </div>
+          <div class="empty-state" style="padding:40px 20px;">
+            <p style="font-size:13px;">매니저가 올린 파일이나 다른 파트너 작업은 권한상 보이지 않아요.</p>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

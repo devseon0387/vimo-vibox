@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import path from "node:path";
 import fs from "node:fs";
@@ -59,10 +59,10 @@ export async function GET(
     return new Response("file missing", { status: 404 });
   }
 
-  // 다운로드 카운트 증가 (에러 나도 파일은 제공)
+  // 다운로드 카운트 증가 — atomic SQL increment (read-modify-write race 방지)
   db
     .update(shareLinks)
-    .set({ downloadCount: link.downloadCount + 1 })
+    .set({ downloadCount: sql`${shareLinks.downloadCount} + 1` })
     .where(eq(shareLinks.id, link.id))
     .run?.();
 

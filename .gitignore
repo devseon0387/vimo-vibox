@@ -41,6 +41,9 @@ yarn-error.log*
 next-env.d.ts
 _storage/
 _data/
+Library/
+Personal/
+Notes/
 .env.local
 
 # arch-specific binaries (compile on target)

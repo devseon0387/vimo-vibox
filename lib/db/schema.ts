@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
 
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
@@ -271,6 +271,39 @@ export type ClientVideo = typeof clientVideos.$inferSelect;
 export type NewClientVideo = typeof clientVideos.$inferInsert;
 export type ClientShareToken = typeof clientShareTokens.$inferSelect;
 export type NewClientShareToken = typeof clientShareTokens.$inferInsert;
+
+export const apiTokens = sqliteTable("api_tokens", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  prefix: text("prefix").notNull(),
+  scopes: text("scopes").notNull().default("[]"),
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  lastUsedAt: integer("last_used_at", { mode: "timestamp_ms" }),
+  revokedAt: integer("revoked_at", { mode: "timestamp_ms" }),
+});
+export type ApiToken = typeof apiTokens.$inferSelect;
+export type NewApiToken = typeof apiTokens.$inferInsert;
+
+export const shareViews = sqliteTable("share_views", {
+  id: text("id").primaryKey(),
+  shareToken: text("share_token").notNull(),
+  filePath: text("file_path").notNull(),
+  visitorId: text("visitor_id").notNull(),
+  ip: text("ip"),
+  userAgent: text("user_agent"),
+  openedAt: integer("opened_at", { mode: "timestamp_ms" }).notNull(),
+  lastEventAt: integer("last_event_at", { mode: "timestamp_ms" }).notNull(),
+  maxPositionSec: real("max_position_sec").notNull().default(0),
+  totalWatchSec: real("total_watch_sec").notNull().default(0),
+  durationSec: real("duration_sec"),
+  completed: integer("completed", { mode: "boolean" }).notNull().default(false),
+});
+export type ShareView = typeof shareViews.$inferSelect;
+export type NewShareView = typeof shareViews.$inferInsert;
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;

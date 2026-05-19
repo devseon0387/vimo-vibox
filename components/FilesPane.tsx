@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LayoutGrid, List } from "lucide-react";
 import type { FileEntry } from "@/lib/fs/storage";
 import { ActionBar } from "./ActionBar";
@@ -15,6 +15,7 @@ import { type ConflictMode } from "@/lib/upload";
 import { useUpload } from "@/lib/upload-store";
 import { useToast } from "./Toast";
 import { humanError } from "@/lib/human-error";
+import { StatusBar } from "./StatusBar";
 
 type ViewMode = "list" | "grid";
 const VIEW_MODE_KEY = "vibox:files:view";
@@ -27,7 +28,7 @@ export function FilesPane({
 }: {
   entries: FileEntry[];
   currentPath: string;
-  session: { id: string; isAdmin: boolean };
+  session: { id: string; isAdmin: boolean; canSeeHealth?: boolean };
   stats?: Record<
     string,
     { commentCount: number; openCount: number; uploaderName?: string | null }
@@ -36,6 +37,10 @@ export function FilesPane({
   const toast = useToast();
   const { enqueue, uploads } = useUpload();
   const [view, setView] = useState<ViewMode>("list");
+  const emptyUploadInputRef = useRef<HTMLInputElement | null>(null);
+  const onEmptyUploadClick = useCallback(() => {
+    emptyUploadInputRef.current?.click();
+  }, []);
 
   // 렌더링 zone 루트("/")에선 새 폴더 만들기 막고, 업로드는 자동으로 /Rendering 으로 보냄.
   // 자료실 루트는 zone prefix 가 다르므로 영향 없음.
@@ -317,6 +322,7 @@ export function FilesPane({
           onToggleSelect={toggleSelect}
           onOptimisticHide={hideOptimistic}
           onOptimisticUnhide={unhideOptimistic}
+          onEmptyUploadClick={onEmptyUploadClick}
         />
       ) : (
         <FileTable
@@ -328,6 +334,30 @@ export function FilesPane({
           onToggleSelect={toggleSelect}
           onOptimisticHide={hideOptimistic}
           onOptimisticUnhide={unhideOptimistic}
+          onEmptyUploadClick={onEmptyUploadClick}
+        />
+      )}
+      {/* EmptyState dropzone 클릭 시 열리는 hidden picker */}
+      <input
+        ref={emptyUploadInputRef}
+        type="file"
+        multiple
+        hidden
+        onChange={(e) => {
+          const files = e.target.files;
+          if (!files || files.length === 0) return;
+          doUpload(Array.from(files));
+          if (emptyUploadInputRef.current) emptyUploadInputRef.current.value = "";
+        }}
+      />
+      {/* StatusBar — admin 전용 (매니저/파트너에겐 거슬려서 숨김) */}
+      {session.isAdmin && (
+        <StatusBar
+          entriesCount={sortedEntries.length}
+          folderCount={sortedEntries.filter((e) => e.isFolder).length}
+          fileCount={sortedEntries.filter((e) => !e.isFolder).length}
+          selectedCount={selectedPaths.size}
+          canSeeHealth={session.canSeeHealth ?? session.isAdmin}
         />
       )}
       <DropZone onFiles={doUpload} />

@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vibox 메뉴 구조 — 디자인 시안</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 60px; }
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: #1c1c1c;
+  color: #f5f5f5;
+}
+button { font-family: inherit; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+
+/* Compare nav */
+.compare-nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(20,20,20,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 14px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: 'Inter', sans-serif;
+}
+.compare-nav .label {
+  font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+}
+.compare-nav .jumps { display: flex; gap: 6px; }
+.compare-nav .jumps a {
+  padding: 8px 16px; border-radius: 999px;
+  font-size: 12px; letter-spacing: 0.1em;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.75);
+  transition: all 0.25s ease;
+}
+.compare-nav .jumps a:hover { background: rgba(255,255,255,0.14); color: #fff; }
+
+/* Variant frame */
+.variant-meta {
+  padding: 56px 48px 28px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.variant-meta .name {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
+  font-weight: 700;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 12px;
+}
+.variant-meta h1 {
+  font-family: 'Inter', sans-serif;
+  font-size: 26px; font-weight: 800; color: #fff;
+  margin-bottom: 8px; letter-spacing: -0.02em;
+}
+.variant-meta .desc {
+  color: rgba(255,255,255,0.6);
+  font-size: 14px; line-height: 1.55; max-width: 720px;
+}
+.variant-meta .pros {
+  margin-top: 14px; display: flex; gap: 16px; flex-wrap: wrap;
+  font-size: 12px; color: rgba(255,255,255,0.55);
+}
+.variant-meta .pros span { display: flex; align-items: center; gap: 6px; }
+.variant-meta .pros .ok { color: #6ECC8E; }
+.variant-meta .pros .no { color: #E88B7E; }
+
+/* Screen frame */
+.screens-wrap { padding: 36px 48px 80px; background: #1c1c1c; }
+.screen {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2);
+  height: 720px;
+  display: flex; flex-direction: column;
+}
+.screen-chrome {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 14px;
+  background: #f5f5f5;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  flex-shrink: 0;
+}
+.screen-chrome .dot { width: 12px; height: 12px; border-radius: 50%; }
+.screen-chrome .dot:nth-child(1) { background: #FF5F57; }
+.screen-chrome .dot:nth-child(2) { background: #FEBC2E; }
+.screen-chrome .dot:nth-child(3) { background: #28C840; }
+.screen-chrome .url {
+  margin-left: 16px;
+  font-family: 'Inter', sans-serif; font-size: 11px;
+  color: #888; letter-spacing: 0.05em;
+}
+.screen-body { flex: 1; display: flex; min-height: 0; }
+
+/* ============================================================
+   VARIANT A — Dropbox-style (light + roomy)
+   ============================================================ */
+.va {
+  --bg: #ffffff;
+  --bg-soft: #F7F7F5;
+  --bg-rail: #F4F4F2;
+  --bg-hover: #EFEEEB;
+  --text: #1F1F1F;
+  --text-sub: #5F5E5C;
+  --text-muted: #999895;
+  --border: #E6E5E2;
+  --accent: #0061FE;
+  --accent-soft: #E6EFFF;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
+}
+.va .screen-body { background: var(--bg); }
+
+/* Rail */
+.va .rail {
+  width: 84px; flex-shrink: 0;
+  background: var(--bg-rail);
+  border-right: 1px solid var(--border);
+  padding: 16px 8px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.va .rail-item {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 12px 4px; border-radius: 8px;
+  color: var(--text-sub); cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+.va .rail-item:hover { background: var(--bg-hover); }
+.va .rail-item.active {
+  background: var(--bg);
+  color: var(--accent);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.va .rail-item i { font-size: 18px; }
+.va .rail-item .rail-label {
+  font-size: 11px; font-weight: 500; letter-spacing: 0.02em;
+}
+.va .rail-item.admin::after {
+  content: ''; position: absolute; top: 8px; right: 12px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); opacity: 0.5;
+}
+.va .rail-divider {
+  height: 1px; background: var(--border); margin: 8px 12px;
+}
+.va .rail-bottom { margin-top: auto; }
+.va .rail-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #4080FF);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+  margin: 0 auto;
+}
+
+/* Menu (홈 sub-menu) */
+.va .menu {
+  width: 240px; flex-shrink: 0;
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+  padding: 18px 12px;
+}
+.va .menu-h {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 10px; margin-bottom: 12px;
+}
+.va .menu-h-title {
+  font-size: 16px; font-weight: 700; color: var(--text);
+  letter-spacing: -0.01em;
+}
+.va .menu-h-icon {
+  color: var(--text-muted); cursor: pointer;
+  width: 24px; height: 24px; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+}
+.va .menu-h-icon:hover { background: var(--bg-hover); }
+.va .menu-section {
+  font-size: 11px; font-weight: 600; color: var(--text-muted);
+  letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 16px 10px 6px;
+}
+.va .menu-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: 6px;
+  font-size: 14px; color: var(--text-sub);
+  cursor: pointer;
+  margin-bottom: 1px;
+}
+.va .menu-item:hover { background: var(--bg-soft); }
+.va .menu-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.va .menu-item i { width: 16px; text-align: center; opacity: 0.85; }
+.va .menu-item .badge {
+  margin-left: auto; font-size: 11px; color: var(--text-muted);
+}
+.va .menu-item.active .badge { color: var(--accent); }
+
+/* Main content */
+.va .main { flex: 1; background: var(--bg); padding: 24px 32px; overflow: auto; }
+.va .main-h {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.va .main-bc {
+  font-size: 13px; color: var(--text-sub);
+}
+.va .main-bc a:hover { color: var(--accent); }
+.va .main-actions { display: flex; gap: 8px; }
+.va .btn {
+  font-size: 13px; padding: 7px 14px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--bg);
+  color: var(--text-sub); display: inline-flex; align-items: center; gap: 6px;
+}
+.va .btn:hover { background: var(--bg-soft); }
+.va .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.va .file-table {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; overflow: hidden;
+}
+.va .file-row {
+  display: grid; grid-template-columns: auto 1fr 100px 140px;
+  align-items: center; gap: 12px;
+  padding: 11px 16px; border-top: 1px solid var(--border);
+  font-size: 13px; cursor: pointer;
+}
+.va .file-row:first-child { border-top: 0; }
+.va .file-row:hover { background: var(--bg-soft); }
+.va .file-row .icon { font-size: 16px; width: 18px; text-align: center; }
+.va .file-row .icon.folder { color: #4A8FFF; }
+.va .file-row .icon.video { color: #E8615F; }
+.va .file-row .name { color: var(--text); }
+.va .file-row .size { color: var(--text-muted); font-size: 12px; }
+.va .file-row .date { color: var(--text-muted); font-size: 12px; }
+
+/* ============================================================
+   VARIANT B — Dark rail (Slack/Linear hybrid)
+   ============================================================ */
+.vb {
+  --bg: #ffffff;
+  --bg-soft: #F8F9FB;
+  --bg-rail: #1A1B25;
+  --bg-rail-hover: #252731;
+  --bg-rail-active: #2F3140;
+  --text: #1F2937;
+  --text-sub: #5F6878;
+  --text-muted: #98A1B0;
+  --border: #E5E7EB;
+  --accent: #4F46E5;
+  --accent-soft: #EEF1FB;
+  --rail-text: rgba(255,255,255,0.65);
+  --rail-text-active: #fff;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
+}
+.vb .screen-body { background: var(--bg); }
+
+.vb .rail {
+  width: 72px; flex-shrink: 0;
+  background: var(--bg-rail);
+  padding: 14px 6px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.vb .rail-logo {
+  width: 36px; height: 36px; margin: 0 auto 16px;
+  background: var(--accent); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 800; font-size: 14px;
+  letter-spacing: -0.02em;
+}
+.vb .rail-item {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 10px 4px; border-radius: 8px;
+  color: var(--rail-text); cursor: pointer;
+  transition: all 0.15s; position: relative;
+}
+.vb .rail-item:hover { background: var(--bg-rail-hover); color: var(--rail-text-active); }
+.vb .rail-item.active {
+  background: var(--bg-rail-active);
+  color: var(--rail-text-active);
+}
+.vb .rail-item.active::before {
+  content: ''; position: absolute; left: -6px; top: 14px; bottom: 14px;
+  width: 3px; border-radius: 0 3px 3px 0; background: var(--accent);
+}
+.vb .rail-item i { font-size: 17px; }
+.vb .rail-item .rail-label {
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.vb .rail-item.admin .lock {
+  position: absolute; top: 6px; right: 8px;
+  font-size: 8px; color: rgba(255,255,255,0.4);
+}
+.vb .rail-bottom { margin-top: auto; }
+.vb .rail-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, #FF6B6B, #FFA94D);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; margin: 0 auto;
+  cursor: pointer;
+}
+
+.vb .menu {
+  width: 240px; flex-shrink: 0;
+  background: var(--bg-soft);
+  border-right: 1px solid var(--border);
+  padding: 18px 14px;
+}
+.vb .menu-h {
+  padding: 4px 8px; margin-bottom: 14px;
+}
+.vb .menu-h-title {
+  font-size: 17px; font-weight: 700; color: var(--text);
+  letter-spacing: -0.015em;
+}
+.vb .menu-section {
+  font-size: 10px; font-weight: 700; color: var(--text-muted);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 16px 8px 8px;
+}
+.vb .menu-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 6px;
+  font-size: 13.5px; color: var(--text-sub);
+  cursor: pointer;
+}
+.vb .menu-item:hover { background: rgba(0,0,0,0.04); }
+.vb .menu-item.active {
+  background: var(--accent-soft); color: var(--accent);
+  font-weight: 500;
+}
+.vb .menu-item i { width: 16px; text-align: center; }
+.vb .menu-item .badge {
+  margin-left: auto; font-size: 11px; padding: 1px 7px;
+  background: rgba(0,0,0,0.05); border-radius: 8px;
+  color: var(--text-muted);
+}
+.vb .menu-item.active .badge { background: var(--accent); color: #fff; }
+
+.vb .main { flex: 1; padding: 24px 32px; background: var(--bg); overflow: auto; }
+.vb .main-h {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.vb .main-h h2 {
+  font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -0.01em;
+}
+.vb .main-h .actions { display: flex; gap: 8px; }
+.vb .btn {
+  font-size: 12.5px; padding: 7px 13px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--bg);
+  color: var(--text-sub); display: inline-flex; align-items: center; gap: 6px;
+  font-weight: 500;
+}
+.vb .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.vb .file-list {
+  background: var(--bg-soft); border-radius: 8px;
+  border: 1px solid var(--border); overflow: hidden;
+}
+.vb .file-list .head {
+  display: grid; grid-template-columns: 30px 1fr 100px 140px;
+  gap: 12px; padding: 10px 16px;
+  font-size: 11px; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
+  border-bottom: 1px solid var(--border);
+}
+.vb .file-row {
+  display: grid; grid-template-columns: 30px 1fr 100px 140px;
+  align-items: center; gap: 12px;
+  padding: 12px 16px;
+  font-size: 13px; cursor: pointer;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.vb .file-row:last-child { border-bottom: 0; }
+.vb .file-row:hover { background: var(--accent-soft); }
+.vb .file-row .icon { font-size: 16px; }
+.vb .file-row .icon.folder { color: var(--accent); }
+.vb .file-row .icon.video { color: #FF6B6B; }
+.vb .file-row .name { color: var(--text); font-weight: 500; }
+.vb .file-row .size, .vb .file-row .date { color: var(--text-muted); font-size: 12px; }
+
+/* ============================================================
+   VARIANT C — VS Code style (icon-only rail, dense)
+   ============================================================ */
+.vc {
+  --bg: #ffffff;
+  --bg-soft: #FAFAFB;
+  --bg-rail: #F0F1F4;
+  --bg-rail-hover: #E5E7EC;
+  --bg-hover: #F0F2F6;
+  --text: #1A1D26;
+  --text-sub: #5C616B;
+  --text-muted: #8B919D;
+  --border: #E1E3E8;
+  --accent: #2563EB;
+  --accent-soft: #EFF4FF;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
+  font-size: 13px;
+}
+.vc .screen-body { background: var(--bg); }
+
+.vc .rail {
+  width: 52px; flex-shrink: 0;
+  background: var(--bg-rail);
+  border-right: 1px solid var(--border);
+  padding: 8px 6px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.vc .rail-item {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px; cursor: pointer;
+  color: var(--text-sub); position: relative;
+  transition: all 0.12s;
+}
+.vc .rail-item:hover { background: var(--bg-rail-hover); color: var(--text); }
+.vc .rail-item.active {
+  background: var(--bg);
+  color: var(--accent);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+}
+.vc .rail-item.active::before {
+  content: ''; position: absolute; left: -6px; top: 8px; bottom: 8px;
+  width: 2px; border-radius: 0 2px 2px 0; background: var(--accent);
+}
+.vc .rail-item i { font-size: 16px; }
+.vc .rail-item .tooltip {
+  position: absolute; left: calc(100% + 12px); top: 50%; transform: translateY(-50%);
+  background: var(--text); color: #fff;
+  padding: 4px 8px; border-radius: 4px;
+  font-size: 11px; font-weight: 500;
+  white-space: nowrap; opacity: 0;
+  pointer-events: none; transition: opacity 0.15s;
+  z-index: 10;
+}
+.vc .rail-item:hover .tooltip { opacity: 1; }
+.vc .rail-item.admin::after {
+  content: ''; position: absolute; bottom: 6px; right: 6px;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #F59E0B;
+}
+.vc .rail-bottom { margin-top: auto; padding-top: 8px; }
+.vc .rail-avatar {
+  width: 28px; height: 28px; border-radius: 6px;
+  background: linear-gradient(135deg, var(--accent), #5E91F0);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  margin: 0 auto; cursor: pointer;
+}
+
+.vc .menu {
+  width: 220px; flex-shrink: 0;
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+  padding: 12px 8px;
+}
+.vc .menu-h {
+  padding: 4px 10px 10px;
+  border-bottom: 1px solid var(--border); margin-bottom: 8px;
+}
+.vc .menu-h-title {
+  font-size: 12px; font-weight: 700; color: var(--text-muted);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.vc .menu-section {
+  font-size: 10px; font-weight: 600; color: var(--text-muted);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 12px 10px 4px;
+}
+.vc .menu-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 10px; border-radius: 4px;
+  font-size: 13px; color: var(--text-sub); cursor: pointer;
+}
+.vc .menu-item:hover { background: var(--bg-hover); }
+.vc .menu-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.vc .menu-item i { width: 14px; text-align: center; font-size: 13px; opacity: 0.9; }
+.vc .menu-item .badge { margin-left: auto; font-size: 11px; color: var(--text-muted); }
+.vc .menu-item.active .badge { color: var(--accent); }
+
+.vc .main { flex: 1; padding: 18px 24px; background: var(--bg); overflow: auto; }
+.vc .main-h {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.vc .main-bc { font-size: 12px; color: var(--text-sub); }
+.vc .main-bc a:hover { color: var(--accent); }
+.vc .main-actions { display: flex; gap: 6px; }
+.vc .btn {
+  font-size: 12px; padding: 5px 11px; border-radius: 4px;
+  background: var(--bg); border: 1px solid var(--border);
+  color: var(--text-sub); display: inline-flex; align-items: center; gap: 5px;
+}
+.vc .btn:hover { background: var(--bg-hover); }
+.vc .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.vc .file-table {
+  background: var(--bg);
+}
+.vc .file-row {
+  display: grid; grid-template-columns: 24px 1fr 80px 120px;
+  align-items: center; gap: 10px;
+  padding: 7px 12px; border-radius: 4px;
+  font-size: 12.5px; cursor: pointer;
+}
+.vc .file-row:hover { background: var(--bg-hover); }
+.vc .file-row .icon { font-size: 14px; }
+.vc .file-row .icon.folder { color: var(--accent); }
+.vc .file-row .icon.video { color: #DC2626; }
+.vc .file-row .name { color: var(--text); }
+.vc .file-row .size, .vc .file-row .date {
+  color: var(--text-muted); font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+</style>
+</head>
+<body>
+
+<nav class="compare-nav">
+  <span class="label">Vibox · 메뉴 구조 시안</span>
+  <div class="jumps">
+    <a href="#va">A. Dropbox</a>
+    <a href="#vb">B. Slack 다크 레일</a>
+    <a href="#vc">C. VS Code 컴팩트</a>
+  </div>
+</nav>
+
+<!-- ============================================================
+     VARIANT A — Dropbox-style
+     ============================================================ -->
+<section id="va">
+<div class="variant-meta">
+  <span class="name">A — Dropbox 스타일</span>
+  <h1>가장 친숙. 라이트 + 여유 있는 레일.</h1>
+  <p class="desc">레일 84px (아이콘 + 라벨 세로 배치). 메뉴 240px. 메인 콘텐츠 넓음. 비박스 기존 톤과 가장 잘 어울림. 학습 곡선 0에 가까움.</p>
+  <div class="pros">
+    <span class="ok">✓ 가장 친숙</span>
+    <span class="ok">✓ 라벨 큼 (한눈에 파악)</span>
+    <span class="ok">✓ 비박스 톤과 자연스러움</span>
+    <span class="no">✗ 레일이 가장 넓음 (화면 ↓)</span>
+  </div>
+</div>
+<div class="screens-wrap va">
+  <div class="screen">
+    <div class="screen-chrome">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <span class="url">vibox.cloud/home</span>
+    </div>
+    <div class="screen-body">
+      <!-- Rail -->
+      <aside class="rail">
+        <div class="rail-item active">
+          <i class="fas fa-house"></i>
+          <span class="rail-label">홈</span>
+        </div>
+        <div class="rail-item admin">
+          <i class="fas fa-code"></i>
+          <span class="rail-label">개발</span>
+        </div>
+        <div class="rail-item">
+          <i class="fas fa-box"></i>
+          <span class="rail-label">내 박스</span>
+        </div>
+        <div class="rail-divider"></div>
+        <div class="rail-item admin">
+          <i class="fas fa-gear"></i>
+          <span class="rail-label">관리</span>
+        </div>
+        <div class="rail-bottom">
+          <div class="rail-avatar">세</div>
+        </div>
+      </aside>
+
+      <!-- Menu -->
+      <nav class="menu">
+        <div class="menu-h">
+          <span class="menu-h-title">홈</span>
+          <span class="menu-h-icon"><i class="fas fa-search"></i></span>
+        </div>
+        <div class="menu-section">팀 작업</div>
+        <div class="menu-item active">
+          <i class="fas fa-folder-open"></i> 렌더링 폴더 <span class="badge">128</span>
+        </div>
+        <div class="menu-item">
+          <i class="fas fa-book"></i> 자료실 <span class="badge">42</span>
+        </div>
+        <div class="menu-section">즐겨찾기</div>
+        <div class="menu-item"><i class="fas fa-star"></i> 면역항암 시리즈</div>
+        <div class="menu-item"><i class="fas fa-star"></i> 위암 캠페인</div>
+      </nav>
+
+      <!-- Main -->
+      <main class="main">
+        <div class="main-h">
+          <div class="main-bc"><a href="#">홈</a> / <a href="#">렌더링 폴더</a></div>
+          <div class="main-actions">
+            <button class="btn"><i class="fas fa-folder-plus"></i> 새 폴더</button>
+            <button class="btn primary"><i class="fas fa-upload"></i> 업로드</button>
+          </div>
+        </div>
+        <div class="file-table">
+          <div class="file-row">
+            <i class="fas fa-folder icon folder"></i>
+            <span class="name">2026-04 면역항암 시리즈</span>
+            <span class="size">12 항목</span>
+            <span class="date">11:30</span>
+          </div>
+          <div class="file-row">
+            <i class="fas fa-folder icon folder"></i>
+            <span class="name">2026-04 위암 캠페인</span>
+            <span class="size">8 항목</span>
+            <span class="date">어제</span>
+          </div>
+          <div class="file-row">
+            <i class="fas fa-folder icon folder"></i>
+            <span class="name">2026-03 신규 클라이언트</span>
+            <span class="size">4 항목</span>
+            <span class="date">2일 전</span>
+          </div>
+          <div class="file-row">
+            <i class="fas fa-film icon video"></i>
+            <span class="name">면역항암제 누구나 사용 가능할까.mp4</span>
+            <span class="size">1.2GB</span>
+            <span class="date">11:15</span>
+          </div>
+          <div class="file-row">
+            <i class="fas fa-film icon video"></i>
+            <span class="name">위암 치료 1편.mp4</span>
+            <span class="size">890MB</span>
+            <span class="date">어제</span>
+          </div>
+          <div class="file-row">
+            <i class="fas fa-film icon video"></i>
+            <span class="name">고대구로병원 인터뷰.mp4</span>
+            <span class="size">2.1GB</span>
+            <span class="date">3일 전</span>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ============================================================
+     VARIANT B — Slack 다크 레일
+     ============================================================ -->
+<section id="vb">
+<div class="variant-meta">
+  <span class="name">B — Slack 다크 레일</span>
+  <h1>다크 네이비 레일 + 라이트 메뉴. 앱 같은 무게감.</h1>
+  <p class="desc">레일 72px 다크 (#1A1B25). 좌상단 V 로고. 메뉴는 라이트 톤 (#F8F9FB). 액센트 인디고 #4F46E5. 콘텐츠 영역에서 다크 레일이 시각적 닻이 됨. Slack/Linear 같은 SaaS 앱 톤.</p>
+  <div class="pros">
+    <span class="ok">✓ 시각적 임팩트 큼</span>
+    <span class="ok">✓ 레일 좁음 (72px)</span>
+    <span class="ok">✓ 액티브 상태 명확</span>
+    <span class="no">✗ 비박스 기존 라이트 톤과 톤 점프</span>
+    <span class="no">✗ 다크 좋아해야 함</span>
+  </div>
+</div>
+<div class="screens-wrap vb">
+  <div class="screen">
+    <div class="screen-chrome">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <span class="url">vibox.cloud/home</span>
+    </div>
+    <div class="screen-body">
+      <!-- Rail -->
+      <aside class="rail">
+        <div class="rail-logo">V</div>
+        <div class="rail-item active">
+          <i class="fas fa-house"></i>
+          <span class="rail-label">홈</span>
+        </div>
+        <div class="rail-item admin">
+          <i class="fas fa-code"></i>
+          <span class="rail-label">개발</span>
+          <i class="fas fa-lock lock"></i>
+        </div>
+        <div class="rail-item">
+          <i class="fas fa-box-archive"></i>
+          <span class="rail-label">내 박스</span>
+        </div>
+        <div class="rail-item admin">
+          <i class="fas fa-sliders"></i>
+          <span class="rail-label">관리</span>
+          <i class="fas fa-lock lock"></i>
+        </div>
+        <div class="rail-bottom">
+          <div class="rail-avatar">세</div>
+        </div>
+      </aside>
+
+      <!-- Menu -->
+      <nav class="menu">
+        <div class="menu-h">
+          <span class="menu-h-title">홈</span>
+        </div>
+        <div class="menu-section">팀 작업</div>
+        <div class="menu-item active">
+          <i class="fas fa-folder-open"></i> 렌더링 폴더 <span class="badge">128</span>
+        </div>
+        <div class="menu-item">
+          <i class="fas fa-book"></i> 자료실 <span class="badge">42</span>
+        </div>
+        <div class="menu-section">즐겨찾기</div>
+        <div class="menu-item"><i class="fas fa-star"></i> 면역항암 시리즈</div>
+        <div class="menu-item"><i class="fas fa-star"></i> 위암 캠페인</div>
+        <div class="menu-section">최근</div>
+        <div class="menu-item"><i class="fas fa-clock"></i> 최근 본 파일</div>
+      </nav>
+
+      <!-- Main -->
+      <main class="main">
+        <div class="main-h">
+          <h2>렌더링 폴더</h2>
+          <div class="actions">
+            <button class="btn"><i class="fas fa-folder-plus"></i> 새 폴더</button>
+            <button class="btn primary"><i class="fas fa-upload"></i> 업로드</button>
+          </div>
+        </div>
+        <div class="file-list">
+          <div class="head">
+            <div></div>
+            <div>이름</div>
+            <div>크기</div>
+            <div>수정일시</div>
+          </div>
+          <div class="file-row">
+            <i class="fas fa-folder icon folder"></i>
+            <span class="name">2026-04 면역항암 시리즈</span>
+            <span class="size">12 항목</span>
+            <span class="date">11:30</span>
+          </div>
+          <div class="file-row">
+            <i class="fas fa-folder icon folder"></i>
+            <span class="name">2026-04 위암 캠페인</span>
+            <span class="size">8 항목</span>
+            <span class="date">어제</span>
+          </div>
+          <div class="file-row">
+            <i class="fas fa-folder icon folder"></i>
+            <span class="name">2026-03 신규 클라이언트</span>
+            <span class="size">4 항목</span>
+            <span class="date">2일 전</span>
+          </div>
+          <div class="file-row">
+            <i class="fas fa-film icon video"></i>
+            <span class="name">면역항암제 누구나 사용 가능할까.mp4</span>
+            <span class="size">1.2GB</span>
+            <span class="date">11:15</span>
+          </div>
+          <div class="file-row">
+            <i class="fas fa-film icon video"></i>
+            <span class="name">위암 치료 1편.mp4</span>
+            <span class="size">890MB</span>
+            <span class="date">어제</span>
+          </div>
+          <div class="file-row">
+            <i class="fas fa-film icon video"></i>
+            <span class="name">고대구로병원 인터뷰.mp4</span>
+            <span class="size">2.1GB</span>
+            <span class="date">3일 전</span>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ============================================================
+     VARIANT C — VS Code 컴팩트
+     ============================================================ -->
+<section id="vc">
+<div class="variant-meta">
+  <span class="name">C — VS Code 컴팩트</span>
+  <h1>레일 52px 아이콘 only. 호버 시 툴팁. 콘텐츠 최대.</h1>
+  <p class="desc">레일이 가장 좁음 (52px, 아이콘만). 호버하면 툴팁으로 라벨. 메뉴도 컴팩트 (220px). 콘텐츠 영역 최대 확보. 파일 많이 다루는 사용자에게 유리. VS Code · Linear 사용자에게 자연스러움.</p>
+  <div class="pros">
+    <span class="ok">✓ 콘텐츠 영역 최대</span>
+    <span class="ok">✓ 정보 밀도 높음</span>
+    <span class="ok">✓ 빠른 탐색 (단축키 호환)</span>
+    <span class="no">✗ 라벨 안 보여서 첫 사용자 헷갈릴 수 있음</span>
+    <span class="no">✗ 작은 화면에 강한 인상</span>
+  </div>
+</div>
+<div class="screens-wrap vc">
+  <div class="screen">
+    <div class="screen-chrome">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <span class="url">vibox.cloud/home</span>
+    </div>
+    <div class="screen-body">
+      <!-- Rail -->
+      <aside class="rail">
+        <div class="rail-item active">
+          <i class="fas fa-house"></i>
+          <span class="tooltip">홈</span>
+        </div>
+        <div class="rail-item admin">
+          <i class="fas fa-code"></i>
+          <span class="tooltip">개발 (admin)</span>
+        </div>
+        <div class="rail-item">
+          <i class="fas fa-box"></i>
+          <span class="tooltip">내 박스</span>
+        </div>
+        <div class="rail-item admin">
+          <i class="fas fa-gear"></i>
+          <span class="tooltip">관리 (admin)</span>
+        </div>
+        <div class="rail-bottom">
+          <div class="rail-avatar">세</div>
+        </div>
+      </aside>
+
+      <!-- Menu -->
+      <nav class="menu">
+        <div class="menu-h">
+          <span class="menu-h-title">HOME</span>
+        </div>
+        <div class="menu-section">팀 작업</div>
+        <div class="menu-item active">
+          <i class="fas fa-folder-open"></i> 렌더링 폴더 <span class="badge">128</span>
+        </div>
+        <div class="menu-item">
+          <i class="fas fa-book"></i> 자료실 <span class="badge">42</span>
+        </div>
+        <div class="menu-section">바로가기</div>
+        <div class="menu-item"><i class="fas fa-star"></i> 면역항암 시리즈</div>
+        <div class="menu-item"><i class="fas fa-star"></i> 위암 캠페인</div>
+        <div class="menu-item"><i class="fas fa-clock"></i> 최근 본 파일</div>
+      </nav>
+
+      <!-- Main -->
+      <main class="main">
+        <div class="main-h">
+          <div class="main-bc"><a href="#">홈</a> / <a href="#">렌더링 폴더</a></div>
+          <div class="main-actions">
+            <button class="btn"><i class="fas fa-folder-plus"></i> 새 폴더</button>
+            <button class="btn primary"><i class="fas fa-upload"></i> 업로드</button>
+          </div>
+        </div>
+        <div class="file-table">
+          <div class="file-row">
+            <i class="fas fa-folder icon folder"></i>
+            <span class="name">2026-04 면역항암 시리즈</span>
+            <span class="size">12</span>
+            <span class="date">11:30</span>
+          </div>
+          <div class="file-row">
+            <i class="fas fa-folder icon folder"></i>
+            <span class="name">2026-04 위암 캠페인</span>
+            <span class="size">8</span>
+            <span class="date">어제</span>
+          </div>
+          <div class="file-row">
+            <i class="fas fa-folder icon folder"></i>
+            <span class="name">2026-03 신규 클라이언트</span>
+            <span class="size">4</span>
+            <span class="date">2d ago</span>
+          </div>
+          <div class="file-row">
+            <i class="fas fa-film icon video"></i>
+            <span class="name">면역항암제 누구나 사용 가능할까.mp4</span>
+            <span class="size">1.2GB</span>
+            <span class="date">11:15</span>
+          </div>
+          <div class="file-row">
+            <i class="fas fa-film icon video"></i>
+            <span class="name">위암 치료 1편.mp4</span>
+            <span class="size">890MB</span>
+            <span class="date">어제</span>
+          </div>
+          <div class="file-row">
+            <i class="fas fa-film icon video"></i>
+            <span class="name">고대구로병원 인터뷰.mp4</span>
+            <span class="size">2.1GB</span>
+            <span class="date">3d ago</span>
+          </div>
+          <div class="file-row">
+            <i class="fas fa-film icon video"></i>
+            <span class="name">위암 치료 2편 가편집.mp4</span>
+            <span class="size">1.4GB</span>
+            <span class="date">4d ago</span>
+          </div>
+          <div class="file-row">
+            <i class="fas fa-film icon video"></i>
+            <span class="name">신규 클라이언트 인터뷰.mp4</span>
+            <span class="size">1.8GB</span>
+            <span class="date">5d ago</span>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
+</section>
+
+</body>
+</html>

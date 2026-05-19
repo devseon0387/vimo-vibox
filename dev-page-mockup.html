@@ -1,0 +1,1067 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>비박스 — /dev 페이지 시안</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #fafafa;
+    --surface-2: #f7f7f7;
+    --border: #ececec;
+    --border-hover: #d4d4d4;
+    --text: #111111;
+    --text-muted: #555555;
+    --text-soft: #666666;
+    --text-faint: #999999;
+    --accent: #e85008;
+    --accent-hover: #c8430a;
+    --accent-soft: #fef0e8;
+    --hover: #f0f0f0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #efefef;
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Pretendard", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding: 32px 24px 64px;
+  }
+  h1.page-title {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  p.page-sub {
+    color: var(--text-soft);
+    font-size: 13.5px;
+    margin-bottom: 28px;
+    max-width: 800px;
+    line-height: 1.55;
+  }
+  section.variant {
+    margin-bottom: 56px;
+  }
+  .variant-head {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 6px;
+  }
+  .variant-title {
+    font-size: 16px; font-weight: 700;
+  }
+  .variant-tag {
+    font-size: 11px; padding: 2px 8px; border-radius: 999px;
+    background: var(--accent-soft); color: var(--accent);
+    font-weight: 700; letter-spacing: 0.5px;
+  }
+  .variant-desc {
+    color: var(--text-soft); font-size: 12.5px;
+    margin-bottom: 14px; max-width: 720px; line-height: 1.55;
+  }
+  .frame {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    height: 720px;
+    display: flex;
+  }
+
+  /* === Rail (84px) === */
+  .rail {
+    width: 84px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 16px 8px;
+    flex-shrink: 0;
+  }
+  .rail .logo {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    margin: 0 auto 16px;
+    color: white; font-weight: 800; font-size: 15px;
+    display: grid; place-items: center;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  .rail nav { display: flex; flex-direction: column; gap: 2px; }
+  .rail-item {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 6px;
+    padding: 12px 4px; border-radius: 8px;
+    color: var(--text-soft); font-size: 11px; font-weight: 500;
+    cursor: pointer;
+  }
+  .rail-item:hover { background: var(--hover); }
+  .rail-item.active {
+    background: white; color: var(--accent);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .rail-item .ico {
+    width: 18px; height: 18px;
+    stroke: currentColor; fill: none; stroke-width: 2;
+  }
+
+  /* === DevMenu (240px) === */
+  .menu {
+    width: 240px;
+    background: white;
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+  }
+  .menu-head {
+    padding: 18px 16px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .menu-title { font-size: 16px; font-weight: 700; }
+  .menu-extra { color: var(--text-faint); cursor: pointer; }
+  .menu-search {
+    margin: 0 12px 8px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 6px;
+    background: var(--surface);
+    color: var(--text-faint); font-size: 12.5px;
+  }
+  .kbd {
+    margin-left: auto; font-size: 10px;
+    padding: 2px 6px; border: 1px solid var(--border); border-radius: 3px;
+    background: white; color: var(--text-faint);
+  }
+  .menu-section {
+    padding: 14px 16px 6px;
+    text-transform: uppercase;
+    font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px;
+    color: var(--text-faint);
+  }
+  .menu-item {
+    margin: 1px 8px;
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 12px; border-radius: 6px;
+    color: var(--text-soft); font-size: 13.5px;
+    cursor: pointer;
+  }
+  .menu-item:hover { background: var(--surface); }
+  .menu-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .menu-item .ico { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; opacity: .9; }
+  .menu-item .badge { margin-left: auto; font-size: 11px; color: var(--text-faint); }
+
+  /* === Main pane === */
+  .main { flex: 1; display: flex; min-width: 0; }
+
+  /* Folder tree (variant A only) */
+  .tree {
+    width: 200px; flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+    overflow-y: auto;
+    padding: 16px 0;
+  }
+  .tree-head {
+    padding: 0 16px 10px;
+    display: flex; align-items: center; justify-content: space-between;
+    color: var(--text-faint); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;
+  }
+  .tree-add {
+    color: var(--text-faint);
+    width: 18px; height: 18px;
+    border-radius: 4px; display: grid; place-items: center;
+    cursor: pointer;
+  }
+  .tree-add:hover { background: var(--hover); color: var(--text); }
+  .tree-row {
+    padding: 5px 16px;
+    display: flex; align-items: center; gap: 8px;
+    color: var(--text-soft); font-size: 13px;
+    cursor: pointer;
+  }
+  .tree-row:hover { background: var(--hover); }
+  .tree-row.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .tree-row .chev { width: 10px; color: var(--text-faint); font-size: 9px; }
+  .tree-row .ico { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .tree-row .count { margin-left: auto; font-size: 11px; color: var(--text-faint); }
+  .tree-children { padding-left: 16px; }
+
+  /* Note list */
+  .list {
+    width: 360px; flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    background: white;
+  }
+  .list-head {
+    padding: 18px 20px 10px;
+    border-bottom: 1px solid var(--border);
+    background: white;
+    position: sticky; top: 0; z-index: 5;
+  }
+  .list-head .title-row {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .list-title { font-size: 17px; font-weight: 700; }
+  .list-count { color: var(--text-faint); font-size: 12px; }
+  .list-actions {
+    display: flex; gap: 6px;
+  }
+  .list-btn {
+    padding: 5px 10px; border-radius: 6px;
+    font-size: 12px; color: var(--text-soft);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    cursor: pointer; display: flex; align-items: center; gap: 4px;
+  }
+  .list-btn:hover { background: var(--hover); }
+  .list-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .list-btn.primary:hover { background: var(--accent-hover); }
+  .list-sort {
+    margin-top: 6px;
+    display: flex; gap: 16px; font-size: 11.5px; color: var(--text-faint);
+  }
+  .list-sort .seg { display: flex; gap: 4px; }
+  .list-sort .seg span {
+    padding: 2px 8px; border-radius: 4px; cursor: pointer;
+  }
+  .list-sort .seg span.on { background: var(--surface-2); color: var(--text); font-weight: 600; }
+
+  .note-row {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .note-row:hover { background: var(--surface); }
+  .note-row.selected { background: var(--accent-soft); border-left: 3px solid var(--accent); padding-left: 17px; }
+  .note-row .nrow1 {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 4px;
+  }
+  .note-row .ntitle {
+    font-size: 14px; font-weight: 600; color: var(--text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .note-row .nstar { color: var(--accent); }
+  .note-row .npreview {
+    font-size: 12.5px; color: var(--text-soft);
+    line-height: 1.4;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .note-row .nmeta {
+    display: flex; gap: 8px; font-size: 11px; color: var(--text-faint);
+    align-items: center;
+  }
+  .note-row .ntag {
+    padding: 1px 6px; border-radius: 3px; background: var(--surface-2);
+    font-size: 10.5px; color: var(--text-soft);
+  }
+  .note-row .nspacer { flex: 1; }
+
+  /* Preview pane */
+  .preview {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column;
+    background: white;
+  }
+  .preview-toolbar {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .breadcrumb {
+    font-size: 12px; color: var(--text-faint);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .breadcrumb .sep { opacity: 0.5; }
+  .breadcrumb .leaf { color: var(--text); font-weight: 600; }
+  .preview-actions {
+    margin-left: auto;
+    display: flex; gap: 6px;
+  }
+  .icon-btn {
+    width: 30px; height: 30px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: white; color: var(--text-soft);
+    display: grid; place-items: center;
+    cursor: pointer;
+  }
+  .icon-btn:hover { background: var(--surface); color: var(--text); }
+  .icon-btn .ico { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .edit-btn {
+    height: 30px; padding: 0 12px;
+    border-radius: 6px;
+    background: var(--accent); color: white;
+    border: none; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12.5px; font-weight: 600;
+  }
+  .edit-btn:hover { background: var(--accent-hover); }
+  .edit-btn .ico { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2.2; }
+
+  .preview-body {
+    flex: 1; overflow-y: auto;
+    padding: 32px 56px;
+    max-width: 760px;
+  }
+  .preview-body h1 {
+    font-size: 26px; font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .preview-body .doc-meta {
+    color: var(--text-faint); font-size: 12px;
+    margin-bottom: 24px;
+    display: flex; gap: 12px;
+  }
+  .preview-body h2 {
+    font-size: 17px; font-weight: 700;
+    margin: 24px 0 10px; padding-top: 8px;
+  }
+  .preview-body p {
+    font-size: 14px; line-height: 1.7;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+  .preview-body ul {
+    padding-left: 22px;
+    margin-bottom: 12px;
+  }
+  .preview-body li {
+    font-size: 14px; line-height: 1.7;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .preview-body code {
+    background: var(--surface-2); padding: 1px 6px;
+    border-radius: 3px; font-size: 12.5px;
+    color: var(--accent);
+    font-family: "SF Mono", Menlo, monospace;
+  }
+  .preview-body strong { color: var(--text); }
+  .preview-body blockquote {
+    border-left: 3px solid var(--accent);
+    padding: 4px 16px;
+    color: var(--text-soft);
+    background: var(--accent-soft);
+    margin-bottom: 14px;
+    font-size: 13.5px;
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* Empty state */
+  .empty {
+    flex: 1; display: grid; place-items: center;
+    color: var(--text-faint); text-align: center;
+    padding: 40px;
+  }
+  .empty .icon-circle {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: var(--surface);
+    display: grid; place-items: center;
+    margin: 0 auto 16px;
+    color: var(--text-faint);
+  }
+  .empty h3 { font-size: 15px; color: var(--text); margin-bottom: 6px; font-weight: 600; }
+  .empty p { font-size: 13px; line-height: 1.55; max-width: 280px; }
+
+  /* === Quick capture popover (floating) === */
+  .capture-pop {
+    position: absolute;
+    top: 64px; right: 32px;
+    width: 460px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+  .capture-pop .top {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: var(--text-faint);
+  }
+  .capture-pop .top input {
+    flex: 1; border: 0; outline: 0; font-size: 14px; color: var(--text);
+    background: transparent;
+  }
+  .capture-pop .body {
+    padding: 14px 16px;
+    min-height: 90px;
+    color: var(--text); font-size: 14px;
+    line-height: 1.55;
+  }
+  .capture-pop .footer {
+    padding: 10px 16px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11.5px; color: var(--text-faint);
+  }
+  .capture-pop .footer button {
+    margin-left: auto;
+    background: var(--accent); color: white; border: 0;
+    padding: 6px 14px; border-radius: 6px; font-weight: 600;
+    cursor: pointer; font-size: 12px;
+  }
+
+  /* legend / annotations */
+  .legend {
+    margin-top: 12px;
+    display: flex; gap: 12px; flex-wrap: wrap;
+    color: var(--text-faint); font-size: 11.5px;
+  }
+  .legend .chip {
+    padding: 4px 10px;
+    background: white; border: 1px solid var(--border); border-radius: 999px;
+  }
+  .legend .chip strong { color: var(--text); margin-right: 4px; }
+
+  .frame-wrap { position: relative; }
+</style>
+</head>
+<body>
+
+<h1 class="page-title">비박스 — /dev 페이지 시안</h1>
+<p class="page-sub">
+  관리자(세온) 전용. <strong>편집은 SEON Hub로 위임</strong>, Vibox는 <strong>스토리지 + 읽기 + 빠른 액션(공유, 즐겨찾기, 검색)</strong>에만 집중.
+  두 가지 레이아웃을 비교해서 보여드립니다.
+</p>
+
+<!-- ====================================================== -->
+<!-- VARIANT A: 3-pane (folder tree + note list + preview) -->
+<!-- ====================================================== -->
+<section class="variant">
+  <div class="variant-head">
+    <span class="variant-title">A안. 3-pane (폴더 트리 + 노트 리스트 + 미리보기)</span>
+    <span class="variant-tag">탐색 강화형</span>
+  </div>
+  <p class="variant-desc">
+    DevMenu는 빠른 접근(최근/즐겨찾기/태그)만 두고, 메인 영역에 폴더 트리를 별도 패널로 배치.
+    수많은 폴더를 한눈에 펼쳐보고 싶을 때, 옵시디언처럼 깊은 트리 구조에서 유리.
+  </p>
+
+  <div class="frame-wrap">
+  <div class="frame">
+
+    <!-- Rail -->
+    <aside class="rail">
+      <div class="logo">V</div>
+      <nav>
+        <div class="rail-item">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>
+          <span>홈</span>
+        </div>
+        <div class="rail-item active">
+          <svg class="ico" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>개발</span>
+        </div>
+        <div class="rail-item">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          <span>내 박스</span>
+        </div>
+        <div class="rail-item">
+          <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>관리</span>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- DevMenu -->
+    <nav class="menu">
+      <div class="menu-head">
+        <span class="menu-title">개발</span>
+        <span class="menu-extra" title="SEON Hub 열기">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </span>
+      </div>
+      <div class="menu-search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>노트 검색</span>
+        <span class="kbd">⌘K</span>
+      </div>
+
+      <div class="menu-section">빠른 접근</div>
+      <div class="menu-item active">
+        <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        최근 노트
+      </div>
+      <div class="menu-item">
+        <svg class="ico" viewBox="0 0 24 24"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8 12 2"/></svg>
+        즐겨찾기 <span class="badge">8</span>
+      </div>
+      <div class="menu-item">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+        태그 <span class="badge">14</span>
+      </div>
+
+      <div class="menu-section">최근 폴더</div>
+      <div class="menu-item">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        프로젝트 / Vibox
+      </div>
+      <div class="menu-item">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        회의 / 2026 Q2
+      </div>
+    </nav>
+
+    <!-- Main -->
+    <main class="main">
+      <!-- Folder tree -->
+      <aside class="tree">
+        <div class="tree-head">
+          <span>폴더</span>
+          <div class="tree-add" title="새 폴더">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+        </div>
+        <div class="tree-row">
+          <span class="chev">▾</span>
+          <svg class="ico" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          회의 <span class="count">12</span>
+        </div>
+        <div class="tree-children">
+          <div class="tree-row">
+            <span class="chev">▸</span>
+            <svg class="ico" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            2026 Q1 <span class="count">7</span>
+          </div>
+          <div class="tree-row active">
+            <span class="chev">▸</span>
+            <svg class="ico" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            2026 Q2 <span class="count">5</span>
+          </div>
+        </div>
+        <div class="tree-row">
+          <span class="chev">▸</span>
+          <svg class="ico" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          프로젝트 <span class="count">28</span>
+        </div>
+        <div class="tree-row">
+          <span class="chev">▸</span>
+          <svg class="ico" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          마케팅 <span class="count">9</span>
+        </div>
+        <div class="tree-row">
+          <span class="chev">▸</span>
+          <svg class="ico" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          일기 <span class="count">42</span>
+        </div>
+        <div class="tree-row">
+          <span class="chev">▸</span>
+          <svg class="ico" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          _inbox <span class="count">3</span>
+        </div>
+      </aside>
+
+      <!-- Note list -->
+      <section class="list">
+        <div class="list-head">
+          <div class="title-row">
+            <div>
+              <div class="list-title">2026 Q2</div>
+              <div class="list-count">5개 노트 · 1.2 MB</div>
+            </div>
+            <div class="list-actions">
+              <button class="list-btn">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 6h18M6 12h12M9 18h6"/></svg>
+                필터
+              </button>
+              <button class="list-btn primary">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                새 노트
+              </button>
+            </div>
+          </div>
+          <div class="list-sort">
+            <span>정렬</span>
+            <div class="seg">
+              <span class="on">수정일</span>
+              <span>제목</span>
+              <span>크기</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="note-row selected">
+          <div class="nrow1">
+            <span class="ntitle">2026-04-30 비박스 메뉴 구조 회의</span>
+            <span class="nstar">★</span>
+          </div>
+          <div class="npreview">레일 / 컨텍스트 메뉴 분리 확정. 홈 메뉴는 렌더링 폴더 + 자료실. 개발은 admin 전용...</div>
+          <div class="nmeta">
+            <span class="ntag">#회의</span>
+            <span class="ntag">#vibox</span>
+            <span class="nspacer"></span>
+            <span>1시간 전</span>
+          </div>
+        </div>
+        <div class="note-row">
+          <div class="nrow1">
+            <span class="ntitle">SEON Hub 연동 스펙</span>
+          </div>
+          <div class="npreview">서비스 계정 JWT, /api/integration/upload 엔드포인트, 원자적 공유 생성 패턴...</div>
+          <div class="nmeta">
+            <span class="ntag">#스펙</span>
+            <span class="ntag">#integration</span>
+            <span class="nspacer"></span>
+            <span>어제</span>
+          </div>
+        </div>
+        <div class="note-row">
+          <div class="nrow1">
+            <span class="ntitle">스토리지 사용량 추세</span>
+          </div>
+          <div class="npreview">3월 8.4GB → 4월 12.4GB. 렌더링 폴더가 가장 큰 비중...</div>
+          <div class="nmeta">
+            <span class="ntag">#운영</span>
+            <span class="nspacer"></span>
+            <span>4월 22일</span>
+          </div>
+        </div>
+        <div class="note-row">
+          <div class="nrow1">
+            <span class="ntitle">파트너 권한 모델 정리</span>
+          </div>
+          <div class="npreview">파트너는 자기 폴더만 보임. 매니저는 모든 클라이언트 폴더...</div>
+          <div class="nmeta">
+            <span class="ntag">#권한</span>
+            <span class="nspacer"></span>
+            <span>4월 18일</span>
+          </div>
+        </div>
+        <div class="note-row">
+          <div class="nrow1">
+            <span class="ntitle">Litestream 백업 점검</span>
+          </div>
+          <div class="npreview">매일 03:00 S3 sync, 7일 retention. 복구 테스트 통과...</div>
+          <div class="nmeta">
+            <span class="ntag">#백업</span>
+            <span class="nspacer"></span>
+            <span>4월 14일</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Preview -->
+      <section class="preview">
+        <div class="preview-toolbar">
+          <div class="breadcrumb">
+            <span>회의</span>
+            <span class="sep">/</span>
+            <span>2026 Q2</span>
+            <span class="sep">/</span>
+            <span class="leaf">2026-04-30 비박스 메뉴 구조 회의</span>
+          </div>
+          <div class="preview-actions">
+            <button class="icon-btn" title="즐겨찾기">
+              <svg class="ico" viewBox="0 0 24 24" fill="var(--accent)" stroke="var(--accent)"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8 12 2"/></svg>
+            </button>
+            <button class="icon-btn" title="공유">
+              <svg class="ico" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            </button>
+            <button class="icon-btn" title="더보기">
+              <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            </button>
+            <button class="edit-btn">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              SEON Hub에서 편집
+            </button>
+          </div>
+        </div>
+
+        <div class="preview-body">
+          <h1>2026-04-30 비박스 메뉴 구조 회의</h1>
+          <div class="doc-meta">
+            <span>세온 · 1시간 전 수정</span>
+            <span>·</span>
+            <span>3.4 KB</span>
+            <span>·</span>
+            <span>#회의 #vibox</span>
+          </div>
+
+          <h2>결정 사항</h2>
+          <ul>
+            <li>레일은 <strong>홈 / 개발 / 내 박스 / 관리</strong> 4개</li>
+            <li>개발·관리는 admin 전용 (member·partner는 숨김)</li>
+            <li>홈 메뉴: 렌더링 폴더 + 자료실 (팀 공용 영역)</li>
+            <li>비박스 브랜드 컬러는 <code>#e85008</code> (오렌지)</li>
+          </ul>
+
+          <h2>다음 액션</h2>
+          <ul>
+            <li>Phase 4: <code>/dev</code>, <code>/mybox</code>, <code>/admin</code> 라우트 신설</li>
+            <li>Phase 5: 서버사이드 admin guard 추가</li>
+            <li>SEON Hub 연동 endpoint 구현 (handoff txt 작성 완료)</li>
+          </ul>
+
+          <blockquote>
+            "옵시디언이 폴더링부터 너무 불편하다고 생각해. 비박스는 가볍게 한눈에 보이는 MD 리더기로 가자."
+          </blockquote>
+
+          <h2>오픈 이슈</h2>
+          <p>모바일에서 사이드바 324px이 너무 넓음 — 햄버거 메뉴로 접는 패턴 필요.</p>
+        </div>
+      </section>
+    </main>
+
+  </div>
+  </div>
+
+  <div class="legend">
+    <div class="chip"><strong>패널 너비</strong>Rail 84 + DevMenu 240 + 트리 200 + 리스트 360 + 미리보기 = ?</div>
+    <div class="chip"><strong>장점</strong>깊은 폴더 구조 한눈 탐색</div>
+    <div class="chip"><strong>단점</strong>좌우로 너무 분할 — 1280px 이하면 답답</div>
+  </div>
+</section>
+
+
+<!-- ====================================================== -->
+<!-- VARIANT B: 2-pane (note list + preview only)           -->
+<!-- ====================================================== -->
+<section class="variant">
+  <div class="variant-head">
+    <span class="variant-title">B안. 2-pane (노트 리스트 + 미리보기)</span>
+    <span class="variant-tag">집중형 · 추천</span>
+  </div>
+  <p class="variant-desc">
+    폴더 트리는 DevMenu 안으로 흡수 (현재 DevMenu 그대로). 메인은 <strong>노트 리스트(왼쪽) + 미리보기(오른쪽)</strong>만.
+    옵시디언이 불편했던 이유 = 폴더에 시야 뺏김. 노트와 본문에만 집중하게 하는 구조.
+    리스트가 더 넓어서 제목·태그·요약이 잘 보임.
+  </p>
+
+  <div class="frame-wrap">
+  <div class="frame">
+
+    <!-- Rail (same) -->
+    <aside class="rail">
+      <div class="logo">V</div>
+      <nav>
+        <div class="rail-item">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>
+          <span>홈</span>
+        </div>
+        <div class="rail-item active">
+          <svg class="ico" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>개발</span>
+        </div>
+        <div class="rail-item">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          <span>내 박스</span>
+        </div>
+        <div class="rail-item">
+          <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>관리</span>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- DevMenu (with folder tree inside) -->
+    <nav class="menu">
+      <div class="menu-head">
+        <span class="menu-title">개발</span>
+        <span class="menu-extra" title="SEON Hub 열기">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </span>
+      </div>
+      <div class="menu-search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>노트 검색</span>
+        <span class="kbd">⌘K</span>
+      </div>
+
+      <div class="menu-section">빠른 접근</div>
+      <div class="menu-item">
+        <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        최근 노트
+      </div>
+      <div class="menu-item">
+        <svg class="ico" viewBox="0 0 24 24"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8 12 2"/></svg>
+        즐겨찾기 <span class="badge">8</span>
+      </div>
+      <div class="menu-item">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+        태그 <span class="badge">14</span>
+      </div>
+
+      <div class="menu-section">폴더</div>
+      <div class="menu-item">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        회의 <span class="badge">12</span>
+      </div>
+      <div class="menu-item active">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        프로젝트 <span class="badge">28</span>
+      </div>
+      <div class="menu-item">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        마케팅 <span class="badge">9</span>
+      </div>
+      <div class="menu-item">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        일기 <span class="badge">42</span>
+      </div>
+      <div class="menu-item">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        _inbox <span class="badge">3</span>
+      </div>
+    </nav>
+
+    <!-- Main: list + preview only -->
+    <main class="main">
+      <section class="list" style="width: 400px;">
+        <div class="list-head">
+          <div class="title-row">
+            <div>
+              <div class="list-title">프로젝트</div>
+              <div class="list-count">28개 노트 · 6.8 MB</div>
+            </div>
+            <div class="list-actions">
+              <button class="list-btn">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 6h18M6 12h12M9 18h6"/></svg>
+                필터
+              </button>
+              <button class="list-btn primary">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                새 노트
+              </button>
+            </div>
+          </div>
+          <div class="list-sort">
+            <span>정렬</span>
+            <div class="seg">
+              <span class="on">수정일</span>
+              <span>제목</span>
+              <span>크기</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="note-row selected">
+          <div class="nrow1">
+            <span class="ntitle">Vibox v0.4 — 사이드바 리디자인</span>
+            <span class="nstar">★</span>
+          </div>
+          <div class="npreview">Rail (84px) + 컨텍스트 메뉴 (240px) + 메인 3-pane 구조 채택. 홈/개발/내박스/관리 분리...</div>
+          <div class="nmeta">
+            <span class="ntag">#vibox</span>
+            <span class="ntag">#design</span>
+            <span class="nspacer"></span>
+            <span>방금</span>
+          </div>
+        </div>
+        <div class="note-row">
+          <div class="nrow1">
+            <span class="ntitle">SEON Hub 백엔드 연동 spec</span>
+          </div>
+          <div class="npreview">서비스 계정 JWT (HS256), 10개 endpoint, frontmatter convention. 원자적 공유 생성 패턴 채택...</div>
+          <div class="nmeta">
+            <span class="ntag">#integration</span>
+            <span class="ntag">#spec</span>
+            <span class="nspacer"></span>
+            <span>어제</span>
+          </div>
+        </div>
+        <div class="note-row">
+          <div class="nrow1">
+            <span class="ntitle">Plick — Remotion 마이그레이션 계획</span>
+          </div>
+          <div class="npreview">프리뷰-렌더 일치 보장 위해 Remotion으로 통일. GPU 인코딩 자동 감지...</div>
+          <div class="nmeta">
+            <span class="ntag">#plick</span>
+            <span class="ntag">#remotion</span>
+            <span class="nspacer"></span>
+            <span>4월 28일</span>
+          </div>
+        </div>
+        <div class="note-row">
+          <div class="nrow1">
+            <span class="ntitle">크릿 — 자동 말자막 설계</span>
+          </div>
+          <div class="npreview">Groq Whisper + Claude post-edit + forced align. 클린 보이스 전용 스택...</div>
+          <div class="nmeta">
+            <span class="ntag">#krit</span>
+            <span class="ntag">#caption</span>
+            <span class="nspacer"></span>
+            <span>4월 27일</span>
+          </div>
+        </div>
+        <div class="note-row">
+          <div class="nrow1">
+            <span class="ntitle">Hype Kit — Crystal UI 확정</span>
+          </div>
+          <div class="npreview">유튜브 롱폼 → 블로그 / 카드뉴스 / 쓰레드 자동 생성. Crystal 디자인 토큰 정리...</div>
+          <div class="nmeta">
+            <span class="ntag">#hypekit</span>
+            <span class="ntag">#design</span>
+            <span class="nspacer"></span>
+            <span>4월 25일</span>
+          </div>
+        </div>
+        <div class="note-row">
+          <div class="nrow1">
+            <span class="ntitle">Ailik — 음악 라이선스 전략</span>
+          </div>
+          <div class="npreview">Artlist+ISRC 하이브리드 모델. 글로벌 라이선스 시장 분석...</div>
+          <div class="nmeta">
+            <span class="ntag">#ailik</span>
+            <span class="nspacer"></span>
+            <span>4월 18일</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Preview -->
+      <section class="preview">
+        <div class="preview-toolbar">
+          <div class="breadcrumb">
+            <span>프로젝트</span>
+            <span class="sep">/</span>
+            <span class="leaf">Vibox v0.4 — 사이드바 리디자인</span>
+          </div>
+          <div class="preview-actions">
+            <button class="icon-btn" title="즐겨찾기">
+              <svg class="ico" viewBox="0 0 24 24" fill="var(--accent)" stroke="var(--accent)"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8 12 2"/></svg>
+            </button>
+            <button class="icon-btn" title="공유 링크">
+              <svg class="ico" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            </button>
+            <button class="icon-btn" title="더보기">
+              <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            </button>
+            <button class="edit-btn">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              SEON Hub에서 편집
+            </button>
+          </div>
+        </div>
+
+        <div class="preview-body">
+          <h1>Vibox v0.4 — 사이드바 리디자인</h1>
+          <div class="doc-meta">
+            <span>세온 · 방금 수정</span>
+            <span>·</span>
+            <span>4.1 KB</span>
+            <span>·</span>
+            <span>#vibox #design</span>
+          </div>
+
+          <h2>배경</h2>
+          <p>
+            기존 단일 사이드바가 <strong>모든 권한이 한 메뉴에 섞여있어</strong> 파트너/매니저가 봐서는 안 되는 항목까지 노출됨.
+            드롭박스/VS Code 패턴을 차용해 <strong>레일 + 컨텍스트 메뉴</strong>로 분리.
+          </p>
+
+          <h2>구조</h2>
+          <ul>
+            <li><code>Rail (84px)</code> — 홈 / 개발 / 내 박스 / 관리</li>
+            <li><code>ContextMenu (240px)</code> — Rail 선택에 따라 동적 변경</li>
+            <li><code>Main (rest)</code> — 페이지 본문</li>
+          </ul>
+
+          <h2>역할별 노출</h2>
+          <ul>
+            <li><strong>Owner (세온)</strong>: 4개 모두</li>
+            <li><strong>Member</strong>: 홈 + 내 박스</li>
+            <li><strong>Partner</strong>: 홈만 (자기 폴더 한정)</li>
+          </ul>
+
+          <blockquote>
+            URL 기반 active state — Phase 4에서 <code>/dev</code>, <code>/mybox</code>, <code>/admin</code>로 라우트 재구성 예정.
+          </blockquote>
+
+          <h2>다음 단계</h2>
+          <p>
+            Phase 4·5 완료 후, DevMenu의 폴더 항목을 실제 <code>notes/</code> storage와 연동.
+            현재는 placeholder 4개(회의·프로젝트·마케팅·일기).
+          </p>
+        </div>
+      </section>
+    </main>
+
+  </div>
+  </div>
+
+  <div class="legend">
+    <div class="chip"><strong>패널 너비</strong>Rail 84 + DevMenu 240 + 리스트 400 + 미리보기 = 넓고 시원함</div>
+    <div class="chip"><strong>장점</strong>본문 가독성 ↑ · 1280px 이하에서도 OK</div>
+    <div class="chip"><strong>단점</strong>3단 폴더 깊이는 DevMenu 안에서 처리해야 함 (펼침/접힘)</div>
+  </div>
+</section>
+
+
+<!-- ====================================================== -->
+<!-- 빠른 캡처 -->
+<!-- ====================================================== -->
+<section class="variant">
+  <div class="variant-head">
+    <span class="variant-title">옵션. 빠른 캡처 (⌘⇧N)</span>
+    <span class="variant-tag">공통 부가 기능</span>
+  </div>
+  <p class="variant-desc">
+    옵시디언이 불편했던 또 하나의 이유 — "한 줄 메모를 빠르게 던질 곳이 없음".
+    어디서든 <code>⌘⇧N</code> → 떠오르는 팝오버에 바로 입력 → <code>notes/_inbox/&lt;timestamp&gt;.md</code>로 저장.
+    나중에 SEON Hub에서 정리.
+  </p>
+
+  <div class="frame-wrap">
+  <div class="frame" style="height: 420px;">
+
+    <aside class="rail">
+      <div class="logo">V</div>
+      <nav>
+        <div class="rail-item active">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg>
+          <span>홈</span>
+        </div>
+        <div class="rail-item">
+          <svg class="ico" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>개발</span>
+        </div>
+      </nav>
+    </aside>
+
+    <nav class="menu">
+      <div class="menu-head"><span class="menu-title">홈</span></div>
+      <div class="menu-section">팀 작업</div>
+      <div class="menu-item">📁 렌더링 폴더</div>
+      <div class="menu-item">📚 자료실</div>
+    </nav>
+
+    <main class="main" style="position: relative; background: var(--surface); ">
+      <div style="padding: 60px 80px; color: var(--text-faint); font-size: 13px;">
+        (홈 페이지 본문 — 어떤 페이지에 있어도 ⌘⇧N으로 캡처 호출)
+      </div>
+
+      <div class="capture-pop">
+        <div class="top">
+          <span style="color: var(--accent); font-weight: 700;">●</span>
+          <input value="회의에서 나온 아이디어 — Vibox 모바일 앱은 PWA부터" />
+          <span class="kbd">_inbox</span>
+        </div>
+        <div class="body" style="color: var(--text-soft);">
+          (선택) 본문 한 줄 추가...
+        </div>
+        <div class="footer">
+          <span>저장 위치: <code style="color: var(--accent);">notes/_inbox/2026-05-01-1432.md</code></span>
+          <button>저장 (⏎)</button>
+        </div>
+      </div>
+    </main>
+
+  </div>
+  </div>
+</section>
+
+<p class="page-sub" style="margin-top: 36px;">
+  <strong>제 추천은 B안</strong> — 옵시디언이 불편했던 핵심 원인(폴더 시야 강탈)을 제거하고, 본문에 집중하는 구조.
+  깊은 폴더 트리는 <code>⌘K</code> 검색으로 해결되는 경우가 대부분이고, 막상 트리 펼쳐보는 빈도는 낮음.
+</p>
+
+</body>
+</html>

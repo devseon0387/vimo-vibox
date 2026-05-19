@@ -20,8 +20,12 @@ export default async function FilesPage({
   const currentPath = sp.path && sp.path.startsWith("/") ? sp.path : "/";
   const session = await getCurrentSession();
   const sessionInfo = session
-    ? { id: session.sub, isAdmin: session.role === "admin" }
-    : { id: "", isAdmin: false };
+    ? {
+        id: session.sub,
+        isAdmin: session.role === "admin",
+        canSeeHealth: session.role === "admin" || session.role === "member",
+      }
+    : { id: "", isAdmin: false, canSeeHealth: false };
 
   if (query) {
     const results = await searchFiles(query);

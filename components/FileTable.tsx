@@ -1,18 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLongPress } from "@/lib/use-long-press";
 import { Thumbnail } from "./Thumbnail";
 import type { FileEntry } from "@/lib/fs/storage";
-import { Download, Trash2, Pencil, Link as LinkIcon, MoveRight, Upload as UploadIcon } from "lucide-react";
+import { Download, Trash2, Pencil, Link as LinkIcon, MoveRight } from "lucide-react";
 import { useConfirm } from "./ConfirmDialog";
 import { usePrompt } from "./PromptDialog";
 import { humanError } from "@/lib/human-error";
-import { PreviewModal } from "./PreviewModal";
+import { PreviewModal, isPreviewableEntry } from "./PreviewModal";
 import { MoveDialog } from "./MoveDialog";
 import { ShareDialog } from "./ShareDialog";
 import { useToast } from "./Toast";
+import { ContextMenu, type CtxItem } from "./ContextMenu";
+import { EmptyState } from "./EmptyState";
+import { TimeCell } from "./TimeCell";
 
 function formatSize(bytes: number): string {
   if (bytes === 0) return "—";
@@ -74,6 +77,7 @@ export function FileTable({
   onToggleSelect,
   onOptimisticHide,
   onOptimisticUnhide,
+  onEmptyUploadClick,
 }: {
   entries: FileEntry[];
   basePath: string;
@@ -87,15 +91,24 @@ export function FileTable({
   /** 낙관적 업데이트: 즉시 리스트에서 숨김. 실패 시 unhide */
   onOptimisticHide?: (paths: string[]) => void;
   onOptimisticUnhide?: (paths: string[]) => void;
+  /** EmptyState dropzone 클릭 시 파일 picker 트리거 */
+  onEmptyUploadClick?: () => void;
 }) {
   const router = useRouter();
   const [deleting, setDeleting] = useState<string | null>(null);
   const [previewEntry, setPreviewEntry] = useState<FileEntry | null>(null);
   const [moveEntry, setMoveEntry] = useState<FileEntry | null>(null);
   const [shareEntry, setShareEntry] = useState<FileEntry | null>(null);
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+  const [ctxMenu, setCtxMenu] = useState<{
+    entry: FileEntry;
+    x: number;
+    y: number;
+  } | null>(null);
   const { confirm, dialog: confirmDialog } = useConfirm();
   const { promptInput, dialog: promptDialog } = usePrompt();
   const { show: showToast } = useToast();
+  const tbodyRef = useRef<HTMLTableSectionElement>(null);
 
   const rows = useMemo(() => entries, [entries]);
 
@@ -111,8 +124,118 @@ export function FileTable({
     }
   };
 
-  const onDelete = async (entry: FileEntry, e: React.MouseEvent) => {
-    e.stopPropagation();
+  // PreviewModal navigation: previewable 항목들 사이를 ←/→로 이동
+  const onPreviewNavigate = (direction: -1 | 1) => {
+    if (!previewEntry) return;
+    const previewables = rows.filter(isPreviewableEntry);
+    if (previewables.length === 0) return;
+    const idx = previewables.findIndex((e) => e.path === previewEntry.path);
+    if (idx < 0) return;
+    const nextIdx = (idx + direction + previewables.length) % previewables.length;
+    const next = previewables[nextIdx];
+    setPreviewEntry(next);
+    // focusedIndex도 따라가면 modal 닫은 후에도 위치 유지됨
+    const rowIdx = rows.findIndex((e) => e.path === next.path);
+    if (rowIdx >= 0) setFocusedIndex(rowIdx);
+  };
+
+  // 키보드 네비게이션: ↑↓ focus, Enter open, Space preview, F2 rename, Del delete, Esc clear
+  useEffect(() => {
+    if (previewEntry) return; // PreviewModal이 자체 키 핸들러 가짐
+    if (moveEntry || shareEntry) return; // 다른 모달 열림
+    if (ctxMenu) return; // 컨텍스트 메뉴가 열려있으면 메뉴가 키보드 처리
+    const handler = (e: KeyboardEvent) => {
+      const active = document.activeElement as HTMLElement | null;
+      if (
+        active &&
+        (active.tagName === "INPUT" ||
+          active.tagName === "TEXTAREA" ||
+          active.tagName === "SELECT" ||
+          active.isContentEditable)
+      ) {
+        return;
+      }
+      if (rows.length === 0) return;
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setFocusedIndex((i) => (i === null ? 0 : Math.min(rows.length - 1, i + 1)));
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setFocusedIndex((i) => (i === null ? 0 : Math.max(0, i - 1)));
+          break;
+        case "Home":
+          e.preventDefault();
+          setFocusedIndex(0);
+          break;
+        case "End":
+          e.preventDefault();
+          setFocusedIndex(rows.length - 1);
+          break;
+        case "Enter": {
+          if (focusedIndex !== null && focusedIndex < rows.length) {
+            e.preventDefault();
+            onOpen(rows[focusedIndex]);
+          }
+          break;
+        }
+        case " ": {
+          if (focusedIndex !== null && focusedIndex < rows.length) {
+            const entry = rows[focusedIndex];
+            if (isPreviewableEntry(entry)) {
+              e.preventDefault();
+              setPreviewEntry(entry);
+            }
+          }
+          break;
+        }
+        case "F2": {
+          if (focusedIndex !== null && focusedIndex < rows.length) {
+            e.preventDefault();
+            onRename(rows[focusedIndex]);
+          }
+          break;
+        }
+        case "Delete":
+        case "Backspace": {
+          if (focusedIndex !== null && focusedIndex < rows.length) {
+            e.preventDefault();
+            onDelete(rows[focusedIndex]);
+          }
+          break;
+        }
+        case "Escape":
+          if (focusedIndex !== null) {
+            setFocusedIndex(null);
+          }
+          break;
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewEntry, moveEntry, shareEntry, ctxMenu, focusedIndex, rows]);
+
+  // focusedIndex 변경 시 해당 row를 화면 안으로 스크롤
+  useEffect(() => {
+    if (focusedIndex === null || !tbodyRef.current) return;
+    const row = tbodyRef.current.querySelector<HTMLTableRowElement>(
+      `tr[data-row-idx="${focusedIndex}"]`,
+    );
+    row?.scrollIntoView({ block: "nearest" });
+  }, [focusedIndex]);
+
+  // rows가 줄어들었을 때 focusedIndex 클램프
+  useEffect(() => {
+    if (focusedIndex === null) return;
+    if (focusedIndex >= rows.length) {
+      setFocusedIndex(rows.length === 0 ? null : rows.length - 1);
+    }
+  }, [rows.length, focusedIndex]);
+
+  const onDelete = async (entry: FileEntry, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     const ok = await confirm({
       title: `${entry.isFolder ? "폴더" : "파일"} 삭제`,
       message: (
@@ -178,8 +301,8 @@ export function FileTable({
     }
   };
 
-  const onRename = async (entry: FileEntry, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const onRename = async (entry: FileEntry, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     const newName = await promptInput({
       title: `${entry.isFolder ? "폴더" : "파일"} 이름 변경`,
       defaultValue: entry.name,
@@ -212,8 +335,8 @@ export function FileTable({
     router.refresh();
   };
 
-  const onDownload = (entry: FileEntry, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const onDownload = (entry: FileEntry, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     const a = document.createElement("a");
     if (entry.isFolder) {
       a.href = `/api/download/zip?path=${encodeURIComponent(entry.path)}`;
@@ -225,8 +348,8 @@ export function FileTable({
     a.click();
   };
 
-  const onShare = (entry: FileEntry, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const onShare = (entry: FileEntry, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (entry.isFolder) {
       showToast("지금은 폴더 공유를 지원하지 않아요", "error");
       return;
@@ -234,9 +357,79 @@ export function FileTable({
     setShareEntry(entry);
   };
 
-  const onMove = (entry: FileEntry, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const onMove = (entry: FileEntry, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setMoveEntry(entry);
+  };
+
+  const copyPath = async (path: string) => {
+    try {
+      await navigator.clipboard.writeText(path);
+      showToast("경로 복사됨");
+    } catch {
+      showToast("경로 복사 실패", "error");
+    }
+  };
+
+  const onRowContextMenu = (entry: FileEntry, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const idx = rows.findIndex((r) => r.path === entry.path);
+    if (idx >= 0) setFocusedIndex(idx);
+    setCtxMenu({ entry, x: e.clientX, y: e.clientY });
+  };
+
+  const buildCtxItems = (entry: FileEntry): CtxItem[] => {
+    const items: CtxItem[] = [
+      { kind: "item", label: "열기", shortcut: "↵", onSelect: () => onOpen(entry) },
+    ];
+    if (isPreviewableEntry(entry)) {
+      items.push({
+        kind: "item",
+        label: "미리보기",
+        shortcut: "Space",
+        onSelect: () => setPreviewEntry(entry),
+      });
+    }
+    items.push({ kind: "separator" });
+    items.push({
+      kind: "item",
+      label: "이름 변경",
+      shortcut: "F2",
+      onSelect: () => onRename(entry),
+    });
+    items.push({
+      kind: "item",
+      label: "이동…",
+      onSelect: () => onMove(entry),
+    });
+    items.push({ kind: "separator" });
+    if (!entry.isFolder) {
+      items.push({
+        kind: "item",
+        label: "공유 링크 만들기",
+        onSelect: () => onShare(entry),
+      });
+    }
+    items.push({
+      kind: "item",
+      label: entry.isFolder ? "ZIP 다운로드" : "다운로드",
+      onSelect: () => onDownload(entry),
+    });
+    items.push({
+      kind: "item",
+      label: "경로 복사",
+      onSelect: () => copyPath(entry.path),
+    });
+    items.push({ kind: "separator" });
+    items.push({
+      kind: "item",
+      label: "삭제",
+      shortcut: "⌫",
+      danger: true,
+      onSelect: () => onDelete(entry),
+    });
+    return items;
   };
 
   const empty = rows.length === 0;
@@ -244,18 +437,11 @@ export function FileTable({
   return (
     <>
       {empty ? (
-        <div className="border-2 border-dashed border-border rounded-xl py-16 px-6 text-center bg-white hover:border-accent/40 transition-colors">
-          <div className="mx-auto w-14 h-14 rounded-full bg-accent-soft text-accent grid place-items-center mb-4">
-            <UploadIcon size={26} strokeWidth={2} />
-          </div>
-          <div className="text-[15px] font-semibold text-text mb-1">
-            {basePath === "/" ? "아직 파일이 없어요" : "이 폴더가 비어있어요"}
-          </div>
-          <div className="text-[12.5px] text-text-muted">
-            파일을 여기로 끌어다 놓거나 위쪽{" "}
-            <span className="font-semibold text-text">업로드</span> 버튼을 눌러주세요
-          </div>
-        </div>
+        <EmptyState
+          currentPath={basePath}
+          isRoot={basePath === "/"}
+          onUploadClick={onEmptyUploadClick}
+        />
       ) : (
         <div className="bg-white rounded-md overflow-x-auto">
           <table className="w-full min-w-[680px] text-[13.5px]">
@@ -307,15 +493,18 @@ export function FileTable({
                 </th>
               </tr>
             </thead>
-            <tbody>
-              {rows.map((entry) => {
+            <tbody ref={tbodyRef}>
+              {rows.map((entry, idx) => {
                 const isSelected = selectedPaths?.has(entry.path) ?? false;
+                const isFocused = focusedIndex === idx;
                 return (
                 <FileRow
                   key={entry.path}
+                  index={idx}
                   entry={entry}
                   uploaderName={stats?.[entry.path]?.uploaderName ?? null}
                   isSelected={isSelected}
+                  isFocused={isFocused}
                   deleting={deleting === entry.path}
                   selectedPaths={selectedPaths}
                   onToggleSelect={onToggleSelect}
@@ -325,6 +514,8 @@ export function FileTable({
                   onShare={onShare}
                   onDownload={onDownload}
                   onDelete={onDelete}
+                  onFocus={() => setFocusedIndex(idx)}
+                  onContextMenu={onRowContextMenu}
                 />
                 );
               })}
@@ -339,6 +530,8 @@ export function FileTable({
         entry={previewEntry}
         open={!!previewEntry}
         onClose={() => setPreviewEntry(null)}
+        entries={rows}
+        onNavigate={onPreviewNavigate}
       />
       <MoveDialog
         entry={moveEntry}
@@ -355,14 +548,24 @@ export function FileTable({
         open={!!shareEntry}
         onClose={() => setShareEntry(null)}
       />
+      {ctxMenu && (
+        <ContextMenu
+          x={ctxMenu.x}
+          y={ctxMenu.y}
+          items={buildCtxItems(ctxMenu.entry)}
+          onClose={() => setCtxMenu(null)}
+        />
+      )}
     </>
   );
 }
 
 function FileRow({
+  index,
   entry,
   uploaderName,
   isSelected,
+  isFocused,
   deleting,
   selectedPaths,
   onToggleSelect,
@@ -372,10 +575,14 @@ function FileRow({
   onShare,
   onDownload,
   onDelete,
+  onFocus,
+  onContextMenu,
 }: {
+  index: number;
   entry: FileEntry;
   uploaderName?: string | null;
   isSelected: boolean;
+  isFocused: boolean;
   deleting: boolean;
   selectedPaths?: Set<string>;
   onToggleSelect?: (
@@ -383,11 +590,13 @@ function FileRow({
     opts?: { range?: boolean; toggle?: boolean },
   ) => void;
   onOpen: (e: FileEntry) => void;
-  onRename: (e: FileEntry, ev: React.MouseEvent) => void;
-  onMove: (e: FileEntry, ev: React.MouseEvent) => void;
-  onShare: (e: FileEntry, ev: React.MouseEvent) => void;
-  onDownload: (e: FileEntry, ev: React.MouseEvent) => void;
-  onDelete: (e: FileEntry, ev: React.MouseEvent) => void;
+  onRename: (e: FileEntry, ev?: React.MouseEvent) => void;
+  onMove: (e: FileEntry, ev?: React.MouseEvent) => void;
+  onShare: (e: FileEntry, ev?: React.MouseEvent) => void;
+  onDownload: (e: FileEntry, ev?: React.MouseEvent) => void;
+  onDelete: (e: FileEntry, ev?: React.MouseEvent) => void;
+  onFocus: () => void;
+  onContextMenu: (entry: FileEntry, ev: React.MouseEvent) => void;
 }) {
   const longPress = useLongPress(
     () => {
@@ -399,6 +608,7 @@ function FileRow({
   const handleClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
     if (longPress.consumedClick()) return;
     if ((e.target as HTMLElement).closest("input[type=checkbox]")) return;
+    onFocus();
     if (e.shiftKey && onToggleSelect) {
       e.preventDefault();
       onToggleSelect(entry.path, { range: true });
@@ -417,14 +627,18 @@ function FileRow({
 
   return (
     <tr
+      data-row-idx={index}
       onClick={handleClick}
+      onContextMenu={(e) => onContextMenu(entry, e)}
       onPointerDown={longPress.onPointerDown}
       onPointerMove={longPress.onPointerMove}
       onPointerUp={longPress.onPointerUp}
       onPointerCancel={longPress.onPointerCancel}
       className={`border-b border-[#f5f5f5] hover:bg-surface cursor-pointer transition-colors select-none ${
         deleting ? "opacity-40" : ""
-      } ${isSelected ? "bg-accent-soft hover:bg-accent-soft" : ""}`}
+      } ${isSelected ? "bg-accent-soft hover:bg-accent-soft" : ""} ${
+        isFocused ? "shadow-[inset_3px_0_0_0_var(--accent,_#3b82f6)] bg-accent-soft/40" : ""
+      }`}
     >
       <td className="px-3 py-2.5 w-[36px]">
         {onToggleSelect && (
@@ -455,7 +669,7 @@ function FileRow({
         className="px-4 py-2.5 text-text-soft"
         title={new Date(entry.modifiedAt).toLocaleString("ko-KR")}
       >
-        {formatTime(entry.modifiedAt)}
+        <TimeCell ms={entry.modifiedAt} />
       </td>
       <td className="px-4 py-2.5 text-text-soft">
         {entry.isFolder ? "—" : formatSize(entry.size)}

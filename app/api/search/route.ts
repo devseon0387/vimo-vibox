@@ -6,12 +6,13 @@ import { db } from "@/lib/db/client";
 import { comments, shareLinks, fileUploads } from "@/lib/db/schema";
 import { searchFiles } from "@/lib/fs/storage";
 import type { FileEntry } from "@/lib/fs/storage";
+import { searchNotes } from "@/lib/notes";
 
 /**
- * GET /api/search?q=...&kinds=files,comments,shares
+ * GET /api/search?q=...&kinds=files,comments,shares,notes
  *  → ⌘K 통합 검색
  *  - kinds 미지정 시 모두
- *  - 권한 필터링: canAccessFile + 파트너는 본인 업로드 + 본인 작성 댓글
+ *  - notes는 admin만
  */
 export async function GET(req: NextRequest) {
   const session = await getCurrentSession();
@@ -20,20 +21,25 @@ export async function GET(req: NextRequest) {
   }
   const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
   if (!q) {
-    return NextResponse.json({ files: [], comments: [], shares: [] });
+    return NextResponse.json({ files: [], comments: [], shares: [], notes: [] });
   }
   const kindsParam = req.nextUrl.searchParams.get("kinds");
   const wantedKinds = new Set(
-    kindsParam ? kindsParam.split(",").map((s) => s.trim()) : ["files", "comments", "shares"],
+    kindsParam
+      ? kindsParam.split(",").map((s) => s.trim())
+      : ["files", "comments", "shares", "notes"],
   );
 
-  const [files, cmts, shares] = await Promise.all([
+  const [files, cmts, shares, notes] = await Promise.all([
     wantedKinds.has("files") ? searchFilesScoped(q, session) : Promise.resolve([]),
     wantedKinds.has("comments") ? searchComments(q, session) : Promise.resolve([]),
     wantedKinds.has("shares") ? searchShares(q, session) : Promise.resolve([]),
+    wantedKinds.has("notes") && session.role === "admin"
+      ? searchNotes(q, 12)
+      : Promise.resolve([]),
   ]);
 
-  return NextResponse.json({ files, comments: cmts, shares });
+  return NextResponse.json({ files, comments: cmts, shares, notes });
 }
 
 async function searchFilesScoped(

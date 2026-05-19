@@ -82,12 +82,14 @@ export function InboxDesktopNotifier() {
  * 권한 요청 + localStorage 저장.
  */
 export function NotifyToggle() {
+  const [mounted, setMounted] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission | null>(
     null,
   );
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     if (typeof Notification === "undefined") return;
     setPermission(Notification.permission);
     try {
@@ -96,6 +98,8 @@ export function NotifyToggle() {
     } catch {}
   }, []);
 
+  // SSR/하이드레이션 일치 보장 — 마운트 전에는 양쪽 다 null
+  if (!mounted) return null;
   if (typeof Notification === "undefined") return null;
 
   const toggle = async () => {
