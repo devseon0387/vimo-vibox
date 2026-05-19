@@ -79,6 +79,7 @@ echo "[1/6] 롤백 스냅샷 저장 (코드 + DB)"
 ssh "${REMOTE_HOST}" "rsync -a --delete \
   --exclude='_data/' --exclude='_storage/' --exclude='node_modules/' \
   --exclude='Notes/' --exclude='Library/' --exclude='Personal/' \
+  --exclude='logs/' \
   ${REMOTE_PATH}/ ${ROLLBACK_DIR}/ && \
   cp ${REMOTE_PATH}/_data/${DB_NAME} ${REMOTE_PATH}/_data/${DB_NAME}.rollback && \
   cp ${REMOTE_PATH}/_data/${DB_NAME} ${REMOTE_PATH}/_data/${DB_NAME}.backup-${TS} && \
