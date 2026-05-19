@@ -16,18 +16,27 @@ export type UploadStats = {
   peakBytesPerSec: number;
 };
 
-const CHUNK_SIZE = 50 * 1024 * 1024; // 50MB — 끝자락 꼬리 효과 완화 (더 많은 청크로 병렬 유지)
-const CONCURRENCY = 18; // 3 도메인 × 6 연결 — 브라우저 origin당 최대치 전부 활용
-const MAX_RETRIES = 3;
+// 청크/동시성 튜닝:
+// - 95MB × 18 동시. 메인(vibox.cloud)은 CF Tunnel 경유, u1/u2 는 UPnP 직결(:8443)
+//   로 라우팅되어 cloudflared backbone cap 우회 → 사용자 ISP 천장(~50 MB/s) 활용.
+// - 청크 95MB: CF Free body 100MB 한계 안전 마진 + TCP slow start 후 큰 window 활용.
+// - CORS Max-Age 24h 캐시로 매 청크마다 OPTIONS preflight 안 보냄.
+const CHUNK_SIZE = 95 * 1024 * 1024; // 95MB — TCP CC ramp-up 완전 활용
+const CONCURRENCY = 24; // 4 origin × 6 origin-conn
+const MAX_RETRIES = 4;
 
-// 도메인 샤딩 — 브라우저의 origin당 6 TCP 연결 제한 우회
-// 청크를 3개 호스트에 분산해서 18 TCP 연결 확보
-// HTTP/3 활성화된 브라우저에선 단일 QUIC 연결도 활용
+// 도메인 샤딩 — 청크 전부 u1/u2 직결로. (vibox.cloud=CF tunnel은 메인 앱 전용)
+// 4 origin (u1/u2 × 8443/18443) → 브라우저 6 conn × 4 = 24 TCP, 전부 ISP 직결.
 function getShards(): string[] {
   if (typeof window === "undefined") return [""];
   const host = window.location.hostname;
   if (host === "vibox.cloud") {
-    return ["", "https://u1.vibox.cloud", "https://u2.vibox.cloud"];
+    return [
+      "https://u1.vibox.cloud:8443",
+      "https://u2.vibox.cloud:8443",
+      "https://u1.vibox.cloud:18443",
+      "https://u2.vibox.cloud:18443",
+    ];
   }
   return [""];
 }
@@ -61,6 +70,13 @@ function genFileId(): string {
   });
 }
 
+export type ConflictMode = "overwrite" | "autonumber" | "skip";
+
+export type UploadOptions = {
+  /** 같은 이름 파일 충돌 시 처리. 기본 'autonumber' (하위호환) */
+  conflictMode?: ConflictMode;
+};
+
 /**
  * 청크 단위로 업로드. init → chunks(병렬) → complete 3단계.
  * onProgress: (이제까지 업로드한 누적 바이트, 전체 바이트)
@@ -71,6 +87,7 @@ export function startUpload(
   files: File[],
   onProgress: (sent: number, total: number) => void,
   onStats?: (stats: UploadStats) => void,
+  options?: UploadOptions,
 ): UploadHandle {
   const totalBytes = files.reduce((s, f) => s + f.size, 0);
   let sentAcrossFiles = 0;
@@ -115,12 +132,26 @@ export function startUpload(
     for (const file of files) {
       if (aborted) return { ok: false, error: "aborted" };
 
+      // 폴더 업로드 시 __relPath 가 있으면 그 경로에서 dirname 만 떼어내 targetPath 에 합침
+      // 예: __relPath = "myProj/sub/a.mp4" → 실제 업로드 위치 = targetPath + "/myProj/sub"
+      const rel = (file as File & { __relPath?: string }).__relPath;
+      let perFileTarget = targetPath;
+      if (rel) {
+        const lastSlash = rel.lastIndexOf("/");
+        if (lastSlash > 0) {
+          const subDir = rel.slice(0, lastSlash);
+          perFileTarget =
+            (targetPath.endsWith("/") ? targetPath : targetPath + "/") + subDir;
+        }
+      }
+
       const res = await uploadOneFile(
         file,
-        targetPath,
+        perFileTarget,
         (sentInFile) => reportWithStats(sentAcrossFiles + sentInFile),
         markShard,
         abortController.signal,
+        options?.conflictMode,
       );
 
       if (!res.ok) {
@@ -147,6 +178,7 @@ async function uploadOneFile(
   onFileProgress: (sentInFile: number) => void,
   markShard: (index: number) => void,
   signal: AbortSignal,
+  conflictMode?: ConflictMode,
 ): Promise<{ ok: boolean; error?: string; saved?: { name: string; size: number; path: string } }> {
   const fileId = genFileId();
   const totalChunks = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
@@ -162,6 +194,7 @@ async function uploadOneFile(
         totalSize: file.size,
         totalChunks,
         path: targetPath,
+        conflictMode,
       }),
       signal,
     });

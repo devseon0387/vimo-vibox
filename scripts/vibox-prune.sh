@@ -3,9 +3,23 @@
 #
 # launchd로 매일 새벽 3시 실행 (scripts/com.vibox.prune.plist 참조)
 # 안전: sqlite3 직접 사용, HTTP 거치지 않음.
+#
+# DB 경로 결정 우선순위 (env-driven, 머신 무관 동작):
+#   1. VIBOX_DB env 직접 지정
+#   2. .env.local의 DATABASE_URL 자동 추출 (스크립트 위치 기준)
+#   3. fallback: ../_data/vibox.db (스크립트 디렉토리 상대)
 set -euo pipefail
 
-DB="/Users/vimo/vimo-cloud/_data/vimo-cloud.db"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENV_FILE="$SCRIPT_DIR/../.env.local"
+
+if [[ -n "${VIBOX_DB:-}" ]]; then
+  DB="$VIBOX_DB"
+elif [[ -f "$ENV_FILE" ]]; then
+  DB="$(grep '^DATABASE_URL=' "$ENV_FILE" | cut -d= -f2- | tr -d '"' | head -1)"
+fi
+DB="${DB:-$SCRIPT_DIR/../_data/vibox.db}"
+
 LOG="/tmp/com.vibox.prune.log"
 KEEP_DAYS=90
 

@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
 
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
@@ -50,6 +50,10 @@ export const fileUploads = sqliteTable("file_uploads", {
   uploadedAt: integer("uploaded_at", { mode: "timestamp_ms" })
     .notNull()
     .$defaultFn(() => new Date()),
+  // 외부 ERP 연동 (Supabase 측 식별자) — nullable
+  episodeId: text("episode_id"),
+  projectId: text("project_id"),
+  partnerId: text("partner_id"),
 });
 
 export const comments = sqliteTable("comments", {
@@ -159,6 +163,147 @@ export const trafficLog = sqliteTable("traffic_log", {
 
 export type TrafficLog = typeof trafficLog.$inferSelect;
 export type NewTrafficLog = typeof trafficLog.$inferInsert;
+
+// HLS 인코딩 작업 큐
+export const encodingJobs = sqliteTable("encoding_jobs", {
+  id: text("id").primaryKey(),
+  filePath: text("file_path").notNull(),
+  fingerprint: text("fingerprint"),
+  status: text("status", {
+    enum: ["queued", "running", "done", "failed", "cancelled"],
+  })
+    .notNull()
+    .default("queued"),
+  progress: integer("progress").notNull().default(0), // 0~100
+  enqueuedAt: integer("enqueued_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  startedAt: integer("started_at", { mode: "timestamp_ms" }),
+  finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
+  error: text("error"),
+  durationSec: integer("duration_sec"),
+  // 재시도 횟수 (실패 시 자동 재시도, 최대 3회 후 failed 확정)
+  attempts: integer("attempts").notNull().default(0),
+});
+
+// HLS 자산 메타 (file_path → fingerprint 매핑)
+export const hlsAssets = sqliteTable("hls_assets", {
+  fingerprint: text("fingerprint").primaryKey(),
+  filePath: text("file_path").notNull().unique(),
+  segmentCount: integer("segment_count").notNull(),
+  totalBytes: integer("total_bytes").notNull(),
+  durationSec: integer("duration_sec").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+export type EncodingJob = typeof encodingJobs.$inferSelect;
+export type NewEncodingJob = typeof encodingJobs.$inferInsert;
+export type HlsAsset = typeof hlsAssets.$inferSelect;
+export type NewHlsAsset = typeof hlsAssets.$inferInsert;
+
+// ─── Client (외부 클라이언트 — 광고주·브랜드 등) ───
+// 한 클라가 여러 영상을 누적해서 받음. 한 영상이 여러 클라에 동시 공유될 수 있음 (M:N).
+// 비모 ERP 에서 가져온 경우 erpClientId 에 ERP 측 uuid 저장 (재import 멱등성)
+export const clients = sqliteTable("clients", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(), // /c/{slug}
+  contactEmail: text("contact_email"),
+  notes: text("notes"),
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  erpClientId: text("erp_client_id"), // 비모 ERP clients.id 매핑
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+export const clientVideos = sqliteTable("client_videos", {
+  id: text("id").primaryKey(),
+  clientId: text("client_id")
+    .notNull()
+    .references(() => clients.id, { onDelete: "cascade" }),
+  filePath: text("file_path").notNull(), // 실제 파일 경로 (/Rendering/...)
+  addedAt: integer("added_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  addedBy: text("added_by")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  status: text("status", {
+    enum: ["draft", "sent", "approved", "archived"],
+  })
+    .notNull()
+    .default("draft"),
+  displayOrder: integer("display_order").notNull().default(0),
+});
+
+// 클라당 누적 공유 토큰 (한 토큰이 그 클라의 모든 영상 노출)
+export const clientShareTokens = sqliteTable("client_share_tokens", {
+  id: text("id").primaryKey(),
+  clientId: text("client_id")
+    .notNull()
+    .references(() => clients.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  allowComments: integer("allow_comments", { mode: "boolean" })
+    .notNull()
+    .default(true),
+  allowDownload: integer("allow_download", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }),
+  revokedAt: integer("revoked_at", { mode: "timestamp_ms" }),
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+export type Client = typeof clients.$inferSelect;
+export type NewClient = typeof clients.$inferInsert;
+export type ClientVideo = typeof clientVideos.$inferSelect;
+export type NewClientVideo = typeof clientVideos.$inferInsert;
+export type ClientShareToken = typeof clientShareTokens.$inferSelect;
+export type NewClientShareToken = typeof clientShareTokens.$inferInsert;
+
+export const apiTokens = sqliteTable("api_tokens", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  prefix: text("prefix").notNull(),
+  scopes: text("scopes").notNull().default("[]"),
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  lastUsedAt: integer("last_used_at", { mode: "timestamp_ms" }),
+  revokedAt: integer("revoked_at", { mode: "timestamp_ms" }),
+});
+export type ApiToken = typeof apiTokens.$inferSelect;
+export type NewApiToken = typeof apiTokens.$inferInsert;
+
+export const shareViews = sqliteTable("share_views", {
+  id: text("id").primaryKey(),
+  shareToken: text("share_token").notNull(),
+  filePath: text("file_path").notNull(),
+  visitorId: text("visitor_id").notNull(),
+  ip: text("ip"),
+  userAgent: text("user_agent"),
+  openedAt: integer("opened_at", { mode: "timestamp_ms" }).notNull(),
+  lastEventAt: integer("last_event_at", { mode: "timestamp_ms" }).notNull(),
+  maxPositionSec: real("max_position_sec").notNull().default(0),
+  totalWatchSec: real("total_watch_sec").notNull().default(0),
+  durationSec: real("duration_sec"),
+  completed: integer("completed", { mode: "boolean" }).notNull().default(false),
+});
+export type ShareView = typeof shareViews.$inferSelect;
+export type NewShareView = typeof shareViews.$inferInsert;
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;

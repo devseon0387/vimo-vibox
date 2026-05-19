@@ -11,9 +11,9 @@
   --text-soft: #666666;
   --text-faint: #999999;
   --text-placeholder: #a3a3a3;
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
-  --accent-soft: #eef4ff;
+  --accent: #e85008;          /* 비박스 브랜드 오렌지 (logo) */
+  --accent-hover: #c8430a;
+  --accent-soft: #fef0e8;
   --hover: #f0f0f0;
   --surface-2: #f7f7f7;
   --danger: #dc2626;
@@ -54,27 +54,28 @@
 
 /* 애니메이션 키프레임 — @layer base로 tree-shaking 방지 */
 @layer base {
+  /* Squish & Pop — 풍선처럼 부풀어 올라옴 */
   @keyframes toast-in {
-    from {
-      opacity: 0;
-      transform: translateY(18px) scale(0.96);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
+    0%   { opacity: 0; transform: translateY(40px) scale(0.3); }
+    50%  { opacity: 1; transform: translateY(-6px) scale(1.1, 0.92); }
+    70%  { transform: translateY(2px) scale(0.96, 1.04); }
+    100% { transform: translateY(0) scale(1); }
   }
 
   @keyframes toast-out {
-    from {
+    0%   {
       opacity: 1;
-      transform: translateY(0) scale(1);
+      transform: scale(1);
       max-height: 80px;
       margin-top: 8px;
     }
-    to {
+    20%  {
+      opacity: 1;
+      transform: scale(1.05, 0.95);
+    }
+    100% {
       opacity: 0;
-      transform: translateY(-8px) scale(0.96);
+      transform: translateY(20px) scale(0.6);
       max-height: 0;
       margin-top: 0;
     }
@@ -83,6 +84,11 @@
   @keyframes backdrop-in {
     from { opacity: 0; }
     to { opacity: 1; }
+  }
+
+  @keyframes backdrop-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
   }
 
   @keyframes dialog-in {
@@ -96,6 +102,32 @@
     }
   }
 
+  @keyframes dialog-out {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(6px) scale(0.97);
+    }
+  }
+
+  @keyframes ctxmenu-in {
+    from { opacity: 0; transform: scale(0.94); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
   /* Jelly 체크 애니메이션 */
   @keyframes check-jelly {
     0%   { transform: scale(1, 1); }
@@ -105,6 +137,11 @@
     85%  { transform: scale(0.95, 1.05); }
     100% { transform: scale(1, 1); }
   }
+  @keyframes vibox-shimmer {
+    0%   { background-position: -100% 0; }
+    100% { background-position: 200% 0; }
+  }
+
   @keyframes check-jelly-draw {
     to { stroke-dashoffset: 0; opacity: 1; }
   }
@@ -141,3 +178,111 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 5px; }
 ::-webkit-scrollbar-thumb:hover { background: #d4d4d4; }
+
+/* === 네이버 블로그 스타일 (편집/미리보기 공용) === */
+.naver-content {
+  font-family: -apple-system, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR",
+    "Malgun Gothic", system-ui, sans-serif;
+  color: #333;
+}
+.naver-content .ProseMirror {
+  outline: none;
+  font-size: 16px;
+  line-height: 1.85;
+  color: #333;
+  min-height: 60vh;
+  padding-bottom: 200px; /* 하단 여백 */
+}
+.naver-content .ProseMirror p {
+  margin: 0 0 16px 0;
+}
+.naver-content .ProseMirror h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 36px 0 16px 0;
+  color: #222;
+  line-height: 1.4;
+}
+.naver-content .ProseMirror h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 28px 0 12px 0;
+  color: #222;
+  line-height: 1.4;
+}
+.naver-content .ProseMirror img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 20px auto;
+  border-radius: 2px;
+  cursor: pointer;
+}
+.naver-content .ProseMirror img.ProseMirror-selectednode {
+  outline: 2px solid #03c75a;
+  outline-offset: 2px;
+}
+.naver-content .ProseMirror blockquote {
+  border-left: 3px solid #03c75a;
+  padding: 4px 0 4px 16px;
+  margin: 20px 0;
+  color: #555;
+  font-style: normal;
+}
+.naver-content .ProseMirror ul,
+.naver-content .ProseMirror ol {
+  padding-left: 24px;
+  margin: 0 0 16px 0;
+}
+.naver-content .ProseMirror ul {
+  list-style: disc;
+}
+.naver-content .ProseMirror ol {
+  list-style: decimal;
+}
+.naver-content .ProseMirror li {
+  margin-bottom: 4px;
+}
+.naver-content .ProseMirror li > p {
+  margin: 0;
+}
+.naver-content .ProseMirror a {
+  color: #03c75a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.naver-content .ProseMirror hr {
+  border: none;
+  border-top: 1px solid #e5e5e5;
+  margin: 32px 0;
+}
+.naver-content .ProseMirror strong {
+  font-weight: 700;
+}
+.naver-content .ProseMirror em {
+  font-style: italic;
+}
+.naver-content .ProseMirror u {
+  text-decoration: underline;
+}
+
+/* 빈 본문 placeholder */
+.naver-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #b8b8b8;
+  pointer-events: none;
+  height: 0;
+}
+
+/* 모바일 미리보기 */
+.naver-content.naver-mobile .ProseMirror {
+  font-size: 15px;
+  line-height: 1.75;
+}
+.naver-content.naver-mobile .ProseMirror h2 {
+  font-size: 19px;
+}
+.naver-content.naver-mobile .ProseMirror h3 {
+  font-size: 16px;
+}

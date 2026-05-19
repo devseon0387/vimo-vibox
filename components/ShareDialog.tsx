@@ -112,9 +112,11 @@ export function ShareDialog({
                     className={`mt-0.5 shrink-0 ${mode === "preview" ? "text-text" : "text-text-muted"}`}
                   />
                   <div>
-                    <div className="text-[12.5px] font-semibold text-text">프리뷰</div>
+                    <div className="text-[12.5px] font-semibold text-text">
+                      보기 전용
+                    </div>
                     <div className="text-[10.5px] text-text-muted mt-0.5 leading-snug">
-                      재생만 가능. 깔끔
+                      클라가 영상만 시청. 댓글·피드백 없음
                     </div>
                   </div>
                 </button>
@@ -132,9 +134,11 @@ export function ShareDialog({
                     className={`mt-0.5 shrink-0 ${mode === "full" ? "text-text" : "text-text-muted"}`}
                   />
                   <div>
-                    <div className="text-[12.5px] font-semibold text-text">풀</div>
-                    <div className="text-[10.5px] text-text-muted mt-0.5 leading-snug">
+                    <div className="text-[12.5px] font-semibold text-text">
                       피드백 받기
+                    </div>
+                    <div className="text-[10.5px] text-text-muted mt-0.5 leading-snug">
+                      클라가 시간 위에 댓글·주석 달 수 있음
                     </div>
                   </div>
                 </button>

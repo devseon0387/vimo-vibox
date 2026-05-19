@@ -1,5 +1,8 @@
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
+import { eq, desc } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { encodingJobs, hlsAssets } from "@/lib/db/schema";
 
 const pexec = promisify(exec);
 
@@ -14,6 +17,17 @@ export type HealthSnapshot = {
   smart: SmartInfo[];
   volumes: VolumeUsage[];
   mirror: MirrorStatus | null;
+  encoding: EncodingQueueInfo;
+};
+
+export type EncodingQueueInfo = {
+  active: { id: string; filePath: string; progress: number; startedAt: number | null }[];
+  queuedCount: number;
+  doneCount: number;
+  failedCount: number;
+  totalAssets: number;
+  totalAssetBytes: number;
+  recentFailed: { id: string; filePath: string; error: string | null; finishedAt: number | null }[];
 };
 
 export type VolumeUsage = {
@@ -476,10 +490,62 @@ async function getMirrorStatus(): Promise<MirrorStatus | null> {
 const CACHE_SMART_MS = 5 * 60 * 1000; // SMART 는 무거움 5분 캐시
 let smartCache: { at: number; data: SmartInfo[] } | null = null;
 
+async function getEncodingQueueInfo(): Promise<EncodingQueueInfo> {
+  const [active, queuedRows, doneRows, failedRows, recentFailed, assetAgg] =
+    await Promise.all([
+      db
+        .select()
+        .from(encodingJobs)
+        .where(eq(encodingJobs.status, "running")),
+      db
+        .select({ id: encodingJobs.id })
+        .from(encodingJobs)
+        .where(eq(encodingJobs.status, "queued")),
+      db
+        .select({ id: encodingJobs.id })
+        .from(encodingJobs)
+        .where(eq(encodingJobs.status, "done")),
+      db
+        .select({ id: encodingJobs.id })
+        .from(encodingJobs)
+        .where(eq(encodingJobs.status, "failed")),
+      db
+        .select()
+        .from(encodingJobs)
+        .where(eq(encodingJobs.status, "failed"))
+        .orderBy(desc(encodingJobs.finishedAt))
+        .limit(5),
+      db.select().from(hlsAssets),
+    ]);
+  const totalAssetBytes = assetAgg.reduce(
+    (acc, a) => acc + (a.totalBytes ?? 0),
+    0,
+  );
+  return {
+    active: active.map((r) => ({
+      id: r.id,
+      filePath: r.filePath,
+      progress: r.progress,
+      startedAt: r.startedAt ? r.startedAt.getTime() : null,
+    })),
+    queuedCount: queuedRows.length,
+    doneCount: doneRows.length,
+    failedCount: failedRows.length,
+    totalAssets: assetAgg.length,
+    totalAssetBytes,
+    recentFailed: recentFailed.map((r) => ({
+      id: r.id,
+      filePath: r.filePath,
+      error: r.error,
+      finishedAt: r.finishedAt ? r.finishedAt.getTime() : null,
+    })),
+  };
+}
+
 export async function getHealthSnapshot(): Promise<HealthSnapshot> {
   const now = Date.now();
 
-  const [swap, memoryPressure, ping, pm2, litestream, volumes, mirror] =
+  const [swap, memoryPressure, ping, pm2, litestream, volumes, mirror, encoding] =
     await Promise.all([
       getSwap(),
       getMemoryPressure(),
@@ -488,6 +554,7 @@ export async function getHealthSnapshot(): Promise<HealthSnapshot> {
       getLitestreamStatus(),
       getAllVolumes(),
       getMirrorStatus(),
+      getEncodingQueueInfo(),
     ]);
 
   // SMART 캐시
@@ -510,5 +577,6 @@ export async function getHealthSnapshot(): Promise<HealthSnapshot> {
     smart,
     volumes,
     mirror,
+    encoding,
   };
 }

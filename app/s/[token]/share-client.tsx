@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Download, AlertTriangle } from "lucide-react";
 import { FeedbackModal, type ShareContext } from "@/components/FeedbackModal";
+import { HlsVideo } from "@/components/HlsVideo";
+import { ShareWelcomeModal } from "@/components/ShareWelcomeModal";
 import type { FileEntry } from "@/lib/fs/storage";
 
 type Kind = "video" | "image" | "audio" | "pdf" | "other";
@@ -108,22 +110,39 @@ export function SharePageClient({
 
   if (useFeedbackUI) {
     return (
-      <FeedbackModal
-        key={activeFile.path}
-        entry={toFileEntry(activeFile)}
-        backHref="#"
-        currentUserId="guest"
-        isAdmin={false}
-        role="partner"
-        shareContext={shareContext}
-      />
+      <>
+        <ShareWelcomeModal
+          initialName={guestName}
+          hasComments
+          onSubmit={(n) => {
+            if (n) onSetGuestName(n);
+          }}
+        />
+        <div className="h-screen overflow-hidden">
+          <FeedbackModal
+            key={activeFile.path}
+            entry={toFileEntry(activeFile)}
+            backHref="#"
+            currentUserId="guest"
+            isAdmin={false}
+            role="partner"
+            shareContext={shareContext}
+          />
+        </div>
+      </>
     );
   }
 
   // 프리뷰 모드 또는 비디오 아닌 경우
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="border-b border-slate-200 bg-white">
+    <>
+      <ShareWelcomeModal
+        initialName={guestName}
+        hasComments={false}
+        onSubmit={() => {}}
+      />
+      <div className="min-h-screen bg-slate-50 flex flex-col">
+        <header className="border-b border-slate-200 bg-white">
         <div className="flex items-center gap-3 px-4 py-2.5">
           <span className="shrink-0 text-[13px] font-extrabold tracking-tight text-slate-900">
             vi<span className="text-accent">.</span>box
@@ -189,11 +208,11 @@ export function SharePageClient({
       <div className="flex-1 flex items-center justify-center p-4 bg-slate-100">
         {activeFile.kind === "video" && (
           <div className="w-full max-w-[1400px] aspect-video bg-black rounded-lg overflow-hidden shadow-md">
-            <video
+            <HlsVideo
               key={activeFile.path}
-              src={fileUrl!}
-              controls
-              preload="metadata"
+              filePath={activeFile.path}
+              fallbackSrc={fileUrl!}
+              shareToken={token}
               className="w-full h-full"
             />
           </div>
@@ -228,8 +247,9 @@ export function SharePageClient({
             </div>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

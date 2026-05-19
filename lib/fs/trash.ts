@@ -24,7 +24,7 @@ export async function moveToTrash(
   relativePath: string,
   userId: string,
   userName: string,
-): Promise<void> {
+): Promise<string> {
   const abs = resolveSafePath(relativePath);
   // 3개 zone 루트 모두 보호 (삭제 방지)
   for (const z of ["rendering", "library", "personal"] as const) {
@@ -57,6 +57,7 @@ export async function moveToTrash(
       deletedByName: userName,
     });
   });
+  return id;
 }
 
 async function uniqueRestorePath(originalAbs: string): Promise<string> {

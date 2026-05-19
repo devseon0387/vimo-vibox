@@ -8,8 +8,9 @@ import type { Stats } from "node:fs";
  * - rendering : 비모 팀 검수 파이프라인 (기존 /Shared/). prefix 없는 레거시 경로도 여기로 폴백.
  * - library   : 자료실 (팀 공용 레퍼런스 — staff만 쓰기)
  * - personal  : 개인 드라이브 (/personal/{userId}/...)
+ * - notes     : 개발 노트 (admin 전용 .md, SEON Hub 동기화 대상)
  */
-export type Zone = "rendering" | "library" | "personal";
+export type Zone = "rendering" | "library" | "personal" | "notes";
 
 /** rendering zone 의 디스크 루트 = STORAGE_ROOT env */
 export function getStorageRoot(): string {
@@ -25,6 +26,7 @@ export function getZoneRoot(zone: Zone): string {
   const base = path.dirname(renderingRoot);
   if (zone === "library") return path.join(base, "Library");
   if (zone === "personal") return path.join(base, "Personal");
+  if (zone === "notes") return path.join(base, "Notes");
   throw new Error(`unknown zone: ${zone}`);
 }
 
@@ -291,6 +293,8 @@ export function streamFile(abs: string) {
 // 청크 업로드 지원
 // ============================================================
 
+export type ConflictMode = "overwrite" | "autonumber" | "skip";
+
 export type ChunkUploadMeta = {
   fileId: string;
   filename: string;
@@ -299,10 +303,21 @@ export type ChunkUploadMeta = {
   targetPath: string; // 상대 경로 (상위 폴더)
   userId: string;
   createdAt: number;
+  /** 같은 이름 파일 충돌 시 처리 방식. 미지정 = autonumber (하위호환) */
+  conflictMode?: ConflictMode;
+  /** 외부 ERP(파트너 ERP) 연동 메타 — fileUploads에 함께 저장됨 */
+  episodeId?: string;
+  projectId?: string;
+  partnerId?: string;
 };
 
 /** 청크 임시 저장소 루트 (STORAGE_ROOT 안, 점으로 시작해 listDirectory에서 필터됨) */
 export function getUploadTempRoot(): string {
+  // 청크 임시 디렉토리는 외장 디스크 대신 내장 SSD/별도 경로에 두면
+  // 외장 USB SSD R/W 경합이 사라져 업로드 throughput 이 크게 개선됨.
+  // UPLOAD_TEMP_ROOT env 로 오버라이드 가능. 미설정 시 외장 디스크 폴백.
+  const override = process.env.UPLOAD_TEMP_ROOT;
+  if (override) return path.resolve(override);
   return path.join(getStorageRoot(), ".vibox", "uploads");
 }
 
@@ -358,13 +373,27 @@ export async function finalizeChunkUpload(fileId: string): Promise<FileEntry> {
   const absTargetDir = resolveSafePath(meta.targetPath);
   await fs.mkdir(absTargetDir, { recursive: true });
   const safeName = meta.filename.replace(/[/\\:*?"<>|]/g, "_");
+  const conflictMode: ConflictMode = meta.conflictMode ?? "autonumber";
+
   const finalAbs = await (async () => {
     const candidate = path.join(absTargetDir, safeName);
+    let exists = true;
     try {
       await fs.access(candidate);
     } catch {
+      exists = false;
+    }
+    if (!exists) return candidate;
+
+    if (conflictMode === "overwrite") {
+      // 그대로 덮어씀 (기존 파일은 writeStream 이 truncate)
       return candidate;
     }
+    if (conflictMode === "skip") {
+      // 사용자가 명시적으로 건너뛰기 선택 — sentinel string 으로 finalize 호출자에게 시그널
+      throw new Error("__SKIP_CONFLICT__");
+    }
+    // autonumber (기본)
     const ext = path.extname(candidate);
     const base = candidate.slice(0, -ext.length);
     for (let i = 1; i < 1000; i++) {

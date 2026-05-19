@@ -5,6 +5,9 @@ import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import { useEffect } from "react";
+import { CommandPalette } from "./CommandPalette";
+import { ShortcutHelp } from "./ShortcutHelp";
+import { InboxDesktopNotifier } from "./InboxDesktopNotifier";
 
 export function AppShell({
   sidebar,
@@ -33,11 +36,13 @@ export function AppShell({
   }, [open]);
 
   return (
-    <div className="min-h-screen md:flex">
+    <div className="min-h-screen md:h-screen md:flex md:overflow-hidden">
+      {/* Sidebar — 데스크톱에선 viewport 높이 고정, 모바일에선 fixed drawer */}
       <div
         className={`
-          fixed md:sticky md:top-0
-          inset-y-0 left-0 z-50 md:z-auto
+          fixed inset-y-0 left-0 z-50
+          md:relative md:inset-y-auto md:left-auto md:z-auto md:h-screen md:shrink-0
+          max-w-[88vw] md:max-w-none overflow-x-hidden
           transition-transform duration-200 ease-out
           ${open ? "translate-x-0 shadow-xl md:shadow-none" : "-translate-x-full md:translate-x-0"}
         `}
@@ -52,7 +57,8 @@ export function AppShell({
         />
       )}
 
-      <main className="flex-1 min-w-0">
+      {/* Main — 데스크톱에선 자체 스크롤, 모바일에선 body 스크롤 유지 */}
+      <main className="flex-1 min-w-0 md:h-screen md:overflow-y-auto">
         <div className="md:hidden sticky top-0 bg-white border-b border-border z-30 px-4 py-3 flex items-center gap-3">
           <button
             onClick={() => setOpen(true)}
@@ -71,6 +77,9 @@ export function AppShell({
 
         {children}
       </main>
+      <CommandPalette />
+      <ShortcutHelp />
+      <InboxDesktopNotifier />
     </div>
   );
 }

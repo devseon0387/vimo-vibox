@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { FileEntry } from "@/lib/fs/storage";
+import { useLongPress } from "@/lib/use-long-press";
 import {
   Download,
   Trash2,
@@ -19,13 +20,38 @@ import {
   Archive,
 } from "lucide-react";
 import { useConfirm } from "./ConfirmDialog";
+import { humanError } from "@/lib/human-error";
 import { usePrompt } from "./PromptDialog";
-import { PreviewModal } from "./PreviewModal";
+import { PreviewModal, isPreviewableEntry } from "./PreviewModal";
 import { MoveDialog } from "./MoveDialog";
 import { ShareDialog } from "./ShareDialog";
 import { useToast } from "./Toast";
+import { ContextMenu, type CtxItem } from "./ContextMenu";
+import { EmptyState } from "./EmptyState";
+import { TimeCell } from "./TimeCell";
 
-type FileStats = { commentCount: number; openCount: number };
+function useGridCols(): number {
+  const [cols, setCols] = useState(2);
+  useEffect(() => {
+    const compute = () => {
+      const w = window.innerWidth;
+      if (w >= 1024) setCols(5);
+      else if (w >= 768) setCols(4);
+      else if (w >= 640) setCols(3);
+      else setCols(2);
+    };
+    compute();
+    window.addEventListener("resize", compute);
+    return () => window.removeEventListener("resize", compute);
+  }, []);
+  return cols;
+}
+
+type FileStats = {
+  commentCount: number;
+  openCount: number;
+  uploaderName?: string | null;
+};
 
 function formatSize(bytes: number): string {
   if (bytes === 0) return "—";
@@ -102,6 +128,7 @@ function VideoThumb({ path }: { path: string }) {
 }
 
 function Card({
+  index,
   entry,
   stats,
   onOpen,
@@ -111,28 +138,102 @@ function Card({
   onDownload,
   onDelete,
   deleting,
+  selected,
+  focused,
+  onToggleSelect,
+  hasSelection,
+  onFocus,
+  onContextMenu,
 }: {
+  index: number;
   entry: FileEntry;
   stats?: FileStats;
   onOpen: (e: FileEntry) => void;
-  onRename: (e: FileEntry, ev: React.MouseEvent) => void;
-  onMove: (e: FileEntry, ev: React.MouseEvent) => void;
-  onShare: (e: FileEntry, ev: React.MouseEvent) => void;
-  onDownload: (e: FileEntry, ev: React.MouseEvent) => void;
-  onDelete: (e: FileEntry, ev: React.MouseEvent) => void;
+  onRename: (e: FileEntry, ev?: React.MouseEvent) => void;
+  onMove: (e: FileEntry, ev?: React.MouseEvent) => void;
+  onShare: (e: FileEntry, ev?: React.MouseEvent) => void;
+  onDownload: (e: FileEntry, ev?: React.MouseEvent) => void;
+  onDelete: (e: FileEntry, ev?: React.MouseEvent) => void;
   deleting: boolean;
+  selected: boolean;
+  focused: boolean;
+  onToggleSelect?: (
+    path: string,
+    opts?: { range?: boolean; toggle?: boolean },
+  ) => void;
+  hasSelection: boolean;
+  onFocus: () => void;
+  onContextMenu: (entry: FileEntry, ev: React.MouseEvent) => void;
 }) {
   const [hover, setHover] = useState(false);
+  const longPress = useLongPress(
+    () => {
+      if (onToggleSelect) onToggleSelect(entry.path, { toggle: true });
+    },
+    { delayMs: 500 },
+  );
+  const handleClick = (e: React.MouseEvent) => {
+    if (longPress.consumedClick()) return;
+    if ((e.target as HTMLElement).closest("input[type=checkbox]")) return;
+    onFocus();
+    if (e.shiftKey && onToggleSelect) {
+      e.preventDefault();
+      onToggleSelect(entry.path, { range: true });
+      return;
+    }
+    if ((e.metaKey || e.ctrlKey) && onToggleSelect) {
+      onToggleSelect(entry.path);
+      return;
+    }
+    if (hasSelection && onToggleSelect) {
+      onToggleSelect(entry.path);
+      return;
+    }
+    onOpen(entry);
+  };
+  const SelectCheckbox = onToggleSelect ? (
+    <div
+      className={`absolute top-1.5 left-1.5 z-10 ${selected || hover ? "opacity-100" : "opacity-0"} transition-opacity`}
+    >
+      <input
+        type="checkbox"
+        checked={selected}
+        onClick={(e) => e.stopPropagation()}
+        onChange={(e) =>
+          onToggleSelect(entry.path, {
+            range: (e.nativeEvent as MouseEvent).shiftKey,
+          })
+        }
+        className="cursor-pointer w-4 h-4"
+        aria-label={`${entry.name} 선택`}
+      />
+    </div>
+  ) : null;
 
   if (entry.isFolder) {
     return (
       <div
-        onClick={() => onOpen(entry)}
+        data-card-idx={index}
+        onClick={handleClick}
+        onContextMenu={(e) => onContextMenu(entry, e)}
+        onPointerDown={longPress.onPointerDown}
+        onPointerMove={longPress.onPointerMove}
+        onPointerUp={longPress.onPointerUp}
+        onPointerCancel={longPress.onPointerCancel}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
-        className={`group cursor-pointer ${deleting ? "opacity-40" : ""}`}
+        className={`group cursor-pointer select-none ${deleting ? "opacity-40" : ""}`}
       >
-        <div className="aspect-[16/10] bg-surface border border-border rounded-lg flex items-center justify-center mb-2 group-hover:border-border-hover transition-colors relative">
+        <div
+          className={`aspect-[16/10] bg-surface border rounded-lg flex items-center justify-center mb-2 transition-colors relative ${
+            selected
+              ? "border-accent ring-2 ring-accent/30"
+              : focused
+                ? "border-accent ring-2 ring-accent/50"
+                : "border-border group-hover:border-border-hover"
+          }`}
+        >
+          {SelectCheckbox}
           <Folder className="w-12 h-12 text-amber-400" strokeWidth={1.5} />
           {hover && (
             <div className="absolute top-1.5 right-1.5 flex gap-0.5 bg-white/95 backdrop-blur rounded-md border border-border shadow-sm">
@@ -172,16 +273,27 @@ function Card({
 
   return (
     <div
-      onClick={() => onOpen(entry)}
+      data-card-idx={index}
+      onClick={handleClick}
+      onContextMenu={(e) => onContextMenu(entry, e)}
+      onPointerDown={longPress.onPointerDown}
+      onPointerMove={longPress.onPointerMove}
+      onPointerUp={longPress.onPointerUp}
+      onPointerCancel={longPress.onPointerCancel}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      className={`group cursor-pointer ${deleting ? "opacity-40" : ""}`}
+      className={`group cursor-pointer select-none ${deleting ? "opacity-40" : ""}`}
     >
       <div
-        className={`aspect-[16/10] rounded-lg overflow-hidden mb-2 relative border border-border group-hover:border-border-hover transition-colors ${
-          isVid ? "bg-black" : "bg-surface"
-        }`}
+        className={`aspect-[16/10] rounded-lg overflow-hidden mb-2 relative border transition-colors ${
+          selected
+            ? "border-accent ring-2 ring-accent/30"
+            : focused
+              ? "border-accent ring-2 ring-accent/50"
+              : "border-border group-hover:border-border-hover"
+        } ${isVid ? "bg-black" : "bg-surface"}`}
       >
+        {SelectCheckbox}
         {isVid ? (
           <VideoThumb path={entry.path} />
         ) : (
@@ -248,8 +360,14 @@ function Card({
         <div className="text-[13px] font-medium text-text truncate" title={entry.name}>
           {entry.name}
         </div>
-        <div className="text-[11.5px] text-text-muted mt-0.5">
-          {formatTime(entry.modifiedAt)} · {formatSize(entry.size)}
+        <div className="text-[11.5px] text-text-muted mt-0.5 truncate">
+          {stats?.uploaderName && (
+            <>
+              <span className="text-text-soft">{stats.uploaderName}</span>
+              {" · "}
+            </>
+          )}
+          <TimeCell ms={entry.modifiedAt} /> · {formatSize(entry.size)}
         </div>
       </div>
     </div>
@@ -258,21 +376,43 @@ function Card({
 
 export function FileCardGrid({
   entries,
+  basePath,
   stats,
+  selectedPaths,
+  onToggleSelect,
+  onOptimisticHide,
+  onOptimisticUnhide,
+  onEmptyUploadClick,
 }: {
   entries: FileEntry[];
   basePath: string;
   session?: { id: string; isAdmin: boolean };
   stats?: Record<string, FileStats>;
+  selectedPaths?: Set<string>;
+  onToggleSelect?: (
+    path: string,
+    opts?: { range?: boolean; toggle?: boolean },
+  ) => void;
+  onOptimisticHide?: (paths: string[]) => void;
+  onOptimisticUnhide?: (paths: string[]) => void;
+  onEmptyUploadClick?: () => void;
 }) {
   const router = useRouter();
   const [deleting, setDeleting] = useState<string | null>(null);
   const [previewEntry, setPreviewEntry] = useState<FileEntry | null>(null);
   const [moveEntry, setMoveEntry] = useState<FileEntry | null>(null);
   const [shareEntry, setShareEntry] = useState<FileEntry | null>(null);
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+  const [ctxMenu, setCtxMenu] = useState<{
+    entry: FileEntry;
+    x: number;
+    y: number;
+  } | null>(null);
   const { confirm, dialog: confirmDialog } = useConfirm();
   const { promptInput, dialog: promptDialog } = usePrompt();
   const { show: showToast } = useToast();
+  const gridRef = useRef<HTMLDivElement>(null);
+  const cols = useGridCols();
 
   const onOpen = (entry: FileEntry) => {
     if (entry.isFolder) {
@@ -286,8 +426,121 @@ export function FileCardGrid({
     }
   };
 
-  const onDelete = async (entry: FileEntry, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const onPreviewNavigate = (direction: -1 | 1) => {
+    if (!previewEntry) return;
+    const previewables = entries.filter(isPreviewableEntry);
+    if (previewables.length === 0) return;
+    const idx = previewables.findIndex((e) => e.path === previewEntry.path);
+    if (idx < 0) return;
+    const nextIdx = (idx + direction + previewables.length) % previewables.length;
+    const next = previewables[nextIdx];
+    setPreviewEntry(next);
+    const cardIdx = entries.findIndex((e) => e.path === next.path);
+    if (cardIdx >= 0) setFocusedIndex(cardIdx);
+  };
+
+  useEffect(() => {
+    if (previewEntry) return;
+    if (moveEntry || shareEntry) return;
+    if (ctxMenu) return;
+    const handler = (e: KeyboardEvent) => {
+      const active = document.activeElement as HTMLElement | null;
+      if (
+        active &&
+        (active.tagName === "INPUT" ||
+          active.tagName === "TEXTAREA" ||
+          active.tagName === "SELECT" ||
+          active.isContentEditable)
+      ) {
+        return;
+      }
+      if (entries.length === 0) return;
+      switch (e.key) {
+        case "ArrowRight":
+          e.preventDefault();
+          setFocusedIndex((i) => (i === null ? 0 : Math.min(entries.length - 1, i + 1)));
+          break;
+        case "ArrowLeft":
+          e.preventDefault();
+          setFocusedIndex((i) => (i === null ? 0 : Math.max(0, i - 1)));
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          setFocusedIndex((i) => {
+            if (i === null) return 0;
+            return Math.min(entries.length - 1, i + cols);
+          });
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setFocusedIndex((i) => {
+            if (i === null) return 0;
+            return Math.max(0, i - cols);
+          });
+          break;
+        case "Home":
+          e.preventDefault();
+          setFocusedIndex(0);
+          break;
+        case "End":
+          e.preventDefault();
+          setFocusedIndex(entries.length - 1);
+          break;
+        case "Enter":
+          if (focusedIndex !== null && focusedIndex < entries.length) {
+            e.preventDefault();
+            onOpen(entries[focusedIndex]);
+          }
+          break;
+        case " ":
+          if (focusedIndex !== null && focusedIndex < entries.length) {
+            const entry = entries[focusedIndex];
+            if (isPreviewableEntry(entry)) {
+              e.preventDefault();
+              setPreviewEntry(entry);
+            }
+          }
+          break;
+        case "F2":
+          if (focusedIndex !== null && focusedIndex < entries.length) {
+            e.preventDefault();
+            onRename(entries[focusedIndex]);
+          }
+          break;
+        case "Delete":
+        case "Backspace":
+          if (focusedIndex !== null && focusedIndex < entries.length) {
+            e.preventDefault();
+            onDelete(entries[focusedIndex]);
+          }
+          break;
+        case "Escape":
+          if (focusedIndex !== null) setFocusedIndex(null);
+          break;
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewEntry, moveEntry, shareEntry, ctxMenu, focusedIndex, entries, cols]);
+
+  useEffect(() => {
+    if (focusedIndex === null || !gridRef.current) return;
+    const card = gridRef.current.querySelector<HTMLDivElement>(
+      `[data-card-idx="${focusedIndex}"]`,
+    );
+    card?.scrollIntoView({ block: "nearest" });
+  }, [focusedIndex]);
+
+  useEffect(() => {
+    if (focusedIndex === null) return;
+    if (focusedIndex >= entries.length) {
+      setFocusedIndex(entries.length === 0 ? null : entries.length - 1);
+    }
+  }, [entries.length, focusedIndex]);
+
+  const onDelete = async (entry: FileEntry, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     const ok = await confirm({
       title: `${entry.isFolder ? "폴더" : "파일"} 삭제`,
       message: (
@@ -307,20 +560,43 @@ export function FileCardGrid({
     });
     if (!ok) return;
 
+    onOptimisticHide?.([entry.path]);
     setDeleting(entry.path);
     try {
       const res = await fetch(`/api/files?path=${encodeURIComponent(entry.path)}`, {
         method: "DELETE",
       });
       if (!res.ok) {
+        onOptimisticUnhide?.([entry.path]);
         const body = await res.json().catch(() => ({}));
-        showToast("삭제 실패: " + (body.error ?? res.statusText), "error");
+        showToast(humanError(body.error ?? res.statusText, "delete"), "error");
         return;
       }
+      const body = await res.json().catch(() => ({}));
+      const trashId: string | undefined = body?.trashId;
       showToast(
         <>
           <span className="font-semibold">{entry.name}</span> 삭제됨
         </>,
+        {
+          kind: "success",
+          action: trashId
+            ? {
+                label: "되돌리기",
+                onClick: async () => {
+                  const r = await fetch(`/api/trash/${trashId}`, {
+                    method: "POST",
+                  });
+                  if (r.ok) {
+                    showToast("복원됨");
+                    router.refresh();
+                  } else {
+                    showToast("복원 실패", "error");
+                  }
+                },
+              }
+            : undefined,
+        },
       );
       router.refresh();
     } finally {
@@ -328,8 +604,8 @@ export function FileCardGrid({
     }
   };
 
-  const onRename = async (entry: FileEntry, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const onRename = async (entry: FileEntry, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     const newName = await promptInput({
       title: `${entry.isFolder ? "폴더" : "파일"} 이름 변경`,
       defaultValue: entry.name,
@@ -350,7 +626,7 @@ export function FileCardGrid({
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      showToast("이름 변경 실패: " + (body.error ?? res.statusText), "error");
+      showToast(humanError(body.error ?? res.statusText, "rename"), "error");
       return;
     }
     showToast(
@@ -361,17 +637,21 @@ export function FileCardGrid({
     router.refresh();
   };
 
-  const onDownload = (entry: FileEntry, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (entry.isFolder) return;
+  const onDownload = (entry: FileEntry, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     const a = document.createElement("a");
-    a.href = `/api/download?path=${encodeURIComponent(entry.path)}`;
-    a.download = entry.name;
+    if (entry.isFolder) {
+      a.href = `/api/download/zip?path=${encodeURIComponent(entry.path)}`;
+      a.download = `${entry.name}.zip`;
+    } else {
+      a.href = `/api/download?path=${encodeURIComponent(entry.path)}`;
+      a.download = entry.name;
+    }
     a.click();
   };
 
-  const onShare = (entry: FileEntry, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const onShare = (entry: FileEntry, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (entry.isFolder) {
       showToast("지금은 폴더 공유를 지원하지 않아요", "error");
       return;
@@ -379,25 +659,89 @@ export function FileCardGrid({
     setShareEntry(entry);
   };
 
-  const onMove = (entry: FileEntry, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const onMove = (entry: FileEntry, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setMoveEntry(entry);
+  };
+
+  const copyPath = async (path: string) => {
+    try {
+      await navigator.clipboard.writeText(path);
+      showToast("경로 복사됨");
+    } catch {
+      showToast("경로 복사 실패", "error");
+    }
+  };
+
+  const onCardContextMenu = (entry: FileEntry, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const idx = entries.findIndex((r) => r.path === entry.path);
+    if (idx >= 0) setFocusedIndex(idx);
+    setCtxMenu({ entry, x: e.clientX, y: e.clientY });
+  };
+
+  const buildCtxItems = (entry: FileEntry): CtxItem[] => {
+    const items: CtxItem[] = [
+      { kind: "item", label: "열기", shortcut: "↵", onSelect: () => onOpen(entry) },
+    ];
+    if (isPreviewableEntry(entry)) {
+      items.push({
+        kind: "item",
+        label: "미리보기",
+        shortcut: "Space",
+        onSelect: () => setPreviewEntry(entry),
+      });
+    }
+    items.push({ kind: "separator" });
+    items.push({
+      kind: "item",
+      label: "이름 변경",
+      shortcut: "F2",
+      onSelect: () => onRename(entry),
+    });
+    items.push({
+      kind: "item",
+      label: "이동…",
+      onSelect: () => onMove(entry),
+    });
+    items.push({ kind: "separator" });
+    if (!entry.isFolder) {
+      items.push({
+        kind: "item",
+        label: "공유 링크 만들기",
+        onSelect: () => onShare(entry),
+      });
+    }
+    items.push({
+      kind: "item",
+      label: entry.isFolder ? "ZIP 다운로드" : "다운로드",
+      onSelect: () => onDownload(entry),
+    });
+    items.push({
+      kind: "item",
+      label: "경로 복사",
+      onSelect: () => copyPath(entry.path),
+    });
+    items.push({ kind: "separator" });
+    items.push({
+      kind: "item",
+      label: "삭제",
+      shortcut: "⌫",
+      danger: true,
+      onSelect: () => onDelete(entry),
+    });
+    return items;
   };
 
   if (entries.length === 0) {
     return (
       <>
-        <div className="border border-dashed border-border rounded-lg py-14 px-6 text-center bg-white">
-          <FolderOpen
-            size={32}
-            className="mx-auto text-text-faint mb-3"
-            strokeWidth={1.5}
-          />
-          <div className="text-[14px] text-text-muted">비어있어요</div>
-          <div className="text-[12px] text-text-faint mt-1">
-            파일을 드래그하거나 업로드 버튼을 눌러보세요
-          </div>
-        </div>
+        <EmptyState
+          currentPath={basePath}
+          isRoot={basePath === "/"}
+          onUploadClick={onEmptyUploadClick}
+        />
         {confirmDialog}
         {promptDialog}
       </>
@@ -406,10 +750,14 @@ export function FileCardGrid({
 
   return (
     <>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {entries.map((entry) => (
+      <div
+        ref={gridRef}
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+      >
+        {entries.map((entry, idx) => (
           <Card
             key={entry.path}
+            index={idx}
             entry={entry}
             stats={stats?.[entry.path]}
             onOpen={onOpen}
@@ -419,6 +767,12 @@ export function FileCardGrid({
             onDownload={onDownload}
             onDelete={onDelete}
             deleting={deleting === entry.path}
+            selected={selectedPaths?.has(entry.path) ?? false}
+            focused={focusedIndex === idx}
+            onToggleSelect={onToggleSelect}
+            hasSelection={(selectedPaths?.size ?? 0) > 0}
+            onFocus={() => setFocusedIndex(idx)}
+            onContextMenu={onCardContextMenu}
           />
         ))}
       </div>
@@ -429,18 +783,31 @@ export function FileCardGrid({
         entry={previewEntry}
         open={!!previewEntry}
         onClose={() => setPreviewEntry(null)}
+        entries={entries}
+        onNavigate={onPreviewNavigate}
       />
       <MoveDialog
         entry={moveEntry}
         open={!!moveEntry}
         onClose={() => setMoveEntry(null)}
-        onMoved={() => router.refresh()}
+        onMoved={() => {
+          if (moveEntry) onOptimisticHide?.([moveEntry.path]);
+          router.refresh();
+        }}
       />
       <ShareDialog
         entry={shareEntry}
         open={!!shareEntry}
         onClose={() => setShareEntry(null)}
       />
+      {ctxMenu && (
+        <ContextMenu
+          x={ctxMenu.x}
+          y={ctxMenu.y}
+          items={buildCtxItems(ctxMenu.entry)}
+          onClose={() => setCtxMenu(null)}
+        />
+      )}
     </>
   );
 }

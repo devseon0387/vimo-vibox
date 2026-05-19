@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vibox Desktop — UX Wireframe</title>
+<style>
+:root {
+  --bg: #f5f5f7;
+  --bg-section: #fff;
+  --bg-app: #ffffff;
+  --bg-app-titlebar: #ececec;
+  --border: #d2d2d7;
+  --border-strong: #b0b0b5;
+  --text: #1d1d1f;
+  --text-2: #6e6e73;
+  --text-3: #a1a1a6;
+  --accent: #0071e3;
+  --accent-hover: #0077ed;
+  --success: #30d158;
+  --warning: #ff9f0a;
+  --error: #ff3b30;
+  --shadow-window: 0 12px 40px rgba(0,0,0,0.18), 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-popover: 0 8px 32px rgba(0,0,0,0.16);
+  --radius: 10px;
+  --radius-sm: 6px;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Pretendard", sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 40px 24px 80px;
+}
+
+.page-header {
+  max-width: 1200px;
+  margin: 0 auto 60px;
+  text-align: center;
+}
+.page-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+.page-header p {
+  color: var(--text-2);
+  font-size: 16px;
+}
+
+.section {
+  max-width: 1200px;
+  margin: 0 auto 80px;
+}
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-3);
+  margin-bottom: 8px;
+}
+.section h2 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin-bottom: 8px;
+}
+.section .lede {
+  color: var(--text-2);
+  margin-bottom: 32px;
+  max-width: 700px;
+}
+
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+/* macOS window chrome */
+.app-window {
+  background: var(--bg-app);
+  border-radius: 12px;
+  box-shadow: var(--shadow-window);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.app-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 12px;
+  background: var(--bg-app-titlebar);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.traffic-lights { display: flex; gap: 8px; }
+.traffic-light {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: #ddd;
+}
+.traffic-light.red { background: #ff5f57; }
+.traffic-light.yellow { background: #febc2e; }
+.traffic-light.green { background: #28c840; }
+.app-title {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+  margin-right: 56px;
+}
+.app-body {
+  padding: 24px;
+  min-height: 200px;
+}
+
+/* Menu bar (top of macOS) */
+.menubar {
+  background: linear-gradient(to bottom, #fafafa, #f0f0f0);
+  border: 1px solid var(--border);
+  border-radius: 8px 8px 0 0;
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--text);
+  height: 28px;
+}
+.menubar .left { font-weight: 600; }
+.menubar .right {
+  margin-left: auto;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.menubar-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.menubar-icon.active { background: rgba(0,0,0,0.08); }
+.menubar-time { font-variant-numeric: tabular-nums; font-size: 12.5px; }
+
+/* Menubar popover */
+.menubar-popover {
+  width: 320px;
+  background: rgba(245,245,247,0.92);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 0.5px solid rgba(0,0,0,0.18);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-popover);
+  overflow: hidden;
+}
+.popover-header {
+  padding: 14px 16px 12px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.08);
+}
+.popover-status {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 600;
+}
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--success);
+  flex-shrink: 0;
+}
+.status-dot.uploading { background: var(--accent); animation: pulse 1.4s ease-in-out infinite; }
+.status-dot.error { background: var(--error); }
+.status-dot.offline { background: var(--text-3); }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.popover-status-sub {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 4px;
+  margin-left: 16px;
+}
+.progress-block {
+  padding: 12px 16px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.08);
+}
+.progress-row {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12.5px;
+  margin-bottom: 6px;
+}
+.progress-name { font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.progress-percent { color: var(--text-2); font-variant-numeric: tabular-nums; }
+.progress-bar {
+  height: 4px; background: rgba(0,0,0,0.08); border-radius: 2px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: var(--accent); border-radius: 2px;
+}
+.progress-meta {
+  font-size: 11px; color: var(--text-2);
+  margin-top: 4px; display: flex; justify-content: space-between;
+}
+.queue-list {
+  padding: 8px 0;
+  border-bottom: 0.5px solid rgba(0,0,0,0.08);
+}
+.queue-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 16px;
+  font-size: 12.5px;
+}
+.queue-row .icon { color: var(--text-3); flex-shrink: 0; }
+.queue-row .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.queue-row .size { color: var(--text-3); font-size: 11px; font-variant-numeric: tabular-nums; }
+.popover-actions {
+  padding: 8px 0;
+}
+.popover-action {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text);
+}
+.popover-action:hover { background: rgba(0,113,227,0.12); }
+.popover-action .icon { color: var(--text-2); width: 16px; }
+
+/* Form */
+.form-group { margin-bottom: 20px; }
+.form-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+  display: block;
+}
+.form-help { font-size: 12px; color: var(--text-2); margin-top: 4px; }
+.form-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: #fff;
+  font-family: var(--font);
+}
+.form-input:focus { outline: none; border-color: var(--accent); }
+.button {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: var(--font);
+}
+.button.primary { background: var(--accent); color: #fff; }
+.button.primary:hover { background: var(--accent-hover); }
+.button.secondary { background: #fff; color: var(--text); border-color: var(--border); }
+.button.secondary:hover { background: #f5f5f7; }
+.button.danger { background: #fff; color: var(--error); border-color: var(--border); }
+
+/* Onboarding card */
+.onboarding-step {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 28px;
+  border: 1px solid var(--border);
+  position: relative;
+}
+.step-num {
+  position: absolute;
+  top: 16px; right: 16px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  letter-spacing: 0.5px;
+}
+.step-title {
+  font-size: 18px; font-weight: 700; margin: 6px 0 4px;
+}
+.step-desc { color: var(--text-2); font-size: 13px; margin-bottom: 20px; }
+
+/* Activity row */
+.activity-list { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.activity-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.activity-row:last-child { border-bottom: none; }
+.activity-icon {
+  width: 32px; height: 32px;
+  background: var(--bg);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-2);
+}
+.activity-icon.success { background: rgba(48,209,88,0.15); color: var(--success); }
+.activity-icon.uploading { background: rgba(0,113,227,0.12); color: var(--accent); }
+.activity-icon.error { background: rgba(255,59,48,0.12); color: var(--error); }
+.activity-name { font-weight: 500; }
+.activity-meta { color: var(--text-2); font-size: 12px; margin-top: 2px; }
+.activity-action { margin-left: auto; }
+.activity-link {
+  font-size: 12px; color: var(--accent); cursor: pointer;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+
+/* Notification toast */
+.toast {
+  background: rgba(40,40,42,0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: #fff;
+  border-radius: 12px;
+  padding: 12px 16px 12px 12px;
+  display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  width: 360px;
+}
+.toast .icon-wrap {
+  width: 36px; height: 36px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.toast.success .icon-wrap { color: var(--success); }
+.toast.error .icon-wrap { color: var(--error); }
+.toast .body { flex: 1; }
+.toast .title { font-weight: 600; font-size: 13px; }
+.toast .desc { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+.toast .actions { display: flex; gap: 6px; margin-top: 8px; }
+.toast .action {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  background: rgba(255,255,255,0.12);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* Finder mockup */
+.finder {
+  background: #fff;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-window);
+  overflow: hidden;
+}
+.finder-toolbar {
+  background: var(--bg-app-titlebar);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 12px;
+  display: flex; gap: 8px; align-items: center;
+}
+.finder-path {
+  font-size: 12.5px;
+  color: var(--text-2);
+  margin-left: 8px;
+}
+.finder-body { display: flex; min-height: 320px; }
+.finder-sidebar {
+  width: 180px;
+  background: #f9f9f9;
+  border-right: 1px solid var(--border);
+  padding: 10px 6px;
+  font-size: 12.5px;
+}
+.finder-sidebar-section { margin-bottom: 14px; }
+.finder-sidebar-label {
+  font-size: 10.5px; text-transform: uppercase;
+  color: var(--text-3); padding: 4px 8px; font-weight: 600;
+}
+.finder-sidebar-item {
+  padding: 4px 8px;
+  display: flex; align-items: center; gap: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.finder-sidebar-item.active { background: var(--accent); color: #fff; }
+.finder-files { flex: 1; padding: 8px; }
+.finder-file-row {
+  display: grid;
+  grid-template-columns: 24px 1fr 80px 100px 16px;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  font-size: 12.5px;
+  border-radius: 4px;
+}
+.finder-file-row:hover { background: rgba(0,113,227,0.08); }
+.file-icon {
+  width: 20px; height: 20px;
+  border-radius: 3px;
+  background: linear-gradient(135deg, #4a4a4a, #2a2a2a);
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 8px; font-weight: 600;
+}
+.file-icon.video { background: linear-gradient(135deg, #ff6347, #d04020); }
+.file-icon.folder { background: linear-gradient(135deg, #5da9e9, #3074bf); }
+.file-meta-col { color: var(--text-3); font-size: 11px; }
+.sync-overlay {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
+}
+.sync-overlay.synced { background: var(--success); }
+.sync-overlay.uploading { background: var(--accent); }
+.sync-overlay.error { background: var(--error); }
+.sync-overlay.queued { background: var(--text-3); }
+
+/* Premiere mockup */
+.premiere {
+  background: #2b2b2b;
+  border-radius: var(--radius);
+  overflow: hidden;
+  color: #ddd;
+  border: 1px solid #1a1a1a;
+}
+.premiere-titlebar {
+  background: #353537;
+  padding: 8px 12px;
+  font-size: 12px;
+  border-bottom: 1px solid #1a1a1a;
+  display: flex; align-items: center; gap: 8px;
+}
+.premiere-body {
+  padding: 16px;
+  background: #2b2b2b;
+}
+.premiere-export {
+  background: #232325;
+  border: 1px solid #1a1a1a;
+  border-radius: 6px;
+  padding: 14px;
+  font-size: 12px;
+}
+.premiere-row {
+  display: flex; padding: 6px 0; gap: 12px;
+  border-bottom: 1px solid #1a1a1a;
+}
+.premiere-row:last-child { border-bottom: none; }
+.premiere-row .label { color: #888; width: 100px; }
+.premiere-row .val { color: #ddd; font-family: monospace; font-size: 11px; }
+.premiere-row .val.path { color: #4ec9b0; }
+
+/* Flow diagram */
+.flow {
+  display: flex; align-items: stretch; gap: 12px;
+  margin-top: 24px;
+}
+.flow-step {
+  flex: 1;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  position: relative;
+}
+.flow-step .num {
+  width: 22px; height: 22px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  margin-bottom: 10px;
+}
+.flow-step .title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.flow-step .desc { font-size: 12px; color: var(--text-2); }
+.flow-arrow {
+  align-self: center;
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+
+/* Web UI integration mockup */
+.webui-frame {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-window);
+}
+.webui-toolbar {
+  background: #fafafa;
+  border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+  font-size: 12.5px;
+  color: var(--text-2);
+  display: flex; gap: 12px; align-items: center;
+}
+.webui-body { padding: 14px; }
+.webui-file-card {
+  display: flex; gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+.webui-file-thumb {
+  width: 64px; height: 36px;
+  background: linear-gradient(135deg, #6e6e73, #1d1d1f);
+  border-radius: 4px;
+  flex-shrink: 0;
+  position: relative;
+}
+.webui-file-thumb::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), transparent 50%);
+}
+.new-badge {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.note {
+  background: #fff7e6;
+  border: 1px solid #ffd591;
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 12.5px;
+  color: #874d00;
+  margin-top: 16px;
+}
+
+.callout {
+  background: #f0f7ff;
+  border: 1px solid #cfe5ff;
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 12.5px;
+  color: #003a78;
+  margin-top: 16px;
+}
+
+.caption {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 10px;
+}
+
+.spec-table {
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.spec-table th, .spec-table td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.spec-table th {
+  background: #fafafa;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text-2);
+}
+.spec-table tr:last-child td { border-bottom: none; }
+.spec-table .key { color: var(--text-2); width: 200px; }
+
+/* Architecture diagram */
+.arch {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  font-family: var(--font);
+}
+.arch-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px;
+  margin-bottom: 4px;
+}
+.arch-box {
+  background: #f0f7ff;
+  border: 1px solid #cfe5ff;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.arch-box.app { background: #e6f7ec; border-color: #99d4af; }
+.arch-box.system { background: #fff7e6; border-color: #ffd591; }
+.arch-box.network { background: #f5e6ff; border-color: #d3a8ff; }
+.arch-arrow { color: var(--text-3); }
+
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Vibox Desktop</h1>
+  <p>UX Wireframe — 데스크탑 앱 시안 (모든 화면·상태·플로우)</p>
+</div>
+
+<!-- 1. 첫 실행 온보딩 -->
+<div class="section">
+  <div class="section-label">SECTION 01</div>
+  <h2>첫 실행 — 온보딩 3단계</h2>
+  <p class="lede">DMG 다운로드 → Applications 드래그 → 실행. 처음 켰을 때 보이는 화면.</p>
+
+  <div class="grid-3">
+
+    <!-- Step 1 -->
+    <div class="app-window">
+      <div class="app-titlebar">
+        <div class="traffic-lights">
+          <div class="traffic-light red"></div><div class="traffic-light yellow"></div><div class="traffic-light green"></div>
+        </div>
+        <div class="app-title">Vibox</div>
+      </div>
+      <div class="app-body" style="text-align: center;">
+        <div style="margin-bottom: 16px;">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#0071e3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto;">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M8 12h8M12 8v8"/>
+          </svg>
+        </div>
+        <div style="font-size: 17px; font-weight: 600; margin-bottom: 6px;">Vibox에 로그인</div>
+        <div style="font-size: 12.5px; color: var(--text-2); margin-bottom: 20px;">이메일·비밀번호로 로그인하면 자동으로 동기화 시작</div>
+        <button class="button primary" style="width: 100%; justify-content: center; margin-bottom: 8px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9l3-3-3-3M17 6H8a4 4 0 0 0-4 4v3"/></svg>
+          브라우저에서 로그인
+        </button>
+        <div style="font-size: 11px; color: var(--text-3); margin-top: 16px;">Vibox 계정이 없으면 비모팀에 문의</div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="app-window">
+      <div class="app-titlebar">
+        <div class="traffic-lights"><div class="traffic-light red"></div><div class="traffic-light yellow"></div><div class="traffic-light green"></div></div>
+        <div class="app-title">Vibox</div>
+      </div>
+      <div class="app-body">
+        <div style="font-size: 17px; font-weight: 600; margin-bottom: 6px;">동기화 폴더 위치</div>
+        <div style="font-size: 12.5px; color: var(--text-2); margin-bottom: 20px;">이 폴더 안에 저장하면 자동으로 vibox.cloud에 올라갑니다.</div>
+
+        <div class="form-group">
+          <label class="form-label">폴더 위치</label>
+          <div style="display: flex; gap: 6px;">
+            <input class="form-input" value="/Users/seon/Vibox" readonly>
+            <button class="button secondary">변경…</button>
+          </div>
+          <div class="form-help">기본: ~/Vibox · Premiere export 경로로 사용하세요</div>
+        </div>
+
+        <div class="form-group" style="background: var(--bg); padding: 12px; border-radius: 6px; font-size: 12.5px;">
+          <div style="display: flex; gap: 8px; align-items: flex-start; margin-bottom: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0071e3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <div>
+              <div style="font-weight: 600; margin-bottom: 4px;">참고</div>
+              <div style="color: var(--text-2);">이 폴더에 새로 들어온 파일만 업로드됩니다. 기존 vibox 파일이 자동으로 다운로드되진 않아요.</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 24px;">
+          <button class="button secondary">뒤로</button>
+          <button class="button primary" style="flex: 1; justify-content: center;">계속</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="app-window">
+      <div class="app-titlebar">
+        <div class="traffic-lights"><div class="traffic-light red"></div><div class="traffic-light yellow"></div><div class="traffic-light green"></div></div>
+        <div class="app-title">Vibox</div>
+      </div>
+      <div class="app-body" style="text-align: center;">
+        <div style="margin-bottom: 14px;">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto;">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <div style="font-size: 17px; font-weight: 600; margin-bottom: 6px;">준비 완료</div>
+        <div style="font-size: 12.5px; color: var(--text-2); margin-bottom: 20px;">상단 메뉴바에 Vibox 아이콘이 항상 떠있어요.<br>거기서 상태·설정 확인 가능합니다.</div>
+
+        <div style="background: var(--bg); border-radius: 6px; padding: 14px; text-align: left; margin-bottom: 18px;">
+          <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px; color: var(--text-2);">다음 단계</div>
+          <div style="font-size: 12.5px; line-height: 1.7;">
+            1. Premiere Export → Output Name → <code style="background: #fff; padding: 1px 5px; border-radius: 3px; font-size: 11px;">~/Vibox/...</code><br>
+            2. Render 시작<br>
+            3. 자동으로 vibox.cloud에 업로드됨
+          </div>
+        </div>
+
+        <button class="button primary" style="width: 100%; justify-content: center;">시작하기</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 2. 메뉴바 -->
+<div class="section">
+  <div class="section-label">SECTION 02</div>
+  <h2>메뉴바 아이콘 — 4가지 상태</h2>
+  <p class="lede">macOS 화면 상단에 항상 떠있음. 클릭하면 popover. 아이콘 자체로도 상태 식별 가능.</p>
+
+  <div style="margin-bottom: 32px;">
+    <div class="menubar">
+      <span class="left">Premiere Pro</span>
+      <span>파일</span><span>편집</span><span>클립</span><span>시퀀스</span><span>마커</span><span>그래픽 및 자막</span>
+      <div class="right">
+        <span class="menubar-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11H5a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h4l5 5V6L9 11z"/></svg>
+        </span>
+        <span class="menubar-icon active" title="Vibox — 동기화 완료">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+        </span>
+        <span class="menubar-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        </span>
+        <span class="menubar-time">오후 3:42</span>
+      </div>
+    </div>
+    <div class="caption">메뉴바에 항상 떠있는 Vibox 아이콘 (V 박스)</div>
+  </div>
+
+  <div class="grid-4">
+
+    <!-- 상태: Idle (Synced) -->
+    <div>
+      <div class="menubar-popover">
+        <div class="popover-header">
+          <div class="popover-status">
+            <div class="status-dot"></div>
+            동기화 완료
+          </div>
+          <div class="popover-status-sub">최근 변경: 2분 전</div>
+        </div>
+        <div class="popover-actions">
+          <div class="popover-action">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l2-2 4 4 8-8 4 4"/></svg>
+            최근 활동
+          </div>
+          <div class="popover-action">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            vibox.cloud 열기
+          </div>
+          <div class="popover-action">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            환경설정…
+          </div>
+        </div>
+      </div>
+      <div class="caption"><strong>Idle</strong> · 모든 파일 동기화 완료</div>
+    </div>
+
+    <!-- 상태: Uploading -->
+    <div>
+      <div class="menubar-popover">
+        <div class="popover-header">
+          <div class="popover-status">
+            <div class="status-dot uploading"></div>
+            업로드 중 · 1/3
+          </div>
+          <div class="popover-status-sub">남은 시간 약 1분 23초</div>
+        </div>
+        <div class="progress-block">
+          <div class="progress-row">
+            <span class="progress-name">DJ_v3_FINAL.mp4</span>
+            <span class="progress-percent">62%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width: 62%;"></div></div>
+          <div class="progress-meta"><span>1.4 / 2.3 GB</span><span>38.2 MB/s</span></div>
+        </div>
+        <div class="queue-list">
+          <div style="font-size: 11px; color: var(--text-3); padding: 4px 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">대기 중 2</div>
+          <div class="queue-row">
+            <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span class="name">DJ_v4_FINAL.mp4</span>
+            <span class="size">1.2 GB</span>
+          </div>
+          <div class="queue-row">
+            <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span class="name">Brand_intro.mov</span>
+            <span class="size">850 MB</span>
+          </div>
+        </div>
+        <div class="popover-actions">
+          <div class="popover-action">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            모두 일시정지
+          </div>
+        </div>
+      </div>
+      <div class="caption"><strong>Uploading</strong> · 진행 + 큐 표시</div>
+    </div>
+
+    <!-- 상태: Error -->
+    <div>
+      <div class="menubar-popover">
+        <div class="popover-header">
+          <div class="popover-status">
+            <div class="status-dot error"></div>
+            업로드 실패 1
+          </div>
+          <div class="popover-status-sub">네트워크 끊김 — 자동 재시도 대기</div>
+        </div>
+        <div class="progress-block">
+          <div class="progress-row">
+            <span class="progress-name" style="color: var(--error);">final_master_4k.mov</span>
+            <span class="progress-percent">실패</span>
+          </div>
+          <div class="progress-meta"><span style="color: var(--error);">3.2 GB · 47% 진행됨</span></div>
+          <div style="display: flex; gap: 6px; margin-top: 10px;">
+            <button class="button primary" style="font-size: 11px; padding: 4px 10px;">재시도</button>
+            <button class="button secondary" style="font-size: 11px; padding: 4px 10px;">건너뛰기</button>
+          </div>
+        </div>
+        <div class="popover-actions">
+          <div class="popover-action">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            오류 자세히 보기
+          </div>
+        </div>
+      </div>
+      <div class="caption"><strong>Error</strong> · 즉시 복구 가능</div>
+    </div>
+
+    <!-- 상태: Offline -->
+    <div>
+      <div class="menubar-popover">
+        <div class="popover-header">
+          <div class="popover-status">
+            <div class="status-dot offline"></div>
+            오프라인
+          </div>
+          <div class="popover-status-sub">네트워크 복구되면 자동 시작</div>
+        </div>
+        <div class="queue-list">
+          <div style="font-size: 11px; color: var(--text-3); padding: 4px 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">대기 중 3 · 4.5 GB</div>
+          <div class="queue-row">
+            <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span class="name">final_v3.mp4</span>
+            <span class="size">2.3 GB</span>
+          </div>
+          <div class="queue-row">
+            <span style="margin-left: 22px; color: var(--text-3); font-size: 11px;">… 외 2개</span>
+          </div>
+        </div>
+        <div class="popover-actions">
+          <div class="popover-action">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            다시 시도
+          </div>
+        </div>
+      </div>
+      <div class="caption"><strong>Offline</strong> · 자동 큐잉</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 3. 메인 윈도우 (설정·활동) -->
+<div class="section">
+  <div class="section-label">SECTION 03</div>
+  <h2>메인 윈도우 — 설정 + 활동</h2>
+  <p class="lede">메뉴바에서 "환경설정" 클릭하면 열림. 평소엔 거의 안 봄. 한 번 셋업하고 잊는 단순함.</p>
+
+  <div class="app-window" style="max-width: 720px; margin: 0 auto;">
+    <div class="app-titlebar">
+      <div class="traffic-lights"><div class="traffic-light red"></div><div class="traffic-light yellow"></div><div class="traffic-light green"></div></div>
+      <div class="app-title">Vibox 환경설정</div>
+    </div>
+    <div style="display: flex; min-height: 460px;">
+      <!-- 사이드바 -->
+      <div style="width: 200px; background: #fafafa; border-right: 1px solid var(--border); padding: 14px 8px;">
+        <div class="finder-sidebar-item active" style="background: rgba(0,113,227,0.12); color: var(--accent); font-weight: 600; margin-bottom: 2px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          일반
+        </div>
+        <div class="finder-sidebar-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l2-2 4 4 8-8 4 4"/></svg>
+          활동 로그
+        </div>
+        <div class="finder-sidebar-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
+          네트워크
+        </div>
+        <div class="finder-sidebar-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          계정
+        </div>
+        <div class="finder-sidebar-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          정보
+        </div>
+      </div>
+
+      <!-- 본문 -->
+      <div style="flex: 1; padding: 24px;">
+        <div class="form-group">
+          <label class="form-label">동기화 폴더</label>
+          <div style="display: flex; gap: 6px;">
+            <input class="form-input" value="/Users/seon/Vibox" readonly>
+            <button class="button secondary">변경…</button>
+          </div>
+          <div class="form-help">이 폴더 안 새 파일이 자동 업로드됩니다</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">대역폭 제한</label>
+          <select class="form-input">
+            <option>제한 없음 (권장)</option>
+            <option>10 MB/s까지</option>
+            <option>30 MB/s까지</option>
+            <option>50 MB/s까지</option>
+          </select>
+          <div class="form-help">다른 작업 영향 받으면 제한 켜기</div>
+        </div>
+
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" checked>
+            <span>업로드 완료 시 알림 표시</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" checked>
+            <span>로그인 시 Vibox 자동 시작</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox">
+            <span>업로드 완료 후 로컬 파일 자동 삭제</span>
+          </label>
+          <div class="form-help">디스크 공간 절약 (권장 X — 안전 위해 기본 OFF)</div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border); padding-top: 16px; margin-top: 24px;">
+          <div style="font-size: 12px; color: var(--text-2); margin-bottom: 12px;">로그인 정보</div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #ff9a3c, #d04020); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px;">서</div>
+            <div style="flex: 1;">
+              <div style="font-weight: 500;">서영선</div>
+              <div style="font-size: 12px; color: var(--text-2);">seon@vi-mo.kr</div>
+            </div>
+            <button class="button secondary" style="font-size: 12px;">로그아웃</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. 활동 로그 -->
+<div class="section">
+  <div class="section-label">SECTION 04</div>
+  <h2>활동 로그</h2>
+  <p class="lede">최근 업로드 시간순. 각 항목에서 vibox.cloud 바로 열기·공유 링크 복사 가능.</p>
+
+  <div class="activity-list" style="max-width: 720px; margin: 0 auto;">
+
+    <div class="activity-row">
+      <div class="activity-icon success">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div>
+        <div class="activity-name">DJ_v3_FINAL.mp4</div>
+        <div class="activity-meta">2.3 GB · 1분 전 · /Renders/Project A</div>
+      </div>
+      <div class="activity-action">
+        <a class="activity-link">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          vibox.cloud
+        </a>
+      </div>
+    </div>
+
+    <div class="activity-row">
+      <div class="activity-icon uploading">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      </div>
+      <div>
+        <div class="activity-name">DJ_v4_FINAL.mp4</div>
+        <div class="activity-meta">1.2 GB · 업로드 중 (37%) · 32 MB/s</div>
+      </div>
+      <div class="activity-action">
+        <a class="activity-link" style="color: var(--text-2);">대기 중</a>
+      </div>
+    </div>
+
+    <div class="activity-row">
+      <div class="activity-icon success">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div>
+        <div class="activity-name">Brand_intro_v2.mov</div>
+        <div class="activity-meta">850 MB · 8분 전 · /Renders/Brand X</div>
+      </div>
+      <div class="activity-action">
+        <a class="activity-link">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          공유 링크 복사
+        </a>
+      </div>
+    </div>
+
+    <div class="activity-row">
+      <div class="activity-icon error">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <div>
+        <div class="activity-name">final_master_4k.mov</div>
+        <div class="activity-meta" style="color: var(--error);">실패 · 네트워크 끊김 · 12분 전</div>
+      </div>
+      <div class="activity-action">
+        <a class="activity-link">재시도</a>
+      </div>
+    </div>
+
+    <div class="activity-row">
+      <div class="activity-icon success">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div>
+        <div class="activity-name">teaser_30s.mp4</div>
+        <div class="activity-meta">120 MB · 1시간 전 · /Renders/Brand X</div>
+      </div>
+      <div class="activity-action">
+        <a class="activity-link">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          vibox.cloud
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 5. Premiere → Vibox 플로우 -->
+<div class="section">
+  <div class="section-label">SECTION 05</div>
+  <h2>Premiere Pro 워크플로</h2>
+  <p class="lede">실제 사용자가 보게 될 흐름. 3단계 — Export 설정 → Render → 자동 업로드.</p>
+
+  <!-- Premiere Export Dialog -->
+  <div class="premiere" style="max-width: 600px; margin: 0 auto 16px;">
+    <div class="premiere-titlebar">
+      <div class="traffic-lights"><div class="traffic-light red"></div><div class="traffic-light yellow"></div><div class="traffic-light green"></div></div>
+      <div style="margin-left: 8px; color: #ddd;">Adobe Premiere Pro — Export Settings</div>
+    </div>
+    <div class="premiere-body">
+      <div style="font-size: 13px; color: #fff; font-weight: 600; margin-bottom: 8px;">Export Settings</div>
+      <div class="premiere-export">
+        <div class="premiere-row">
+          <div class="label">Format</div>
+          <div class="val">H.264</div>
+        </div>
+        <div class="premiere-row">
+          <div class="label">Preset</div>
+          <div class="val">Match Source — High bitrate</div>
+        </div>
+        <div class="premiere-row">
+          <div class="label">Output Name</div>
+          <div class="val path">/Users/seon/Vibox/Renders/Project A/DJ_v3_FINAL.mp4</div>
+        </div>
+        <div class="premiere-row">
+          <div class="label">Estimated Size</div>
+          <div class="val">2.3 GB</div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 14px;">
+        <button class="button secondary" style="background: #444; color: #ddd; border-color: #555;">Queue</button>
+        <button class="button primary" style="margin-left: auto;">Export</button>
+      </div>
+    </div>
+  </div>
+  <div class="caption">Step 1: Premiere Export 경로를 <code>~/Vibox/...</code> 안으로 지정</div>
+
+  <div class="flow">
+    <div class="flow-step">
+      <div class="num">1</div>
+      <div class="title">Render</div>
+      <div class="desc">Premiere가 로컬 SSD에 풀 스피드로 저장 (1000 MB/s급). 네트워크 영향 0.</div>
+    </div>
+    <div class="flow-arrow">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </div>
+    <div class="flow-step">
+      <div class="num">2</div>
+      <div class="title">Vibox 감지</div>
+      <div class="desc">Vibox 앱이 새 파일 즉시 감지. 메뉴바 아이콘 회전 시작 (업로드 중).</div>
+    </div>
+    <div class="flow-arrow">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </div>
+    <div class="flow-step">
+      <div class="num">3</div>
+      <div class="title">백그라운드 업로드</div>
+      <div class="desc">청크 24 conn 직결. 끝나면 vibox.cloud에 등장 + 알림.</div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>핵심 차이</strong> · Premiere는 export 끝나는 즉시 다음 작업 가능. 네트워크 업로드가 사용자를 묶지 않음.
+  </div>
+</div>
+
+<!-- 6. Finder 통합 -->
+<div class="section">
+  <div class="section-label">SECTION 06</div>
+  <h2>Finder 통합 — 파일 상태 시각화</h2>
+  <p class="lede">~/Vibox/ 폴더 안 파일에 자동 오버레이. 동기화 상태가 한 눈에.</p>
+
+  <div class="finder">
+    <div class="finder-toolbar">
+      <div style="display: flex; gap: 4px;">
+        <button class="button secondary" style="padding: 4px 8px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button class="button secondary" style="padding: 4px 8px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      </div>
+      <div class="finder-path">Vibox › Renders › Project A</div>
+    </div>
+    <div class="finder-body">
+      <div class="finder-sidebar">
+        <div class="finder-sidebar-section">
+          <div class="finder-sidebar-label">즐겨찾기</div>
+          <div class="finder-sidebar-item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            데스크탑
+          </div>
+          <div class="finder-sidebar-item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            문서
+          </div>
+          <div class="finder-sidebar-item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polyline points="21 15 16 10 5 21"/><circle cx="9" cy="9" r="2"/><rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            다운로드
+          </div>
+          <div class="finder-sidebar-item active">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            Vibox
+          </div>
+        </div>
+        <div class="finder-sidebar-section">
+          <div class="finder-sidebar-label">위치</div>
+          <div class="finder-sidebar-item">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+            네트워크
+          </div>
+        </div>
+      </div>
+      <div class="finder-files">
+        <div style="display: grid; grid-template-columns: 24px 1fr 80px 100px 16px; gap: 8px; padding: 4px 6px; font-size: 11px; color: var(--text-3); border-bottom: 1px solid var(--border); margin-bottom: 4px; font-weight: 600;">
+          <div></div><div>이름</div><div>크기</div><div>수정일</div><div></div>
+        </div>
+
+        <div class="finder-file-row">
+          <div class="file-icon folder">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div>old_versions</div>
+          <div class="file-meta-col">—</div>
+          <div class="file-meta-col">어제</div>
+          <div class="sync-overlay synced" title="동기화됨"></div>
+        </div>
+
+        <div class="finder-file-row" style="background: rgba(0,113,227,0.08);">
+          <div class="file-icon video">MP4</div>
+          <div>DJ_v3_FINAL.mp4</div>
+          <div class="file-meta-col">2.3 GB</div>
+          <div class="file-meta-col">방금 전</div>
+          <div class="sync-overlay synced" title="동기화됨"></div>
+        </div>
+
+        <div class="finder-file-row">
+          <div class="file-icon video">MP4</div>
+          <div>DJ_v4_FINAL.mp4</div>
+          <div class="file-meta-col">1.2 GB</div>
+          <div class="file-meta-col">방금 전</div>
+          <div class="sync-overlay uploading" title="업로드 중"></div>
+        </div>
+
+        <div class="finder-file-row">
+          <div class="file-icon video">MOV</div>
+          <div>final_master_4k.mov</div>
+          <div class="file-meta-col">3.2 GB</div>
+          <div class="file-meta-col">12분 전</div>
+          <div class="sync-overlay error" title="실패 — 재시도 대기"></div>
+        </div>
+
+        <div class="finder-file-row">
+          <div class="file-icon video">MOV</div>
+          <div>Brand_intro_v2.mov</div>
+          <div class="file-meta-col">850 MB</div>
+          <div class="file-meta-col">8분 전</div>
+          <div class="sync-overlay synced" title="동기화됨"></div>
+        </div>
+
+        <div class="finder-file-row">
+          <div class="file-icon video">MP4</div>
+          <div>teaser_30s.mp4</div>
+          <div class="file-meta-col">120 MB</div>
+          <div class="file-meta-col">1시간 전</div>
+          <div class="sync-overlay synced" title="동기화됨"></div>
+        </div>
+
+        <div class="finder-file-row">
+          <div class="file-icon video">MP4</div>
+          <div>cuts_proxy.mp4</div>
+          <div class="file-meta-col">450 MB</div>
+          <div class="file-meta-col">큐 대기</div>
+          <div class="sync-overlay queued" title="큐 대기 중"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 24px; margin-top: 16px; justify-content: center; font-size: 12px; color: var(--text-2);">
+    <span style="display: flex; align-items: center; gap: 6px;"><span class="sync-overlay synced" style="border-color: var(--text-3);"></span>동기화 완료</span>
+    <span style="display: flex; align-items: center; gap: 6px;"><span class="sync-overlay uploading" style="border-color: var(--text-3);"></span>업로드 중</span>
+    <span style="display: flex; align-items: center; gap: 6px;"><span class="sync-overlay queued" style="border-color: var(--text-3);"></span>대기</span>
+    <span style="display: flex; align-items: center; gap: 6px;"><span class="sync-overlay error" style="border-color: var(--text-3);"></span>실패</span>
+  </div>
+
+  <div class="note">
+    <strong>구현 노트</strong> · macOS는 표준 API로 폴더 아이콘 오버레이 제한적. Phase 1에선 우클릭 메뉴 + 메뉴바에 의존. 진짜 오버레이는 Phase 3 File Provider Extension에서.
+  </div>
+</div>
+
+<!-- 7. 알림 (Notification) -->
+<div class="section">
+  <div class="section-label">SECTION 07</div>
+  <h2>알림</h2>
+  <p class="lede">macOS 알림 센터. 클릭으로 vibox.cloud 바로 이동·공유 링크 복사.</p>
+
+  <div style="display: flex; flex-direction: column; gap: 16px; max-width: 460px; margin: 0 auto;">
+
+    <!-- Success -->
+    <div class="toast success">
+      <div class="icon-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="body">
+        <div class="title">DJ_v3_FINAL.mp4 업로드 완료</div>
+        <div class="desc">2.3 GB · 53초 · 클라이언트 검수 시작 가능</div>
+        <div class="actions">
+          <span class="action">vibox.cloud 열기</span>
+          <span class="action">공유 링크 복사</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div class="toast error">
+      <div class="icon-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <div class="body">
+        <div class="title">업로드 실패 — final_master_4k.mov</div>
+        <div class="desc">네트워크 끊김 · 47%에서 멈춤</div>
+        <div class="actions">
+          <span class="action">재시도</span>
+          <span class="action">자세히</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- All done -->
+    <div class="toast success">
+      <div class="icon-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="body">
+        <div class="title">큐 모두 완료 · 5개 업로드</div>
+        <div class="desc">8.4 GB · 총 4분 12초</div>
+        <div class="actions">
+          <span class="action">vibox.cloud 열기</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 8. Web UI 통합 -->
+<div class="section">
+  <div class="section-label">SECTION 08</div>
+  <h2>Web UI 연동</h2>
+  <p class="lede">Premiere에서 export → 데스크탑이 자동 업로드 → 1초 내 vibox.cloud에 등장. 클라이언트 알림 자동 발송.</p>
+
+  <div class="webui-frame" style="max-width: 720px; margin: 0 auto;">
+    <div class="webui-toolbar">
+      <div style="background: var(--accent); color: #fff; width: 22px; height: 22px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px;">V</div>
+      <span style="font-weight: 600; color: var(--text);">vibox.cloud</span>
+      <span style="color: var(--text-3);">/</span>
+      <span>Renders</span>
+      <span style="color: var(--text-3);">/</span>
+      <span>Project A</span>
+    </div>
+    <div class="webui-body">
+      <div class="webui-file-card">
+        <div class="webui-file-thumb"></div>
+        <div style="flex: 1;">
+          <div style="font-weight: 500;">
+            DJ_v3_FINAL.mp4
+            <span class="new-badge">NEW</span>
+          </div>
+          <div style="font-size: 12px; color: var(--text-2); margin-top: 2px;">2.3 GB · 데스크탑에서 업로드 · 방금 전 · 서영선</div>
+        </div>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <button class="button secondary" style="font-size: 12px; padding: 4px 10px;">미리보기</button>
+          <button class="button primary" style="font-size: 12px; padding: 4px 10px;">공유</button>
+        </div>
+      </div>
+
+      <div class="webui-file-card">
+        <div class="webui-file-thumb"></div>
+        <div style="flex: 1;">
+          <div style="font-weight: 500;">DJ_v2_review.mp4</div>
+          <div style="font-size: 12px; color: var(--text-2); margin-top: 2px;">1.8 GB · 어제 · 서영선</div>
+        </div>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <button class="button secondary" style="font-size: 12px; padding: 4px 10px;">미리보기</button>
+          <button class="button secondary" style="font-size: 12px; padding: 4px 10px;">공유</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>자동 메타데이터</strong> · 업로더 (데스크탑 앱 사용자), 출처 (데스크탑 vs 웹), 파일 경로 자동 등록. 별도 입력 X.
+  </div>
+</div>
+
+<!-- 9. 기술 아키텍처 -->
+<div class="section">
+  <div class="section-label">SECTION 09</div>
+  <h2>아키텍처</h2>
+  <p class="lede">앱 내부 구조 — Tauri 또는 Electron 둘 다 비슷한 형태.</p>
+
+  <div class="arch">
+    <div class="arch-row">
+      <div class="arch-box system">macOS / Windows OS</div>
+      <span class="arch-arrow">→</span>
+      <div class="arch-box system">FSEvents / ReadDirectoryChangesW</div>
+      <span class="arch-arrow">→</span>
+      <div class="arch-box app">Vibox Desktop (메인 프로세스)</div>
+    </div>
+    <div class="arch-row" style="padding-left: 80px;">
+      <span style="color: var(--text-3); font-size: 18px;">↓</span>
+    </div>
+    <div class="arch-row">
+      <div class="arch-box app">파일 watcher</div>
+      <span class="arch-arrow">→</span>
+      <div class="arch-box app">SQLite 매핑 DB</div>
+      <span class="arch-arrow">→</span>
+      <div class="arch-box app">업로드 큐</div>
+    </div>
+    <div class="arch-row" style="padding-left: 280px;">
+      <span style="color: var(--text-3); font-size: 18px;">↓</span>
+    </div>
+    <div class="arch-row" style="padding-left: 220px;">
+      <div class="arch-box network">청크 업로드 (24 conn × HTTPS/HTTP3)</div>
+    </div>
+    <div class="arch-row" style="padding-left: 280px;">
+      <span style="color: var(--text-3); font-size: 18px;">↓</span>
+    </div>
+    <div class="arch-row" style="padding-left: 220px;">
+      <div class="arch-box network">u1.vibox.cloud:8443 / u2:8443 (직결)</div>
+    </div>
+    <div class="arch-row" style="padding-left: 280px;">
+      <span style="color: var(--text-3); font-size: 18px;">↓</span>
+    </div>
+    <div class="arch-row" style="padding-left: 220px;">
+      <div class="arch-box system">macmini Caddy → next.js → 외장 SSD</div>
+    </div>
+  </div>
+
+  <table class="spec-table" style="margin-top: 24px;">
+    <tr>
+      <th colspan="2" style="font-size: 13px; padding: 12px 14px; color: var(--text);">컴포넌트별 역할</th>
+    </tr>
+    <tr><td class="key">파일 watcher</td><td>chokidar (Node) / notify-rs (Rust). 새 파일 감지, 변경 감지, 5분 폴링 백업</td></tr>
+    <tr><td class="key">SQLite 매핑 DB</td><td>로컬 경로 ↔ vibox file ID. 중복 업로드 방지, 재개 지원</td></tr>
+    <tr><td class="key">업로드 큐</td><td>순차 1개씩, 동시 청크 24 conn. lib/upload.ts 재사용 또는 Rust 재작성</td></tr>
+    <tr><td class="key">메뉴바 UI</td><td>네이티브 메뉴 + popover (작은 React 앱). idle/uploading/error 시각화</td></tr>
+    <tr><td class="key">자동 업데이트</td><td>electron-updater / Tauri updater. 새 버전 자동 다운·재시작</td></tr>
+    <tr><td class="key">인증</td><td>OAuth 코드 플로우. 토큰 macOS Keychain · Win Credential Vault 보관</td></tr>
+  </table>
+</div>
+
+<!-- 10. 결정 포인트 -->
+<div class="section">
+  <div class="section-label">SECTION 10</div>
+  <h2>요약 — 결정 필요 포인트</h2>
+  <p class="lede">시안 보고 다음 결정해주시면 바로 Phase 1 들어갑니다.</p>
+
+  <table class="spec-table">
+    <tr><th>결정</th><th>옵션</th></tr>
+    <tr>
+      <td class="key">기술 스택</td>
+      <td><strong>Electron</strong> (12일, 코드 재사용) · <strong>Tauri 2.x</strong> (18일, 가벼움·Rust 자산)</td>
+    </tr>
+    <tr>
+      <td class="key">플랫폼</td>
+      <td>macOS만 · macOS+Windows · macOS+Win+Linux</td>
+    </tr>
+    <tr>
+      <td class="key">코드 사이닝</td>
+      <td>Apple Developer Program $99/년 가입 여부</td>
+    </tr>
+    <tr>
+      <td class="key">동기화 방향</td>
+      <td><strong>Upload-only</strong> (MVP) · 양방향 (Phase 2)</td>
+    </tr>
+    <tr>
+      <td class="key">앱 이름</td>
+      <td>Vibox · Vibox Desktop · Vibox for Mac · 다른 이름</td>
+    </tr>
+    <tr>
+      <td class="key">아이콘 디자인</td>
+      <td>현재 V 박스 그대로 · 새로 디자인</td>
+    </tr>
+  </table>
+</div>
+
+</body>
+</html>

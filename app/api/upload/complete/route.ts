@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { corsHeaders, preflight } from "@/lib/auth/cors";
 import {
   finalizeChunkUpload,
   getChunkSession,
@@ -10,12 +11,18 @@ import { db } from "@/lib/db/client";
 import { fileUploads } from "@/lib/db/schema";
 import { sql } from "drizzle-orm";
 import { logTraffic } from "@/lib/traffic";
+import { enqueue as enqueueHLS } from "@/lib/encoding/queue";
+
+export async function OPTIONS(req: NextRequest) {
+  return preflight(req.headers.get("origin"));
+}
 
 // POST /api/upload/complete  body: { fileId, action?: "complete" | "abort" }
 export async function POST(req: NextRequest) {
+  const cors = corsHeaders(req.headers.get("origin"));
   const session = await getCurrentSession();
   if (!session) {
-    return Response.json({ error: "unauthorized" }, { status: 401 });
+    return Response.json({ error: "unauthorized" }, { status: 401, headers: cors });
   }
 
   const body = await req.json().catch(() => null);
@@ -23,20 +30,20 @@ export async function POST(req: NextRequest) {
   const action = body?.action ?? "complete";
 
   if (!fileId || !/^[a-f0-9-]{30,}$/i.test(fileId)) {
-    return Response.json({ error: "invalid fileId" }, { status: 400 });
+    return Response.json({ error: "invalid fileId" }, { status: 400, headers: cors });
   }
 
   const meta = await getChunkSession(fileId);
   if (!meta) {
-    return Response.json({ error: "unknown session" }, { status: 404 });
+    return Response.json({ error: "unknown session" }, { status: 404, headers: cors });
   }
   if (meta.userId !== session.sub) {
-    return Response.json({ error: "forbidden" }, { status: 403 });
+    return Response.json({ error: "forbidden" }, { status: 403, headers: cors });
   }
 
   if (action === "abort") {
     await abortChunkUpload(fileId);
-    return Response.json({ ok: true, aborted: true });
+    return Response.json({ ok: true, aborted: true }, { headers: cors });
   }
 
   try {
@@ -48,6 +55,9 @@ export async function POST(req: NextRequest) {
         path: saved.path,
         uploadedBy: session.sub,
         uploadedByName: session.name ?? session.username,
+        episodeId: meta.episodeId ?? null,
+        projectId: meta.projectId ?? null,
+        partnerId: meta.partnerId ?? null,
       })
       .onConflictDoUpdate({
         target: fileUploads.path,
@@ -55,6 +65,9 @@ export async function POST(req: NextRequest) {
           uploadedBy: session.sub,
           uploadedByName: session.name ?? session.username,
           uploadedAt: sql`(unixepoch() * 1000)`,
+          episodeId: meta.episodeId ?? null,
+          projectId: meta.projectId ?? null,
+          partnerId: meta.partnerId ?? null,
         },
       })
       .catch(() => {});
@@ -65,14 +78,17 @@ export async function POST(req: NextRequest) {
       source: "upload",
       userId: session.sub,
     });
-    // 영상이면 백그라운드로 썸네일 생성 (응답 지연 안 됨)
+    // 영상이면 백그라운드로 썸네일 생성 + HLS 인코딩 큐에 추가
     if (isVideoPath(saved.path)) {
       generateThumbInBackground(saved.path);
+      enqueueHLS(saved.path).catch(() => {
+        /* 큐 등록 실패는 응답 막지 않음 */
+      });
     }
-    return Response.json({ ok: true, saved });
+    return Response.json({ ok: true, saved }, { headers: cors });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "unknown";
-    return Response.json({ error: msg }, { status: 500 });
+    return Response.json({ error: msg }, { status: 500, headers: cors });
   }
 }
 

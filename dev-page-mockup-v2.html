@@ -1,0 +1,1269 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>비박스 — /dev 페이지 시안 v2 (리스트 외 대안)</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #fafafa;
+    --surface-2: #f7f7f7;
+    --border: #ececec;
+    --border-hover: #d4d4d4;
+    --text: #111111;
+    --text-muted: #555555;
+    --text-soft: #666666;
+    --text-faint: #999999;
+    --accent: #e85008;
+    --accent-hover: #c8430a;
+    --accent-soft: #fef0e8;
+    --hover: #f0f0f0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #efefef;
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Pretendard", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding: 32px 24px 64px;
+  }
+  h1.page-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+  p.page-sub {
+    color: var(--text-soft); font-size: 13.5px;
+    margin-bottom: 28px; max-width: 800px; line-height: 1.55;
+  }
+  section.variant { margin-bottom: 56px; }
+  .variant-head {
+    display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px;
+  }
+  .variant-title { font-size: 16px; font-weight: 700; }
+  .variant-tag {
+    font-size: 11px; padding: 2px 8px; border-radius: 999px;
+    background: var(--accent-soft); color: var(--accent);
+    font-weight: 700; letter-spacing: 0.5px;
+  }
+  .variant-desc {
+    color: var(--text-soft); font-size: 12.5px;
+    margin-bottom: 14px; max-width: 720px; line-height: 1.55;
+  }
+  .frame {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    height: 760px;
+    display: flex;
+  }
+
+  /* === Rail (84px) === */
+  .rail {
+    width: 84px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 16px 8px;
+    flex-shrink: 0;
+  }
+  .rail .logo {
+    width: 36px; height: 36px;
+    background: var(--accent); border-radius: 8px;
+    margin: 0 auto 16px;
+    color: white; font-weight: 800; font-size: 15px;
+    display: grid; place-items: center;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  .rail nav { display: flex; flex-direction: column; gap: 2px; }
+  .rail-item {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 12px 4px; border-radius: 8px;
+    color: var(--text-soft); font-size: 11px; font-weight: 500; cursor: pointer;
+  }
+  .rail-item:hover { background: var(--hover); }
+  .rail-item.active {
+    background: white; color: var(--accent);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .rail-item .ico {
+    width: 18px; height: 18px;
+    stroke: currentColor; fill: none; stroke-width: 2;
+  }
+
+  /* === DevMenu (240px) === */
+  .menu {
+    width: 240px;
+    background: white;
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    flex-shrink: 0; overflow-y: auto;
+  }
+  .menu-head {
+    padding: 18px 16px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .menu-title { font-size: 16px; font-weight: 700; }
+  .menu-search {
+    margin: 0 12px 8px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 6px;
+    background: var(--surface);
+    color: var(--text-faint); font-size: 12.5px;
+  }
+  .kbd {
+    margin-left: auto; font-size: 10px;
+    padding: 2px 6px; border: 1px solid var(--border); border-radius: 3px;
+    background: white; color: var(--text-faint);
+  }
+  .menu-section {
+    padding: 14px 16px 6px;
+    text-transform: uppercase;
+    font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px;
+    color: var(--text-faint);
+  }
+  .menu-item {
+    margin: 1px 8px;
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 12px; border-radius: 6px;
+    color: var(--text-soft); font-size: 13.5px; cursor: pointer;
+  }
+  .menu-item:hover { background: var(--surface); }
+  .menu-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .menu-item .ico { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; opacity: .9; }
+  .menu-item .badge { margin-left: auto; font-size: 11px; color: var(--text-faint); }
+
+  .main {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .main-head {
+    padding: 22px 32px 14px;
+    border-bottom: 1px solid var(--border);
+    background: white;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .crumb {
+    font-size: 12px; color: var(--text-faint);
+    margin-bottom: 4px;
+  }
+  .pageH {
+    font-size: 22px; font-weight: 800;
+  }
+  .head-actions {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .chip-row {
+    margin-top: 10px;
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .chip {
+    font-size: 12px; padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--surface); color: var(--text-soft);
+    cursor: pointer; border: 1px solid transparent;
+  }
+  .chip:hover { border-color: var(--border-hover); }
+  .chip.on {
+    background: var(--accent-soft); color: var(--accent);
+    font-weight: 600; border-color: var(--accent-soft);
+  }
+  .pri-btn {
+    height: 30px; padding: 0 14px;
+    background: var(--accent); color: white;
+    border: 0; border-radius: 6px;
+    font-weight: 600; font-size: 12.5px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .pri-btn:hover { background: var(--accent-hover); }
+  .ghost-btn {
+    height: 30px; padding: 0 12px;
+    background: white; color: var(--text-soft);
+    border: 1px solid var(--border); border-radius: 6px;
+    font-size: 12.5px; cursor: pointer;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .ghost-btn:hover { background: var(--surface); }
+
+
+  /* ========================================================== */
+  /* A안. Gallery (Notion 갤러리뷰)                              */
+  /* ========================================================== */
+  .gallery {
+    flex: 1; overflow-y: auto; padding: 24px 32px 40px;
+    background: #f7f7f7;
+  }
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; flex-direction: column;
+  }
+  .card:hover {
+    border-color: var(--border-hover);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+    transform: translateY(-1px);
+  }
+  .card.pinned { border-color: var(--accent); }
+  .card-cover {
+    height: 96px;
+    background: linear-gradient(135deg, var(--accent-soft) 0%, #fff 100%);
+    display: grid; place-items: center;
+    font-size: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-cover.indigo { background: linear-gradient(135deg, #eef2ff 0%, #fff 100%); }
+  .card-cover.green  { background: linear-gradient(135deg, #f0fdf4 0%, #fff 100%); }
+  .card-cover.purple { background: linear-gradient(135deg, #faf5ff 0%, #fff 100%); }
+  .card-cover.gray   { background: linear-gradient(135deg, #f4f4f5 0%, #fff 100%); }
+  .card-body {
+    padding: 14px 16px 16px;
+    flex: 1; display: flex; flex-direction: column;
+  }
+  .card-title {
+    font-size: 13.5px; font-weight: 700;
+    margin-bottom: 6px; line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-excerpt {
+    font-size: 12px; color: var(--text-soft);
+    line-height: 1.45;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+  }
+  .card-foot {
+    margin-top: 10px;
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10.5px; color: var(--text-faint);
+  }
+  .card-tag {
+    background: var(--surface);
+    padding: 1px 6px; border-radius: 3px;
+    color: var(--text-soft);
+  }
+  .card-foot .star { color: var(--accent); margin-left: auto; }
+
+
+  /* ========================================================== */
+  /* B안. Magazine (Hero + horizontal rails)                     */
+  /* ========================================================== */
+  .magazine {
+    flex: 1; overflow-y: auto;
+    background: white;
+  }
+  .hero {
+    padding: 28px 36px 24px;
+    background: linear-gradient(135deg, var(--accent-soft) 0%, #fff 60%);
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-label {
+    color: var(--accent); font-size: 11px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .hero-title {
+    font-size: 32px; font-weight: 800; line-height: 1.2;
+    margin-bottom: 12px;
+    max-width: 640px;
+  }
+  .hero-excerpt {
+    font-size: 14.5px; color: var(--text-muted);
+    line-height: 1.65;
+    max-width: 640px;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .hero-meta {
+    margin-top: 14px;
+    display: flex; gap: 12px; align-items: center;
+    font-size: 12px; color: var(--text-faint);
+  }
+  .rail-section {
+    padding: 24px 36px 8px;
+  }
+  .rail-section-h {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 12px;
+  }
+  .rail-section-h h3 { font-size: 14px; font-weight: 700; }
+  .rail-section-h .more {
+    margin-left: auto; font-size: 11.5px; color: var(--text-faint);
+    cursor: pointer;
+  }
+  .rail-scroll {
+    display: flex; gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 16px;
+    margin: 0 -36px;
+    padding-left: 36px; padding-right: 36px;
+    scrollbar-width: thin;
+  }
+  .rcard {
+    flex-shrink: 0;
+    width: 240px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    cursor: pointer;
+  }
+  .rcard:hover { border-color: var(--border-hover); }
+  .rcard-emoji { font-size: 22px; margin-bottom: 8px; }
+  .rcard-title {
+    font-size: 13px; font-weight: 600;
+    margin-bottom: 4px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .rcard-sub {
+    font-size: 11.5px; color: var(--text-faint);
+  }
+
+
+  /* ========================================================== */
+  /* C안. Calendar Timeline                                      */
+  /* ========================================================== */
+  .cal-wrap {
+    flex: 1; display: flex; min-height: 0;
+  }
+  .cal-side {
+    width: 280px; flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    background: white;
+    padding: 24px 20px;
+    overflow-y: auto;
+  }
+  .cal-month-head {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 13px; font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .cal-month-head .nav {
+    display: flex; gap: 4px; color: var(--text-faint);
+  }
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 14px;
+  }
+  .cal-dow {
+    text-align: center;
+    font-size: 10px; font-weight: 700;
+    color: var(--text-faint);
+    padding: 4px 0;
+  }
+  .cal-day {
+    aspect-ratio: 1;
+    display: grid; place-items: center;
+    font-size: 12px; color: var(--text);
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+  }
+  .cal-day:hover { background: var(--hover); }
+  .cal-day.muted { color: var(--text-faint); opacity: 0.5; }
+  .cal-day.has-note::after {
+    content: ""; position: absolute;
+    bottom: 4px; width: 4px; height: 4px;
+    background: var(--accent); border-radius: 50%;
+  }
+  .cal-day.today {
+    background: var(--surface-2); font-weight: 700;
+  }
+  .cal-day.selected {
+    background: var(--accent); color: white; font-weight: 700;
+  }
+  .cal-day.selected.has-note::after { background: white; }
+
+  .cal-mini-section {
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    margin-top: 6px;
+  }
+  .cal-mini-section h4 {
+    font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px;
+    text-transform: uppercase; color: var(--text-faint);
+    margin-bottom: 10px;
+  }
+  .cal-mini-row {
+    padding: 6px 8px; margin: 0 -8px;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12.5px; color: var(--text-soft);
+    border-radius: 6px; cursor: pointer;
+  }
+  .cal-mini-row:hover { background: var(--surface); }
+  .cal-mini-row .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+  }
+  .cal-mini-row .dot.gray { background: var(--text-faint); }
+  .cal-mini-row .when { margin-left: auto; font-size: 11px; color: var(--text-faint); }
+
+  .cal-feed {
+    flex: 1; overflow-y: auto;
+    background: var(--surface);
+    padding: 24px 36px 40px;
+  }
+  .cal-day-block {
+    margin-bottom: 32px;
+  }
+  .cal-day-h {
+    display: flex; align-items: baseline; gap: 14px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cal-day-h .date {
+    font-size: 22px; font-weight: 800;
+  }
+  .cal-day-h .dow {
+    font-size: 13px; color: var(--text-faint);
+  }
+  .cal-day-h .count {
+    margin-left: auto;
+    font-size: 11.5px; color: var(--text-faint);
+    background: white; padding: 3px 10px; border-radius: 999px;
+    border: 1px solid var(--border);
+  }
+  .cal-note {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+  .cal-note:hover { border-color: var(--border-hover); }
+  .cal-note .time {
+    font-size: 11px; color: var(--text-faint);
+    margin-bottom: 6px;
+  }
+  .cal-note .ttl {
+    font-size: 14.5px; font-weight: 700; margin-bottom: 6px;
+  }
+  .cal-note .body {
+    font-size: 13px; color: var(--text-muted); line-height: 1.5;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .cal-note .ftr {
+    margin-top: 10px;
+    display: flex; gap: 6px; align-items: center;
+    font-size: 11px;
+  }
+
+
+  /* ========================================================== */
+  /* D안. Wall (Pinterest masonry)                               */
+  /* ========================================================== */
+  .wall {
+    flex: 1; overflow-y: auto;
+    padding: 24px 32px 40px;
+    background: #f7f7f7;
+    column-count: 4;
+    column-gap: 14px;
+  }
+  @media (max-width: 1400px) { .wall { column-count: 3; } }
+  .wcard {
+    break-inside: avoid;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 18px;
+    margin-bottom: 14px;
+    cursor: pointer;
+    display: inline-block; width: 100%;
+  }
+  .wcard:hover { border-color: var(--border-hover); }
+  .wcard h4 { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+  .wcard .ex {
+    font-size: 12.5px; color: var(--text-soft); line-height: 1.55;
+    margin-bottom: 10px;
+  }
+  .wcard .ex.long {
+    display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .wcard .ftr {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10.5px; color: var(--text-faint);
+  }
+  .wcard.accent { border-left: 3px solid var(--accent); padding-left: 16px; }
+  .wcard.dim { background: var(--surface); }
+
+
+  /* legend */
+  .legend {
+    margin-top: 12px;
+    display: flex; gap: 12px; flex-wrap: wrap;
+    color: var(--text-faint); font-size: 11.5px;
+  }
+  .legend .ch {
+    padding: 4px 10px;
+    background: white; border: 1px solid var(--border); border-radius: 999px;
+  }
+  .legend .ch strong { color: var(--text); margin-right: 4px; }
+</style>
+</head>
+<body>
+
+<h1 class="page-title">비박스 — /dev 페이지 v2 (리스트 외 대안)</h1>
+<p class="page-sub">
+  리스트가 아닌 4가지 대안 — <strong>갤러리 / 매거진 / 캘린더 / 월(masonry)</strong>.
+  각 패턴은 노트의 <em>어떤 면</em>을 강조하는지가 다릅니다.
+</p>
+
+
+<!-- ============= A안. Gallery ============= -->
+<section class="variant">
+  <div class="variant-head">
+    <span class="variant-title">A안. 갤러리뷰 (Notion gallery)</span>
+    <span class="variant-tag">스캔성 · 추천</span>
+  </div>
+  <p class="variant-desc">
+    카드 그리드. 각 노트가 <strong>커버(이모지/색)</strong> + 제목 + 첫 단락. 리스트 대비 한눈에 5~6배 많이 보임.
+    상단 칩으로 폴더·태그 필터링. 이모지·커버는 frontmatter (<code>cover_emoji: 🚀</code>)에서 읽기.
+  </p>
+
+  <div class="frame">
+    <aside class="rail">
+      <div class="logo">V</div>
+      <nav>
+        <div class="rail-item"><svg class="ico" viewBox="0 0 24 24"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg><span>홈</span></div>
+        <div class="rail-item active"><svg class="ico" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg><span>개발</span></div>
+        <div class="rail-item"><svg class="ico" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span>내 박스</span></div>
+        <div class="rail-item"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg><span>관리</span></div>
+      </nav>
+    </aside>
+
+    <nav class="menu">
+      <div class="menu-head"><span class="menu-title">개발</span></div>
+      <div class="menu-search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>노트 검색</span><span class="kbd">⌘K</span>
+      </div>
+      <div class="menu-section">빠른 접근</div>
+      <div class="menu-item active">📋 모든 노트 <span class="badge">94</span></div>
+      <div class="menu-item">⭐ 즐겨찾기 <span class="badge">8</span></div>
+      <div class="menu-item">⏱ 최근 7일 <span class="badge">12</span></div>
+      <div class="menu-item">📥 _inbox <span class="badge">3</span></div>
+      <div class="menu-section">폴더</div>
+      <div class="menu-item">📁 회의 <span class="badge">12</span></div>
+      <div class="menu-item">📁 프로젝트 <span class="badge">28</span></div>
+      <div class="menu-item">📁 마케팅 <span class="badge">9</span></div>
+      <div class="menu-item">📁 일기 <span class="badge">42</span></div>
+    </nav>
+
+    <main class="main">
+      <div class="main-head">
+        <div>
+          <div class="crumb">개발 · 모든 노트</div>
+          <div class="pageH">개발 노트</div>
+        </div>
+        <div class="head-actions">
+          <button class="ghost-btn">📊 정렬</button>
+          <button class="ghost-btn">▦ 보기</button>
+          <button class="pri-btn">+ 새 노트</button>
+        </div>
+      </div>
+
+      <div style="padding: 14px 32px 0; border-bottom: 1px solid var(--border); background: white;">
+        <div class="chip-row">
+          <span class="chip on">전체</span>
+          <span class="chip">⭐ 즐겨찾기</span>
+          <span class="chip">📁 회의</span>
+          <span class="chip">📁 프로젝트</span>
+          <span class="chip">📁 마케팅</span>
+          <span class="chip">📁 일기</span>
+          <span class="chip">#vibox</span>
+          <span class="chip">#krit</span>
+          <span class="chip">#design</span>
+        </div>
+      </div>
+
+      <div class="gallery">
+        <div class="gallery-grid">
+
+          <div class="card pinned">
+            <div class="card-cover">📐</div>
+            <div class="card-body">
+              <div class="card-title">비박스 v0.4 — 사이드바 리디자인</div>
+              <div class="card-excerpt">기존 단일 사이드바가 권한 섞여있어 파트너/매니저가 봐서는 안 되는 항목까지 노출됨. 드롭박스 패턴 차용...</div>
+              <div class="card-foot">
+                <span class="card-tag">#vibox</span>
+                <span class="star">★</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-cover indigo">🔌</div>
+            <div class="card-body">
+              <div class="card-title">SEON Hub 백엔드 연동 spec</div>
+              <div class="card-excerpt">서비스 계정 JWT (HS256), 10개 endpoint, frontmatter convention. 원자적 공유 생성 패턴...</div>
+              <div class="card-foot">
+                <span class="card-tag">#integration</span>
+                <span style="margin-left:auto;">어제</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-cover green">🎬</div>
+            <div class="card-body">
+              <div class="card-title">Plick — Remotion 마이그레이션 계획</div>
+              <div class="card-excerpt">프리뷰-렌더 일치 보장 위해 Remotion으로 통일. GPU 인코딩 자동 감지...</div>
+              <div class="card-foot">
+                <span class="card-tag">#plick</span>
+                <span style="margin-left:auto;">4월 28일</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-cover purple">📝</div>
+            <div class="card-body">
+              <div class="card-title">크릿 — 자동 말자막 설계</div>
+              <div class="card-excerpt">Groq Whisper + Claude post-edit + forced align. 클린 보이스 전용 스택...</div>
+              <div class="card-foot">
+                <span class="card-tag">#krit</span>
+                <span style="margin-left:auto;">4월 27일</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-cover">💎</div>
+            <div class="card-body">
+              <div class="card-title">Hype Kit — Crystal UI 확정</div>
+              <div class="card-excerpt">유튜브 롱폼 → 블로그 / 카드뉴스 / 쓰레드 자동 생성. Crystal 디자인 토큰 정리...</div>
+              <div class="card-foot">
+                <span class="card-tag">#hypekit</span>
+                <span style="margin-left:auto;">4월 25일</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-cover gray">🎵</div>
+            <div class="card-body">
+              <div class="card-title">Ailik — 음악 라이선스 전략</div>
+              <div class="card-excerpt">Artlist+ISRC 하이브리드 모델. 글로벌 라이선스 시장 분석. ISRC 발급 비용 추정...</div>
+              <div class="card-foot">
+                <span class="card-tag">#ailik</span>
+                <span style="margin-left:auto;">4월 18일</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-cover indigo">🗂</div>
+            <div class="card-body">
+              <div class="card-title">파트너 권한 모델 정리</div>
+              <div class="card-excerpt">파트너는 자기 폴더만. 매니저는 모든 클라이언트. 회사 owner_partner_id로 분기...</div>
+              <div class="card-foot">
+                <span class="card-tag">#권한</span>
+                <span style="margin-left:auto;">4월 18일</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-cover green">💾</div>
+            <div class="card-body">
+              <div class="card-title">Litestream 백업 점검</div>
+              <div class="card-excerpt">매일 03:00 S3 sync, 7일 retention. 복구 테스트 통과. 다음: 멀티 리전 검토...</div>
+              <div class="card-foot">
+                <span class="card-tag">#백업</span>
+                <span style="margin-left:auto;">4월 14일</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-cover">🍔</div>
+            <div class="card-body">
+              <div class="card-title">메뉴한컷 — 8개 스타일 확장</div>
+              <div class="card-excerpt">다크무드 / 자연광 / 플랫레이 / 마크로 / 한식 / 구이 / 음료 / 광고익스플로전...</div>
+              <div class="card-foot">
+                <span class="card-tag">#menu-prompt</span>
+                <span style="margin-left:auto;">4월 11일</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-cover purple">📚</div>
+            <div class="card-body">
+              <div class="card-title">어휘재산 — FSRS 스케줄러 튜닝</div>
+              <div class="card-excerpt">디폴트 파라미터로는 단어 너무 빨리 퇴장. d=4, w=[..] 조정안...</div>
+              <div class="card-foot">
+                <span class="card-tag">#wordcraft</span>
+                <span style="margin-left:auto;">4월 8일</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-cover gray">⚙️</div>
+            <div class="card-body">
+              <div class="card-title">ZET 복구 — EC2 SSH 진행</div>
+              <div class="card-excerpt">app.thezet.io 로컬 소스 유실. 43.200.120.153 SSH 1순위 복구 루트...</div>
+              <div class="card-foot">
+                <span class="card-tag">#zet</span>
+                <span style="margin-left:auto;">4월 5일</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-cover indigo">📱</div>
+            <div class="card-body">
+              <div class="card-title">td-v1.1.0 — 멀티호스트 로드맵</div>
+              <div class="card-excerpt">Electron, NEXT_SESSION.md 우선 읽기 트리거. 모니터링 호스트 추가...</div>
+              <div class="card-foot">
+                <span class="card-tag">#td</span>
+                <span style="margin-left:auto;">4월 3일</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="legend">
+    <div class="ch"><strong>강점</strong>한눈에 많이, 시각적 변별</div>
+    <div class="ch"><strong>약점</strong>긴 본문 노트는 카드가 비어보임 (커버 이모지로 보완)</div>
+    <div class="ch"><strong>fit</strong>다양한 주제·짧은 노트 많은 경우</div>
+  </div>
+</section>
+
+
+<!-- ============= B안. Magazine ============= -->
+<section class="variant">
+  <div class="variant-head">
+    <span class="variant-title">B안. 매거진 (Hero + 가로 캐러셀)</span>
+    <span class="variant-tag">큐레이션형</span>
+  </div>
+  <p class="variant-desc">
+    가장 최근/즐겨찾기 노트 1개를 <strong>큰 Hero</strong>로. 아래는 카테고리별 <strong>가로 스크롤 카드 줄</strong>.
+    "오늘 다시 볼 노트 + 카테고리 둘러보기" 흐름. 노트가 잡지 기사처럼 큐레이션되는 느낌.
+  </p>
+
+  <div class="frame">
+    <aside class="rail">
+      <div class="logo">V</div>
+      <nav>
+        <div class="rail-item"><svg class="ico" viewBox="0 0 24 24"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg><span>홈</span></div>
+        <div class="rail-item active"><svg class="ico" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg><span>개발</span></div>
+        <div class="rail-item"><svg class="ico" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span>내 박스</span></div>
+        <div class="rail-item"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg><span>관리</span></div>
+      </nav>
+    </aside>
+
+    <nav class="menu">
+      <div class="menu-head"><span class="menu-title">개발</span></div>
+      <div class="menu-search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>노트 검색</span><span class="kbd">⌘K</span>
+      </div>
+      <div class="menu-section">빠른 접근</div>
+      <div class="menu-item active">🏠 데일리</div>
+      <div class="menu-item">⭐ 즐겨찾기 <span class="badge">8</span></div>
+      <div class="menu-item">⏱ 최근 7일 <span class="badge">12</span></div>
+      <div class="menu-section">폴더</div>
+      <div class="menu-item">📁 회의 <span class="badge">12</span></div>
+      <div class="menu-item">📁 프로젝트 <span class="badge">28</span></div>
+      <div class="menu-item">📁 마케팅 <span class="badge">9</span></div>
+      <div class="menu-item">📁 일기 <span class="badge">42</span></div>
+    </nav>
+
+    <main class="main">
+      <div class="magazine">
+        <div class="hero">
+          <div class="hero-label">📌 핀 · 1시간 전 수정</div>
+          <h1 class="hero-title">비박스 v0.4 — 사이드바 리디자인 (메뉴 구조 회의)</h1>
+          <p class="hero-excerpt">
+            기존 단일 사이드바가 모든 권한이 한 메뉴에 섞여있어 파트너/매니저가 봐서는 안 되는 항목까지 노출됨.
+            드롭박스 패턴을 차용해 레일(84px) + 컨텍스트 메뉴(240px)로 분리하기로 결정. 홈/개발/내박스/관리 4개 섹션.
+          </p>
+          <div class="hero-meta">
+            <span>세온</span>
+            <span>·</span>
+            <span>4.1 KB</span>
+            <span>·</span>
+            <span style="color: var(--accent); font-weight: 600;">#vibox #design</span>
+            <span style="margin-left: 24px;">
+              <button class="pri-btn" style="height: 28px;">SEON Hub에서 편집 →</button>
+            </span>
+          </div>
+        </div>
+
+        <div class="rail-section">
+          <div class="rail-section-h">
+            <h3>⭐ 즐겨찾기</h3>
+            <span class="more">전체 보기 →</span>
+          </div>
+          <div class="rail-scroll">
+            <div class="rcard"><div class="rcard-emoji">🔌</div><div class="rcard-title">SEON Hub 백엔드 연동 spec</div><div class="rcard-sub">#integration · 어제</div></div>
+            <div class="rcard"><div class="rcard-emoji">📐</div><div class="rcard-title">비박스 v0.4 사이드바 리디자인</div><div class="rcard-sub">#vibox · 1시간</div></div>
+            <div class="rcard"><div class="rcard-emoji">🎬</div><div class="rcard-title">Plick — Remotion 마이그레이션</div><div class="rcard-sub">#plick · 3일</div></div>
+            <div class="rcard"><div class="rcard-emoji">🗂</div><div class="rcard-title">파트너 권한 모델 정리</div><div class="rcard-sub">#권한 · 1주</div></div>
+            <div class="rcard"><div class="rcard-emoji">💾</div><div class="rcard-title">Litestream 백업 점검</div><div class="rcard-sub">#백업 · 2주</div></div>
+            <div class="rcard"><div class="rcard-emoji">🎵</div><div class="rcard-title">Ailik — 음악 라이선스 전략</div><div class="rcard-sub">#ailik · 2주</div></div>
+          </div>
+        </div>
+
+        <div class="rail-section">
+          <div class="rail-section-h">
+            <h3>🚧 진행 중인 프로젝트</h3>
+            <span class="more">28개 →</span>
+          </div>
+          <div class="rail-scroll">
+            <div class="rcard"><div class="rcard-emoji">📐</div><div class="rcard-title">비박스 v0.4</div><div class="rcard-sub">5개 노트</div></div>
+            <div class="rcard"><div class="rcard-emoji">🎬</div><div class="rcard-title">Plick GPU</div><div class="rcard-sub">3개 노트</div></div>
+            <div class="rcard"><div class="rcard-emoji">📝</div><div class="rcard-title">크릿 자동 말자막</div><div class="rcard-sub">7개 노트</div></div>
+            <div class="rcard"><div class="rcard-emoji">💎</div><div class="rcard-title">Hype Kit</div><div class="rcard-sub">4개 노트</div></div>
+            <div class="rcard"><div class="rcard-emoji">🎵</div><div class="rcard-title">Ailik 전략</div><div class="rcard-sub">2개 노트</div></div>
+          </div>
+        </div>
+
+        <div class="rail-section">
+          <div class="rail-section-h">
+            <h3>💬 최근 회의</h3>
+            <span class="more">12개 →</span>
+          </div>
+          <div class="rail-scroll">
+            <div class="rcard"><div class="rcard-emoji">🗓</div><div class="rcard-title">2026-04-30 메뉴 구조 회의</div><div class="rcard-sub">1시간 전</div></div>
+            <div class="rcard"><div class="rcard-emoji">🗓</div><div class="rcard-title">2026-04-28 Plick 우선순위</div><div class="rcard-sub">3일 전</div></div>
+            <div class="rcard"><div class="rcard-emoji">🗓</div><div class="rcard-title">2026-04-25 Hype Kit 디자인</div><div class="rcard-sub">6일 전</div></div>
+            <div class="rcard"><div class="rcard-emoji">🗓</div><div class="rcard-title">2026-04-22 운영 회의</div><div class="rcard-sub">9일 전</div></div>
+            <div class="rcard"><div class="rcard-emoji">🗓</div><div class="rcard-title">2026-04-18 권한 정리</div><div class="rcard-sub">2주 전</div></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="legend">
+    <div class="ch"><strong>강점</strong>"오늘 무얼 볼까" — 큐레이션 효과</div>
+    <div class="ch"><strong>약점</strong>전체 탐색은 별도 페이지(/dev/all) 필요</div>
+    <div class="ch"><strong>fit</strong>핀/즐겨찾기 자주 쓰고, 카테고리 둘러보기 선호</div>
+  </div>
+</section>
+
+
+<!-- ============= C안. Calendar Timeline ============= -->
+<section class="variant">
+  <div class="variant-head">
+    <span class="variant-title">C안. 캘린더 타임라인</span>
+    <span class="variant-tag">시간 기반</span>
+  </div>
+  <p class="variant-desc">
+    좌측 미니 캘린더 + 우측 시간순 노트 카드. 일기·회의록·작업로그처럼 <strong>날짜가 중심</strong>인 노트에 강함.
+    "지난주 화요일 회의록" → 캘린더 4월 23일 클릭. 옵시디언의 Daily Notes를 GUI로.
+  </p>
+
+  <div class="frame">
+    <aside class="rail">
+      <div class="logo">V</div>
+      <nav>
+        <div class="rail-item"><svg class="ico" viewBox="0 0 24 24"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg><span>홈</span></div>
+        <div class="rail-item active"><svg class="ico" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg><span>개발</span></div>
+        <div class="rail-item"><svg class="ico" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span>내 박스</span></div>
+        <div class="rail-item"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg><span>관리</span></div>
+      </nav>
+    </aside>
+
+    <nav class="menu">
+      <div class="menu-head"><span class="menu-title">개발</span></div>
+      <div class="menu-search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>노트 검색</span><span class="kbd">⌘K</span>
+      </div>
+      <div class="menu-section">보기</div>
+      <div class="menu-item active">📅 캘린더</div>
+      <div class="menu-item">🖼 갤러리</div>
+      <div class="menu-item">📋 리스트</div>
+      <div class="menu-section">필터</div>
+      <div class="menu-item">📁 회의 <span class="badge">12</span></div>
+      <div class="menu-item">📁 프로젝트 <span class="badge">28</span></div>
+      <div class="menu-item">📁 마케팅 <span class="badge">9</span></div>
+      <div class="menu-item">📁 일기 <span class="badge">42</span></div>
+    </nav>
+
+    <main class="main">
+      <div class="cal-wrap">
+        <aside class="cal-side">
+          <div class="cal-month-head">
+            <span>2026년 5월</span>
+            <div class="nav">‹ 오늘 ›</div>
+          </div>
+          <div class="cal-grid">
+            <div class="cal-dow">일</div><div class="cal-dow">월</div><div class="cal-dow">화</div>
+            <div class="cal-dow">수</div><div class="cal-dow">목</div><div class="cal-dow">금</div>
+            <div class="cal-dow">토</div>
+
+            <div class="cal-day muted">27</div>
+            <div class="cal-day muted">28</div>
+            <div class="cal-day muted has-note">29</div>
+            <div class="cal-day muted has-note">30</div>
+            <div class="cal-day today selected has-note">1</div>
+            <div class="cal-day">2</div>
+            <div class="cal-day">3</div>
+
+            <div class="cal-day">4</div>
+            <div class="cal-day has-note">5</div>
+            <div class="cal-day">6</div>
+            <div class="cal-day has-note">7</div>
+            <div class="cal-day">8</div>
+            <div class="cal-day">9</div>
+            <div class="cal-day">10</div>
+
+            <div class="cal-day">11</div>
+            <div class="cal-day">12</div>
+            <div class="cal-day">13</div>
+            <div class="cal-day">14</div>
+            <div class="cal-day">15</div>
+            <div class="cal-day">16</div>
+            <div class="cal-day">17</div>
+
+            <div class="cal-day">18</div>
+            <div class="cal-day">19</div>
+            <div class="cal-day">20</div>
+            <div class="cal-day">21</div>
+            <div class="cal-day">22</div>
+            <div class="cal-day">23</div>
+            <div class="cal-day">24</div>
+
+            <div class="cal-day">25</div>
+            <div class="cal-day">26</div>
+            <div class="cal-day">27</div>
+            <div class="cal-day">28</div>
+            <div class="cal-day">29</div>
+            <div class="cal-day">30</div>
+            <div class="cal-day">31</div>
+          </div>
+
+          <div class="cal-mini-section">
+            <h4>이번 주 요약</h4>
+            <div class="cal-mini-row">
+              <span class="dot"></span>
+              <span>회의록</span>
+              <span class="when">3건</span>
+            </div>
+            <div class="cal-mini-row">
+              <span class="dot gray"></span>
+              <span>일기</span>
+              <span class="when">5건</span>
+            </div>
+            <div class="cal-mini-row">
+              <span class="dot"></span>
+              <span>프로젝트 노트</span>
+              <span class="when">7건</span>
+            </div>
+          </div>
+
+          <div class="cal-mini-section">
+            <h4>다가오는 일정</h4>
+            <div class="cal-mini-row">
+              <span class="dot"></span>
+              <span>5/3 — Vibox 베타 배포</span>
+            </div>
+            <div class="cal-mini-row">
+              <span class="dot gray"></span>
+              <span>5/7 — Hype Kit 리뷰</span>
+            </div>
+          </div>
+        </aside>
+
+        <div class="cal-feed">
+
+          <div class="cal-day-block">
+            <div class="cal-day-h">
+              <span class="date">5월 1일</span>
+              <span class="dow">목요일 · 오늘</span>
+              <span class="count">3개 노트</span>
+            </div>
+            <div class="cal-note">
+              <div class="time">14:32</div>
+              <div class="ttl">📐 비박스 v0.4 — 사이드바 리디자인</div>
+              <div class="body">
+                기존 단일 사이드바가 권한 섞여있어 파트너/매니저가 봐서는 안 되는 항목까지 노출됨. 드롭박스 패턴 차용해 레일+컨텍스트 메뉴로 분리.
+              </div>
+              <div class="ftr">
+                <span class="card-tag">#vibox</span>
+                <span class="card-tag">#design</span>
+              </div>
+            </div>
+            <div class="cal-note">
+              <div class="time">11:08</div>
+              <div class="ttl">📥 _inbox — 회의에서 나온 아이디어</div>
+              <div class="body">
+                Vibox 모바일은 PWA부터. 햄버거 메뉴로 사이드바 접고, 가운데 영역만 풀스크린.
+              </div>
+              <div class="ftr">
+                <span class="card-tag">#inbox</span>
+              </div>
+            </div>
+            <div class="cal-note">
+              <div class="time">09:15</div>
+              <div class="ttl">📓 일기 — 어제 회의 회고</div>
+              <div class="body">
+                권한 분리 결정한 게 잘한 듯. 파트너가 관리 메뉴 누르려고 시도한 로그가 6번 있었음...
+              </div>
+              <div class="ftr">
+                <span class="card-tag">#일기</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cal-day-block">
+            <div class="cal-day-h">
+              <span class="date">4월 30일</span>
+              <span class="dow">수요일 · 어제</span>
+              <span class="count">2개 노트</span>
+            </div>
+            <div class="cal-note">
+              <div class="time">17:42</div>
+              <div class="ttl">🗓 2026-04-30 메뉴 구조 회의</div>
+              <div class="body">
+                레일은 홈/개발/내박스/관리 4개. 개발·관리는 admin 전용. 홈 메뉴는 렌더링 폴더 + 자료실.
+              </div>
+              <div class="ftr">
+                <span class="card-tag">#회의</span>
+                <span class="card-tag">#vibox</span>
+              </div>
+            </div>
+            <div class="cal-note">
+              <div class="time">10:30</div>
+              <div class="ttl">🔌 SEON Hub 백엔드 연동 spec</div>
+              <div class="body">
+                서비스 계정 JWT (HS256), 10개 endpoint, frontmatter convention. 원자적 공유 생성 패턴 채택.
+              </div>
+              <div class="ftr">
+                <span class="card-tag">#integration</span>
+                <span class="card-tag">#spec</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cal-day-block">
+            <div class="cal-day-h">
+              <span class="date">4월 29일</span>
+              <span class="dow">화요일</span>
+              <span class="count">1개 노트</span>
+            </div>
+            <div class="cal-note">
+              <div class="time">21:00</div>
+              <div class="ttl">📓 일기 — 크릿 작업 막힘</div>
+              <div class="body">
+                Tauri dev HMR 신뢰 금지. JS 변경 후 ⌘R도 안 먹음. 강제 재시작 패턴 메모.
+              </div>
+              <div class="ftr">
+                <span class="card-tag">#일기</span>
+                <span class="card-tag">#krit</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="legend">
+    <div class="ch"><strong>강점</strong>일기·회의록·작업로그에 천연</div>
+    <div class="ch"><strong>약점</strong>날짜 정보 없는 노트는 어색 (frontmatter date 필요)</div>
+    <div class="ch"><strong>fit</strong>매일 노트를 쓰는 습관 + Daily Note 패턴 좋아할 때</div>
+  </div>
+</section>
+
+
+<!-- ============= D안. Wall (masonry) ============= -->
+<section class="variant">
+  <div class="variant-head">
+    <span class="variant-title">D안. 월(Wall, Pinterest masonry)</span>
+    <span class="variant-tag">자유형</span>
+  </div>
+  <p class="variant-desc">
+    카드 높이가 <strong>본문 길이에 따라 자유롭게</strong>. 짧은 메모는 작게, 긴 글은 크게. 칠판에 포스트잇 붙인 듯한 느낌.
+    스캔성은 갤러리만큼, 본문 미리보기는 더 풍성.
+  </p>
+
+  <div class="frame">
+    <aside class="rail">
+      <div class="logo">V</div>
+      <nav>
+        <div class="rail-item"><svg class="ico" viewBox="0 0 24 24"><path d="M3 12 12 3l9 9"/><path d="M5 10v10h14V10"/></svg><span>홈</span></div>
+        <div class="rail-item active"><svg class="ico" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg><span>개발</span></div>
+        <div class="rail-item"><svg class="ico" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span>내 박스</span></div>
+        <div class="rail-item"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg><span>관리</span></div>
+      </nav>
+    </aside>
+
+    <nav class="menu">
+      <div class="menu-head"><span class="menu-title">개발</span></div>
+      <div class="menu-search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>노트 검색</span><span class="kbd">⌘K</span>
+      </div>
+      <div class="menu-section">빠른 접근</div>
+      <div class="menu-item active">🧱 모든 노트 <span class="badge">94</span></div>
+      <div class="menu-item">⭐ 즐겨찾기 <span class="badge">8</span></div>
+      <div class="menu-item">📥 _inbox <span class="badge">3</span></div>
+      <div class="menu-section">폴더</div>
+      <div class="menu-item">📁 회의 <span class="badge">12</span></div>
+      <div class="menu-item">📁 프로젝트 <span class="badge">28</span></div>
+      <div class="menu-item">📁 마케팅 <span class="badge">9</span></div>
+      <div class="menu-item">📁 일기 <span class="badge">42</span></div>
+    </nav>
+
+    <main class="main">
+      <div class="main-head">
+        <div>
+          <div class="crumb">개발 · Wall</div>
+          <div class="pageH">개발 노트</div>
+        </div>
+        <div class="head-actions">
+          <button class="ghost-btn">▦ 보기</button>
+          <button class="pri-btn">+ 새 노트</button>
+        </div>
+      </div>
+
+      <div class="wall">
+
+        <div class="wcard accent">
+          <h4>📐 비박스 v0.4 — 사이드바 리디자인</h4>
+          <div class="ex long">
+            기존 단일 사이드바가 모든 권한이 한 메뉴에 섞여있어 파트너/매니저가 봐서는 안 되는 항목까지 노출됨.
+            드롭박스 패턴 차용해 레일(84px) + 컨텍스트 메뉴(240px)로 분리.
+            홈/개발/내박스/관리 4개 섹션. URL 기반 active state.
+            Phase 4에서 라우트 재구성 예정. Phase 5는 서버사이드 admin guard.
+          </div>
+          <div class="ftr">★ <span>#vibox · 1시간</span></div>
+        </div>
+
+        <div class="wcard">
+          <h4>📥 회의에서 나온 아이디어</h4>
+          <div class="ex">
+            Vibox 모바일은 PWA부터.
+          </div>
+          <div class="ftr">#inbox · 방금</div>
+        </div>
+
+        <div class="wcard">
+          <h4>🔌 SEON Hub 백엔드 연동 spec</h4>
+          <div class="ex long">
+            서비스 계정 JWT (HS256), 10개 endpoint, frontmatter convention.
+            원자적 공유 생성 패턴 채택. /api/integration/upload, /upload-image, /file, /files (list), /shares...
+          </div>
+          <div class="ftr">★ <span>#integration · 어제</span></div>
+        </div>
+
+        <div class="wcard dim">
+          <h4>🍔 메뉴한컷 8 스타일</h4>
+          <div class="ex">다크 / 자연광 / 플랫레이 / 마크로 / 한식 / 구이 / 음료 / 광고익스플로전</div>
+          <div class="ftr">#menu-prompt · 4월 11일</div>
+        </div>
+
+        <div class="wcard">
+          <h4>🎬 Plick — Remotion 마이그레이션 계획</h4>
+          <div class="ex long">
+            프리뷰-렌더 일치 보장 위해 Remotion으로 통일. GPU 인코딩 자동 감지.
+            기존 ffmpeg-only 경로 제거, 컴포지션 단일화.
+          </div>
+          <div class="ftr">#plick · 3일</div>
+        </div>
+
+        <div class="wcard">
+          <h4>📝 크릿 — 자동 말자막 설계</h4>
+          <div class="ex long">
+            Groq Whisper + Claude post-edit + forced align.
+            클린 보이스 전용 스택. GROQ_API_KEY 필요.
+            노이즈/배경음 있는 영상은 별도 전처리 단계 검토.
+          </div>
+          <div class="ftr">★ <span>#krit · 4일</span></div>
+        </div>
+
+        <div class="wcard dim">
+          <h4>📥 위택스 미납건</h4>
+          <div class="ex">이정수 14개월 — 위택스+발급+납부 남음.</div>
+          <div class="ftr">#inbox · 6일</div>
+        </div>
+
+        <div class="wcard">
+          <h4>🗂 파트너 권한 모델 정리</h4>
+          <div class="ex long">
+            파트너는 자기 폴더만 보임. 매니저는 모든 클라이언트 폴더.
+            owner_partner_id로 분기. 파트너 ERP는 자체 ERP로 진화 가능성.
+          </div>
+          <div class="ftr">#권한 · 1주</div>
+        </div>
+
+        <div class="wcard">
+          <h4>💎 Hype Kit — Crystal UI 확정</h4>
+          <div class="ex long">
+            유튜브 롱폼 → 블로그 / 카드뉴스 / 쓰레드 자동.
+            Crystal 디자인 토큰 정리. 톤 일관성 가드 추가.
+          </div>
+          <div class="ftr">#hypekit · 1주</div>
+        </div>
+
+        <div class="wcard">
+          <h4>💾 Litestream 백업 점검</h4>
+          <div class="ex">매일 03:00 S3. 7일 retention. 복구 테스트 통과.</div>
+          <div class="ftr">★ <span>#백업 · 2주</span></div>
+        </div>
+
+        <div class="wcard dim">
+          <h4>📚 어휘재산 FSRS 튜닝</h4>
+          <div class="ex long">
+            디폴트 파라미터로는 단어 너무 빨리 퇴장.
+            d=4, w=[..] 조정안. 모바일 PWA 인터랙션도 같이.
+          </div>
+          <div class="ftr">#wordcraft · 3주</div>
+        </div>
+
+        <div class="wcard">
+          <h4>🎵 Ailik 음악 라이선스</h4>
+          <div class="ex long">
+            Artlist+ISRC 하이브리드. 글로벌 라이선스 시장 분석. ISRC 발급 비용 추정.
+          </div>
+          <div class="ftr">#ailik · 2주</div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <div class="legend">
+    <div class="ch"><strong>강점</strong>본문 길이에 따른 자연스러운 변별, 정보 밀도 ↑</div>
+    <div class="ch"><strong>약점</strong>레이아웃 jitter (스크롤 시 카드 위치 변동), 정렬 혼란</div>
+    <div class="ch"><strong>fit</strong>긴 노트·짧은 메모가 섞여있는 환경</div>
+  </div>
+</section>
+
+
+<p class="page-sub" style="margin-top: 36px;">
+  <strong>제 추천: A안 갤러리 + C안 캘린더 토글</strong>.
+  DevMenu 상단에 [🖼 갤러리 · 📅 캘린더 · 📋 리스트] 토글 두면 노트 종류·맥락에 따라 골라 쓸 수 있음.
+  매거진(B)은 화려하지만 만들기 비싸고, 월(D)은 jitter가 거슬릴 수 있음.
+</p>
+
+</body>
+</html>

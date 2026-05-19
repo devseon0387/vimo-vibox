@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronLeft, ChevronUp, ChevronDown } from "lucide-react";
 import { useConfirm } from "./ConfirmDialog";
 import { useToast } from "./Toast";
 import {
@@ -62,6 +63,7 @@ type CommentRow = {
   filePath: string;
   authorId: string;
   authorName: string;
+  authorRole?: "admin" | "member" | "partner" | "guest" | null;
   videoTimeMs: number;
   category: Category;
   autoCategory: Category;
@@ -142,11 +144,42 @@ async function runOcr(
 
 type ViewFilter = "all" | "feedback" | "praise";
 
+function RoleBadge({
+  role,
+}: {
+  role: "admin" | "member" | "partner" | "guest" | null;
+}) {
+  if (!role) return null;
+  const map = {
+    admin: { label: "관리", cls: "bg-purple-100 text-purple-700" },
+    member: { label: "매니저", cls: "bg-purple-100 text-purple-700" },
+    partner: { label: "파트너", cls: "bg-slate-200 text-slate-700" },
+    guest: { label: "클라", cls: "bg-amber-100 text-amber-700" },
+  } as const;
+  const c = map[role];
+  if (!c) return null;
+  return (
+    <span
+      className={`px-1 py-[1px] rounded text-[9px] font-bold tracking-wider ${c.cls}`}
+    >
+      {c.label}
+    </span>
+  );
+}
+
 function formatTc(ms: number): string {
   const totalSec = Math.floor(ms / 1000);
   const m = Math.floor(totalSec / 60);
   const s = totalSec % 60;
   return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+}
+
+function formatEta(sec: number): string {
+  if (sec < 60) return `${sec}초`;
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  if (m < 10) return `${m}분 ${s}초`;
+  return `${m}분`;
 }
 
 function formatRelative(ms: number): string {
@@ -170,17 +203,29 @@ export type ShareContext = {
 export function FeedbackModal({
   entry,
   backHref = "/",
+  prevHref,
+  nextHref,
+  uploaderName,
   currentUserId,
   isAdmin,
   role = "member",
   shareContext,
+  initialSeekMs,
 }: {
   entry: FileEntry | null;
   backHref?: string;
+  /** 같은 폴더의 이전 영상 (K/↑ 키) */
+  prevHref?: string;
+  /** 같은 폴더의 다음 영상 (J/↓ 키) */
+  nextHref?: string;
+  /** 헤더에 표시할 업로더 이름 */
+  uploaderName?: string | null;
   currentUserId: string;
   isAdmin: boolean;
   role?: "admin" | "member" | "partner";
   shareContext?: ShareContext;
+  /** ⌘K 댓글 결과 클릭 등으로 영상 열 때 자동 시크할 ms */
+  initialSeekMs?: number;
 }) {
   const isGuest = !!shareContext;
   const effectiveRole = isGuest ? "partner" : role;
@@ -206,10 +251,49 @@ export function FeedbackModal({
     { left: string; top: string; flipUp?: boolean } | null
   >(null);
   const videoWrapRef = useRef<HTMLDivElement>(null);
+  const [seekingNow, setSeekingNow] = useState(false);
+  const [hlsManifestUrl, setHlsManifestUrl] = useState<string | null>(null);
+  const [hlsStatus, setHlsStatus] = useState<
+    | { kind: "checking" }
+    | { kind: "ready"; url: string }
+    | { kind: "encoding"; progress: number; etaSec: number | null }
+    | { kind: "fallback" }
+  >({ kind: "checking" });
+  // 인코딩 ETA 계산용 — 최초 진행률 본 시각·값을 ref 로 들고, 변화율 → 남은 시간
+  const encodingFirstSampleRef = useRef<{ at: number; pct: number } | null>(
+    null,
+  );
   const { confirm, dialog: confirmDialog } = useConfirm();
   const { success, error: toastError } = useToast();
 
   const filePath = entry?.path ?? null;
+  const router = useRouter();
+
+  // 형제 영상 키 단축키: J/↓ 다음, K/↑ 이전 (입력 필드 외에서)
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if ((e.key === "j" || e.key === "ArrowDown") && nextHref) {
+        e.preventDefault();
+        router.push(nextHref);
+      } else if ((e.key === "k" || e.key === "ArrowUp") && prevHref) {
+        e.preventDefault();
+        router.push(prevHref);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, prevHref, nextHref, router]);
 
   const fetchComments = useCallback(async () => {
     if (!filePath) return;
@@ -246,6 +330,86 @@ export function FeedbackModal({
       setCurrentTime(0);
     }
   }, [open, filePath, fetchComments]);
+
+  // HLS 자산 lookup — 변환 완료됐으면 manifestUrl 받아 hls.js로 재생
+  useEffect(() => {
+    if (!filePath) return;
+    setHlsManifestUrl(null);
+    setHlsStatus({ kind: "checking" });
+    let cancelled = false;
+    let pollTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const check = async () => {
+      const tokenSuffix = shareContext
+        ? `&token=${encodeURIComponent(shareContext.token)}`
+        : "";
+      try {
+        const r = await fetch(
+          `/api/stream/lookup?path=${encodeURIComponent(filePath)}${tokenSuffix}`,
+        );
+        if (cancelled) return;
+        if (!r.ok) {
+          setHlsStatus({ kind: "fallback" });
+          return;
+        }
+        const data = await r.json();
+        if (data.ready && data.manifestUrl) {
+          setHlsManifestUrl(data.manifestUrl);
+          setHlsStatus({ kind: "ready", url: data.manifestUrl });
+          encodingFirstSampleRef.current = null;
+        } else if (data.status === "queued" || data.status === "running") {
+          const pct = Number(data.progress ?? 0);
+          const now = Date.now();
+          if (
+            !encodingFirstSampleRef.current ||
+            pct < encodingFirstSampleRef.current.pct
+          ) {
+            // 첫 샘플 또는 진행률이 거꾸로 갔으면 (재시작) 리셋
+            encodingFirstSampleRef.current = { at: now, pct };
+          }
+          const first = encodingFirstSampleRef.current;
+          const elapsed = (now - first.at) / 1000;
+          const advanced = pct - first.pct;
+          let etaSec: number | null = null;
+          if (advanced >= 1 && elapsed >= 5) {
+            const rate = advanced / elapsed; // %/sec
+            etaSec = Math.max(0, Math.round((100 - pct) / rate));
+          }
+          setHlsStatus({ kind: "encoding", progress: pct, etaSec });
+          pollTimer = setTimeout(check, 5000);
+        } else {
+          setHlsStatus({ kind: "fallback" });
+          encodingFirstSampleRef.current = null;
+        }
+      } catch {
+        if (!cancelled) setHlsStatus({ kind: "fallback" });
+      }
+    };
+    check();
+
+    return () => {
+      cancelled = true;
+      if (pollTimer) clearTimeout(pollTimer);
+    };
+  }, [filePath, shareContext]);
+
+  // hls.js 어태치 — manifestUrl 준비되면 vidRef에 붙임
+  useEffect(() => {
+    if (!hlsManifestUrl) return;
+    const v = vidRef.current;
+    if (!v) return;
+    let handle: { destroy: () => void } | null = null;
+    let cancelled = false;
+    void (async () => {
+      const { attachHls } = await import("@/lib/hls-client");
+      if (cancelled) return;
+      handle = await attachHls(v, hlsManifestUrl);
+    })();
+    return () => {
+      cancelled = true;
+      handle?.destroy();
+    };
+  }, [hlsManifestUrl]);
 
   // 키보드 단축키: Space(재생), ←/→(±3s), Shift+←/→(±10s), J/L(-/+10s)
   useEffect(() => {
@@ -816,15 +980,50 @@ export function FeedbackModal({
             </Link>
           )}
           <div className="w-px h-5 bg-slate-200" />
-          <h1 className="text-[14px] font-semibold text-slate-900 truncate">
+          <h1 className="text-[14px] font-semibold text-slate-900 truncate min-w-0">
             {entry.name}
           </h1>
+          {uploaderName && (
+            <span className="hidden md:inline shrink-0 text-[11.5px] text-slate-500">
+              올린 사람:{" "}
+              <span className="font-semibold text-slate-700">{uploaderName}</span>
+            </span>
+          )}
+          <div className="flex-1" />
+          {!isGuest && (prevHref || nextHref) && (
+            <div className="hidden md:flex items-center gap-0.5 shrink-0">
+              <Link
+                href={prevHref ?? "#"}
+                aria-disabled={!prevHref}
+                className={`p-1.5 rounded inline-flex items-center gap-1 text-[12px] ${
+                  prevHref
+                    ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                    : "text-slate-300 pointer-events-none"
+                }`}
+                title="이전 영상 (K 또는 ↑)"
+              >
+                <ChevronUp size={15} strokeWidth={2.2} />
+              </Link>
+              <Link
+                href={nextHref ?? "#"}
+                aria-disabled={!nextHref}
+                className={`p-1.5 rounded inline-flex items-center gap-1 text-[12px] ${
+                  nextHref
+                    ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                    : "text-slate-300 pointer-events-none"
+                }`}
+                title="다음 영상 (J 또는 ↓)"
+              >
+                <ChevronDown size={15} strokeWidth={2.2} />
+              </Link>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col md:flex-row flex-1 min-h-0">
           {/* 좌: 비디오 + 타임라인 (모바일에선 상단 고정, 나머지 공간은 댓글) */}
           <div className="shrink-0 md:shrink md:flex-1 min-w-0 flex flex-col bg-slate-100">
-            <div className="flex-1 md:flex-[5] min-h-0 flex items-center md:items-end justify-center bg-slate-100 overflow-hidden">
+            <div className="flex-1 md:flex-[5] min-h-0 flex items-start justify-center bg-slate-100 overflow-hidden">
               <div
                 ref={videoWrapRef}
                 className={`relative overflow-hidden bg-black max-w-full max-h-full ${
@@ -840,20 +1039,89 @@ export function FeedbackModal({
               >
               <video
                 ref={vidRef}
-                src={src}
+                // HLS 준비됐으면 hls.js 가 src 덮어씀, 아니면 원본 (fallback)
+                src={hlsStatus.kind === "ready" ? undefined : src}
                 poster={poster}
                 preload="metadata"
                 className="w-full h-full object-contain pointer-events-none"
                 onLoadedMetadata={(e) => {
                   setDuration(e.currentTarget.duration * 1000);
                   setMuted(e.currentTarget.muted);
+                  if (
+                    initialSeekMs &&
+                    initialSeekMs > 0 &&
+                    e.currentTarget.duration > 0
+                  ) {
+                    e.currentTarget.currentTime = initialSeekMs / 1000;
+                  }
                 }}
                 onTimeUpdate={(e) =>
                   setCurrentTime(e.currentTarget.currentTime * 1000)
                 }
                 onPlay={() => setPlaying(true)}
                 onPause={() => setPlaying(false)}
+                onSeeking={() => setSeekingNow(true)}
+                onSeeked={() => setSeekingNow(false)}
+                onWaiting={() => setSeekingNow(true)}
+                onPlaying={() => setSeekingNow(false)}
+                onCanPlay={() => setSeekingNow(false)}
               />
+              {/* 시킹·버퍼링 스피너 — HLS 세그먼트 fetch 동안 시각적 피드백 */}
+              {seekingNow && (
+                <div className="absolute inset-0 z-15 grid place-items-center pointer-events-none">
+                  <div className="bg-black/60 backdrop-blur rounded-full px-3 py-2 flex items-center gap-2 text-white text-[11.5px] font-semibold">
+                    <svg
+                      className="w-4 h-4 animate-spin"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeOpacity="0.25"
+                        strokeWidth="3"
+                      />
+                      <path
+                        d="M22 12a10 10 0 0 1-10 10"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    버퍼링 중…
+                  </div>
+                </div>
+              )}
+              {/* HLS 인코딩 진행 중 카드 (영상 위 중앙, 큰 게이지) */}
+              {hlsStatus.kind === "encoding" && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur text-white rounded-lg px-4 py-3 z-20 w-[min(90%,360px)] shadow-xl border border-white/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                    <span className="text-[12.5px] font-bold tracking-tight">
+                      스트리밍 최적화 중
+                    </span>
+                    <span className="ml-auto text-[12.5px] font-mono tabular-nums text-amber-300">
+                      {hlsStatus.progress}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-white/15 rounded-full overflow-hidden mb-2">
+                    <div
+                      className="h-full bg-amber-400 transition-[width] duration-500"
+                      style={{ width: `${hlsStatus.progress}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[10.5px] text-white/70">
+                    <span>
+                      {hlsStatus.etaSec != null
+                        ? `약 ${formatEta(hlsStatus.etaSec)} 남음`
+                        : "남은 시간 계산 중…"}
+                    </span>
+                    <span>지금은 원본으로 재생 중</span>
+                  </div>
+                </div>
+              )}
 
               {/* 주석 모드 토글 */}
               <button
@@ -2194,7 +2462,10 @@ function CommentItem({
                   AI
                 </>
               ) : (
-                comment.authorName
+                <>
+                  {comment.authorName}
+                  <RoleBadge role={comment.authorRole ?? null} />
+                </>
               )}
             </span>
           </div>
@@ -2793,6 +3064,10 @@ function AnnotationOverlay({
             zIndex: 4,
           }}
         />
+        {(() => {
+          // 라벨이 영상 프레임 밖으로 잘리지 않도록 박스 위/아래 자동 플립
+          const flipUp = bbox.y + bbox.h > 0.82;
+          return (
         <div
           onClick={(e) => {
             e.stopPropagation();
@@ -2801,8 +3076,12 @@ function AnnotationOverlay({
           className="absolute cursor-pointer"
           style={{
             left: `${(bbox.x + bbox.w / 2) * 100}%`,
-            top: `${(bbox.y + bbox.h) * 100}%`,
-            transform: "translate(-50%, 8px)",
+            top: flipUp
+              ? `${bbox.y * 100}%`
+              : `${(bbox.y + bbox.h) * 100}%`,
+            transform: flipUp
+              ? "translate(-50%, calc(-100% - 8px))"
+              : "translate(-50%, 8px)",
             zIndex: 5,
           }}
         >
@@ -2830,6 +3109,8 @@ function AnnotationOverlay({
             )}
           </span>
         </div>
+          );
+        })()}
       </>
     );
   }
@@ -2938,7 +3219,10 @@ function AnnotationOverlay({
           })}
         </g>
       </svg>
-      {body?.trim() && (
+      {body?.trim() && (() => {
+        // 라벨이 영상 프레임 밖으로 잘리지 않도록 박스 위/아래 자동 플립
+        const flipUp = bounds.y + bounds.h > 0.82;
+        return (
         <div
           onClick={(e) => {
             e.stopPropagation();
@@ -2947,8 +3231,12 @@ function AnnotationOverlay({
           className="absolute cursor-pointer"
           style={{
             left: `${(bounds.x + bounds.w / 2) * 100}%`,
-            top: `${(bounds.y + bounds.h) * 100}%`,
-            transform: "translate(-50%, 8px)",
+            top: flipUp
+              ? `${bounds.y * 100}%`
+              : `${(bounds.y + bounds.h) * 100}%`,
+            transform: flipUp
+              ? "translate(-50%, calc(-100% - 8px))"
+              : "translate(-50%, 8px)",
             zIndex: 5,
             maxWidth: "70%",
           }}
@@ -2969,7 +3257,8 @@ function AnnotationOverlay({
             {body.trim()}
           </span>
         </div>
-      )}
+        );
+      })()}
     </>
   );
 }

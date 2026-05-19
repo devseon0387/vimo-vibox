@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vibox 사이드바·메뉴 개선안</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard+Variable:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --accent:#6755ee; --accent-soft:#eef0ff;
+      --text:#1d1f24; --text-muted:#5a6172; --text-soft:#7c8395; --text-faint:#a4abb8;
+      --surface:#f6f7f9; --border:#e6e8ec; --border-hover:#cdd1d8; --hover:#eef0f3;
+      --danger:#dc2626; --danger-soft:#fee2e2;
+      --warn:#f59e0b; --ok:#10b981;
+    }
+    body{ font-family:"Pretendard Variable",-apple-system,system-ui,sans-serif; color:var(--text); background:#f0f1f4; }
+    .mono{ font-family:"JetBrains Mono",monospace; }
+    .kbd{ font-family:"JetBrains Mono",monospace; font-size:10px; background:#fff; border:1px solid var(--border); border-bottom-width:2px; border-radius:4px; padding:1px 5px; color:var(--text-soft); }
+    .nav-row{ display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:6px; font-size:13px; color:var(--text-muted); cursor:pointer; transition:.12s; position:relative; }
+    .nav-row:hover{ background:var(--hover); color:var(--text); }
+    .nav-row.active{ background:var(--accent-soft); color:var(--accent); font-weight:600; }
+    .nav-row.active::before{ content:""; position:absolute; left:-8px; top:6px; bottom:6px; width:3px; background:var(--accent); border-radius:0 3px 3px 0; }
+    .new-badge{ font-size:9px; font-weight:700; padding:1px 5px; border-radius:3px; background:#10b981; color:#fff; letter-spacing:0.3px; }
+    .nav-row .lucide{ width:15px; height:15px; stroke-width:2; }
+    .nav-row.active .lucide{ stroke-width:2.5; }
+    .section-label{ display:flex; align-items:center; gap:6px; padding:12px 12px 4px; font-size:10.5px; font-weight:700; letter-spacing:.1em; color:var(--text-faint); text-transform:uppercase; }
+    .section-label .lucide{ width:11px; height:11px; stroke-width:2.3; }
+    .arrow-callout{ position:absolute; }
+    .annotation{ position:absolute; font-size:11px; line-height:1.45; color:#fff; background:#2563eb; padding:6px 10px; border-radius:6px; box-shadow:0 4px 12px rgba(37,99,235,.25); max-width:230px; }
+    .annotation::after{ content:""; position:absolute; width:0; height:0; border:6px solid transparent; }
+    .annotation.left::after{ border-right-color:#2563eb; left:-12px; top:50%; transform:translateY(-50%); }
+    .annotation.right::after{ border-left-color:#2563eb; right:-12px; top:50%; transform:translateY(-50%); }
+    .change-pill{ display:inline-flex; align-items:center; gap:4px; padding:1px 6px; font-size:10px; font-weight:700; border-radius:3px; }
+    .pill-add{ background:#dcfce7; color:#166534; }
+    .pill-rename{ background:#dbeafe; color:#1e40af; }
+    .pill-move{ background:#fef3c7; color:#92400e; }
+    .pill-rm{ background:#fee2e2; color:#991b1b; }
+    .sb-mini{ font-size:11px; color:var(--text-soft); padding:8px 12px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:3px; }
+    .sb-mini .row{ display:flex; align-items:center; gap:6px; }
+    .sb-mini .dot{ width:6px; height:6px; border-radius:50%; }
+    .dot-ok{ background:var(--ok); }
+    .dot-warn{ background:var(--warn); }
+    .profile-dropdown{ position:absolute; bottom:54px; left:8px; right:8px; background:#fff; border:1px solid var(--border); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.08); padding:4px; }
+    .profile-dropdown a{ display:flex; align-items:center; gap:10px; padding:8px 10px; font-size:12.5px; color:var(--text-muted); border-radius:5px; cursor:pointer; }
+    .profile-dropdown a:hover{ background:var(--hover); color:var(--text); }
+    .profile-dropdown hr{ margin:4px 0; border-color:var(--border); }
+    .mobile-frame{ width:360px; height:64px; border:1px solid var(--border); border-radius:10px 10px 0 0; padding:10px 12px; background:#fff; display:flex; align-items:center; gap:10px; }
+  </style>
+</head>
+<body class="p-8">
+
+<header class="max-w-[1280px] mx-auto mb-10">
+  <div class="flex items-center gap-3 mb-2">
+    <span class="text-[18px] font-extrabold tracking-tight">vi<span class="text-[#6755ee]">.</span>box</span>
+    <span class="text-[#a4abb8]">/</span>
+    <span class="text-[15px] font-semibold">사이드바·메뉴 개선안</span>
+  </div>
+  <p class="text-[13px] text-[#5a6172] max-w-[800px]">
+    현재 사이드바의 정보 구조·발견성·시각적 명료성 문제를 잡는 개선안.
+    <span class="font-semibold text-[#1d1f24]">왼쪽: 현재(Before)</span>,
+    <span class="font-semibold text-[#1d1f24]">오른쪽: 개선(After)</span>.
+    각 변경 사항은 우측 패널 옆 주석 참조.
+  </p>
+</header>
+
+<main class="max-w-[1280px] mx-auto grid grid-cols-2 gap-12 relative">
+
+  <!-- ========== BEFORE ========== -->
+  <section>
+    <div class="text-[11px] font-bold tracking-widest uppercase text-[#a4abb8] mb-3">Before · 현재</div>
+    <div class="bg-white rounded-xl shadow-sm border border-[#e6e8ec] overflow-hidden flex">
+      <aside class="w-[240px] bg-[#f6f7f9] border-r border-[#e6e8ec] flex flex-col" style="height:680px">
+        <!-- 로고 -->
+        <div class="px-5 pt-6 pb-5">
+          <div class="text-[15px] font-extrabold tracking-tight">vi<span class="text-[#6755ee]">.</span>box</div>
+        </div>
+
+        <!-- 빠른 검색 -->
+        <button class="mx-3 mb-1 flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-white border border-[#e6e8ec] text-[#7c8395] text-[12.5px]">
+          <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <span class="flex-1 text-left">빠른 검색</span>
+          <span class="kbd">⌘K</span>
+        </button>
+
+        <nav class="flex-1 overflow-y-auto px-2 pt-1 pb-2">
+          <div class="section-label">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            VIMO BOX
+          </div>
+          <div class="nav-row active">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            렌더링
+          </div>
+          <div class="nav-row">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            자료실
+          </div>
+
+          <div class="section-label">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            PERSONAL
+          </div>
+          <div class="nav-row">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            내 박스
+          </div>
+
+          <div class="section-label">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            도구
+          </div>
+          <div class="nav-row">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            공유 링크
+          </div>
+          <div class="nav-row">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            휴지통
+          </div>
+          <div class="nav-row">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v18M3 12h18"/></svg>
+            인사이트
+          </div>
+
+          <div class="section-label">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 12H2v10h20zM22 6H2v6h20z"/></svg>
+            관리
+          </div>
+          <div class="nav-row">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg>
+            사용자 관리
+          </div>
+          <div class="nav-row">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+            트래픽 통계
+          </div>
+          <div class="nav-row">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="22" y1="12" x2="2" y2="12"/></svg>
+            저장소 정리
+          </div>
+        </nav>
+
+        <!-- 프로필 -->
+        <div class="border-t border-[#e6e8ec] px-4 py-3 flex items-center gap-3 cursor-default">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#6755ee] to-[#a855f7] text-white grid place-items-center text-[11px] font-bold">SE</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[13px] font-semibold truncate">시언</div>
+            <div class="text-[11px] text-[#a4abb8] truncate">관리자</div>
+          </div>
+          <button class="p-1.5 rounded text-[#a4abb8]" title="로그아웃">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </div>
+      </aside>
+
+      <div class="flex-1 bg-white grid place-items-center text-[12px] text-[#a4abb8]">
+        (메인 컨텐츠)
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== AFTER ========== -->
+  <section class="relative">
+    <div class="text-[11px] font-bold tracking-widest uppercase text-[#10b981] mb-3 flex items-center gap-2">
+      After · 개선
+      <span class="px-2 py-0.5 rounded-full text-[10px] bg-[#dcfce7] text-[#166534] tracking-normal normal-case">8가지 변경</span>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-[#e6e8ec] overflow-hidden flex relative">
+      <aside class="w-[240px] bg-[#f6f7f9] border-r border-[#e6e8ec] flex flex-col relative" style="height:680px">
+        <!-- 로고 -->
+        <div class="px-5 pt-6 pb-5">
+          <div class="text-[15px] font-extrabold tracking-tight">vi<span class="text-[#6755ee]">.</span>box</div>
+        </div>
+
+        <!-- 빠른 검색 (그대로) -->
+        <button class="mx-3 mb-1 flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-white border border-[#e6e8ec] text-[#7c8395] text-[12.5px]">
+          <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <span class="flex-1 text-left">빠른 검색</span>
+          <span class="kbd">⌘K</span>
+        </button>
+
+        <nav class="flex-1 overflow-y-auto px-2 pt-1 pb-2">
+          <!-- 섹션 1: 팀 작업 -->
+          <div class="section-label">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            VIMO BOX
+          </div>
+          <div class="nav-row active">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            <span class="flex-1">공용 폴더</span>
+          </div>
+          <div class="nav-row">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <span class="flex-1">자료실</span>
+          </div>
+          <div class="nav-row">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 12h20M12 2l4 4-4 4"/></svg>
+            <span class="flex-1">검수 통계</span>
+          </div>
+
+          <!-- 섹션 2: 내 공간 -->
+          <div class="section-label">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            내 공간
+          </div>
+          <div class="nav-row">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            <span class="flex-1">내 박스</span>
+          </div>
+          <div class="nav-row">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+            <span class="flex-1">내 기록</span>
+            <span class="new-badge">NEW</span>
+          </div>
+
+          <!-- 섹션 3: 일상 -->
+          <div class="section-label">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            일상
+          </div>
+          <div class="nav-row">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            <span class="flex-1">공유 링크</span>
+          </div>
+          <div class="nav-row">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span class="flex-1">휴지통</span>
+          </div>
+
+          <!-- 섹션 4: 관리 (재정렬) -->
+          <div class="section-label">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 12H2v10h20zM22 6H2v6h20z"/></svg>
+            관리
+          </div>
+          <div class="nav-row">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+            <span class="flex-1">트래픽 통계</span>
+          </div>
+          <div class="nav-row">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+            <span class="flex-1">저장소 정리</span>
+          </div>
+          <div class="nav-row">
+            <svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg>
+            <span class="flex-1">사용자 관리</span>
+          </div>
+        </nav>
+
+        <!-- 시스템 미니 위젯 (NEW) -->
+        <div class="sb-mini">
+          <div class="row"><span class="dot dot-ok"></span> 인코딩 <span class="font-semibold text-[#1d1f24]">대기 0</span> · 동작 0</div>
+          <div class="row"><span class="dot dot-ok"></span> 백업 7시간 전 · 디스크 64%</div>
+        </div>
+
+        <!-- 프로필 (드롭다운 가능) -->
+        <div class="border-t border-[#e6e8ec] px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-[#eef0f3] transition-colors relative">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#6755ee] to-[#a855f7] text-white grid place-items-center text-[11px] font-bold">SE</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[13px] font-semibold truncate">시언</div>
+            <div class="text-[11px] text-[#a4abb8] truncate">관리자 · seon@vi-mo.kr</div>
+          </div>
+          <svg class="w-3.5 h-3.5 text-[#7c8395]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </aside>
+
+      <div class="flex-1 bg-white grid place-items-center text-[12px] text-[#a4abb8]">
+        (메인 컨텐츠)
+      </div>
+    </div>
+
+    <!-- 우측 주석 -->
+    <div class="absolute -right-4 top-[110px] translate-x-full annotation left">
+      ① <strong>"렌더링" → "공용 폴더"</strong><br/>
+      직관적 이름. "팀 공용 영상 작업 폴더"라는 본질이 즉시 와닿음
+      <span class="change-pill pill-rename mt-1">RENAME</span>
+    </div>
+
+    <div class="absolute -right-4 top-[200px] translate-x-full annotation left">
+      ② <strong>"인사이트" → "검수 통계" + 위치 이동</strong><br/>
+      "도구"가 아닌 VIMO Box 섹션 안으로. 팀 검수 결과니까 자연스러움
+      <span class="change-pill pill-rename mt-1">RENAME</span>
+      <span class="change-pill pill-move mt-1">MOVE</span>
+    </div>
+
+    <div class="absolute -right-4 top-[295px] translate-x-full annotation left">
+      ③ <strong>"내 기록" 새로 노출</strong><br/>
+      이전엔 사이드바에 없어서 프로필 영역으로 가야 도달. Personal 섹션에 정착
+      <span class="change-pill pill-add mt-1">ADD</span>
+    </div>
+
+    <div class="absolute -right-4 top-[395px] translate-x-full annotation left">
+      ④ <strong>"도구" → "일상" + 인사이트 분리</strong><br/>
+      섹션 의미를 더 분명히. 인사이트가 빠져나가서 깔끔
+      <span class="change-pill pill-rename mt-1">RENAME</span>
+    </div>
+
+    <div class="absolute -right-4 top-[465px] translate-x-full annotation left">
+      ⑤ <strong>관리 섹션 빈도 순 재정렬</strong><br/>
+      트래픽 통계 → 저장소 정리 → 사용자 관리 (자주 쓰는 순)
+      <span class="change-pill pill-move mt-1">REORDER</span>
+    </div>
+
+    <div class="absolute -left-72 top-[120px] annotation right" style="width:240px">
+      ⑥ <strong>활성 표시 강화</strong><br/>
+      왼쪽에 accent 세로 바 4px. 폴더 깊이 들어가도 위치 인지 즉시
+      <span class="change-pill pill-add mt-1">VISUAL</span>
+    </div>
+
+    <div class="absolute -left-72 top-[295px] annotation right" style="width:240px">
+      ⑦ <strong>NEW 배지</strong><br/>
+      신기능 항목 옆에 7일간 배지 (localStorage로 사용자별 추적)
+      <span class="change-pill pill-add mt-1">DISCOVERY</span>
+    </div>
+
+    <div class="absolute -left-72 top-[543px] annotation right" style="width:240px">
+      ⑧ <strong>시스템 미니 위젯</strong><br/>
+      인코딩 큐·백업 상태·디스크 잔여 한 줄 요약. 상시 모니터링
+      <span class="change-pill pill-add mt-1">NEW</span>
+    </div>
+
+    <div class="absolute -left-72 top-[615px] annotation right" style="width:240px">
+      ⑨ <strong>프로필 클릭 → 드롭다운</strong><br/>
+      이메일 노출 + 클릭 시 메뉴 (내 박스 / 내 기록 / 설정 / 로그아웃)
+      <span class="change-pill pill-add mt-1">UX</span>
+    </div>
+  </section>
+</main>
+
+<!-- 프로필 드롭다운 미리보기 -->
+<section class="max-w-[1280px] mx-auto mt-16">
+  <h2 class="text-[16px] font-bold mb-2">프로필 드롭다운 디테일</h2>
+  <p class="text-[13px] text-[#5a6172] mb-4">하단 프로필 영역 클릭 시 펼쳐지는 메뉴.</p>
+  <div class="w-[240px] bg-[#f6f7f9] border border-[#e6e8ec] rounded-lg p-3 relative">
+    <div class="profile-dropdown" style="position:relative; bottom:auto; left:auto; right:auto;">
+      <a><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> 내 박스</a>
+      <a><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg> 내 기록</a>
+      <a><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> 환경설정</a>
+      <a><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> 도움말 / 단축키</a>
+      <hr/>
+      <a class="text-[#dc2626]"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> 로그아웃</a>
+    </div>
+  </div>
+</section>
+
+<!-- 모바일 헤더 비교 -->
+<section class="max-w-[1280px] mx-auto mt-12">
+  <h2 class="text-[16px] font-bold mb-2">모바일 상단 헤더</h2>
+  <p class="text-[13px] text-[#5a6172] mb-4">현재 위치 표시 부재 → breadcrumb 한 줄 추가.</p>
+  <div class="grid grid-cols-2 gap-12">
+    <div>
+      <div class="text-[11px] font-bold tracking-widest uppercase text-[#a4abb8] mb-3">Before</div>
+      <div class="mobile-frame">
+        <button class="p-1.5 rounded hover:bg-[#eef0f3]">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <span class="text-[15px] font-extrabold tracking-tight">vi<span class="text-[#6755ee]">.</span>box</span>
+      </div>
+    </div>
+    <div>
+      <div class="text-[11px] font-bold tracking-widest uppercase text-[#10b981] mb-3">After</div>
+      <div class="mobile-frame">
+        <button class="p-1.5 rounded hover:bg-[#eef0f3]">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div class="flex-1 min-w-0">
+          <div class="text-[10px] text-[#a4abb8] flex items-center gap-1 truncate">
+            공용 폴더 / 위드힘
+          </div>
+          <div class="text-[14px] font-semibold truncate">암선생_숏폼</div>
+        </div>
+        <button class="p-1.5 rounded text-[#7c8395] hover:bg-[#eef0f3]">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 변경 요약 표 -->
+<section class="max-w-[1280px] mx-auto mt-16">
+  <h2 class="text-[16px] font-bold mb-3">변경 요약</h2>
+  <div class="bg-white rounded-lg border border-[#e6e8ec] overflow-hidden">
+    <table class="w-full text-[13px]">
+      <thead class="bg-[#f6f7f9] text-[#5a6172] text-[11.5px] uppercase tracking-wider">
+        <tr>
+          <th class="text-left px-4 py-2.5 w-[60px]">#</th>
+          <th class="text-left px-4 py-2.5">변경</th>
+          <th class="text-left px-4 py-2.5 w-[120px]">유형</th>
+          <th class="text-left px-4 py-2.5 w-[100px]">예상 공수</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-[#f5f5f5]">
+        <tr><td class="px-4 py-2.5 mono text-[#a4abb8]">①</td><td class="px-4 py-2.5">"렌더링" → "공용 폴더"</td><td class="px-4 py-2.5"><span class="change-pill pill-rename">RENAME</span></td><td class="px-4 py-2.5 text-[#5a6172]">5분</td></tr>
+        <tr><td class="px-4 py-2.5 mono text-[#a4abb8]">②</td><td class="px-4 py-2.5">"인사이트" → "검수 통계", VIMO Box 섹션으로 이동</td><td class="px-4 py-2.5"><span class="change-pill pill-rename">RENAME</span> <span class="change-pill pill-move">MOVE</span></td><td class="px-4 py-2.5 text-[#5a6172]">5분</td></tr>
+        <tr><td class="px-4 py-2.5 mono text-[#a4abb8]">③</td><td class="px-4 py-2.5">"내 기록" Personal 섹션에 노출</td><td class="px-4 py-2.5"><span class="change-pill pill-add">ADD</span></td><td class="px-4 py-2.5 text-[#5a6172]">5분</td></tr>
+        <tr><td class="px-4 py-2.5 mono text-[#a4abb8]">④</td><td class="px-4 py-2.5">"도구" → "일상" 라벨 변경</td><td class="px-4 py-2.5"><span class="change-pill pill-rename">RENAME</span></td><td class="px-4 py-2.5 text-[#5a6172]">2분</td></tr>
+        <tr><td class="px-4 py-2.5 mono text-[#a4abb8]">⑤</td><td class="px-4 py-2.5">관리 섹션 빈도 순 재정렬</td><td class="px-4 py-2.5"><span class="change-pill pill-move">REORDER</span></td><td class="px-4 py-2.5 text-[#5a6172]">3분</td></tr>
+        <tr><td class="px-4 py-2.5 mono text-[#a4abb8]">⑥</td><td class="px-4 py-2.5">활성 항목 왼쪽 accent 세로 바</td><td class="px-4 py-2.5"><span class="change-pill pill-add">VISUAL</span></td><td class="px-4 py-2.5 text-[#5a6172]">10분</td></tr>
+        <tr><td class="px-4 py-2.5 mono text-[#a4abb8]">⑦</td><td class="px-4 py-2.5">NEW 배지 시스템 (localStorage 기반)</td><td class="px-4 py-2.5"><span class="change-pill pill-add">DISCOVERY</span></td><td class="px-4 py-2.5 text-[#5a6172]">0.5일</td></tr>
+        <tr><td class="px-4 py-2.5 mono text-[#a4abb8]">⑧</td><td class="px-4 py-2.5">시스템 미니 위젯 (인코딩·백업·디스크)</td><td class="px-4 py-2.5"><span class="change-pill pill-add">NEW</span></td><td class="px-4 py-2.5 text-[#5a6172]">1일</td></tr>
+        <tr><td class="px-4 py-2.5 mono text-[#a4abb8]">⑨</td><td class="px-4 py-2.5">프로필 영역 드롭다운 메뉴</td><td class="px-4 py-2.5"><span class="change-pill pill-add">UX</span></td><td class="px-4 py-2.5 text-[#5a6172]">0.5일</td></tr>
+        <tr class="bg-[#f9fafb]"><td class="px-4 py-2.5 mono text-[#a4abb8]">⑩</td><td class="px-4 py-2.5">모바일 헤더에 breadcrumb 추가</td><td class="px-4 py-2.5"><span class="change-pill pill-add">MOBILE</span></td><td class="px-4 py-2.5 text-[#5a6172]">0.3일</td></tr>
+      </tbody>
+      <tfoot class="bg-[#f6f7f9] font-semibold">
+        <tr>
+          <td colspan="3" class="px-4 py-2.5 text-right">합계</td>
+          <td class="px-4 py-2.5">~2.5일</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</section>
+
+<!-- 단계별 적용 추천 -->
+<section class="max-w-[1280px] mx-auto mt-12 mb-16">
+  <h2 class="text-[16px] font-bold mb-3">단계별 적용 추천</h2>
+  <div class="grid grid-cols-3 gap-4">
+    <div class="bg-white rounded-lg border border-[#e6e8ec] p-4">
+      <div class="text-[10.5px] font-bold tracking-widest uppercase text-[#10b981] mb-1">PHASE 1 · 즉시</div>
+      <div class="text-[13.5px] font-semibold mb-2">정보 구조 정리</div>
+      <ul class="text-[12.5px] text-[#5a6172] space-y-1 list-disc pl-4">
+        <li>① 렌더링 → 공용 폴더</li>
+        <li>② 인사이트 → 검수 통계</li>
+        <li>③ 내 기록 노출</li>
+        <li>④ 도구 → 일상</li>
+        <li>⑤ 관리 재정렬</li>
+        <li>⑥ 활성 accent 바</li>
+      </ul>
+      <div class="mt-3 text-[11px] text-[#7c8395]">≈ 30분 안에 끝, 즉시 체감</div>
+    </div>
+    <div class="bg-white rounded-lg border border-[#e6e8ec] p-4">
+      <div class="text-[10.5px] font-bold tracking-widest uppercase text-[#f59e0b] mb-1">PHASE 2 · 다음</div>
+      <div class="text-[13.5px] font-semibold mb-2">발견성·UX</div>
+      <ul class="text-[12.5px] text-[#5a6172] space-y-1 list-disc pl-4">
+        <li>⑦ NEW 배지 시스템</li>
+        <li>⑨ 프로필 드롭다운</li>
+      </ul>
+      <div class="mt-3 text-[11px] text-[#7c8395]">≈ 1일</div>
+    </div>
+    <div class="bg-white rounded-lg border border-[#e6e8ec] p-4">
+      <div class="text-[10.5px] font-bold tracking-widest uppercase text-[#6755ee] mb-1">PHASE 3 · 후속</div>
+      <div class="text-[13.5px] font-semibold mb-2">상시 운영 가시성</div>
+      <ul class="text-[12.5px] text-[#5a6172] space-y-1 list-disc pl-4">
+        <li>⑧ 시스템 미니 위젯</li>
+        <li>⑩ 모바일 breadcrumb</li>
+      </ul>
+      <div class="mt-3 text-[11px] text-[#7c8395]">≈ 1일</div>
+    </div>
+  </div>
+</section>
+
+<footer class="max-w-[1280px] mx-auto text-center text-[11px] text-[#a4abb8] py-6">
+  Vibox 사이드바 개선안 · 2026-04-26 · 시안 v1
+</footer>
+
+</body>
+</html>

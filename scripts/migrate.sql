@@ -1,5 +1,39 @@
 -- Vibox 스키마 마이그레이션 (멱등)
 -- 재실행해도 안전하도록 모든 DDL은 IF NOT EXISTS 사용
+-- 새 머신/DR 시 처음부터 실행해도 동작해야 함 (FK 의존성 순서 주의)
+
+-- 2026-05-02 추가: DR 안전성을 위해 base 테이블 (users, share_links) 명시적 정의
+-- 이전엔 lib/db/migrations.ts에서만 생성되어 fresh DB에서 이 파일 단독 실행 시 FK 깨짐.
+
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY,
+  username TEXT NOT NULL UNIQUE,
+  email TEXT,
+  name TEXT,
+  password_hash TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'member',  -- admin | member | partner
+  quota_gb INTEGER NOT NULL DEFAULT 100,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+
+CREATE TABLE IF NOT EXISTS share_links (
+  id TEXT PRIMARY KEY,
+  token TEXT NOT NULL UNIQUE,
+  file_path TEXT NOT NULL,
+  title TEXT,
+  paths TEXT,                               -- JSON array (다중 파일)
+  mode TEXT NOT NULL DEFAULT 'preview',     -- preview | full
+  allow_comments INTEGER NOT NULL DEFAULT 0,
+  allow_download INTEGER NOT NULL DEFAULT 1,
+  created_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  expires_at INTEGER,
+  password_hash TEXT,
+  download_count INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_share_links_token ON share_links(token);
+CREATE INDEX IF NOT EXISTS idx_share_links_created_by ON share_links(created_by);
 
 -- 2026-04-20: 휴지통 테이블
 CREATE TABLE IF NOT EXISTS trash_items (
@@ -131,3 +165,119 @@ CREATE INDEX IF NOT EXISTS idx_traffic_at ON traffic_log(at);
 CREATE INDEX IF NOT EXISTS idx_traffic_source ON traffic_log(source);
 CREATE INDEX IF NOT EXISTS idx_traffic_path ON traffic_log(path);
 CREATE INDEX IF NOT EXISTS idx_traffic_share ON traffic_log(share_token);
+
+-- 2026-04-25: HLS 인코딩 큐 + 자산 매핑 (Phase 1 — 스트리밍 최적화)
+-- encoding_jobs: ffmpeg HLS 변환 작업 큐 (max 2 동시, FIFO)
+CREATE TABLE IF NOT EXISTS encoding_jobs (
+  id TEXT PRIMARY KEY,
+  file_path TEXT NOT NULL,
+  fingerprint TEXT,
+  status TEXT NOT NULL DEFAULT 'queued',  -- queued | running | done | failed | cancelled
+  progress INTEGER NOT NULL DEFAULT 0,    -- 0~100
+  enqueued_at INTEGER NOT NULL,
+  started_at INTEGER,
+  finished_at INTEGER,
+  error TEXT,
+  duration_sec INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_encoding_status ON encoding_jobs(status);
+CREATE INDEX IF NOT EXISTS idx_encoding_file ON encoding_jobs(file_path);
+ALTER TABLE encoding_jobs ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0;
+
+-- hls_assets: 변환 완료된 HLS 자산 레지스트리 (file_path → fingerprint)
+CREATE TABLE IF NOT EXISTS hls_assets (
+  fingerprint TEXT PRIMARY KEY,
+  file_path TEXT NOT NULL UNIQUE,
+  segment_count INTEGER NOT NULL,
+  total_bytes INTEGER NOT NULL,
+  duration_sec INTEGER NOT NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_hls_file ON hls_assets(file_path);
+
+-- ─── 클라이언트 (외부 광고주·브랜드) ───
+CREATE TABLE IF NOT EXISTS clients (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  slug TEXT NOT NULL UNIQUE,
+  contact_email TEXT,
+  notes TEXT,
+  active INTEGER NOT NULL DEFAULT 1,
+  created_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_clients_slug ON clients(slug);
+CREATE INDEX IF NOT EXISTS idx_clients_active ON clients(active);
+
+-- M:N 매핑 (한 영상 ↔ 여러 클라)
+CREATE TABLE IF NOT EXISTS client_videos (
+  id TEXT PRIMARY KEY,
+  client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  file_path TEXT NOT NULL,
+  added_at INTEGER NOT NULL,
+  added_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'draft',  -- draft | sent | approved | archived
+  display_order INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_client_videos_client ON client_videos(client_id);
+CREATE INDEX IF NOT EXISTS idx_client_videos_path ON client_videos(file_path);
+-- 동일 (client_id, file_path) 중복 방지
+CREATE UNIQUE INDEX IF NOT EXISTS idx_client_videos_unique ON client_videos(client_id, file_path);
+
+CREATE TABLE IF NOT EXISTS client_share_tokens (
+  id TEXT PRIMARY KEY,
+  client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  token TEXT NOT NULL UNIQUE,
+  allow_comments INTEGER NOT NULL DEFAULT 1,
+  allow_download INTEGER NOT NULL DEFAULT 0,
+  expires_at INTEGER,
+  revoked_at INTEGER,
+  created_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_client_share_tokens_client ON client_share_tokens(client_id);
+CREATE INDEX IF NOT EXISTS idx_client_share_tokens_token ON client_share_tokens(token);
+
+-- 2026-04-26: 비모 ERP 클라 import 매핑 (erp_client_id)
+ALTER TABLE clients ADD COLUMN erp_client_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_clients_erp_id ON clients(erp_client_id);
+
+-- 2026-05-02: 외부 API 토큰 (Claude → 비박스 노트 저장 등)
+CREATE TABLE IF NOT EXISTS api_tokens (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  token_hash TEXT NOT NULL UNIQUE,
+  prefix TEXT NOT NULL,
+  scopes TEXT NOT NULL DEFAULT '[]',
+  created_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at INTEGER NOT NULL,
+  last_used_at INTEGER,
+  revoked_at INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_api_tokens_hash ON api_tokens(token_hash);
+CREATE INDEX IF NOT EXISTS idx_api_tokens_created_by ON api_tokens(created_by);
+
+-- 2026-05-02: 공유 링크 시청 트래킹 (admin only intel)
+CREATE TABLE IF NOT EXISTS share_views (
+  id TEXT PRIMARY KEY,
+  share_token TEXT NOT NULL,
+  file_path TEXT NOT NULL,
+  visitor_id TEXT NOT NULL,
+  ip TEXT,
+  user_agent TEXT,
+  opened_at INTEGER NOT NULL,
+  last_event_at INTEGER NOT NULL,
+  max_position_sec REAL NOT NULL DEFAULT 0,
+  total_watch_sec REAL NOT NULL DEFAULT 0,
+  duration_sec REAL,
+  completed INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_share_views_token ON share_views(share_token);
+CREATE INDEX IF NOT EXISTS idx_share_views_token_path ON share_views(share_token, file_path);
+CREATE INDEX IF NOT EXISTS idx_share_views_last_event ON share_views(last_event_at);
+
+-- 2026-05-02: (token, visitor, path) 동시 ping race로 중복 row 생성 방지
+-- 기존 idx_share_views_visitor (non-unique) 대체. drizzle insert에 onConflictDoUpdate 사용.
+DROP INDEX IF EXISTS idx_share_views_visitor;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_share_views_visitor_unique
+  ON share_views(share_token, visitor_id, file_path);
