@@ -288,3 +288,35 @@ ALTER TABLE share_links ADD COLUMN revoked_at INTEGER;
 -- 2026-05-24: users.deactivated_at — admin 삭제를 soft delete로 변경
 -- (이전 hard delete는 comments/trash/api_tokens 등 ON DELETE CASCADE로 모든 작업 이력 손실)
 ALTER TABLE users ADD COLUMN deactivated_at INTEGER;
+
+-- 2026-05-24: vinote (글쓰기 컴패니언) 인덱스·이력 테이블
+-- 파일(Notes/*.md)이 truth, DB는 검색·이력 보조
+CREATE TABLE IF NOT EXISTS note_index (
+  path        TEXT PRIMARY KEY,
+  title       TEXT,
+  excerpt     TEXT,
+  tags        TEXT,             -- JSON array
+  folder      TEXT,
+  word_count  INTEGER,
+  modified_at INTEGER NOT NULL, -- mtime ms (ETag 용)
+  indexed_at  INTEGER NOT NULL,
+  starred     INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_note_index_modified ON note_index(modified_at DESC);
+CREATE INDEX IF NOT EXISTS idx_note_index_folder   ON note_index(folder);
+
+CREATE VIRTUAL TABLE IF NOT EXISTS note_fts USING fts5(
+  path UNINDEXED, title, body, content=''
+);
+
+CREATE TABLE IF NOT EXISTS note_versions (
+  id        TEXT PRIMARY KEY,
+  path      TEXT NOT NULL,
+  body      TEXT NOT NULL,
+  saved_at  INTEGER NOT NULL,
+  saved_by  TEXT,
+  reason    TEXT,               -- autosave | manual | conflict | restore
+  bytes     INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_note_versions_path_saved
+  ON note_versions(path, saved_at DESC);

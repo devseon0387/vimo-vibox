@@ -29,6 +29,7 @@ const SAME_ZONE_HOSTNAMES = new Set([
   "u3.vibox.cloud",
   "u4.vibox.cloud",
   "app.vibox.cloud",
+  "note.vibox.cloud", // vinote 컴패니언
 ]);
 
 function isSameZoneOrigin(origin: string): boolean {

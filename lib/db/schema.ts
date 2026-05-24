@@ -317,3 +317,32 @@ export type TrashItem = typeof trashItems.$inferSelect;
 export type NewTrashItem = typeof trashItems.$inferInsert;
 export type ScanHistory = typeof scanHistory.$inferSelect;
 export type NewScanHistory = typeof scanHistory.$inferInsert;
+
+// ───── vinote (글쓰기 컴패니언) — 파일이 truth, DB는 인덱스·이력 ─────
+export const noteIndex = sqliteTable("note_index", {
+  path: text("path").primaryKey(),           // '/notes/일기/2026-05-24.md'
+  title: text("title"),
+  excerpt: text("excerpt"),
+  tags: text("tags"),                         // JSON array
+  folder: text("folder"),
+  wordCount: integer("word_count"),
+  modifiedAt: integer("modified_at").notNull(), // mtime ms — ETag
+  indexedAt: integer("indexed_at").notNull(),
+  starred: integer("starred", { mode: "boolean" }).notNull().default(false),
+});
+export type NoteIndex = typeof noteIndex.$inferSelect;
+export type NewNoteIndex = typeof noteIndex.$inferInsert;
+
+export const noteVersions = sqliteTable("note_versions", {
+  id: text("id").primaryKey(),
+  path: text("path").notNull(),
+  body: text("body").notNull(),
+  savedAt: integer("saved_at").notNull(),
+  savedBy: text("saved_by"),
+  reason: text("reason"),                     // autosave | manual | conflict | restore
+  bytes: integer("bytes"),
+});
+export type NoteVersion = typeof noteVersions.$inferSelect;
+export type NewNoteVersion = typeof noteVersions.$inferInsert;
+
+// note_fts는 FTS5 가상 테이블이라 drizzle table 정의 없음. 직접 SQL로 INSERT/SELECT.
