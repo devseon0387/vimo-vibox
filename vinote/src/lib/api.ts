@@ -141,6 +141,60 @@ export async function searchNotes(q: string, limit = 20): Promise<SearchHit[]> {
   return r.data?.hits ?? [];
 }
 
+export async function runAi(prompt: string, system?: string): Promise<string> {
+  const r = await request<{ text: string }>(`/api/notes/v2/ai`, {
+    method: "POST",
+    body: JSON.stringify({ prompt, system }),
+  });
+  if (r.error) throw new Error(r.error);
+  return r.data?.text ?? "";
+}
+
+export type NoteVersion = {
+  id: string;
+  savedAt: number;
+  savedBy: string | null;
+  reason: string | null;
+  bytes: number | null;
+};
+
+export async function listVersions(path: string, limit = 50): Promise<NoteVersion[]> {
+  const qs = new URLSearchParams({ path, limit: String(limit) });
+  const r = await request<{ versions: NoteVersion[] }>(`/api/notes/v2/versions?${qs}`);
+  return r.data?.versions ?? [];
+}
+
+export async function getVersion(id: string): Promise<
+  | { id: string; path: string; body: string; savedAt: number; reason: string | null }
+  | null
+> {
+  const qs = new URLSearchParams({ id });
+  const r = await request<{ id: string; path: string; body: string; savedAt: number; reason: string | null }>(
+    `/api/notes/v2/version?${qs}`,
+  );
+  return r.data;
+}
+
+export type Suggestion = { path: string; title: string };
+
+export async function suggest(q: string, limit = 10): Promise<Suggestion[]> {
+  const qs = new URLSearchParams({ q, limit: String(limit) });
+  const r = await request<{ suggestions: Suggestion[] }>(`/api/notes/v2/suggest?${qs}`);
+  return r.data?.suggestions ?? [];
+}
+
+export async function restoreVersion(
+  path: string,
+  versionId: string,
+): Promise<{ ok: boolean; mtimeMs?: number; error?: string }> {
+  const r = await request<{ ok: boolean; mtimeMs: number }>(`/api/notes/v2/restore`, {
+    method: "POST",
+    body: JSON.stringify({ path, versionId }),
+  });
+  if (r.error) return { ok: false, error: r.error };
+  return { ok: true, mtimeMs: r.data?.mtimeMs };
+}
+
 export function vibxLoginUrl(): string {
   return `${API_BASE}/login`;
 }

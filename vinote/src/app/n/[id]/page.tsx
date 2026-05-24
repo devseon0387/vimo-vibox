@@ -3,9 +3,12 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { use } from "react";
-import { ArrowLeft, Check, Star, AlertCircle } from "lucide-react";
+import type { Editor as TiptapEditor } from "@tiptap/react";
+import { ArrowLeft, Check, Star, AlertCircle, Sparkles, History } from "lucide-react";
 import { getNote, saveNote, starNote, type NoteDetail, type SaveResult } from "@/lib/api";
-import { Editor } from "@/components/Editor";
+import { Editor, getEditorMarkdown } from "@/components/Editor";
+import { AiMenu, ProposalCard, PolishDiff, type Proposal, type PolishPreview } from "@/components/AiMenu";
+import { WikiLinkSuggest } from "@/components/WikiLinkSuggest";
 
 const AUTOSAVE_DEBOUNCE_MS = 600;
 
@@ -27,6 +30,13 @@ export default function NoteEditPage({ params }: { params: Promise<{ id: string 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingBody = useRef<string | null>(null);
   const pendingTitle = useRef<string | null>(null);
+  const editorRef = useRef<TiptapEditor | null>(null);
+  const [editorInstance, setEditorInstance] = useState<TiptapEditor | null>(null);
+
+  // AI 관련 상태
+  const [aiMenuOpen, setAiMenuOpen] = useState(false);
+  const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [polishPreview, setPolishPreview] = useState<PolishPreview | null>(null);
 
   // 초기 로드
   useEffect(() => {
@@ -122,6 +132,40 @@ export default function NoteEditPage({ params }: { params: Promise<{ id: string 
     scheduleSave();
   }
 
+  // 현재 selection 추출
+  function getSelectionCtx(): { start: number; end: number; text: string } | null {
+    const editor = editorRef.current;
+    if (!editor) return null;
+    const { from, to } = editor.state.selection;
+    if (from === to) return null;
+    const text = editor.state.doc.textBetween(from, to, "\n").trim();
+    if (!text) return null;
+    return { start: from, end: to, text };
+  }
+
+  function applyProposalToEnd(p: Proposal) {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.chain().focus("end").insertContent("\n\n" + p.text).run();
+    setProposals((arr) => arr.filter((x) => x.id !== p.id));
+  }
+
+  function dismissProposal(id: string) {
+    setProposals((arr) => arr.filter((x) => x.id !== id));
+  }
+
+  function applyPolish() {
+    if (!polishPreview) return;
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor
+      .chain()
+      .focus()
+      .insertContentAt({ from: polishPreview.selStart, to: polishPreview.selEnd }, polishPreview.suggested)
+      .run();
+    setPolishPreview(null);
+  }
+
   function forceSave() {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     void performSave(true);
@@ -177,6 +221,20 @@ export default function NoteEditPage({ params }: { params: Promise<{ id: string 
             <ArrowLeft size={14} /> 홈
           </Link>
           <div className="flex items-center gap-3">
+            <Link
+              href={`/history/${encodeURIComponent(notePath)}`}
+              className="inline-flex items-center gap-1 rounded px-2 py-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+              title="버전 이력"
+            >
+              <History size={14} /> 이력
+            </Link>
+            <button
+              onClick={() => setAiMenuOpen(true)}
+              className="inline-flex items-center gap-1 rounded px-2 py-1 text-zinc-500 hover:bg-zinc-100 hover:text-violet-700"
+              title="AI 어시스트 (⌘/)"
+            >
+              <Sparkles size={14} /> AI
+            </button>
             <button
               onClick={toggleStar}
               className={`inline-flex items-center gap-1 rounded px-2 py-1 ${
@@ -198,14 +256,46 @@ export default function NoteEditPage({ params }: { params: Promise<{ id: string 
         className="bg-transparent py-4 text-3xl font-semibold tracking-tight outline-none placeholder:text-zinc-300"
       />
 
+      {/* AI 제안 카드 + 다듬기 모달 */}
+      {proposals.map((p) => (
+        <ProposalCard
+          key={p.id}
+          proposal={p}
+          onInsert={() => applyProposalToEnd(p)}
+          onDismiss={() => dismissProposal(p.id)}
+        />
+      ))}
+      {polishPreview && (
+        <PolishDiff preview={polishPreview} onApply={applyPolish} onCancel={() => setPolishPreview(null)} />
+      )}
+
       <div className="flex-1 pb-32">
         <Editor
           initialMarkdown={body}
           onChange={onBodyChange}
           onSaveShortcut={forceSave}
-          placeholder="여기서부터 글을 쓰세요. ⌘+. 으로 집중 모드."
+          onAiShortcut={() => setAiMenuOpen(true)}
+          onMount={(ed) => {
+            editorRef.current = ed;
+            setEditorInstance(ed);
+            const current = getEditorMarkdown(ed);
+            if (body && body !== current) {
+              ed.commands.setContent(body, { emitUpdate: false });
+            }
+          }}
+          placeholder="여기서부터 글을 쓰세요. ⌘+. 집중 모드 · ⌘+/ AI."
         />
       </div>
+
+      <AiMenu
+        open={aiMenuOpen}
+        onClose={() => setAiMenuOpen(false)}
+        ctx={{ body, selection: getSelectionCtx() }}
+        onProposal={(p) => setProposals((arr) => [p, ...arr])}
+        onPolish={setPolishPreview}
+      />
+
+      <WikiLinkSuggest editor={editorInstance} />
 
       {conflictBody !== null && (
         <ConflictModal
