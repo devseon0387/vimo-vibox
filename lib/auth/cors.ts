@@ -35,6 +35,10 @@ const SAME_ZONE_HOSTNAMES = new Set([
 function isSameZoneOrigin(origin: string): boolean {
   try {
     const url = new URL(origin);
+    // dev: localhost는 production 외 환경에서만 자동 허용 (vinote 등 로컬 컴패니언)
+    if (process.env.NODE_ENV !== "production") {
+      if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return true;
+    }
     if (url.protocol !== "https:") return false;
     return SAME_ZONE_HOSTNAMES.has(url.hostname);
   } catch {
