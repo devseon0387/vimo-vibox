@@ -23,7 +23,7 @@
 ## 2. 아키텍처 한 줄
 
 ```
-note.vibox.cloud (port 4300)
+note.vibox.cloud (port 4500)
     │
     ├─ 자체 Next.js 16 앱 (apps/vinote 또는 vibox 내 vinote/)
     ├─ 백엔드 = vibox API 호출 (cross-subdomain, cookie 공유)
@@ -179,8 +179,8 @@ CREATE INDEX IF NOT EXISTS idx_note_versions_path_saved
 
 | 항목 | 설정 |
 |---|---|
-| LaunchDaemon | `cloud.vinote.app` (port 4300) |
-| Caddy | `note.vibox.cloud → :4300` |
+| LaunchDaemon | `cloud.vinote.app` (port 4500) |
+| Caddy | `note.vibox.cloud → :4500` |
 | Litestream | vibox DB 잡 그대로 (별도 없음) |
 | 빌드 | vibox deploy 스크립트에 vinote 빌드 단계 추가 |
 | 리포 | vibox 모노레포 내 `vinote/` 서브디렉 |
