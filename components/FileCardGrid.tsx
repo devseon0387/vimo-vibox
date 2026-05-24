@@ -752,7 +752,7 @@ export function FileCardGrid({
     <>
       <div
         ref={gridRef}
-        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+        className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3 md:gap-4"
       >
         {entries.map((entry, idx) => (
           <Card

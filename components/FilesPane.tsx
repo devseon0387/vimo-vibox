@@ -264,21 +264,22 @@ export function FilesPane({
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3 mb-5">
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 mb-4 sm:mb-5">
         <ActionBar
           currentPath={currentPath}
           onUpload={doUpload}
           uploading={uploadingHere}
           disableNewFolder={isRenderingRoot}
         />
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 ml-auto">
           <SortDropdown
             config={sortConfig}
             onChangeKey={setSortKey}
             onToggleOrder={toggleOrder}
             onToggleFoldersFirst={setFoldersFirst}
           />
-          <div className="flex items-center rounded-md border border-border bg-white p-0.5">
+          {/* view toggle은 모바일에선 숨김 (어차피 카드 강제) */}
+          <div className="hidden md:flex items-center rounded-md border border-border bg-white p-0.5">
             <button
               onClick={() => setViewPersist("list")}
               title="리스트 보기"
@@ -312,31 +313,31 @@ export function FilesPane({
         onOptimisticUnhide={unhideOptimistic}
       />
 
-      {view === "grid" ? (
-        <FileCardGrid
-          entries={sortedEntries}
-          basePath={currentPath}
-          session={session}
-          stats={stats}
-          selectedPaths={selectedPaths}
-          onToggleSelect={toggleSelect}
-          onOptimisticHide={hideOptimistic}
-          onOptimisticUnhide={unhideOptimistic}
-          onEmptyUploadClick={onEmptyUploadClick}
-        />
-      ) : (
-        <FileTable
-          entries={sortedEntries}
-          basePath={currentPath}
-          session={session}
-          stats={stats}
-          selectedPaths={selectedPaths}
-          onToggleSelect={toggleSelect}
-          onOptimisticHide={hideOptimistic}
-          onOptimisticUnhide={unhideOptimistic}
-          onEmptyUploadClick={onEmptyUploadClick}
-        />
-      )}
+      {(() => {
+        const fileViewProps = {
+          entries: sortedEntries,
+          basePath: currentPath,
+          session,
+          stats,
+          selectedPaths,
+          onToggleSelect: toggleSelect,
+          onOptimisticHide: hideOptimistic,
+          onOptimisticUnhide: unhideOptimistic,
+          onEmptyUploadClick,
+        };
+        // 모바일(<md)에선 view 무관 카드 그리드 강제 (표는 좁은 화면에서 가로 스크롤 강제 → UX 나쁨)
+        if (view === "grid") return <FileCardGrid {...fileViewProps} />;
+        return (
+          <>
+            <div className="md:hidden">
+              <FileCardGrid {...fileViewProps} />
+            </div>
+            <div className="hidden md:block">
+              <FileTable {...fileViewProps} />
+            </div>
+          </>
+        );
+      })()}
       {/* EmptyState dropzone 클릭 시 열리는 hidden picker */}
       <input
         ref={emptyUploadInputRef}
