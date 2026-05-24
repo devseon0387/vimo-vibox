@@ -1,0 +1,23 @@
+{
+  "name": "비박스",
+  "short_name": "비박스",
+  "description": "VIMO 내부 팀 파일 공유",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#0ea5e9",
+  "orientation": "any",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    { "name": "업로드", "url": "/vimo-box?upload=1", "short_name": "업로드" },
+    { "name": "받은편지함", "url": "/inbox", "short_name": "받은편지함" }
+  ]
+}
