@@ -1,0 +1,19 @@
+{
+  "name": "비노트",
+  "short_name": "비노트",
+  "description": "글쓰기 전용 컴패니언",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafaf8",
+  "theme_color": "#fafaf8",
+  "orientation": "any",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ]
+}
