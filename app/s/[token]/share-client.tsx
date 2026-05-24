@@ -172,10 +172,11 @@ export function SharePageClient({
           {allowDownload && (
             <button
               onClick={download}
-              className="shrink-0 bg-slate-900 text-white hover:bg-slate-700 px-3 py-1.5 rounded-md text-[12px] font-semibold inline-flex items-center gap-1.5"
+              className="shrink-0 bg-slate-900 text-white hover:bg-slate-700 px-2.5 sm:px-3 py-1.5 rounded-md text-[12px] font-semibold inline-flex items-center gap-1.5 min-h-[36px]"
+              aria-label="다운로드"
             >
-              <Download size={13} strokeWidth={2.3} />
-              다운로드
+              <Download size={14} strokeWidth={2.3} />
+              <span className="hidden sm:inline">다운로드</span>
             </button>
           )}
         </div>

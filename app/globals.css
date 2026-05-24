@@ -286,3 +286,20 @@ body {
 .naver-content.naver-mobile .ProseMirror h3 {
   font-size: 16px;
 }
+
+/* ───── 모바일 터치 응답성 (PWA·갤탭 사용성) ───── */
+/* 이중 탭 줌 방지 → 첫 탭 즉시 반응 */
+button, a, [role="button"], [role="tab"], summary {
+  touch-action: manipulation;
+}
+/* 터치 시 회색 highlight 제거 (디자인 통일) */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+/* 입력 필드 iOS auto-zoom 방지 — font-size 16px 이상 필수 */
+@media (max-width: 767px) {
+  input[type="text"], input[type="email"], input[type="password"],
+  input[type="search"], input[type="tel"], input[type="url"], textarea {
+    font-size: 16px;
+  }
+}
