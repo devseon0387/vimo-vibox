@@ -31,6 +31,7 @@ export default async function SharePage({
     .limit(1);
   const link = rows[0];
   if (!link) notFound();
+  if (link.revokedAt) notFound();
 
   const expired = !!link.expiresAt && link.expiresAt.getTime() < Date.now();
 

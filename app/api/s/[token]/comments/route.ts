@@ -22,6 +22,7 @@ async function verifyShare(
     .limit(1);
   const link = rows[0];
   if (!link) return { ok: false, status: 404, error: "not found" };
+  if (link.revokedAt) return { ok: false, status: 410, error: "revoked" };
   if (link.expiresAt && link.expiresAt.getTime() < Date.now()) {
     return { ok: false, status: 410, error: "expired" };
   }

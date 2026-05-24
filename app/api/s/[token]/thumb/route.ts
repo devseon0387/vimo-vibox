@@ -40,6 +40,7 @@ export async function GET(
     .limit(1);
   const link = rows[0];
   if (!link) return new Response("not found", { status: 404 });
+  if (link.revokedAt) return new Response("revoked", { status: 410 });
   if (link.expiresAt && link.expiresAt.getTime() < Date.now()) {
     return new Response("expired", { status: 410 });
   }

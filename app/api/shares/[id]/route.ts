@@ -6,7 +6,7 @@ import { getCurrentSession } from "@/lib/auth/session";
 import { canAccessFile } from "@/lib/auth/access";
 import { statPath } from "@/lib/fs/storage";
 
-// DELETE /api/shares/[id]  → 내 공유 링크 삭제 (취소)
+// DELETE /api/shares/[id]  → 내 공유 링크 리보크 (soft delete — audit 추적용으로 row 유지)
 export async function DELETE(
   _req: Request,
   ctx: { params: Promise<{ id: string }> },
@@ -15,9 +15,15 @@ export async function DELETE(
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await ctx.params;
 
+  const isAdmin = session.role === "admin";
+  const where = isAdmin
+    ? eq(shareLinks.id, id)
+    : and(eq(shareLinks.id, id), eq(shareLinks.createdBy, session.sub));
+
   await db
-    .delete(shareLinks)
-    .where(and(eq(shareLinks.id, id), eq(shareLinks.createdBy, session.sub)));
+    .update(shareLinks)
+    .set({ revokedAt: new Date() })
+    .where(where);
 
   return NextResponse.json({ ok: true });
 }

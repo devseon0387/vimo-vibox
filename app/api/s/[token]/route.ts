@@ -8,7 +8,11 @@ import { shareLinks } from "@/lib/db/schema";
 import { resolveSafePath, statPath } from "@/lib/fs/storage";
 import { streamWithTrafficLog } from "@/lib/traffic";
 import { resolveAllowedPaths } from "@/lib/share/paths";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import mime from "../../download/mime";
+
+// timing 균일화용 더미 hash (bcrypt cost 10) — 토큰 missing / 비번 틀림 응답시간 평준화
+const DUMMY_BCRYPT_HASH = "$2a$10$abcdefghijklmnopqrstuuV1cKQjZ7ZSf6N3D8XWvLpVqVqJxOAaW";
 
 // GET /api/s/[token]?password=xxx  → 공개 다운로드 (인증 없음)
 export async function GET(
@@ -19,10 +23,27 @@ export async function GET(
   const url = new URL(req.url);
   const password = url.searchParams.get("password") ?? "";
 
+  // IP 기반 rate limit: 토큰 brute force 방어
+  const ip = getClientIp(req);
+  const rl = rateLimit(`share:${ip}`, { max: 60, windowMs: 60_000 });
+  if (!rl.ok) {
+    return new Response("rate limited", {
+      status: 429,
+      headers: { "Retry-After": String(rl.retryAfterSec) },
+    });
+  }
+
   const rows = await db.select().from(shareLinks).where(eq(shareLinks.token, token)).limit(1);
   const link = rows[0];
-  if (!link) return new Response("not found", { status: 404 });
+  if (!link) {
+    // timing 균일화 (enumeration 차단)
+    await bcrypt.compare(password || "x", DUMMY_BCRYPT_HASH).catch(() => {});
+    return new Response("not found", { status: 404 });
+  }
 
+  if (link.revokedAt) {
+    return new Response("revoked", { status: 410 });
+  }
   if (link.expiresAt && link.expiresAt.getTime() < Date.now()) {
     return new Response("expired", { status: 410 });
   }
@@ -30,6 +51,9 @@ export async function GET(
     if (!password) return new Response("password required", { status: 401 });
     const ok = await bcrypt.compare(password, link.passwordHash);
     if (!ok) return new Response("wrong password", { status: 401 });
+  } else {
+    // 비번 없는 링크라도 timing 일정하게
+    await bcrypt.compare(password || "x", DUMMY_BCRYPT_HASH).catch(() => {});
   }
 
   // 멀티 파일 지원: ?p=/foo.mp4 로 특정 파일 선택 가능
@@ -70,9 +94,9 @@ export async function GET(
   const encodedName = encodeURIComponent(filename);
   const contentType = mime(filename);
   const disposition = isDownload ? "attachment" : "inline";
-  // 공유 링크 = 토큰 아는 사람 접근 허용 → CF 엣지 캐시 가능 (public)
-  // 같은 영상 재시청 시 터널 트래픽 0. 비번 기능 제거됐고 토큰이 128비트라 URL 자체가 접근 제어.
-  const cacheControl = "public, max-age=3600";
+  // private 캐시 (브라우저만, CF 엣지는 안 함) — 리보크/만료 즉시 반영 위함.
+  // 같은 브라우저 재시청 시 304 또는 disk cache 사용.
+  const cacheControl = "private, max-age=300, must-revalidate";
 
   const range = req.headers.get("range");
 
@@ -146,9 +170,17 @@ export async function HEAD(
   const url = new URL(req.url);
   const password = url.searchParams.get("password") ?? "";
 
+  const ip = getClientIp(req);
+  const rl = rateLimit(`share:${ip}`, { max: 60, windowMs: 60_000 });
+  if (!rl.ok) return new Response(null, { status: 429 });
+
   const rows = await db.select().from(shareLinks).where(eq(shareLinks.token, token)).limit(1);
   const link = rows[0];
-  if (!link) return new Response(null, { status: 404 });
+  if (!link) {
+    await bcrypt.compare(password || "x", DUMMY_BCRYPT_HASH).catch(() => {});
+    return new Response(null, { status: 404 });
+  }
+  if (link.revokedAt) return new Response(null, { status: 410 });
   if (link.expiresAt && link.expiresAt.getTime() < Date.now()) {
     return new Response(null, { status: 410 });
   }
@@ -156,6 +188,8 @@ export async function HEAD(
     if (!password) return new Response(null, { status: 401 });
     const ok = await bcrypt.compare(password, link.passwordHash);
     if (!ok) return new Response(null, { status: 401 });
+  } else {
+    await bcrypt.compare(password || "x", DUMMY_BCRYPT_HASH).catch(() => {});
   }
   return new Response(null, { status: 200 });
 }

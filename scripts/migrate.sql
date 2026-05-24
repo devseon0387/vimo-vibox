@@ -281,3 +281,6 @@ CREATE INDEX IF NOT EXISTS idx_share_views_last_event ON share_views(last_event_
 DROP INDEX IF EXISTS idx_share_views_visitor;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_share_views_visitor_unique
   ON share_views(share_token, visitor_id, file_path);
+
+-- 2026-05-24: share_links.revoked_at — soft delete + CF 캐시 후에도 즉시 무효화 검증
+ALTER TABLE share_links ADD COLUMN revoked_at INTEGER;

@@ -9,7 +9,7 @@ import {
   shareLinks,
   trafficLog,
 } from "@/lib/db/schema";
-import { getStorageRoot } from "@/lib/fs/storage";
+import { getStorageRoot, getZoneRoot } from "@/lib/fs/storage";
 import { thumbHash } from "@/lib/fs/thumbnail";
 
 const CHUNK_STALE_HOURS = 24;
@@ -37,8 +37,8 @@ export type ReconcileReport = {
   liveFileCount: number;
 };
 
-// SSD에 실제 존재하는 모든 파일의 상대 경로를 재귀 수집 (dot 디렉터리 제외)
-async function collectLiveFiles(root: string): Promise<string[]> {
+// 단일 디렉터리 트리에서 파일 상대 경로를 prefix 붙여 수집
+async function walkZone(absRoot: string, urlPrefix: string): Promise<string[]> {
   const result: string[] = [];
   async function walk(abs: string, rel: string) {
     let entries;
@@ -50,16 +50,27 @@ async function collectLiveFiles(root: string): Promise<string[]> {
     for (const e of entries) {
       if (e.name.startsWith(".")) continue;
       const childAbs = path.join(abs, e.name);
-      const childRel = rel === "/" ? "/" + e.name : rel + "/" + e.name;
+      const childRel = rel === "" ? "/" + e.name : rel + "/" + e.name;
       if (e.isDirectory()) {
         await walk(childAbs, childRel);
       } else if (e.isFile()) {
-        result.push(childRel);
+        result.push(urlPrefix + childRel);
       }
     }
   }
-  await walk(root, "/");
+  await walk(absRoot, "");
   return result;
+}
+
+// SSD에 실제 존재하는 모든 파일을 3 zone (rendering/library/personal) 통합 수집.
+// URL 표기 그대로 (rendering="/foo.mp4", library="/library/...", personal="/personal/...")
+async function collectLiveFiles(): Promise<string[]> {
+  const [rendering, library, personal] = await Promise.all([
+    walkZone(getZoneRoot("rendering"), ""),
+    walkZone(getZoneRoot("library"), "/library"),
+    walkZone(getZoneRoot("personal"), "/personal"),
+  ]);
+  return [...rendering, ...library, ...personal];
 }
 
 async function dirSize(abs: string): Promise<{ bytes: number; files: number }> {
@@ -104,7 +115,7 @@ export async function runReconcile(opts: {
   apply: boolean;
 }): Promise<ReconcileReport> {
   const root = getStorageRoot();
-  const liveFiles = await collectLiveFiles(root);
+  const liveFiles = await collectLiveFiles();
   const liveSet = new Set(liveFiles);
   const liveHashSet = new Set(liveFiles.map((p) => thumbHash(p)));
 

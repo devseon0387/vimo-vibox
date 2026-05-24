@@ -19,11 +19,18 @@ export function isAllowedOrigin(origin: string | null): boolean {
 }
 
 /**
- * 업로드 샤딩(u1/u2.vibox.cloud)에서 같은 zone 의 subdomain 간 호출이
+ * 업로드 샤딩(u1/u2.vibox.cloud[:port])에서 같은 zone 의 subdomain 간 호출이
  * CORS 통과하도록 *.vibox.cloud 를 자동 허용. ERP 화이트리스트와는 별개.
+ * 비표준 포트(8443/18443) 직결 업로드 분배도 허용.
  */
 function isSameZoneOrigin(origin: string): boolean {
-  return /^https:\/\/(?:[a-z0-9-]+\.)*vibox\.cloud$/i.test(origin);
+  try {
+    const url = new URL(origin);
+    if (url.protocol !== "https:") return false;
+    return url.hostname === "vibox.cloud" || url.hostname.endsWith(".vibox.cloud");
+  } catch {
+    return false;
+  }
 }
 
 export function corsHeaders(origin: string | null): Record<string, string> {

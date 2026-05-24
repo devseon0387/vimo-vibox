@@ -34,6 +34,7 @@ export const shareLinks = sqliteTable("share_links", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   expiresAt: integer("expires_at", { mode: "timestamp_ms" }),
+  revokedAt: integer("revoked_at", { mode: "timestamp_ms" }),
   passwordHash: text("password_hash"),
   downloadCount: integer("download_count").notNull().default(0),
   createdAt: integer("created_at", { mode: "timestamp_ms" })

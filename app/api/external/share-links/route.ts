@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
     allowComments = true,
     allowDownload = true,
     mode = "full",
+    expiresInDays,
   } = body as {
     episodeId?: string;
     paths?: string[];
@@ -62,21 +63,51 @@ export async function POST(req: NextRequest) {
     allowComments?: boolean;
     allowDownload?: boolean;
     mode?: "preview" | "full";
+    expiresInDays?: number;
   };
 
   if (mode !== "preview" && mode !== "full") {
     return Response.json({ error: "invalid mode" }, { status: 400, headers: cors });
   }
 
-  // paths 결정: explicitPaths 우선, 없으면 episodeId로 fileUploads 조회
-  let paths: string[] = Array.isArray(explicitPaths) ? explicitPaths.filter((p) => typeof p === "string") : [];
+  // 강제 만료: 기본 30일, 최대 365일. null/0 거부.
+  const MAX_DAYS = 365;
+  const DEFAULT_DAYS = 30;
+  const days = Number.isFinite(expiresInDays) && expiresInDays! > 0
+    ? Math.min(MAX_DAYS, Math.floor(expiresInDays!))
+    : DEFAULT_DAYS;
+  const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 
-  if (paths.length === 0 && typeof episodeId === "string" && episodeId) {
+  // paths 결정: episodeId 우선(권장), 없을 때만 explicitPaths.
+  // explicitPaths 사용 시에도 모든 path가 그 episodeId 소속이어야 함 (임의 path 발급 차단).
+  let paths: string[] = [];
+  if (typeof episodeId === "string" && episodeId) {
     const rows = await db
       .select({ path: fileUploads.path })
       .from(fileUploads)
       .where(eq(fileUploads.episodeId, episodeId));
-    paths = rows.map((r) => r.path);
+    const episodePaths = new Set(rows.map((r) => r.path));
+    if (Array.isArray(explicitPaths) && explicitPaths.length > 0) {
+      const filtered = explicitPaths.filter((p) => typeof p === "string" && episodePaths.has(p));
+      if (filtered.length !== explicitPaths.length) {
+        return Response.json(
+          { error: "all explicit paths must belong to the given episodeId" },
+          { status: 400, headers: cors }
+        );
+      }
+      paths = filtered;
+    } else {
+      paths = rows.map((r) => r.path);
+    }
+  } else if (Array.isArray(explicitPaths) && explicitPaths.length > 0) {
+    // episodeId 없는 임의 path 발급은 admin만 허용
+    if (session.role !== "admin") {
+      return Response.json(
+        { error: "episodeId required for non-admin paths" },
+        { status: 403, headers: cors }
+      );
+    }
+    paths = explicitPaths.filter((p) => typeof p === "string");
   }
 
   if (paths.length === 0) {
@@ -111,17 +142,22 @@ export async function POST(req: NextRequest) {
     allowComments: !!allowComments,
     allowDownload: !!allowDownload,
     createdBy: session.sub,
-    expiresAt: null,        // 만료 없음 (매니저가 수동 비활성화)
-    passwordHash: null,     // 비밀번호 없음
+    expiresAt,              // 강제 만료 (기본 30일, 최대 365일)
+    passwordHash: null,     // 비밀번호는 호출자가 별도 PATCH로 설정
     downloadCount: 0,
   });
+
+  console.log(
+    `[share-link] created token=${token.slice(0, 8)}… by=${session.username ?? session.sub} ` +
+    `paths=${paths.length} expires=${expiresAt.toISOString()} mode=${mode}`,
+  );
 
   // 외부에서 접근할 vibox 공개 URL
   const publicBase = process.env.VIBOX_PUBLIC_URL ?? `${req.nextUrl.protocol}//${req.headers.get("host") ?? "localhost:4200"}`;
   const url = `${publicBase}/s/${token}`;
 
   return Response.json(
-    { token, url, paths, mode, allowComments, allowDownload },
+    { token, url, paths, mode, allowComments, allowDownload, expiresAt: expiresAt.toISOString() },
     { headers: cors }
   );
 }

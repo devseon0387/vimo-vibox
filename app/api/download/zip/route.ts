@@ -91,6 +91,9 @@ export async function GET(req: NextRequest) {
   archive.on("data", (chunk: Buffer) => {
     totalBytes += chunk.length;
   });
+  archive.on("error", (err) => {
+    console.error("[zip] archiver error:", err);
+  });
 
   for (const it of items) archive.file(it.abs, { name: it.zipName });
   void archive.finalize();
@@ -137,6 +140,8 @@ async function collectDir(
   }
   for (const e of entries) {
     if (shouldSkip(e.name)) continue;
+    // symlink는 zone 우회 위험 (STORAGE_ROOT 안에 외부 마운트 가리키는 link 만들면 따라감)
+    if (e.isSymbolicLink()) continue;
     const abs = path.join(absDir, e.name);
     const zipPath = zipPrefix ? `${zipPrefix}/${e.name}` : e.name;
     if (e.isDirectory()) {

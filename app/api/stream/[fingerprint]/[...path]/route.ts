@@ -41,7 +41,8 @@ export async function GET(
   }
   const subPath = parts.join("/");
   // 안전: 단일 세그먼트 또는 매니페스트만 허용
-  if (!/^(playlist\.m3u8|segment_\d{3}\.ts)$/.test(subPath)) {
+  // segment_\d+ — 3자리 제한이면 999 세그먼트(2.8h) 이상 영상 차단됨. 확장.
+  if (!/^(playlist\.m3u8|segment_\d{1,8}\.ts)$/.test(subPath)) {
     return new Response("invalid path", { status: 400 });
   }
 

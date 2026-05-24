@@ -6,8 +6,10 @@ import {
   listDirectory,
   createFolder,
   moveEntry,
+  statPath,
 } from "@/lib/fs/storage";
 import { moveToTrash } from "@/lib/fs/trash";
+import { syncDbPathsAfterMove } from "@/lib/fs/move-sync";
 import { db } from "@/lib/db/client";
 import { fileUploads } from "@/lib/db/schema";
 
@@ -102,7 +104,24 @@ export async function PATCH(req: NextRequest) {
   }
 
   try {
+    // 이동 전에 dir 여부 미리 알아두기 (rename 후엔 from이 없음)
+    const { stat } = await statPath(from);
+    const isDir = stat.isDirectory();
+
     await moveEntry(from, to);
+
+    // 모든 DB 참조 경로를 from→to 로 동기 갱신 (트랜잭션). 실패 시 reconcile이 잡지만
+    // 즉시 에러 표면화하여 운영자가 알아챌 수 있게.
+    try {
+      await syncDbPathsAfterMove(from, to, isDir);
+    } catch (e) {
+      console.error("[files PATCH] syncDbPathsAfterMove failed:", e);
+      return NextResponse.json(
+        { error: "moved on disk but DB sync failed — run reconcile", path: to },
+        { status: 500 },
+      );
+    }
+
     return NextResponse.json({ ok: true, path: to });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "unknown";

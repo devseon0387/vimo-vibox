@@ -27,12 +27,18 @@ export async function POST(
   if (!token) return NextResponse.json({ ok: false }, { status: 400 });
 
   const link = await db
-    .select({ expiresAt: shareLinks.expiresAt })
+    .select({
+      expiresAt: shareLinks.expiresAt,
+      revokedAt: shareLinks.revokedAt,
+      paths: shareLinks.paths,
+      filePath: shareLinks.filePath,
+    })
     .from(shareLinks)
     .where(eq(shareLinks.token, token))
     .limit(1);
   if (link.length === 0) return NextResponse.json({ ok: false }, { status: 404 });
-  const { expiresAt } = link[0];
+  const { expiresAt, revokedAt, paths: linkPathsJson, filePath: linkPrimaryPath } = link[0];
+  if (revokedAt) return NextResponse.json({ ok: false }, { status: 410 });
   if (expiresAt && expiresAt < new Date()) return NextResponse.json({ ok: false }, { status: 410 });
 
   let body: Body;
@@ -43,6 +49,21 @@ export async function POST(
   }
   const filePath = (body.filePath ?? "").trim();
   if (!filePath) return NextResponse.json({ ok: false }, { status: 400 });
+
+  // P1: filePath 화이트리스트 검증 — 토큰이 노출한 paths 안에 있어야 통계 오염 방지
+  const allowed = new Set<string>();
+  allowed.add(linkPrimaryPath);
+  if (linkPathsJson) {
+    try {
+      const arr = JSON.parse(linkPathsJson) as unknown;
+      if (Array.isArray(arr)) for (const p of arr) if (typeof p === "string") allowed.add(p);
+    } catch {
+      /* invalid JSON — primary만 허용 */
+    }
+  }
+  if (!allowed.has(filePath)) {
+    return NextResponse.json({ ok: false, error: "path not in share" }, { status: 400 });
+  }
 
   // visitor cookie (anonymous tracking)
   const cookieStore = await cookies();

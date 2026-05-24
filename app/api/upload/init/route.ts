@@ -1,17 +1,28 @@
 import { NextRequest } from "next/server";
 import path from "node:path";
 import fs from "node:fs/promises";
+import { statfs } from "node:fs/promises";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { users } from "@/lib/db/schema";
 import { getCurrentSession } from "@/lib/auth/session";
 import { corsHeaders, preflight } from "@/lib/auth/cors";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import {
+  getStorageRoot,
   getZoneRoot,
   initChunkSession,
   parseZoneFromPath,
   personalOwnerOf,
 } from "@/lib/fs/storage";
+
+// dirSize 캐시: userId → { bytes, expiresAt }. TTL 30초.
+// 동시 다발 init 시 매 호출 풀워크 폭증 방지.
+const dirSizeCache = new Map<string, { bytes: number; expiresAt: number }>();
+const DIR_SIZE_TTL_MS = 30_000;
+
+// 글로벌 disk-full 가드: 가용 공간이 이 임계 이하면 init 거부 (운영 다른 LaunchDaemon 보호)
+const DISK_FULL_RESERVE_BYTES = 10 * 1024 * 1024 * 1024; // 10GB
 
 export async function OPTIONS(req: NextRequest) {
   return preflight(req.headers.get("origin"));
@@ -35,6 +46,19 @@ async function dirSize(dir: string): Promise<number> {
   return total;
 }
 
+async function cachedDirSize(userId: string, dir: string): Promise<number> {
+  const now = Date.now();
+  const c = dirSizeCache.get(userId);
+  if (c && c.expiresAt > now) return c.bytes;
+  const bytes = await dirSize(dir);
+  dirSizeCache.set(userId, { bytes, expiresAt: now + DIR_SIZE_TTL_MS });
+  return bytes;
+}
+
+export function invalidateDirSizeCache(userId: string) {
+  dirSizeCache.delete(userId);
+}
+
 // POST /api/upload/init
 // body: { fileId, filename, totalSize, totalChunks, path }
 export async function POST(req: NextRequest) {
@@ -43,6 +67,33 @@ export async function POST(req: NextRequest) {
   const session = await getCurrentSession();
   if (!session) {
     return Response.json({ error: "unauthorized" }, { status: 401, headers: cors });
+  }
+
+  // 인증 사용자 IP 기반 rate limit (디스크 풀 DoS 방지)
+  const ip = getClientIp(req);
+  const rl = rateLimit(`upload-init:${session.sub}:${ip}`, {
+    max: 60,
+    windowMs: 60_000,
+  });
+  if (!rl.ok) {
+    return Response.json(
+      { error: "rate limited", retryAfterSec: rl.retryAfterSec },
+      { status: 429, headers: { ...cors, "Retry-After": String(rl.retryAfterSec) } },
+    );
+  }
+
+  // 글로벌 디스크 가용 공간 가드 — 인코딩·litestream·mirror 등 다른 워커 보호
+  try {
+    const stats = await statfs(getStorageRoot());
+    const freeBytes = Number(stats.bavail) * Number(stats.bsize);
+    if (freeBytes < DISK_FULL_RESERVE_BYTES) {
+      return Response.json(
+        { error: "server disk full — upload temporarily unavailable", freeBytes },
+        { status: 507, headers: cors },
+      );
+    }
+  } catch {
+    /* statfs 실패는 보수적으로 통과 */
   }
 
   const body = await req.json().catch(() => null);
@@ -70,6 +121,8 @@ export async function POST(req: NextRequest) {
     partnerId?: string;
   };
 
+  // 단일 파일 상한 (전 zone 공통): 200GB. 더 큰 파일은 사전 협의 + env로 풀기
+  const MAX_FILE_BYTES = Number(process.env.MAX_FILE_BYTES ?? 200 * 1024 * 1024 * 1024);
   if (
     !fileId ||
     typeof fileId !== "string" ||
@@ -78,6 +131,7 @@ export async function POST(req: NextRequest) {
     typeof filename !== "string" ||
     typeof totalSize !== "number" ||
     totalSize <= 0 ||
+    totalSize > MAX_FILE_BYTES ||
     typeof totalChunks !== "number" ||
     totalChunks <= 0 ||
     totalChunks > 100000 ||
@@ -131,7 +185,7 @@ export async function POST(req: NextRequest) {
     const quotaBytes = (u?.quotaGb ?? 100) * 1024 * 1024 * 1024;
     const personalRoot = getZoneRoot("personal");
     const userDir = path.join(personalRoot, ownerId);
-    const used = await dirSize(userDir);
+    const used = await cachedDirSize(ownerId, userDir);
     if (used + totalSize > quotaBytes) {
       return Response.json(
         {
