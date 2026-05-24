@@ -77,6 +77,29 @@ export function resolveSafePath(relativePath: string): string {
   return absolute;
 }
 
+/**
+ * 다운로드·스트림 시 사용 — symlink 추가 검증 (realpath 후 zone 재확인).
+ * 외부 마운트로 가리키는 symlink가 STORAGE_ROOT 안에 만들어진 경우 차단.
+ * resolveSafePath보다 비싸므로 (extra stat) 모든 호출엔 적용 안 함.
+ */
+export async function resolveSafePathStrict(relativePath: string): Promise<string> {
+  const absolute = resolveSafePath(relativePath);
+  const { zone } = parseZoneFromPath(relativePath.replace(/\\/g, "/"));
+  const root = getZoneRoot(zone);
+  let realAbs: string;
+  try {
+    realAbs = await fs.realpath(absolute);
+  } catch {
+    return absolute; // 파일 없는 경우 (create 직전) — 통과
+  }
+  const realRoot = await fs.realpath(root).catch(() => root);
+  const rel = path.relative(realRoot, realAbs);
+  if (rel.startsWith("..") || path.isAbsolute(rel)) {
+    throw new Error(`Invalid path (symlink out of zone): ${relativePath}`);
+  }
+  return realAbs;
+}
+
 export type FileEntry = {
   name: string;
   path: string; // 상대 경로 (/로 시작)

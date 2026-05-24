@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { eq, inArray } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { clients } from "@/lib/db/schema";
 import { getCurrentSession } from "@/lib/auth/session";
@@ -95,37 +95,54 @@ export async function POST(req: NextRequest) {
     existing.map((e) => e.erpId).filter(Boolean) as string[],
   );
 
+  // 모든 슬러그를 한 번에 조회해 N+1 제거 (이전엔 각 import마다 select 루프)
+  const allSlugs = await db.select({ slug: clients.slug }).from(clients);
+  const usedSlugs = new Set(allSlugs.map((s) => s.slug));
+
   let added = 0;
-  for (const eid of erpIds) {
-    if (existingSet.has(eid)) continue;
-    const row = erpById.get(eid);
-    if (!row) continue;
+  let failed = 0;
+  // 부분 실패 시 전체 롤백 — 일부만 들어가 운영자가 다시 import 못하는 상황 방지
+  try {
+    await db.transaction(async (tx) => {
+      for (const eid of erpIds) {
+        if (existingSet.has(eid)) continue;
+        const row = erpById.get(eid);
+        if (!row) continue;
 
-    // slug 충돌 회피
-    let baseSlug = makeSlug(row.name);
-    let slug = baseSlug;
-    for (let i = 1; i < 1000; i++) {
-      const dup = await db
-        .select({ id: clients.id })
-        .from(clients)
-        .where(eq(clients.slug, slug))
-        .limit(1);
-      if (dup.length === 0) break;
-      slug = `${baseSlug}-${i}`;
-    }
+        let baseSlug = makeSlug(row.name);
+        let slug = baseSlug;
+        for (let i = 1; i < 1000 && usedSlugs.has(slug); i++) {
+          slug = `${baseSlug}-${i}`;
+        }
+        usedSlugs.add(slug);
 
-    await db.insert(clients).values({
-      id: randomUUID(),
-      name: row.name,
-      slug,
-      contactEmail: row.email || null,
-      notes: row.notes || null,
-      active: row.status === "active",
-      erpClientId: row.id,
-      createdBy: session.sub,
+        try {
+          await tx.insert(clients).values({
+            id: randomUUID(),
+            name: row.name,
+            slug,
+            contactEmail: row.email || null,
+            notes: row.notes || null,
+            active: row.status === "active",
+            erpClientId: row.id,
+            createdBy: session.sub,
+          });
+          added++;
+        } catch (e) {
+          // 동시 import로 UNIQUE 충돌해도 전체 롤백
+          failed++;
+          throw e;
+        }
+      }
     });
-    added++;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    return NextResponse.json(
+      { error: `import failed (rolled back): ${msg}`, attempted: erpIds.length, failed },
+      { status: 500 },
+    );
   }
+
   return NextResponse.json({
     ok: true,
     added,

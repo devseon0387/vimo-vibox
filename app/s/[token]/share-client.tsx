@@ -64,7 +64,15 @@ export function SharePageClient({
     } catch {}
   }, []);
 
-  const activeFile = files[activeIdx];
+  // files=[] 가드 — 빈 공유 링크 (모든 path 제거됨) 시 TypeError 방지
+  if (files.length === 0) {
+    return (
+      <div className="flex h-screen items-center justify-center text-zinc-500">
+        이 공유 링크에 표시할 파일이 없어요.
+      </div>
+    );
+  }
+  const activeFile = files[Math.min(activeIdx, files.length - 1)];
   const fileUrl = (() => {
     const qs = new URLSearchParams();
     qs.set("p", activeFile.path);

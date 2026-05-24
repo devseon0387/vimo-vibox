@@ -13,6 +13,25 @@ const nextConfig: NextConfig = {
       { source: "/api/me/stats", destination: "/api/my/stats", permanent: false },
     ];
   },
+
+  // 전역 보안 헤더 — proxy.ts는 matcher가 정적 자산 제외하므로 정적 응답에 헤더 누락됨.
+  // 여기서 모든 경로에 기본 헤더 부착 (proxy.ts가 추가로 CSP 등 동적 헤더 부착).
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), usb=()" },
+          ...(process.env.NODE_ENV === "production"
+            ? [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" }]
+            : []),
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

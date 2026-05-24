@@ -195,7 +195,14 @@ export function NoteEditor({
         e.preventDefault();
         triggerSave();
       } else if (e.key === "Escape") {
-        // 메뉴 등이 열려있지 않으면 취소 처리
+        // 다른 인풋·프롬프트·다이얼로그가 열려있으면 그쪽에서 처리 (window 단까지 안 옴)
+        // 본문에서 누른 경우만 취소 처리
+        const target = e.target as HTMLElement | null;
+        const tag = target?.tagName?.toLowerCase();
+        if (tag === "input" || tag === "textarea" || target?.isContentEditable) {
+          // 인풋에서 Esc는 해당 인풋이 처리 (blur 등). 글로벌 취소 X
+          return;
+        }
         e.preventDefault();
         triggerCancel();
       }
@@ -453,17 +460,29 @@ function DeviceBtn({
   );
 }
 
-// 파일 다이얼로그 헬퍼
+// 파일 다이얼로그 헬퍼 — oncancel은 Safari 16↓ 등에서 미지원이라
+// focus 복귀 + change 미발생을 cancel 신호로 사용 (timeout fallback)
 function imageFileDialog(): Promise<File | null> {
   return new Promise((resolve) => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
-    input.onchange = () => {
-      const f = input.files?.[0];
-      resolve(f ?? null);
+    let settled = false;
+    const settle = (f: File | null) => {
+      if (settled) return;
+      settled = true;
+      window.removeEventListener("focus", onFocus);
+      resolve(f);
     };
-    input.oncancel = () => resolve(null);
+    input.onchange = () => settle(input.files?.[0] ?? null);
+    input.oncancel = () => settle(null);
+    const onFocus = () => {
+      // 다이얼로그 닫고 포커스 복귀 → change 안 떴으면 cancel로 간주
+      setTimeout(() => {
+        if (!input.files?.length) settle(null);
+      }, 300);
+    };
+    window.addEventListener("focus", onFocus, { once: true });
     input.click();
   });
 }

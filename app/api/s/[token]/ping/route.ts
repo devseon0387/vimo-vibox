@@ -72,6 +72,7 @@ export async function POST(
     visitorId = randomUUID();
     cookieStore.set(VISITOR_COOKIE, visitorId, {
       httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: VISITOR_MAX_AGE,
       path: "/",
