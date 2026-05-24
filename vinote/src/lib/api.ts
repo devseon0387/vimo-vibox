@@ -122,6 +122,18 @@ export async function starNote(path: string, starred: boolean): Promise<boolean>
   return !r.error;
 }
 
+export type Facets = {
+  folders: { name: string; n: number }[];
+  tags: { name: string; n: number }[];
+  total: number;
+  starred: number;
+};
+
+export async function getFacets(): Promise<Facets> {
+  const r = await request<Facets>(`/api/notes/v2/facets`);
+  return r.data ?? { folders: [], tags: [], total: 0, starred: 0 };
+}
+
 export async function searchNotes(q: string, limit = 20): Promise<SearchHit[]> {
   if (!q.trim()) return [];
   const qs = new URLSearchParams({ q, limit: String(limit) });

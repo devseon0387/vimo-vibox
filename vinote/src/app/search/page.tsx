@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { searchNotes, type SearchHit } from "@/lib/api";
+import { Shell } from "@/components/Shell";
 
 export default function SearchPage() {
   const [q, setQ] = useState("");
@@ -34,12 +35,9 @@ export default function SearchPage() {
   }, [q]);
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-6 py-8">
-      <Link href="/" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-900">
-        <ArrowLeft size={12} /> 홈
-      </Link>
-
-      <div className="mt-6 flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 py-2">
+    <Shell>
+      <div className="mx-auto w-full max-w-3xl px-8 py-10">
+      <div className="flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 py-2">
         <Search size={16} className="text-zinc-400" />
         <input
           ref={inputRef}
@@ -76,6 +74,7 @@ export default function SearchPage() {
           ))}
         </ul>
       </div>
-    </div>
+      </div>
+    </Shell>
   );
 }

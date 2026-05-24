@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { GlobalHotkeys } from "@/components/GlobalHotkeys";
 
 export const metadata: Metadata = {
   title: "비노트",
@@ -9,7 +10,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" className="h-full antialiased">
-      <body className="min-h-full bg-[#fafaf8] text-zinc-900">{children}</body>
+      <body className="min-h-full bg-[#fafaf8] text-zinc-900">
+        {children}
+        <GlobalHotkeys />
+      </body>
     </html>
   );
 }
