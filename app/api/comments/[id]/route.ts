@@ -140,11 +140,11 @@ export async function DELETE(
     return NextResponse.json({ error: "작성자 또는 관리자만 삭제할 수 있어요" }, { status: 403 });
   }
 
-  // 답글도 같이 삭제
-  await db
-    .delete(comments)
-    .where(and(eq(comments.parentId, id)));
-  await db.delete(comments).where(eq(comments.id, id));
+  // 답글 + 본 댓글을 단일 트랜잭션으로 (서버 죽으면 둘 다 롤백)
+  await db.transaction(async (tx) => {
+    await tx.delete(comments).where(eq(comments.parentId, id));
+    await tx.delete(comments).where(eq(comments.id, id));
+  });
 
   return NextResponse.json({ ok: true });
 }

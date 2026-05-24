@@ -119,7 +119,9 @@ export async function enqueue(filePath: string): Promise<EncodingJobView | null>
   return row ? toView(row) : null;
 }
 
-/** 큐에서 다음 잡 가져와 실행 (반복) */
+/** 큐에서 다음 잡 가져와 실행 (반복).
+ *  Atomic claim: select-then-update 사이 race를 막기 위해 status='queued' WHERE 조건을 update에 포함.
+ *  rowsAffected===0이면 다른 worker가 선점한 것 — skip하고 다음 후보 시도. */
 async function tryStart(): Promise<void> {
   if (starting) return;
   starting = true;
@@ -133,11 +135,15 @@ async function tryStart(): Promise<void> {
         .limit(1);
       if (!next) break;
 
-      // running 으로 마킹 후 비동기 실행
-      await db
+      // status='queued' 조건부 update — race 시 두 번째 caller는 0행 갱신 후 다음 후보로
+      const result = await db
         .update(encodingJobs)
         .set({ status: "running", startedAt: new Date(), progress: 0 })
-        .where(eq(encodingJobs.id, next.id));
+        .where(and(eq(encodingJobs.id, next.id), eq(encodingJobs.status, "queued")));
+      // better-sqlite3 driver: result는 RunResult { changes: number }
+      const changes = (result as unknown as { changes?: number }).changes ?? 0;
+      if (changes === 0) continue;
+
       activeWorkers++;
       void runJob(next.id, next.filePath);
     }

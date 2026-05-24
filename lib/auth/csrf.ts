@@ -26,8 +26,10 @@ function isOriginAllowed(originStr: string): boolean {
       if (url.hostname === BASE_DOMAIN) return true;
       if (url.hostname.endsWith("." + BASE_DOMAIN)) return true;
     }
-    // 개발 환경: localhost 허용
-    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return true;
+    // 개발 환경: localhost 허용 (production에서는 거부)
+    if (process.env.NODE_ENV !== "production") {
+      if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return true;
+    }
   } catch {
     /* invalid URL */
   }

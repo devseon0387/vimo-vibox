@@ -37,15 +37,28 @@ export type HLSResult = {
 
 export type HLSProgress = (percent: number) => void;
 
-/** 파일 fingerprint 계산 (앞 4MB + size + mtime). 빠르고 변경 감지 충분. */
+/** 파일 fingerprint — 앞·중간·뒤 1MB 샘플 + size + mtime.
+ *  mtime-preserve rsync로 다른 내용을 같은 mtime에 덮는 케이스도 잡힘. */
 export async function fingerprintOf(absVideoPath: string): Promise<string> {
   const stat = await fs.stat(absVideoPath);
   const fh = await fs.open(absVideoPath, "r");
   try {
-    const sample = Buffer.alloc(Math.min(4 * 1024 * 1024, stat.size));
-    await fh.read(sample, 0, sample.length, 0);
+    const sampleSize = Math.min(1024 * 1024, stat.size);
+    const head = Buffer.alloc(sampleSize);
+    await fh.read(head, 0, sampleSize, 0);
     const hash = createHash("sha256");
-    hash.update(sample);
+    hash.update(head);
+    if (stat.size > sampleSize * 2) {
+      const mid = Buffer.alloc(sampleSize);
+      const midOffset = Math.max(0, Math.floor(stat.size / 2) - sampleSize / 2);
+      await fh.read(mid, 0, sampleSize, midOffset);
+      hash.update(mid);
+    }
+    if (stat.size > sampleSize) {
+      const tail = Buffer.alloc(sampleSize);
+      await fh.read(tail, 0, sampleSize, Math.max(0, stat.size - sampleSize));
+      hash.update(tail);
+    }
     hash.update(`-${stat.size}-${Math.floor(stat.mtimeMs)}`);
     return hash.digest("hex").slice(0, 16);
   } finally {
@@ -168,16 +181,24 @@ export async function generateHLS(
     path.join(outDir, "playlist.m3u8"),
   ];
 
+  // 시작 전 partial outDir 정리 (이전 실패 attempt의 segment 잔존 방지)
+  await fs.rm(outDir, { recursive: true, force: true }).catch(() => {});
+  await fs.mkdir(outDir, { recursive: true });
+
+  // wallclock timeout: max(영상길이 × 5, 30분). 좀비 ffmpeg 방지.
+  const timeoutMs = Math.max(30 * 60 * 1000, Math.floor(totalDuration * 5 * 1000));
+
   return new Promise((resolve, reject) => {
     const proc = spawn("ffmpeg", args, {
       stdio: ["ignore", "ignore", "pipe"],
     });
 
-    let stderr = "";
+    // stderr ring buffer (2KB) — 무한 누적 방지
+    let stderrTail = "";
+    const STDERR_KEEP = 2048;
     proc.stderr.on("data", (d: Buffer) => {
       const text = d.toString();
-      stderr += text;
-      // ffmpeg -progress 출력 파싱 (out_time_ms=N)
+      stderrTail = (stderrTail + text).slice(-STDERR_KEEP);
       const m = text.match(/out_time_ms=(\d+)/);
       if (m && totalDuration > 0 && onProgress) {
         const seconds = parseInt(m[1], 10) / 1_000_000;
@@ -186,17 +207,24 @@ export async function generateHLS(
       }
     });
 
+    const killer = setTimeout(() => {
+      try {
+        proc.kill("SIGKILL");
+      } catch {}
+    }, timeoutMs);
+
     proc.on("error", async (e) => {
+      clearTimeout(killer);
       await fs.rm(outDir, { recursive: true, force: true }).catch(() => {});
       reject(e);
     });
 
-    proc.on("exit", async (code) => {
+    proc.on("exit", async (code, signal) => {
+      clearTimeout(killer);
       if (code !== 0) {
         await fs.rm(outDir, { recursive: true, force: true }).catch(() => {});
-        reject(
-          new Error(`ffmpeg exit ${code}\n${stderr.slice(-2000)}`),
-        );
+        const reason = signal ? `signal=${signal}` : `exit=${code}`;
+        reject(new Error(`ffmpeg ${reason}\n${stderrTail}`));
         return;
       }
       try {

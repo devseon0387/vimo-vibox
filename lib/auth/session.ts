@@ -7,6 +7,9 @@ const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30일
 function getSecret(): Uint8Array {
   const secret = process.env.AUTH_SECRET;
   if (!secret) throw new Error("AUTH_SECRET not set");
+  if (secret.length < 32) {
+    throw new Error("AUTH_SECRET too short (min 32 chars) — generate with: openssl rand -hex 32");
+  }
   return new TextEncoder().encode(secret);
 }
 
@@ -17,17 +20,25 @@ export type SessionPayload = {
   role: "admin" | "member" | "partner";
 };
 
-export async function createSession(payload: SessionPayload): Promise<string> {
+export async function createSession(
+  payload: SessionPayload,
+  maxAgeSec: number = SESSION_MAX_AGE,
+): Promise<string> {
   return await new SignJWT({ ...payload })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime(`${SESSION_MAX_AGE}s`)
+    .setExpirationTime(`${maxAgeSec}s`)
     .sign(getSecret());
 }
 
+/** 데스크탑 앱용 7일 토큰. Keychain 탈취 시 노출 시간 단축. */
+export const DESKTOP_TOKEN_MAX_AGE = 60 * 60 * 24 * 7;
+
 export async function verifySession(token: string): Promise<SessionPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, getSecret());
+    const { payload } = await jwtVerify(token, getSecret(), {
+      algorithms: ["HS256"],
+    });
     return payload as unknown as SessionPayload;
   } catch {
     return null;

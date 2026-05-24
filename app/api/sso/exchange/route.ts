@@ -36,31 +36,42 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "invalid or expired token" }, { status: 401, headers: cors });
   }
 
-  // users upsert — Supabase id 기준
+  // users upsert — ERP의 sub와 vibox-네이티브 users.id 충돌 시 admin 권한 덮어쓰기 방지를 위해
+  // SSO 사용자는 "erp:" 네임스페이스로 분리. 기존 ERP 사용자(prefix 없는 id)와의 호환을 위해
+  // 먼저 namespaced id 찾고, 없으면 raw id 폴백 (마이그레이션 기간 동안만 후자 허용)
+  const namespacedId = `erp:${payload.sub}`;
   const existing = await db
     .select()
     .from(users)
-    .where(eq(users.id, payload.sub))
+    .where(eq(users.id, namespacedId))
     .limit(1);
 
   if (existing.length === 0) {
-    // 신규 가입 — username은 email 기반 자동 생성 (충돌 방지 위해 sub 일부 추가)
+    // 같은 raw sub로 vibox-네이티브 admin이 등록돼있을 가능성 사전 차단
+    const collision = await db
+      .select({ id: users.id, role: users.role })
+      .from(users)
+      .where(eq(users.id, payload.sub))
+      .limit(1);
+    if (collision.length > 0) {
+      console.warn(
+        `[sso] sub 충돌 — namespaced로 분리 생성. raw_id=${payload.sub} raw_role=${collision[0].role}`,
+      );
+    }
     const baseUsername = (payload.email.split("@")[0] || "user")
       .toLowerCase()
       .replace(/[^a-z0-9._-]/g, "");
     const username = `${baseUsername}-${payload.sub.slice(0, 6)}`;
     await db.insert(users).values({
-      id: payload.sub,
+      id: namespacedId,
       username,
       email: payload.email,
       name: payload.name,
-      // 외부 SSO 사용자는 비번 미사용 — 빈 hash 저장
       passwordHash: "external-sso",
       role: payload.role,
       quotaGb: 100,
     });
   } else {
-    // 메타 동기화 (이름/이메일/역할이 바뀌었을 수 있음)
     const u = existing[0];
     if (
       u.email !== payload.email ||
@@ -74,12 +85,12 @@ export async function POST(req: NextRequest) {
           name: payload.name,
           role: payload.role,
         })
-        .where(eq(users.id, payload.sub));
+        .where(eq(users.id, namespacedId));
     }
   }
 
   const session = await createSession({
-    sub: payload.sub,
+    sub: namespacedId,
     username: payload.email,
     name: payload.name,
     role: payload.role,
@@ -90,7 +101,7 @@ export async function POST(req: NextRequest) {
     {
       ok: true,
       user: {
-        id: payload.sub,
+        id: namespacedId,
         name: payload.name,
         role: payload.role,
       },

@@ -56,14 +56,17 @@ export async function loginAction(
     .where(sql`LOWER(${users.username}) = ${username}`)
     .limit(1);
 
+  // timing 균일화 — 사용자 미존재 시에도 bcrypt 호출 (enumeration 차단)
+  const DUMMY_HASH = "$2a$10$abcdefghijklmnopqrstuuV1cKQjZ7ZSf6N3D8XWvLpVqVqJxOAaW";
   const user = rows[0];
-  if (!user) {
+  const hash = user?.passwordHash ?? DUMMY_HASH;
+  const ok = await bcrypt.compare(password, hash);
+
+  if (!user || !ok) {
     return { error: "아이디 또는 비밀번호가 일치하지 않습니다" };
   }
-
-  const ok = await bcrypt.compare(password, user.passwordHash);
-  if (!ok) {
-    return { error: "아이디 또는 비밀번호가 일치하지 않습니다" };
+  if (user.deactivatedAt) {
+    return { error: "비활성화된 계정입니다. 관리자에게 문의하세요" };
   }
 
   const token = await createSession({

@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
 
 // POST /api/files  body: { path, name } → 새 폴더 생성
 export async function POST(req: NextRequest) {
-  const { error } = await requireAuth();
+  const { error, session } = await requireAuth();
   if (error) return error;
 
   const body = await req.json().catch(() => null);
@@ -78,6 +78,10 @@ export async function POST(req: NextRequest) {
     );
   }
   const target = (parent.endsWith("/") ? parent : parent + "/") + name;
+  // zone 권한 가드 — partner가 personal/library 임의 위치에 폴더 만드는 것 방지
+  if (!(await canAccessFile(session!, target))) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
   try {
     await createFolder(target);
     return NextResponse.json({ ok: true, path: target });

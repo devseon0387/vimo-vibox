@@ -410,9 +410,6 @@ export async function finalizeChunkUpload(fileId: string): Promise<FileEntry> {
   // 스트림으로 순차 append (메모리 안정)
   const { createReadStream: crs, createWriteStream: cws } = await import("node:fs");
   const writeStream = cws(finalAbs);
-  // 청크 N개 루프 돌며 pipeline/pipe 호출 시 writeStream 에 리스너가 누적됨.
-  // 기본 한계 10 이라 50MB * 11청크 넘어가면 MaxListenersExceededWarning 발생.
-  // 업로드 완료 이후 즉시 종료되는 stream 이라 안전하게 풀어도 됨.
   writeStream.setMaxListeners(Infinity);
   try {
     for (const part of partFiles) {
@@ -429,13 +426,16 @@ export async function finalizeChunkUpload(fileId: string): Promise<FileEntry> {
     });
   } catch (e) {
     writeStream.destroy();
+    // 실패 시 최종 파일 + 임시 디렉터리 모두 정리 (이전엔 tempDir만 남아 디스크 누수)
     await fs.rm(finalAbs, { force: true });
+    await fs.rm(tempDir, { recursive: true, force: true });
     throw e;
   }
 
   const stat = await fs.stat(finalAbs);
   if (stat.size !== meta.totalSize) {
     await fs.rm(finalAbs, { force: true });
+    await fs.rm(tempDir, { recursive: true, force: true });
     throw new Error(`size mismatch: expected ${meta.totalSize}, got ${stat.size}`);
   }
 

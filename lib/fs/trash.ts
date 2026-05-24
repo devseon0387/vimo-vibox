@@ -1,9 +1,9 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-import { eq, lt } from "drizzle-orm";
+import { eq, lt, like, or } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { trashItems, shareLinks } from "@/lib/db/schema";
+import { trashItems, shareLinks, comments, hlsAssets, fileUploads, encodingJobs } from "@/lib/db/schema";
 import {
   getStorageRoot,
   getZoneRoot,
@@ -112,8 +112,23 @@ export async function permanentDelete(trashId: string): Promise<void> {
     .limit(1);
   if (!row) return;
   const trashPath = getTrashItemPath(row.id);
+  const originalPath = row.originalPath;
+  const prefixLike = originalPath + "/%";
+
+  // 파일·디렉터리 모두에 안전한 prefix 매칭 — 파일이면 prefix=참고만
+  await db.transaction(async (tx) => {
+    // 휴지통 row 삭제
+    await tx.delete(trashItems).where(eq(trashItems.id, trashId));
+    // 관련 DB 메타 정리 (orphan 방지) — exact + dir prefix
+    await tx.delete(comments).where(or(eq(comments.filePath, originalPath), like(comments.filePath, prefixLike)));
+    await tx.delete(fileUploads).where(or(eq(fileUploads.path, originalPath), like(fileUploads.path, prefixLike)));
+    await tx.delete(hlsAssets).where(or(eq(hlsAssets.filePath, originalPath), like(hlsAssets.filePath, prefixLike)));
+    await tx.delete(encodingJobs).where(or(eq(encodingJobs.filePath, originalPath), like(encodingJobs.filePath, prefixLike)));
+    // shareLinks는 moveToTrash 단계에서 이미 정리됨 (남은 케이스: 휴지통 이후 새로 만들었을 가능성)
+    await tx.delete(shareLinks).where(or(eq(shareLinks.filePath, originalPath), like(shareLinks.filePath, prefixLike)));
+  });
+
   await fs.rm(trashPath, { recursive: true, force: true });
-  await db.delete(trashItems).where(eq(trashItems.id, trashId));
 }
 
 export async function emptyAllTrash(): Promise<number> {

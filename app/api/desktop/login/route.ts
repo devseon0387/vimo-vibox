@@ -7,7 +7,7 @@ import bcrypt from "bcryptjs";
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { users } from "@/lib/db/schema";
-import { createSession, type SessionPayload } from "@/lib/auth/session";
+import { createSession, DESKTOP_TOKEN_MAX_AGE, type SessionPayload } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     name: user.name,
     role: user.role as SessionPayload["role"],
   };
-  const token = await createSession(payload);
+  const token = await createSession(payload, DESKTOP_TOKEN_MAX_AGE);
 
   return NextResponse.json({
     token,

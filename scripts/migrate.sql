@@ -284,3 +284,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_share_views_visitor_unique
 
 -- 2026-05-24: share_links.revoked_at — soft delete + CF 캐시 후에도 즉시 무효화 검증
 ALTER TABLE share_links ADD COLUMN revoked_at INTEGER;
+
+-- 2026-05-24: users.deactivated_at — admin 삭제를 soft delete로 변경
+-- (이전 hard delete는 comments/trash/api_tokens 등 ON DELETE CASCADE로 모든 작업 이력 손실)
+ALTER TABLE users ADD COLUMN deactivated_at INTEGER;

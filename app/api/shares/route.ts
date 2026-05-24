@@ -54,6 +54,12 @@ export async function POST(req: NextRequest) {
   const session = await getCurrentSession();
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
+  // staff(admin/member)만 외부 공유 발급 — partner가 검수 전 작업물을 외부 노출 못하게
+  // (/api/external/share-links와 정책 통일)
+  if (session.role !== "admin" && session.role !== "member") {
+    return NextResponse.json({ error: "manager only" }, { status: 403 });
+  }
+
   const body = await req.json().catch(() => null);
 
   // paths (배열) or path (단일) — 하나는 있어야

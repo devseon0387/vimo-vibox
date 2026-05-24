@@ -12,6 +12,8 @@ import { fileUploads } from "@/lib/db/schema";
 import { sql } from "drizzle-orm";
 import { logTraffic } from "@/lib/traffic";
 import { enqueue as enqueueHLS } from "@/lib/encoding/queue";
+import { invalidateDirSizeCache } from "../init/route";
+import { personalOwnerOf } from "@/lib/fs/storage";
 
 export async function OPTIONS(req: NextRequest) {
   return preflight(req.headers.get("origin"));
@@ -48,29 +50,35 @@ export async function POST(req: NextRequest) {
 
   try {
     const saved = await finalizeChunkUpload(fileId);
-    // 파일 소유권 DB 기록 (partner 가시성 용도) — upsert
-    await db
-      .insert(fileUploads)
-      .values({
-        path: saved.path,
-        uploadedBy: session.sub,
-        uploadedByName: session.name ?? session.username,
-        episodeId: meta.episodeId ?? null,
-        projectId: meta.projectId ?? null,
-        partnerId: meta.partnerId ?? null,
-      })
-      .onConflictDoUpdate({
-        target: fileUploads.path,
-        set: {
+    // 파일 소유권 DB 기록 (partner 가시성 용도) — upsert. 실패하면 로깅 (이전엔 silent)
+    try {
+      await db
+        .insert(fileUploads)
+        .values({
+          path: saved.path,
           uploadedBy: session.sub,
           uploadedByName: session.name ?? session.username,
-          uploadedAt: sql`(unixepoch() * 1000)`,
           episodeId: meta.episodeId ?? null,
           projectId: meta.projectId ?? null,
           partnerId: meta.partnerId ?? null,
-        },
-      })
-      .catch(() => {});
+        })
+        .onConflictDoUpdate({
+          target: fileUploads.path,
+          set: {
+            uploadedBy: session.sub,
+            uploadedByName: session.name ?? session.username,
+            uploadedAt: sql`(unixepoch() * 1000)`,
+            episodeId: meta.episodeId ?? null,
+            projectId: meta.projectId ?? null,
+            partnerId: meta.partnerId ?? null,
+          },
+        });
+    } catch (e) {
+      console.error("[upload/complete] fileUploads upsert failed:", e, "path=", saved.path);
+    }
+    // personal 업로드면 dirSize 캐시 무효화
+    const ownerId = personalOwnerOf(saved.path);
+    if (ownerId) invalidateDirSizeCache(ownerId);
     // 인바운드 트래픽 기록 (업로드된 파일 크기)
     logTraffic({
       path: saved.path,

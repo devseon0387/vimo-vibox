@@ -32,14 +32,11 @@ BEFORE=$(sqlite3 "$DB" "SELECT COUNT(*) FROM traffic_log")
 DELETED=$(sqlite3 "$DB" "DELETE FROM traffic_log WHERE at < $CUTOFF_MS; SELECT changes();")
 AFTER=$(sqlite3 "$DB" "SELECT COUNT(*) FROM traffic_log")
 
-# VACUUM은 디스크 회수 (파일 크기 축소) — 월 1회 정도만 (요일 체크)
-# 매번 VACUUM은 I/O 부담이라 매일 하지 않음
-if [[ "$(date +%u)" == "7" ]]; then
-  sqlite3 "$DB" "VACUUM"
-  VACUUMED="yes"
-else
-  VACUUMED="no"
-fi
+# VACUUM 제거 (2026-05-24) — VACUUM은 DB 전체 페이지 재작성 + WAL truncate로
+# Litestream snapshot이 강제 재생성되어 PITR 구간이 망실됨. 대신 incremental
+# wal_checkpoint(TRUNCATE)로 WAL 파일 크기만 정리. Litestream과 호환.
+sqlite3 "$DB" "PRAGMA wal_checkpoint(TRUNCATE);" > /dev/null
+VACUUMED="checkpoint"
 
 echo "[$(date '+%F %T')] pruned=$DELETED before=$BEFORE after=$AFTER vacuum=$VACUUMED" >> "$LOG"
 

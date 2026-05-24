@@ -13,6 +13,9 @@ export const users = sqliteTable("users", {
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .$defaultFn(() => new Date()),
+  // soft delete — hard delete 시 모든 audit (comments/trash/api_tokens 등) cascade로 사라지므로
+  // admin 사용자 삭제는 deactivate로만. 로그인은 막힘 + UI에서 비활성 표시.
+  deactivatedAt: integer("deactivated_at", { mode: "timestamp_ms" }),
 });
 
 export const shareLinks = sqliteTable("share_links", {

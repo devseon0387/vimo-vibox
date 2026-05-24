@@ -17,7 +17,10 @@ async function decodeSession(token: string | undefined): Promise<SessionPayload 
   const secret = process.env.AUTH_SECRET;
   if (!secret) return null;
   try {
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(secret));
+    // algorithms 명시 — 다중 secret/key 도입 시 confusion 공격 차단
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(secret), {
+      algorithms: ["HS256"],
+    });
     return payload as unknown as SessionPayload;
   } catch {
     return null;

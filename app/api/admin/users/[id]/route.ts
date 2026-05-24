@@ -67,7 +67,9 @@ export async function PATCH(
   return NextResponse.json({ ok: true });
 }
 
-// DELETE /api/admin/users/[id] — 사용자 삭제 (공유 링크/휴지통 항목은 FK로 자동 정리)
+// DELETE /api/admin/users/[id] — 사용자 비활성화 (soft delete)
+// hard delete는 comments/trash/api_tokens 등 ON DELETE CASCADE로 모든 작업 이력 cascade
+// 손실되어 위험. deactivatedAt 설정으로 로그인만 막고 데이터는 보존.
 export async function DELETE(
   _req: NextRequest,
   ctx: { params: Promise<{ id: string }> },
@@ -83,6 +85,6 @@ export async function DELETE(
     );
   }
 
-  await db.delete(users).where(eq(users.id, id));
-  return NextResponse.json({ ok: true });
+  await db.update(users).set({ deactivatedAt: new Date() }).where(eq(users.id, id));
+  return NextResponse.json({ ok: true, deactivated: true });
 }

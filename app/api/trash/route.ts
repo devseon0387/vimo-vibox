@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
-import { listTrash, emptyAllTrash, autoExpireOldTrash } from "@/lib/fs/trash";
+import { listTrash, emptyAllTrash } from "@/lib/fs/trash";
 
 // GET /api/trash → 휴지통 항목 전체 (팀 공유 — 누가 지웠든 다 보임)
+// 자동 만료는 GET에서 destructive 작업하면 race + 의도치 않은 삭제 위험이라
+// 별도 launchd 잡(scripts/vibox-trash-expire.sh)으로 분리.
 export async function GET() {
   const session = await getCurrentSession();
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-
-  await autoExpireOldTrash(30).catch(() => {});
 
   const items = await listTrash();
   return NextResponse.json({ items });
