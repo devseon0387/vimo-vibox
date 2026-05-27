@@ -1,14 +1,24 @@
 /**
  * Rail navigation key 추출 — URL 기반.
- * 기존 라우팅 유지하면서 Rail 액티브 상태를 결정.
+ * 5개 항목: 홈(/) · My box(/my) · 비모(/team) · 활동(/inbox·/insights·/activity) · 관리(/admin·/shares·/trash·/dev)
+ *
+ * "개발(/dev/notes)"은 admin 메뉴 안으로 흡수 — Rail에서 제거.
  */
-export type RailKey = "home" | "dev" | "mybox" | "admin";
+export type RailKey = "home" | "mybox" | "team" | "activity" | "admin";
 
 export function railFromPath(pathname: string): RailKey {
-  if (pathname.startsWith("/dev")) return "dev";
   if (pathname.startsWith("/my")) return "mybox";
+  if (pathname.startsWith("/team")) return "team";
+  if (
+    pathname.startsWith("/inbox") ||
+    pathname.startsWith("/insights") ||
+    pathname.startsWith("/activity")
+  ) {
+    return "activity";
+  }
   if (
     pathname.startsWith("/admin") ||
+    pathname.startsWith("/dev") ||
     pathname === "/shares" ||
     pathname.startsWith("/shares/") ||
     pathname === "/trash" ||
@@ -16,10 +26,10 @@ export function railFromPath(pathname: string): RailKey {
   ) {
     return "admin";
   }
-  // /, /vimo-box, /inbox, /insights, /s, etc → home
+  // /, /vimo-box, /s, etc → home(=대시보드)
   return "home";
 }
 
 export function railIsAdminOnly(key: RailKey): boolean {
-  return key === "dev" || key === "admin";
+  return key === "admin";
 }

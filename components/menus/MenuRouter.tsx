@@ -3,8 +3,9 @@
 import { usePathname } from "next/navigation";
 import { railFromPath } from "@/lib/rail";
 import { HomeMenu } from "./HomeMenu";
-import { DevMenu } from "./DevMenu";
 import { MyboxMenu } from "./MyboxMenu";
+import { TeamMenu } from "./TeamMenu";
+import { ActivityMenu } from "./ActivityMenu";
 import { AdminMenu } from "./AdminMenu";
 
 /**
@@ -15,16 +16,18 @@ export function MenuRouter({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
   const rail = railFromPath(pathname);
 
-  // Admin 가드 — admin 아닌데 dev/admin URL이면 home으로 fallback (server에서도 차단 별도 필요)
-  if ((rail === "dev" || rail === "admin") && !isAdmin) {
+  // Admin 가드 — admin 아닌데 admin URL이면 home으로 fallback
+  if (rail === "admin" && !isAdmin) {
     return <HomeMenu />;
   }
 
   switch (rail) {
-    case "dev":
-      return <DevMenu />;
     case "mybox":
       return <MyboxMenu />;
+    case "team":
+      return <TeamMenu />;
+    case "activity":
+      return <ActivityMenu />;
     case "admin":
       return <AdminMenu />;
     case "home":

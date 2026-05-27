@@ -49,7 +49,7 @@ export default function LoginPage() {
 
           <div>
             <label className="block text-[12px] font-semibold text-text-soft mb-1.5">
-              아이디
+              아이디 또는 이메일
             </label>
             <div className="relative">
               <User
@@ -62,7 +62,7 @@ export default function LoginPage() {
                 type="text"
                 autoComplete="username"
                 required
-                placeholder="예: seon"
+                placeholder="seon 또는 you@example.com"
                 className="w-full pl-9 pr-3 py-2 border border-border rounded-md text-[14px] outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-all"
               />
             </div>

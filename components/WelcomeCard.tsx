@@ -27,22 +27,22 @@ export function WelcomeCard({ name }: { name?: string | null }) {
   if (dismissed) return null;
 
   return (
-    <div className="relative bg-gradient-to-br from-accent-soft to-white border border-accent/20 rounded-xl p-5 mb-5 overflow-hidden">
+    <div className="relative bg-gradient-to-br from-accent-soft to-white border border-accent/20 rounded-xl p-4 sm:p-5 mb-5 overflow-hidden">
       <button
         onClick={dismiss}
-        className="absolute top-3 right-3 p-1 rounded text-text-soft hover:text-text hover:bg-white/60"
+        className="absolute top-2.5 right-2.5 p-1.5 rounded text-text-soft hover:text-text hover:bg-white/60"
         title="닫기"
       >
         <X size={14} strokeWidth={2.2} />
       </button>
-      <div className="flex items-center gap-2 text-[12px] font-bold text-accent uppercase tracking-wider mb-1">
+      <div className="flex items-center gap-2 text-[11px] sm:text-[12px] font-bold text-accent uppercase tracking-wider mb-1">
         <Sparkles size={13} strokeWidth={2.4} />
         Vibox 시작 가이드
       </div>
-      <h2 className="text-[18px] font-bold text-text mb-3">
+      <h2 className="text-[16px] sm:text-[18px] font-bold text-text mb-3 pr-7">
         반갑습니다{name ? `, ${name}님` : ""} 👋
       </h2>
-      <div className="grid sm:grid-cols-3 gap-3">
+      <div className="grid sm:grid-cols-3 gap-2 sm:gap-3">
         <Step
           icon={<Upload size={15} strokeWidth={2.2} />}
           step={1}
@@ -62,7 +62,7 @@ export function WelcomeCard({ name }: { name?: string | null }) {
           desc="언제든 ⌘K 로 파일·댓글·페이지 찾기"
         />
       </div>
-      <div className="mt-3 text-[11.5px] text-text-faint">
+      <div className="hidden sm:block mt-3 text-[11.5px] text-text-faint">
         Tip: 단축키는 <kbd className="font-mono bg-white border border-border rounded px-1 py-0.5 text-[10.5px]">?</kbd> 키로 언제든 확인.
       </div>
     </div>
@@ -81,12 +81,12 @@ function Step({
   desc: string;
 }) {
   return (
-    <div className="flex gap-2.5 bg-white/70 backdrop-blur border border-white rounded-lg p-3">
-      <div className="shrink-0 w-7 h-7 rounded-full bg-accent text-white grid place-items-center text-[11px] font-bold">
+    <div className="flex gap-2.5 bg-white/70 backdrop-blur border border-white rounded-lg p-2.5 sm:p-3">
+      <div className="shrink-0 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-accent text-white grid place-items-center text-[10px] sm:text-[11px] font-bold">
         {step}
       </div>
       <div className="min-w-0">
-        <div className="flex items-center gap-1.5 text-[12.5px] font-semibold text-text mb-0.5">
+        <div className="flex items-center gap-1.5 text-[12px] sm:text-[12.5px] font-semibold text-text mb-0.5">
           <span className="text-accent">{icon}</span>
           {title}
         </div>

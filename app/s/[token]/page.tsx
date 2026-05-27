@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import path from "node:path";
 import { eq } from "drizzle-orm";
@@ -7,6 +8,64 @@ import { resolveAllowedPaths } from "@/lib/share/paths";
 import { SharePageClient } from "./share-client";
 
 type Kind = "video" | "image" | "audio" | "pdf" | "other";
+
+const PUBLIC_BASE =
+  process.env.PUBLIC_BASE_URL ||
+  process.env.NEXT_PUBLIC_BASE_URL ||
+  "https://vibox.cloud";
+
+const VIDEO_EXT = /\.(mp4|mov|mkv|webm|m4v|avi)$/i;
+
+// SNS (카톡·트위터·페북) 미리보기용 OG/Twitter 메타.
+// 영상 썸네일을 /api/s/[token]/thumb 로 노출.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}): Promise<Metadata> {
+  const { token } = await params;
+  const rows = await db
+    .select()
+    .from(shareLinks)
+    .where(eq(shareLinks.token, token))
+    .limit(1);
+  const link = rows[0];
+  if (!link || link.revokedAt) {
+    return { title: "비박스" };
+  }
+
+  const paths = resolveAllowedPaths(link);
+  const firstName = path.basename(paths[0]);
+  const title = link.title ?? firstName;
+  // 비번 걸린 링크는 OG 이미지 노출 안 함 (썸네일 보이면 비번 방어 무의미)
+  const hasThumb = !link.passwordHash && paths.some((p) => VIDEO_EXT.test(p));
+  const thumbUrl = hasThumb ? `${PUBLIC_BASE}/api/s/${token}/thumb` : undefined;
+  const description =
+    paths.length > 1 ? `${paths.length}개 파일 묶음` : "비박스 공유";
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "video.other",
+      url: `${PUBLIC_BASE}/s/${token}`,
+      siteName: "비박스",
+      ...(thumbUrl
+        ? {
+            images: [{ url: thumbUrl, alt: title }],
+          }
+        : {}),
+    },
+    twitter: {
+      card: thumbUrl ? "summary_large_image" : "summary",
+      title,
+      description,
+      ...(thumbUrl ? { images: [thumbUrl] } : {}),
+    },
+  };
+}
 
 function detectKind(filename: string): Kind {
   const ext = path.extname(filename).toLowerCase().slice(1);

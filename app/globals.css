@@ -24,6 +24,14 @@
   --warning-soft: #fef3c7;
   --purple: #7c3aed;
   --purple-soft: #f5f3ff;
+
+  /* 두 공간 토큰 (홈 dashboard / Rail / 파일 라벨) */
+  --personal: #0ea5e9;       /* My box = sky */
+  --personal-soft: #e0f2fe;
+  --personal-dark: #0369a1;
+  --team-color: #e85008;      /* 비모 = brand orange (accent 동일) */
+  --team-soft: #fef0e8;
+  --team-dark: #c8430a;
 }
 
 @theme inline {

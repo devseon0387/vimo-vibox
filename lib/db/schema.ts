@@ -346,3 +346,60 @@ export type NoteVersion = typeof noteVersions.$inferSelect;
 export type NewNoteVersion = typeof noteVersions.$inferInsert;
 
 // note_fts는 FTS5 가상 테이블이라 drizzle table 정의 없음. 직접 SQL로 INSERT/SELECT.
+
+// AI 검수 결과에 대한 사용자 피드백 — 추후 OCR/Claude 프롬프트 개선 분석용.
+// commentId 는 FK 미설정 (재검수로 AI 댓글 삭제·재삽입되어도 피드백은 살아남음).
+// AI 댓글 본문/제안/OCR원문 스냅샷을 같이 저장해서 댓글이 사라져도 분석 가능.
+export const aiReviewFeedback = sqliteTable("ai_review_feedback", {
+  id: text("id").primaryKey(),
+  commentId: text("comment_id").notNull(),
+  filePath: text("file_path").notNull(),
+  reporterId: text("reporter_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  verdict: text("verdict", { enum: ["good", "bad", "partial"] }).notNull(),
+  reasonTag: text("reason_tag", {
+    enum: [
+      "ocr_misread",
+      "wrong_correction",
+      "context_wrong",
+      "not_a_typo",
+      "partial_fix",
+      "other",
+    ],
+  }),
+  note: text("note"),
+  // 스냅샷 (재검수로 댓글 사라져도 컨텍스트 유지)
+  aiBody: text("ai_body"),
+  aiSuggestion: text("ai_suggestion"),
+  aiOcrWrong: text("ai_ocr_wrong"),
+  videoTimeMs: integer("video_time_ms"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+export type AiReviewFeedback = typeof aiReviewFeedback.$inferSelect;
+export type NewAiReviewFeedback = typeof aiReviewFeedback.$inferInsert;
+
+// Web Push 구독. 한 사용자가 여러 디바이스(브라우저·OS·세션) 가질 수 있음.
+// endpoint 는 push service URL → 고유. p256dh/auth 는 ECDH 키.
+// expiresAt 은 push service 가 알려준 만료 시각(밀리초). 만료 시 자동 정리 대상.
+export const pushSubscriptions = sqliteTable("push_subscriptions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  userAgent: text("user_agent"),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  lastUsedAt: integer("last_used_at", { mode: "timestamp_ms" }),
+  // 발송 실패 누적 — 410 Gone 이나 N회 연속 실패 시 prune.
+  failureCount: integer("failure_count").notNull().default(0),
+});
+export type PushSubscriptionRow = typeof pushSubscriptions.$inferSelect;
+export type NewPushSubscriptionRow = typeof pushSubscriptions.$inferInsert;

@@ -27,8 +27,32 @@ type InternalJob = ScanJobPublic & {
 
 const jobs = new Map<string, InternalJob>();
 
+// running 상태로 30분 넘게 멈춰있는 job 강제 만료 — 자식 프로세스가 exit 이벤트 못 받고
+// 죽은 경우(SIGKILL 직격, 부모 재기동 등) 메모리에 영원히 'running' 남는 걸 차단.
+const STALE_RUNNING_MS = 30 * 60 * 1000;
+
+function reapStaleRunning() {
+  const now = Date.now();
+  for (const job of jobs.values()) {
+    if (job.status !== "running" && job.status !== "pending") continue;
+    if (now - job.startedAt > STALE_RUNNING_MS) {
+      // 살아있을지 모르는 자식 프로세스 정리 시도 (best-effort)
+      if (job.proc) {
+        try {
+          job.proc.kill("SIGKILL");
+        } catch {}
+      }
+      job.status = "failed";
+      job.error = `watchdog: ${Math.floor((now - job.startedAt) / 60000)}분 무응답 — 강제 만료`;
+      job.finishedAt = now;
+      job.proc = null;
+    }
+  }
+}
+
 // 오래된 완료 job 정리 (1시간 이상)
 function gcOldJobs() {
+  reapStaleRunning();
   const now = Date.now();
   for (const [id, job] of jobs) {
     if (

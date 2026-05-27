@@ -101,3 +101,143 @@ async function networkFirst(req) {
     return cached || new Response("offline", { status: 503 });
   }
 }
+
+// ── Web Push ────────────────────────────────────────────────
+// 서버가 보낸 JSON payload: { title, body, url, tag, icon, data }
+
+self.addEventListener("push", (event) => {
+  let payload = { title: "비박스", body: "새 알림", url: "/" };
+  try {
+    if (event.data) payload = { ...payload, ...event.data.json() };
+  } catch {
+    /* payload 없거나 깨짐 — 기본값 사용 */
+  }
+  const { title, body, url, tag, icon, data } = payload;
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      tag,
+      icon: icon || "/icon-192.png",
+      badge: "/icon-192.png",
+      data: { url: url || "/", ...(data || {}) },
+    }),
+  );
+});
+
+// ── Background Sync (Chrome 계열 only) ───────────────────────
+// chunks 가 모두 올라간 뒤 finalize(complete) 호출이 실패한 경우,
+// SW 가 이 sync 이벤트에서 IndexedDB 큐를 비우며 자동 재시도.
+const SYNC_TAG_FINALIZE = "vibox-finalize-retry";
+const MAX_FINALIZE_ATTEMPTS = 5;
+
+function idbOpen() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open("vibox", 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains("pending_finalize")) {
+        db.createObjectStore("pending_finalize", { keyPath: "fileId" });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function idbList() {
+  const db = await idbOpen();
+  return await new Promise((resolve, reject) => {
+    const t = db.transaction("pending_finalize", "readonly");
+    const r = t.objectStore("pending_finalize").getAll();
+    r.onsuccess = () => resolve(r.result || []);
+    r.onerror = () => reject(r.error);
+  });
+}
+
+async function idbDelete(fileId) {
+  const db = await idbOpen();
+  return await new Promise((resolve, reject) => {
+    const t = db.transaction("pending_finalize", "readwrite");
+    const r = t.objectStore("pending_finalize").delete(fileId);
+    r.onsuccess = () => resolve();
+    r.onerror = () => reject(r.error);
+  });
+}
+
+async function idbBump(fileId) {
+  const db = await idbOpen();
+  return await new Promise((resolve, reject) => {
+    const t = db.transaction("pending_finalize", "readwrite");
+    const s = t.objectStore("pending_finalize");
+    const g = s.get(fileId);
+    g.onsuccess = () => {
+      const row = g.result;
+      if (!row) return resolve();
+      row.attempts = (row.attempts || 0) + 1;
+      row.lastAttemptAt = Date.now();
+      const p = s.put(row);
+      p.onsuccess = () => resolve();
+      p.onerror = () => reject(p.error);
+    };
+    g.onerror = () => reject(g.error);
+  });
+}
+
+self.addEventListener("sync", (event) => {
+  if (event.tag !== SYNC_TAG_FINALIZE) return;
+  event.waitUntil(
+    (async () => {
+      const pending = await idbList().catch(() => []);
+      for (const row of pending) {
+        if (row.attempts >= MAX_FINALIZE_ATTEMPTS) {
+          await idbDelete(row.fileId);
+          continue;
+        }
+        try {
+          const r = await fetch("/api/upload/complete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ fileId: row.fileId, action: "complete" }),
+          });
+          if (r.ok) {
+            await idbDelete(row.fileId);
+          } else if (r.status === 404 || r.status === 401) {
+            // 세션 만료·세션 사라짐 → 큐에서 제거 (재시도 무의미)
+            await idbDelete(row.fileId);
+          } else {
+            await idbBump(row.fileId);
+          }
+        } catch {
+          await idbBump(row.fileId);
+        }
+      }
+    })(),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = event.notification.data?.url || "/";
+  event.waitUntil(
+    (async () => {
+      const all = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      // 이미 열린 같은 origin 탭이 있으면 focus + navigate
+      for (const c of all) {
+        if (c.url && new URL(c.url).origin === self.location.origin) {
+          await c.focus();
+          if (typeof c.navigate === "function" && c.url !== new URL(target, self.location.origin).href) {
+            try {
+              await c.navigate(target);
+            } catch {
+              /* navigate 실패는 무시 — 사용자가 직접 이동 */
+            }
+          }
+          return;
+        }
+      }
+      // 없으면 새 창
+      await self.clients.openWindow(target);
+    })(),
+  );
+});

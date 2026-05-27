@@ -97,6 +97,20 @@ export function MyBoxClient({
     refresh();
   }, [refresh]);
 
+  // PWA Web Share Target 인입 알림 (claim 자동화는 후속 작업).
+  useEffect(() => {
+    const sharedId = searchParams.get("sharedFiles");
+    const shareEmpty = searchParams.get("shareEmpty");
+    if (sharedId) {
+      toast.info(
+        `공유된 파일이 임시 보관함에 저장됐어요. 관리자에게 정식 인입을 요청하세요. (ID: ${sharedId.slice(0, 8)})`,
+      );
+    } else if (shareEmpty) {
+      toast.error("공유 데이터를 읽을 수 없어요.");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const onSelectFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const arr = Array.from(files);

@@ -103,14 +103,28 @@ export function MenuItem({
 
   let isActive = false;
   if (matchQueryPath) {
+    // /?path=/Rendering 같은 폴더 진입 표시 — pathname /+path query 매칭
     const p = params.get("path") || "";
     isActive = pathname === "/" && p === matchQueryPath;
-  } else if (matchExact) {
-    isActive = pathname === href.split("?")[0];
   } else if (matchPrefix) {
     isActive = pathname.startsWith(matchPrefix);
   } else {
-    isActive = pathname === href.split("?")[0];
+    // 기본 — pathname + query 둘 다 일치해야 active.
+    // href에 query 있으면 그 query 키·값까지 일치해야 active (예: ?upload=1, ?recent=1)
+    const [hrefPath, hrefQuery] = href.split("?");
+    if (pathname !== hrefPath) {
+      isActive = false;
+    } else if (hrefQuery) {
+      // href의 모든 key=value가 현재 URL params에도 동일하게 있어야 함
+      const expected = new URLSearchParams(hrefQuery);
+      isActive = Array.from(expected.entries()).every(
+        ([k, v]) => params.get(k) === v,
+      );
+    } else {
+      // href에 query 없으면 — 현재 URL에 의미있는 query 없을 때만 active
+      // (예: /shares 항목은 /shares?something=... 가 아닌 깔끔한 /shares 일 때만)
+      isActive = !params.toString();
+    }
   }
 
   const padLeft = indent === 2 ? "pl-11" : indent === 1 ? "pl-7" : "pl-3";

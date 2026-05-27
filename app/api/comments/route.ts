@@ -26,8 +26,10 @@ export async function GET(req: NextRequest) {
   const session = await getCurrentSession();
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const filePath = req.nextUrl.searchParams.get("path");
-  if (!filePath) return NextResponse.json({ error: "path required" }, { status: 400 });
+  const rawPath = req.nextUrl.searchParams.get("path");
+  if (!rawPath) return NextResponse.json({ error: "path required" }, { status: 400 });
+  // 한글 NFC/NFD 정규화 — 브라우저 URL 은 NFD 로 오는 경우가 있어 DB(NFC) 와 매칭 실패.
+  const filePath = rawPath.normalize("NFC");
 
   if (!(await canAccessFile(session, filePath))) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
@@ -124,7 +126,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!(await canAccessFile(session, String(body.path)))) {
+  const filePath = String(body.path).normalize("NFC");
+  if (!(await canAccessFile(session, filePath))) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
@@ -153,7 +156,7 @@ export async function POST(req: NextRequest) {
 
   await db.insert(comments).values({
     id: randomUUID(),
-    filePath: String(body.path),
+    filePath,
     authorId: session.sub,
     authorName: session.name ?? session.username,
     videoTimeMs: Math.max(0, Math.floor(Number(body.videoTimeMs))),

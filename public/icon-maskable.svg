@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+  </defs>
+  <!-- maskable: 가장자리는 안전영역 밖이라 잘릴 수 있음. 풀-블리드 배경 + 중앙 80% 영역에만 컨텐츠. -->
+  <rect width="512" height="512" fill="url(#g)"/>
+  <text x="256" y="316" font-family="-apple-system,system-ui,sans-serif" font-size="208" font-weight="700" fill="#ffffff" text-anchor="middle">박</text>
+</svg>

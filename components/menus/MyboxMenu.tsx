@@ -1,37 +1,69 @@
 "use client";
 
 import { FolderOpen, Clock, Star, Trash2, Activity } from "lucide-react";
+import { useEffect, useState } from "react";
 import { MenuShell, MenuSearch, MenuSection, MenuItem } from "./MenuShell";
 
+type Usage = { usedBytes: number; quotaBytes: number; pct: number; fileCount: number };
+
+function formatBytes(b: number | null | undefined): string {
+  if (!b || b === 0) return "0 B";
+  const u = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.min(u.length - 1, Math.floor(Math.log10(b) / 3));
+  return `${(b / Math.pow(1000, i)).toFixed(i <= 1 ? 0 : 1)} ${u[i]}`;
+}
+
 export function MyboxMenu() {
+  const [usage, setUsage] = useState<Usage | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/my/box/usage")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((u) => {
+        if (!cancelled && u) setUsage(u);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
-    <MenuShell title="내 박스">
+    <MenuShell title="My box">
       <MenuSearch placeholder="내 파일 검색" />
 
-      {/* 사용량 게이지 — 추후 server-side에서 실제 값 주입 */}
+      {/* 사용량 게이지 — /api/my/box/usage 실데이터 */}
       <div className="px-4 py-3 border-b border-border">
         <div className="flex items-center justify-between text-[11px] text-text-faint mb-1.5">
           <span>스토리지</span>
-          <span>12.4 GB / 100 GB</span>
+          <span>
+            {usage
+              ? `${formatBytes(usage.usedBytes)} / ${formatBytes(usage.quotaBytes)}`
+              : "—"}
+          </span>
         </div>
         <div className="h-1 rounded-full bg-surface overflow-hidden">
           <div
-            className="h-full bg-accent"
-            style={{ width: "12.4%" }}
+            className="h-full bg-accent transition-all"
+            style={{
+              width: usage ? `${Math.min(100, usage.pct * 100)}%` : "0%",
+              background: "var(--personal, var(--accent))",
+            }}
           />
         </div>
       </div>
 
       <MenuSection label="바로가기" />
-      <MenuItem href="/my/box" icon={FolderOpen} label="모든 파일" matchExact />
+      <MenuItem href="/my/box" icon={FolderOpen} label="모든 파일" />
       <MenuItem href="/my/box?recent=1" icon={Clock} label="최근" />
       <MenuItem href="/my/box?starred=1" icon={Star} label="즐겨찾기" />
 
       <MenuSection label="기록" />
-      <MenuItem href="/my/stats" icon={Activity} label="내 기록" matchExact />
+      <MenuItem href="/my/stats" icon={Activity} label="내 기록" />
 
       <MenuSection label="기타" />
-      <MenuItem href="/trash" icon={Trash2} label="휴지통" matchExact />
+      <MenuItem href="/trash" icon={Trash2} label="휴지통" />
     </MenuShell>
   );
 }

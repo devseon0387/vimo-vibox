@@ -21,6 +21,7 @@ import {
   type Kind,
 } from "@/lib/comments/detect";
 import type { FileEntry } from "@/lib/fs/storage";
+import { AiFeedbackRow } from "./AiFeedbackRow";
 import {
   parseAnnotation,
   shapesBounds,
@@ -867,10 +868,10 @@ export function FeedbackModal({
   const handleScan = async () => {
     if (!entry || scanJob) return;
     const ok = await confirm({
-      title: "AI 자동 검수",
+      title: "AI 자막 오타 검수",
       message: (
         <>
-          자막 오타와 블랙·정지 프레임을 자동으로 검사합니다.
+          자막 오타를 자동으로 검사합니다.
           <br />
           <span className="text-text-faint text-[11.5px]">
             약 2~3분 소요 · 기존 AI 피드백은 새 결과로 교체됩니다
@@ -1324,7 +1325,7 @@ export function FeedbackModal({
                       title={
                         lastScan
                           ? `마지막 검수: ${formatRelative(lastScan.finishedAt)} · ${lastScan.issuesFound ?? 0}건 · ${lastScan.startedByName}`
-                          : "자막 오타 + 블랙/정지 프레임을 자동 검수합니다"
+                          : "자막 오타를 자동 검수합니다"
                       }
                       className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded transition-colors text-violet-600 hover:bg-violet-50"
                     >
@@ -2601,6 +2602,13 @@ function CommentItem({
           </div>
         </div>
       </div>
+
+      {/* AI 댓글 평가 — 사용자가 정확/부정확 + 사유 남기는 인라인 UI */}
+      {isAI && (
+        <div className="ml-7 mt-0.5">
+          <AiFeedbackRow commentId={comment.id} />
+        </div>
+      )}
 
       {/* 답글 인라인 표시 (항상) */}
       {replies.length > 0 && (

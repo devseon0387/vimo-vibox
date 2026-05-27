@@ -10,6 +10,7 @@ import { getCurrentSession } from "@/lib/auth/session";
 import { canAccessFile } from "@/lib/auth/access";
 import { resolveSafePath } from "@/lib/fs/storage";
 import { serializeAnnotation } from "@/lib/comments/annotation";
+import { requireBins } from "@/lib/deps-health";
 import {
   createScanJob,
   getScanJob,
@@ -52,11 +53,22 @@ export async function POST(req: NextRequest) {
   const session = await getCurrentSession();
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
+  // 검수 실행에 필요한 binary 가 prod 에 누락된 경우 fail-fast (exit 127 같은 silent 사고 방지)
+  try {
+    requireBins(["ffmpeg", "ffprobe", "ocr", "claude"]);
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "deps missing" },
+      { status: 503 },
+    );
+  }
+
   const body = await req.json().catch(() => null);
-  const filePath = body?.path;
-  if (!filePath || typeof filePath !== "string") {
+  const rawPath = body?.path;
+  if (!rawPath || typeof rawPath !== "string") {
     return NextResponse.json({ error: "path required" }, { status: 400 });
   }
+  const filePath = rawPath.normalize("NFC");
 
   if (!(await canAccessFile(session, filePath))) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
@@ -134,6 +146,23 @@ async function runScanAsync(
   const job = getScanJob(jobId);
   if (!job) return;
 
+  // 디버그 — 매 스캔의 stdout/stderr 전체를 파일로 보존 (원인 진단용)
+  const debugLogPath = path.join(
+    process.env.HOME || "/tmp",
+    "vibox",
+    "logs",
+    `scan-${jobId}.log`,
+  );
+  await fs.mkdir(path.dirname(debugLogPath), { recursive: true }).catch(() => {});
+  const debugLog = await fs.open(debugLogPath, "a").catch(() => null);
+  const writeDebug = async (label: string, text: string) => {
+    if (!debugLog) return;
+    try {
+      await debugLog.write(`[${new Date().toISOString()}] ${label}: ${text}`);
+    } catch {}
+  };
+  await writeDebug("INFO", `start scan video=${absVideo} out=${outFile}\n`);
+
   const proc = spawn(SCAN_SCRIPT, [absVideo, outFile], {
     stdio: ["ignore", "pipe", "pipe"],
     env: { ...process.env, CLAUDECODE: "" },
@@ -149,24 +178,28 @@ async function runScanAsync(
 
   proc.stdout.on("data", (d: Buffer) => {
     const text = d.toString();
+    void writeDebug("OUT", text);
     const result = parseStageFromOutput(text);
     if (result) updateProgress(job, result);
   });
   proc.stderr.on("data", (d: Buffer) => {
     stderr += d.toString();
-    // stderr도 stage 정보 포함 (Python 필터 로그)
     const text = d.toString();
+    void writeDebug("ERR", text);
     const result = parseStageFromOutput(text);
     if (result) updateProgress(job, result);
   });
 
   proc.on("error", (err: Error) => {
     clearTimeout(timer);
+    void writeDebug("PROCERR", err.message + "\n");
     markFailed(job, err.message);
   });
 
   proc.on("exit", async (code) => {
     clearTimeout(timer);
+    void writeDebug("EXIT", `code=${code}\n`);
+    await debugLog?.close().catch(() => {});
     if (job.status === "cancelled") {
       fs.rm(outFile, { force: true }).catch(() => {});
       await db
@@ -177,14 +210,15 @@ async function runScanAsync(
       return;
     }
     if (code !== 0) {
-      markFailed(job, `exit ${code}: ${stderr.slice(0, 400)}`);
+      const errSnippet = stderr.slice(-1200);
+      markFailed(job, `exit ${code}: ${errSnippet}`);
       fs.rm(outFile, { force: true }).catch(() => {});
       await db
         .update(scanHistory)
         .set({
           status: "failed",
           finishedAt: new Date(),
-          error: `exit ${code}`,
+          error: `exit ${code}: ${errSnippet}`,
         })
         .where(eq(scanHistory.id, job.id))
         .catch(() => {});
@@ -194,65 +228,66 @@ async function runScanAsync(
       const raw = await fs.readFile(outFile, "utf-8");
       const result = JSON.parse(raw) as ScanResult;
 
-      // 기존 AI 댓글 삭제 (자막 + 프레임 모두 — 이번 검수로 전체 새로고침)
-      await db
-        .delete(comments)
-        .where(
-          and(
-            eq(comments.filePath, filePath),
-            eq(comments.authorId, AI_USER_ID),
-          ),
-        );
-
+      // 기존 AI 댓글 삭제 + 새 이슈 INSERT 를 트랜잭션으로 묶어 중간 실패·동시 scan race 차단.
+      // 트랜잭션 안에서 던지면 자동 롤백 → 클라이언트는 일관된 상태만 봄.
       let inserted = 0;
-      for (const iss of result.issues ?? []) {
-        try {
-          const startSec =
-            typeof iss.startSec === "number" ? iss.startSec : iss.timeSec;
-          const endSec =
-            typeof iss.endSec === "number" ? iss.endSec : iss.timeSec;
-          const wrong = (iss.wrong || iss.original || "").trim().slice(0, 200);
-          const correct = (iss.correct || iss.suggestion || "").trim();
-          const annotation = serializeAnnotation({
-            bbox: iss.bbox,
-            original: wrong,
-            suggestion: correct,
-            note: iss.issue,
-            startMs: Math.max(0, Math.floor(startSec * 1000)),
-            endMs: Math.max(0, Math.floor(endSec * 1000)),
-          });
-          await db.insert(comments).values({
-            id: randomUUID(),
-            filePath,
-            authorId: AI_USER_ID,
-            authorName: AI_USER_NAME,
-            videoTimeMs: Math.max(0, Math.floor(startSec * 1000)),
-            category: "txt",
-            autoCategory: "txt",
-            kind: "feedback",
-            autoKind: "feedback",
-            annotation,
-            body: `"${wrong}" → "${correct}" · ${iss.issue}`,
-          });
-          inserted++;
-        } catch {
-          // skip malformed issue
-        }
-      }
-      // 자막 검수 완료 → 이어서 프레임 검수
-      updateProgress(job, { stage: "프레임 이상 감지", progress: 95 });
-      const frameInserted = await runFrameScan(absVideo, filePath).catch(
-        () => 0,
-      );
-      const totalInserted = inserted + frameInserted;
+      await db.transaction(async (tx) => {
+        await tx
+          .delete(comments)
+          .where(
+            and(
+              eq(comments.filePath, filePath),
+              eq(comments.authorId, AI_USER_ID),
+            ),
+          );
 
-      markDone(job, totalInserted);
+        for (const iss of result.issues ?? []) {
+          try {
+            const startSec =
+              typeof iss.startSec === "number" ? iss.startSec : iss.timeSec;
+            const endSec =
+              typeof iss.endSec === "number" ? iss.endSec : iss.timeSec;
+            const wrong = (iss.wrong || iss.original || "").trim().slice(0, 200);
+            const correct = (iss.correct || iss.suggestion || "").trim();
+            const annotation = serializeAnnotation({
+              bbox: iss.bbox,
+              original: wrong,
+              suggestion: correct,
+              note: iss.issue,
+              startMs: Math.max(0, Math.floor(startSec * 1000)),
+              endMs: Math.max(0, Math.floor(endSec * 1000)),
+            });
+            await tx.insert(comments).values({
+              id: randomUUID(),
+              filePath,
+              authorId: AI_USER_ID,
+              authorName: AI_USER_NAME,
+              videoTimeMs: Math.max(0, Math.floor(startSec * 1000)),
+              category: "txt",
+              autoCategory: "txt",
+              kind: "feedback",
+              autoKind: "feedback",
+              annotation,
+              body: `"${wrong}" → "${correct}" · ${iss.issue}`,
+            });
+            inserted++;
+          } catch {
+            // 개별 이슈 직렬화 실패는 skip — 트랜잭션은 유지 (전체 롤백 안 함)
+          }
+        }
+      });
+      // 프레임 검수는 일시 보류 (2026-05-26) — 자막 오타만 우선 검수
+      // 복구하려면 아래 두 줄 주석 해제 + markDone(job, inserted) 를 totalInserted 로 교체
+      // const frameInserted = await runFrameScan(absVideo, filePath).catch(() => 0);
+      // const totalInserted = inserted + frameInserted;
+
+      markDone(job, inserted);
       await db
         .update(scanHistory)
         .set({
           status: "done",
           finishedAt: new Date(),
-          issuesFound: totalInserted,
+          issuesFound: inserted,
         })
         .where(eq(scanHistory.id, job.id))
         .catch(() => {});

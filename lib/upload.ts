@@ -299,12 +299,35 @@ async function uploadOneFile(
     });
     const body = await completeRes.json().catch(() => ({}));
     if (!completeRes.ok) {
+      await registerFinalizeRetry(fileId, file.name);
       return { ok: false, error: "complete: " + (body.error ?? completeRes.statusText) };
     }
     return { ok: true, saved: body.saved };
   } catch (e) {
     if ((e as Error).name === "AbortError") return { ok: false, error: "aborted" };
+    // 네트워크 끊김 등 — SW Background Sync 큐에 등록해 자동 재시도
+    await registerFinalizeRetry(fileId, file.name);
     return { ok: false, error: "complete: " + (e as Error).message };
+  }
+}
+
+// chunks 가 모두 올라간 뒤 finalize 가 실패한 경우 IndexedDB 큐에 등록 +
+// SW Background Sync 트리거. Chrome 계열만 지원 — 미지원 환경은 no-op.
+async function registerFinalizeRetry(fileId: string, filename: string): Promise<void> {
+  try {
+    const { queueFinalize } = await import("@/lib/idb-pending");
+    await queueFinalize(fileId, filename);
+    if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+      const reg = await navigator.serviceWorker.ready;
+      const r = reg as ServiceWorkerRegistration & {
+        sync?: { register: (tag: string) => Promise<void> };
+      };
+      if (r.sync) {
+        await r.sync.register("vibox-finalize-retry");
+      }
+    }
+  } catch (e) {
+    console.warn("[upload] failed to queue finalize retry:", e);
   }
 }
 

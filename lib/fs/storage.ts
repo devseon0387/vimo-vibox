@@ -398,34 +398,42 @@ export async function finalizeChunkUpload(fileId: string): Promise<FileEntry> {
   const safeName = meta.filename.replace(/[/\\:*?"<>|]/g, "_");
   const conflictMode: ConflictMode = meta.conflictMode ?? "autonumber";
 
+  // 원자적 파일명 점유 — 동시 finalize 두 건이 같은 번호 발급하는 TOCTOU 차단.
+  // 'wx' 플래그 = O_CREAT | O_EXCL → 이미 있으면 EEXIST 즉시 실패.
+  // 0바이트 placeholder 생성 후 close → 뒤따르는 createWriteStream 이 truncate-overwrite.
   const finalAbs = await (async () => {
-    const candidate = path.join(absTargetDir, safeName);
-    let exists = true;
-    try {
-      await fs.access(candidate);
-    } catch {
-      exists = false;
-    }
-    if (!exists) return candidate;
+    const tryClaim = async (abs: string): Promise<string | null> => {
+      try {
+        const fh = await fs.open(abs, "wx");
+        await fh.close();
+        return abs;
+      } catch (e: unknown) {
+        if ((e as NodeJS.ErrnoException).code === "EEXIST") return null;
+        throw e;
+      }
+    };
+
+    const primary = path.join(absTargetDir, safeName);
 
     if (conflictMode === "overwrite") {
-      // 그대로 덮어씀 (기존 파일은 writeStream 이 truncate)
-      return candidate;
+      // 그대로 덮어씀 (writeStream 이 truncate). 점유 시도 안 함.
+      return primary;
     }
+
+    const claimedPrimary = await tryClaim(primary);
+    if (claimedPrimary) return claimedPrimary;
+
     if (conflictMode === "skip") {
-      // 사용자가 명시적으로 건너뛰기 선택 — sentinel string 으로 finalize 호출자에게 시그널
       throw new Error("__SKIP_CONFLICT__");
     }
-    // autonumber (기본)
-    const ext = path.extname(candidate);
-    const base = candidate.slice(0, -ext.length);
+
+    // autonumber — 점유 성공할 때까지 (1, 2, ...) 시도
+    const ext = path.extname(primary);
+    const base = primary.slice(0, -ext.length);
     for (let i = 1; i < 1000; i++) {
       const c = `${base} (${i})${ext}`;
-      try {
-        await fs.access(c);
-      } catch {
-        return c;
-      }
+      const claimed = await tryClaim(c);
+      if (claimed) return claimed;
     }
     throw new Error("too many duplicates");
   })();

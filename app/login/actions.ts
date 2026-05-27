@@ -3,11 +3,12 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import bcrypt from "bcryptjs";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { users } from "@/lib/db/schema";
 import { createSession, setSessionCookie } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/rate-limit";
+import { loginViaSupabase } from "@/lib/auth/supabase-bridge";
 
 export type LoginState = {
   error?: string;
@@ -49,35 +50,82 @@ export async function loginAction(
     };
   }
 
-  // 대소문자 구분 없이 검색
+  // 1) 자체 SQLite users 매칭 (username 또는 email 둘 다 허용, 대소문자 무시)
   const rows = await db
     .select()
     .from(users)
-    .where(sql`LOWER(${users.username}) = ${username}`)
+    .where(sql`LOWER(${users.username}) = ${username} OR LOWER(${users.email}) = ${username}`)
     .limit(1);
 
   // timing 균일화 — 사용자 미존재 시에도 bcrypt 호출 (enumeration 차단)
   const DUMMY_HASH = "$2a$10$abcdefghijklmnopqrstuuV1cKQjZ7ZSf6N3D8XWvLpVqVqJxOAaW";
-  const user = rows[0];
-  const hash = user?.passwordHash ?? DUMMY_HASH;
-  const ok = await bcrypt.compare(password, hash);
+  const local = rows[0];
+  const isExternalSso = local?.passwordHash === "external-sso";
+  const hash = local && !isExternalSso ? local.passwordHash : DUMMY_HASH;
+  const localOk = await bcrypt.compare(password, hash);
 
-  if (!user || !ok) {
-    return { error: "아이디 또는 비밀번호가 일치하지 않습니다" };
+  if (local && localOk && !isExternalSso) {
+    const token = await createSession({
+      sub: local.id,
+      username: local.username,
+      name: local.name,
+      role: local.role,
+    });
+    await setSessionCookie(token);
+    redirect("/");
   }
-  if (user.deactivatedAt) {
-    return { error: "비활성화된 계정입니다. 관리자에게 문의하세요" };
+
+  // 2) 자체 PW 매칭 실패 또는 SSO 전용 계정 — Supabase 로 비밀번호 검증 위임
+  //    입력이 이메일 형식일 때만 시도 (아이디 enumeration 노출 최소화)
+  if (username.includes("@")) {
+    const sb = await loginViaSupabase(username, password);
+    if (sb.ok) {
+      const namespacedId = `erp:${sb.sub}`;
+      const existing = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, namespacedId))
+        .limit(1);
+
+      if (existing.length === 0) {
+        const baseUsername = (sb.email.split("@")[0] || "user")
+          .toLowerCase()
+          .replace(/[^a-z0-9._-]/g, "");
+        await db.insert(users).values({
+          id: namespacedId,
+          username: `${baseUsername}-${sb.sub.slice(0, 6)}`,
+          email: sb.email,
+          name: sb.name,
+          passwordHash: "external-sso",
+          role: sb.role,
+          quotaGb: 100,
+        });
+      } else {
+        const u = existing[0];
+        if (u.email !== sb.email || u.name !== sb.name || u.role !== sb.role) {
+          await db
+            .update(users)
+            .set({ email: sb.email, name: sb.name, role: sb.role })
+            .where(eq(users.id, namespacedId));
+        }
+      }
+
+      const token = await createSession({
+        sub: namespacedId,
+        username: sb.email,
+        name: sb.name,
+        role: sb.role,
+      });
+      await setSessionCookie(token);
+      redirect("/");
+    }
+
+    if (sb.reason === "no_vibox_access") {
+      return { error: "비박스 사용 권한이 없는 계정입니다. 관리자에게 문의하세요" };
+    }
   }
 
-  const token = await createSession({
-    sub: user.id,
-    username: user.username,
-    name: user.name,
-    role: user.role,
-  });
-  await setSessionCookie(token);
-
-  redirect("/");
+  return { error: "아이디 또는 비밀번호가 일치하지 않습니다" };
 }
 
 export async function logoutAction(): Promise<void> {

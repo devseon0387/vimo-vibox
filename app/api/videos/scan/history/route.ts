@@ -11,8 +11,9 @@ export async function GET(req: NextRequest) {
   const session = await getCurrentSession();
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const filePath = req.nextUrl.searchParams.get("path");
-  if (!filePath) return NextResponse.json({ error: "path required" }, { status: 400 });
+  const rawPath = req.nextUrl.searchParams.get("path");
+  if (!rawPath) return NextResponse.json({ error: "path required" }, { status: 400 });
+  const filePath = rawPath.normalize("NFC");
 
   if (!(await canAccessFile(session, filePath))) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });

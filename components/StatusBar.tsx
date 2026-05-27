@@ -98,22 +98,23 @@ export function StatusBar({
 
   return (
     <div
-      className="sticky bottom-0 left-0 right-0 z-30 mt-4 -mx-1 bg-white/95 backdrop-blur border border-border rounded-md px-3.5 py-1.5 flex items-center gap-3.5 text-[11px] text-text-soft shadow-[0_-1px_3px_rgba(0,0,0,0.03)]"
+      className="sticky bottom-0 left-0 right-0 z-30 mt-4 -mx-1 bg-white/95 backdrop-blur border border-border rounded-md px-3.5 py-1.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[11px] text-text-soft shadow-[0_-1px_3px_rgba(0,0,0,0.03)]"
       role="status"
       aria-live="polite"
     >
-      {/* Left: 항목 카운트 */}
+      {/* Left: 항목 카운트 — 모바일은 폴더·파일 내역 생략 */}
       <span className="flex items-center gap-1">
         {selectedCount > 0 ? (
           <>
             <span className="font-semibold text-accent">{selectedCount}</span>
-            <span>개 선택됨 / {entriesCount}개</span>
+            <span>개 선택 / {entriesCount}개</span>
           </>
         ) : (
           <>
             <span className="font-semibold text-text">{entriesCount}</span>
-            <span>
-              개 항목 ({folderCount} 폴더 · {fileCount} 파일)
+            <span>개 항목</span>
+            <span className="hidden sm:inline">
+              ({folderCount} 폴더 · {fileCount} 파일)
             </span>
           </>
         )}
@@ -122,7 +123,7 @@ export function StatusBar({
       {/* Health (admin/member만) */}
       {health && (
         <>
-          <span className="w-px h-3 bg-border" />
+          <span className="hidden sm:block w-px h-3 bg-border" />
           <span className="flex items-center gap-1.5">
             <span
               className={`w-1.5 h-1.5 rounded-full ${health.litestreamOk ? "bg-success" : "bg-danger"}`}
@@ -159,8 +160,8 @@ export function StatusBar({
         </>
       )}
 
-      {/* Right: 단축키 힌트 */}
-      <span className="ml-auto flex items-center gap-2 text-text-faint">
+      {/* Right: 단축키 힌트 — 키보드 없는 모바일에선 숨김 */}
+      <span className="ml-auto hidden md:flex items-center gap-2 text-text-faint">
         <kbd className="px-1.5 py-0.5 bg-surface border border-border rounded text-[10px] font-mono text-text-soft">
           ↑↓
         </kbd>

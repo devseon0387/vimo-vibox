@@ -77,11 +77,11 @@ export function ActionBar({
 
   return (
     <>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 w-full md:w-auto">
         <button
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="bg-text text-white hover:bg-[#333] disabled:opacity-60 transition-colors px-3.5 py-2 rounded-md text-[13px] font-semibold flex items-center gap-1.5"
+          className="bg-text text-white hover:bg-[#333] disabled:opacity-60 transition-colors flex-1 md:flex-none px-3.5 py-2.5 md:py-2 rounded-md text-[13px] font-semibold flex items-center justify-center md:justify-start gap-1.5"
         >
           <Upload size={14} strokeWidth={2.5} />
           업로드
@@ -90,15 +90,17 @@ export function ActionBar({
           onClick={() => folderInputRef.current?.click()}
           disabled={uploading}
           title="폴더 통째로 업로드 (구조 보존)"
-          className="bg-white border border-border hover:border-border-hover text-text-muted hover:text-text disabled:opacity-60 transition-colors px-3.5 py-2 rounded-md text-[13px] font-medium flex items-center gap-1.5"
+          aria-label="폴더 업로드"
+          className="bg-white border border-border hover:border-border-hover text-text-muted hover:text-text disabled:opacity-60 transition-colors px-3 md:px-3.5 py-2.5 md:py-2 rounded-md text-[13px] font-medium flex items-center gap-1.5 shrink-0"
         >
           <FolderUp size={14} strokeWidth={2} />
-          폴더 업로드
+          <span className="hidden md:inline">폴더 업로드</span>
         </button>
         {!disableNewFolder && (
           <button
             onClick={handleNewFolder}
-            className="bg-white border border-border hover:border-border-hover text-text-muted hover:text-text transition-colors px-3.5 py-2 rounded-md text-[13px] font-medium flex items-center gap-1.5"
+            aria-label="새 폴더"
+            className="hidden md:flex bg-white border border-border hover:border-border-hover text-text-muted hover:text-text transition-colors px-3.5 py-2 rounded-md text-[13px] font-medium items-center gap-1.5"
           >
             <FolderPlus size={14} strokeWidth={2} /> 새 폴더
           </button>

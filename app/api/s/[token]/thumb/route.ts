@@ -19,18 +19,16 @@ import {
 
 // GET /api/s/[token]/thumb?p=/foo.mp4[&t=12][&password=xxx]
 // 공유 링크 내 파일의 썸네일 (메인 or 프레임 시점)
+// p 가 없으면 공유 링크의 첫 영상 파일로 폴백 (OG image 용도 — SNS 봇이 호출).
 export async function GET(
   req: NextRequest,
   ctx: { params: Promise<{ token: string }> },
 ) {
   const { token } = await ctx.params;
   const url = new URL(req.url);
-  const p = url.searchParams.get("p");
+  const pParam = url.searchParams.get("p");
   const password = url.searchParams.get("password") ?? "";
   const tParam = url.searchParams.get("t");
-
-  if (!p) return new Response("p required", { status: 400 });
-  if (!isVideoPath(p)) return new Response("not a video", { status: 400 });
 
   // 공유 링크 검증
   const rows = await db
@@ -50,11 +48,21 @@ export async function GET(
     if (!ok) return new Response("wrong password", { status: 401 });
   }
 
-  // 공유 링크에 포함된 파일인지 확인
   const allowedPaths = resolveAllowedPaths(link);
-  if (!allowedPaths.includes(p)) {
-    return new Response("not allowed", { status: 403 });
+
+  // p 지정되면 검증, 아니면 첫 영상 파일로 폴백 (OG image 호출 시나리오)
+  let p: string;
+  if (pParam) {
+    if (!allowedPaths.includes(pParam)) {
+      return new Response("not allowed", { status: 403 });
+    }
+    p = pParam;
+  } else {
+    const firstVideo = allowedPaths.find((x) => isVideoPath(x));
+    if (!firstVideo) return new Response("no video", { status: 404 });
+    p = firstVideo;
   }
+  if (!isVideoPath(p)) return new Response("not a video", { status: 400 });
 
   let abs: string;
   if (tParam !== null) {

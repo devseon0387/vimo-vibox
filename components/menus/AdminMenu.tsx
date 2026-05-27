@@ -12,6 +12,7 @@ import {
   Plug,
   Eye,
   Sparkles,
+  Code2,
 } from "lucide-react";
 import { MenuShell, MenuSearch, MenuSection, MenuItem } from "./MenuShell";
 
@@ -27,6 +28,7 @@ export function AdminMenu() {
       <MenuItem href="/admin/clients" icon={Building2} label="클라이언트" matchPrefix="/admin/clients" />
 
       <MenuSection label="시스템" />
+      <MenuItem href="/admin/ai-feedback" icon={Sparkles} label="AI 검수 피드백" matchPrefix="/admin/ai-feedback" />
       <MenuItem href="/admin/stats" icon={BarChart3} label="통계" matchPrefix="/admin/stats" />
       <MenuItem href="/admin/disks" icon={HardDrive} label="디스크" matchPrefix="/admin/disks" />
       <MenuItem href="/admin/storage" icon={HardDrive} label="저장소 점검" matchPrefix="/admin/storage" />
@@ -39,6 +41,7 @@ export function AdminMenu() {
 
       <MenuSection label="앱" />
       <MenuItem href="/admin/updates" icon={Sparkles} label="업데이트" matchPrefix="/admin/updates" />
+      <MenuItem href="/dev/notes" icon={Code2} label="개발 노트" matchPrefix="/dev/notes" />
     </MenuShell>
   );
 }

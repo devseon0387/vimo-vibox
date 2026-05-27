@@ -23,6 +23,7 @@ import { useConfirm } from "./ConfirmDialog";
 import { humanError } from "@/lib/human-error";
 import { usePrompt } from "./PromptDialog";
 import { PreviewModal, isPreviewableEntry } from "./PreviewModal";
+import { SpaceLabel } from "./dashboard/SpaceLabel";
 import { MoveDialog } from "./MoveDialog";
 import { ShareDialog } from "./ShareDialog";
 import { useToast } from "./Toast";
@@ -302,19 +303,26 @@ function Card({
           </div>
         )}
 
-        {stats && stats.commentCount > 0 && (
-          <div className="absolute top-1.5 left-1.5 flex gap-1">
-            <span className="bg-black/70 text-white text-[10.5px] font-semibold px-1.5 py-0.5 rounded flex items-center gap-0.5 backdrop-blur-sm">
-              <MessageSquare size={10} strokeWidth={2.5} />
-              {stats.commentCount}
-            </span>
-            {stats.openCount > 0 && (
-              <span className="bg-amber-500 text-white text-[10.5px] font-semibold px-1.5 py-0.5 rounded">
-                {stats.openCount} 남음
+        <div className="absolute top-1.5 left-1.5 flex gap-1 items-center">
+          <SpaceLabel
+            space={entry.path.startsWith("/personal/") ? "personal" : "team"}
+            size="sm"
+            withText={false}
+          />
+          {stats && stats.commentCount > 0 && (
+            <>
+              <span className="bg-black/70 text-white text-[10.5px] font-semibold px-1.5 py-0.5 rounded flex items-center gap-0.5 backdrop-blur-sm">
+                <MessageSquare size={10} strokeWidth={2.5} />
+                {stats.commentCount}
               </span>
-            )}
-          </div>
-        )}
+              {stats.openCount > 0 && (
+                <span className="bg-amber-500 text-white text-[10.5px] font-semibold px-1.5 py-0.5 rounded">
+                  {stats.openCount} 남음
+                </span>
+              )}
+            </>
+          )}
+        </div>
 
         {hover && (
           <div className="absolute top-1.5 right-1.5 flex gap-0.5 bg-white/95 backdrop-blur rounded-md border border-border shadow-sm">

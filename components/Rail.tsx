@@ -3,22 +3,25 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Home, Code2, Package, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, Users, Activity, Settings, LogOut } from "lucide-react";
 import { logoutAction } from "@/app/login/actions";
-import { railFromPath } from "@/lib/rail";
+import { railFromPath, type RailKey } from "@/lib/rail";
 
 type RailItem = {
-  key: "home" | "dev" | "mybox" | "admin";
+  key: RailKey;
   label: string;
-  icon: typeof Home;
+  icon: typeof LayoutDashboard;
   href: string;
   adminOnly?: boolean;
+  /** 활성 아이콘 색상 (액티브 + 호버) — 공간 구분용 */
+  accentColor?: string;
 };
 
 const RAIL_ITEMS: RailItem[] = [
-  { key: "home", label: "홈", icon: Home, href: "/" },
-  { key: "dev", label: "개발", icon: Code2, href: "/dev/notes", adminOnly: true },
-  { key: "mybox", label: "내 박스", icon: Package, href: "/my/box" },
+  { key: "home", label: "홈", icon: LayoutDashboard, href: "/" },
+  { key: "mybox", label: "My box", icon: Package, href: "/my/box", accentColor: "#0ea5e9" },
+  { key: "team", label: "비모", icon: Users, href: "/team", accentColor: "#e85008" },
+  { key: "activity", label: "활동", icon: Activity, href: "/inbox" },
   { key: "admin", label: "관리", icon: Settings, href: "/admin/users", adminOnly: true },
 ];
 
@@ -56,6 +59,8 @@ export function Rail({
         {visibleItems.map((item) => {
           const Icon = item.icon;
           const isActive = active === item.key;
+          // 공간 구분 색은 활성일 때만. 비활성은 text-soft 통일 — 활성 위계 회복.
+          const tint = item.accentColor;
           return (
             <Link
               key={item.key}
@@ -64,18 +69,16 @@ export function Rail({
                 relative flex flex-col items-center gap-1.5 py-3 px-1 rounded-lg
                 transition-colors
                 ${isActive
-                  ? "bg-white text-accent shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
-                  : "text-text-soft hover:bg-hover"
+                  ? "bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+                  : "text-text-soft hover:bg-hover hover:text-text"
                 }
               `}
+              style={isActive ? { color: tint ?? "var(--accent)" } : undefined}
             >
               <Icon size={18} strokeWidth={2} />
               <span className="text-[11px] font-medium tracking-tight">
                 {item.label}
               </span>
-              {item.adminOnly && (
-                <span className="absolute top-2 right-3 w-1.5 h-1.5 rounded-full bg-accent/50" />
-              )}
             </Link>
           );
         })}

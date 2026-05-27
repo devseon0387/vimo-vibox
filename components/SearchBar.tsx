@@ -25,7 +25,7 @@ export function SearchBar() {
   };
 
   return (
-    <div className="relative flex-1 max-w-[360px] ml-auto">
+    <div className="relative w-full md:flex-1 md:max-w-[360px] md:ml-auto">
       <Search
         size={14}
         strokeWidth={2.2}

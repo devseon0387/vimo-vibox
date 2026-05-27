@@ -138,6 +138,7 @@ export const config = {
     // 인증 검사 대상: 공개 에셋·내장 라우트 제외한 모든 경로
     // 제외:
     //  - api/upload/* (청크 init/chunk/complete 모두, 스트리밍·라우트 자체 인증)
+    //  - api/share-target/* (PWA Web Share Target multipart — 라우트 자체 세션 검증)
     //  - api/sso/* (외부 ERP SSO 핸드오프 — 라우트 자체에서 JWT 검증)
     //  - api/dev/* (외부 ERP 프록시 — DEV_PROXY_TOKEN Bearer 인증)
     //  - api/notes/* (외부 클라이언트 — vbx_ 토큰 Bearer 인증, 라우트에서 검증)
@@ -147,6 +148,6 @@ export const config = {
     //
     // 모든 prefix exclude는 trailing `/` 또는 정확 일치만 허용 — 앞으로 추가될
     // /api/notes-public 같은 hostname-collision 라우트가 의도치 않게 인증 우회되는 것 방지.
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|avif)$|public|api/upload(?:/|$)|api/sso(?:/|$)|api/dev(?:/|$)|api/external(?:/|$)|api/notes(?:/|$)|api/s/|s/).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sw\\.js$|manifest\\.webmanifest$|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|avif)$|public|api/upload(?:/|$)|api/share-target(?:/|$)|api/sso(?:/|$)|api/dev(?:/|$)|api/external(?:/|$)|api/notes(?:/|$)|api/s/|s/).*)",
   ],
 };

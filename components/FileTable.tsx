@@ -10,6 +10,7 @@ import { useConfirm } from "./ConfirmDialog";
 import { usePrompt } from "./PromptDialog";
 import { humanError } from "@/lib/human-error";
 import { PreviewModal, isPreviewableEntry } from "./PreviewModal";
+import { SpaceLabel } from "./dashboard/SpaceLabel";
 import { MoveDialog } from "./MoveDialog";
 import { ShareDialog } from "./ShareDialog";
 import { useToast } from "./Toast";
@@ -657,9 +658,14 @@ function FileRow({
         )}
       </td>
       <td className="px-4 py-2.5">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 min-w-0">
           <Thumbnail kind={entry.kind} path={entry.path} />
-          <span className="text-text">{entry.name}</span>
+          <SpaceLabel
+            space={entry.path.startsWith("/personal/") ? "personal" : "team"}
+            size="sm"
+            withText={false}
+          />
+          <span className="text-text truncate">{entry.name}</span>
         </div>
       </td>
       <td className="px-4 py-2.5 text-text-soft truncate" title={uploaderName ?? ""}>

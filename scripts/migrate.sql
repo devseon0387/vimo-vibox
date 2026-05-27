@@ -320,3 +320,22 @@ CREATE TABLE IF NOT EXISTS note_versions (
 );
 CREATE INDEX IF NOT EXISTS idx_note_versions_path_saved
   ON note_versions(path, saved_at DESC);
+
+-- 2026-05-27: PWA Web Push 구독.
+-- userId FK + endpoint UNIQUE. 한 사용자가 여러 디바이스 가질 수 있음.
+-- expiresAt 은 push service 가 알려준 만료 시각, failureCount 5회 누적 시 prune.
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id            TEXT PRIMARY KEY NOT NULL,
+  user_id       TEXT NOT NULL,
+  endpoint      TEXT NOT NULL,
+  p256dh        TEXT NOT NULL,
+  auth          TEXT NOT NULL,
+  user_agent    TEXT,
+  expires_at    INTEGER,
+  created_at    INTEGER NOT NULL,
+  last_used_at  INTEGER,
+  failure_count INTEGER NOT NULL DEFAULT 0,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON UPDATE no action ON DELETE cascade
+);
+CREATE UNIQUE INDEX IF NOT EXISTS push_subscriptions_endpoint_unique
+  ON push_subscriptions(endpoint);

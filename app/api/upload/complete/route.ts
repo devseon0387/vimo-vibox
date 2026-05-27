@@ -50,7 +50,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const saved = await finalizeChunkUpload(fileId);
-    // 파일 소유권 DB 기록 (partner 가시성 용도) — upsert. 실패하면 로깅 (이전엔 silent)
+
+    // 파일 소유권 DB 기록 (partner 가시성 + ERP 연동 추적용) — upsert.
+    // 실패 시 응답에 _warning 필드로 명시 — 클라이언트 UI 가 노출, 서버 stderr 에 WARN
+    // 표식 로깅으로 운영 모니터링 가능. 파일은 디스크에 그대로 두어 reconcile.ts 로 복구.
+    let dbWarning: string | null = null;
     try {
       await db
         .insert(fileUploads)
@@ -74,26 +78,32 @@ export async function POST(req: NextRequest) {
           },
         });
     } catch (e) {
-      console.error("[upload/complete] fileUploads upsert failed:", e, "path=", saved.path);
+      const msg = e instanceof Error ? e.message : "unknown";
+      dbWarning = `fileUploads upsert failed: ${msg.slice(0, 200)}`;
+      console.warn(
+        `[WARN][upload/complete] fileUploads upsert failed user=${session.sub} path=${saved.path} err=${msg}`,
+      );
     }
-    // personal 업로드면 dirSize 캐시 무효화
+
     const ownerId = personalOwnerOf(saved.path);
     if (ownerId) invalidateDirSizeCache(ownerId);
-    // 인바운드 트래픽 기록 (업로드된 파일 크기)
     logTraffic({
       path: saved.path,
       bytes: saved.size,
       source: "upload",
       userId: session.sub,
     });
-    // 영상이면 백그라운드로 썸네일 생성 + HLS 인코딩 큐에 추가
     if (isVideoPath(saved.path)) {
       generateThumbInBackground(saved.path);
       enqueueHLS(saved.path).catch(() => {
         /* 큐 등록 실패는 응답 막지 않음 */
       });
     }
-    return Response.json({ ok: true, saved }, { headers: cors });
+
+    return Response.json(
+      dbWarning ? { ok: true, saved, _warning: dbWarning } : { ok: true, saved },
+      { headers: cors },
+    );
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "unknown";
     return Response.json({ error: msg }, { status: 500, headers: cors });
