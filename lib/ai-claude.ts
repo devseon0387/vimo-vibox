@@ -12,6 +12,10 @@ import { spawn } from "node:child_process";
 
 const CLAUDE_BIN = process.env.CLAUDE_BIN ?? "claude";
 
+// CLI 가 hang 하면 요청이 영원히 매달리므로 강제 타임아웃. notes/v2/ai 의
+// maxDuration(120s)보다 짧게 둬 라우트 레벨 종료보다 먼저 정리되게 한다.
+const CLAUDE_TIMEOUT_MS = Number(process.env.AI_CLAUDE_TIMEOUT_MS ?? 90_000);
+
 const DISALLOWED_TOOLS = [
   "Bash", "Edit", "Write", "Read", "Glob", "Grep", "Task",
   "WebSearch", "WebFetch", "NotebookEdit", "TodoWrite", "MultiEdit",
@@ -50,12 +54,35 @@ export async function runClaude(opts: {
     const child = spawn(CLAUDE_BIN, args, { env });
     let out = "";
     let err = "";
+
+    // 중복 settle 방지 + 타임아웃 정리
+    let settled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const finish = (fn: () => void) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      fn();
+    };
+
+    timer = setTimeout(() => {
+      try {
+        child.kill("SIGKILL");
+      } catch {}
+      finish(() =>
+        reject(new Error(`claude CLI timeout (${CLAUDE_TIMEOUT_MS}ms)`)),
+      );
+    }, CLAUDE_TIMEOUT_MS);
+    timer.unref?.();
+
     child.stdout.on("data", (d) => (out += d.toString()));
     child.stderr.on("data", (d) => (err += d.toString()));
-    child.on("error", reject);
+    child.on("error", (e) => finish(() => reject(e)));
     child.on("close", (code) => {
-      if (code === 0) resolve(out.trim());
-      else reject(new Error(`claude CLI exit ${code}: ${(err || out).trim()}`));
+      finish(() => {
+        if (code === 0) resolve(out.trim());
+        else reject(new Error(`claude CLI exit ${code}: ${(err || out).trim()}`));
+      });
     });
   });
 }
