@@ -65,6 +65,10 @@ export async function loginAction(
   const localOk = await bcrypt.compare(password, hash);
 
   if (local && localOk && !isExternalSso) {
+    // 비활성화(soft-delete) 계정은 로그인 차단 (schema: deactivatedAt 주석 참조)
+    if (local.deactivatedAt) {
+      return { error: "비활성화된 계정입니다. 관리자에게 문의하세요" };
+    }
     const token = await createSession({
       sub: local.id,
       username: local.username,
@@ -102,6 +106,10 @@ export async function loginAction(
         });
       } else {
         const u = existing[0];
+        // vibox 에서 비활성화한 ERP 계정은 Supabase 인증이 통과해도 차단
+        if (u.deactivatedAt) {
+          return { error: "비활성화된 계정입니다. 관리자에게 문의하세요" };
+        }
         if (u.email !== sb.email || u.name !== sb.name || u.role !== sb.role) {
           await db
             .update(users)

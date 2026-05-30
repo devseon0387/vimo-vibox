@@ -61,6 +61,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "아이디 또는 비밀번호가 틀렸습니다" }, { status: 401 });
   }
 
+  // 비활성화(soft-delete) 계정은 토큰 발급 차단
+  if (user.deactivatedAt) {
+    return NextResponse.json({ error: "비활성화된 계정입니다" }, { status: 403 });
+  }
+
   const payload: SessionPayload = {
     sub: user.id,
     username: user.username,

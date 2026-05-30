@@ -6,6 +6,17 @@ import { Search } from "lucide-react";
 import { searchNotes, type SearchHit } from "@/lib/api";
 import { Shell } from "@/components/Shell";
 
+// FTS 스니펫은 노트 본문 raw 텍스트라 그대로 innerHTML 에 넣으면 stored XSS.
+// '[[' / ']]' 마커만 <mark> 로 바꾸기 전에 본문의 HTML 메타문자를 먼저 escape.
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export default function SearchPage() {
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<SearchHit[]>([]);
@@ -64,7 +75,7 @@ export default function SearchPage() {
                 <div
                   className="mt-1 text-xs text-zinc-600"
                   dangerouslySetInnerHTML={{
-                    __html: h.snippet
+                    __html: escapeHtml(h.snippet)
                       .replace(/\[\[/g, '<mark class="bg-amber-100 text-amber-900 not-italic">')
                       .replace(/\]\]/g, "</mark>"),
                   }}

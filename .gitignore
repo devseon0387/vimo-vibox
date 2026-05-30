@@ -39,11 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-_storage/
-_data/
-Library/
-Personal/
-Notes/
+# 데이터 디렉토리만 무시 — 루트 앵커(/) 필수.
+# macOS 는 대소문자 무시 파일시스템이라 앵커 없는 `Notes/` 는 소스 `app/api/notes/`,
+# `app/api/dev/notes/` 까지 매칭해 라우트 23개를 통째로 버전관리에서 누락시킨다.
+/_storage/
+/_data/
+/Library/
+/Personal/
+/Notes/
 .env.local
 
 # arch-specific binaries (compile on target)

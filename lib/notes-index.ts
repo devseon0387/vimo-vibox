@@ -29,7 +29,14 @@ export function notePathFromAbs(abs: string): string | null {
 export function absFromNotePath(notePath: string): string | null {
   if (!notePath.startsWith("/notes/")) return null;
   const rel = notePath.slice("/notes/".length);
-  return path.join(notesRoot(), rel);
+  const root = notesRoot();
+  // path traversal 봉쇄 — resolveSafePath(storage.ts)와 동일 패턴.
+  // notePath 는 URL/요청 파라미터라 '../' 가 섞이면 notes zone 밖으로 탈출 가능
+  // (예: /notes/../../etc/hosts, /notes/../personal/victim/x.md) → join 후 재검증.
+  const abs = path.join(root, path.normalize(rel.replace(/\\/g, "/")));
+  const relCheck = path.relative(root, abs);
+  if (relCheck.startsWith("..") || path.isAbsolute(relCheck)) return null;
+  return abs;
 }
 
 /** 본문에서 발췌 200자 (frontmatter 제외) */

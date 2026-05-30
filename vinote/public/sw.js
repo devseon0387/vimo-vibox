@@ -75,17 +75,33 @@ async function cacheFirst(req) {
   }
 }
 
+// 노트 API GET — network-first (인증 데이터라 항상 최신 우선, 오프라인만 캐시 폴백).
+// 과거 SWR(cached 먼저 반환)은 공유 기기에서 계정 전환 시 이전 사용자의 노트가
+// 그대로 노출되는 문제가 있어 network-first 로 전환. 인증 실패 응답은 캐시를 비운다.
 async function swr(req) {
-  const cached = await caches.match(req);
-  const fetchPromise = fetch(req)
-    .then((res) => {
-      if (res.ok) {
-        caches.open(RUNTIME_CACHE).then((c) => c.put(req, res.clone()));
-      }
+  try {
+    const res = await fetch(req);
+    // 401/403 = 세션 만료·로그아웃·계정 전환 신호 → 다른 사용자 데이터가 남지
+    // 않도록 private 런타임 캐시를 통째로 비운다.
+    if (res.status === 401 || res.status === 403) {
+      await caches.delete(RUNTIME_CACHE);
       return res;
-    })
-    .catch(() => cached);
-  return cached || fetchPromise;
+    }
+    if (res.ok) {
+      const c = await caches.open(RUNTIME_CACHE);
+      c.put(req, res.clone());
+    }
+    return res;
+  } catch {
+    const cached = await caches.match(req);
+    return (
+      cached ||
+      new Response(JSON.stringify({ offline: true }), {
+        status: 503,
+        headers: { "Content-Type": "application/json" },
+      })
+    );
+  }
 }
 
 // ───── offline save 큐 (IndexedDB) ─────
@@ -169,5 +185,9 @@ self.addEventListener("online", () => {
 self.addEventListener("message", (event) => {
   if (event.data?.type === "FLUSH_SAVE_QUEUE") {
     event.waitUntil(flushQueue());
+  }
+  // 로그아웃/계정 전환 시 클라이언트가 호출 — private 노트 캐시 즉시 제거
+  if (event.data?.type === "CLEAR_PRIVATE_CACHE") {
+    event.waitUntil(caches.delete(RUNTIME_CACHE));
   }
 });

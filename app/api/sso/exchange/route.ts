@@ -21,7 +21,9 @@ import { corsHeaders, preflight } from "@/lib/auth/cors";
  * users upsert — ERP의 sub와 vibox-네이티브 users.id 충돌 시 admin 권한 덮어쓰기
  * 방지를 위해 SSO 사용자는 "erp:" 네임스페이스로 분리.
  */
-async function upsertSsoUser(payload: SsoPayload): Promise<string> {
+async function upsertSsoUser(
+  payload: SsoPayload,
+): Promise<{ id: string; deactivated: boolean }> {
   const namespacedId = `erp:${payload.sub}`;
   const existing = await db
     .select()
@@ -53,24 +55,29 @@ async function upsertSsoUser(payload: SsoPayload): Promise<string> {
       role: payload.role,
       quotaGb: 100,
     });
-  } else {
-    const u = existing[0];
-    if (
-      u.email !== payload.email ||
-      u.name !== payload.name ||
-      u.role !== payload.role
-    ) {
-      await db
-        .update(users)
-        .set({
-          email: payload.email,
-          name: payload.name,
-          role: payload.role,
-        })
-        .where(eq(users.id, namespacedId));
-    }
+    return { id: namespacedId, deactivated: false };
   }
-  return namespacedId;
+
+  const u = existing[0];
+  // vibox 에서 비활성화(soft-delete)한 계정은 외부 ERP SSO 로도 재진입 차단
+  if (u.deactivatedAt) {
+    return { id: namespacedId, deactivated: true };
+  }
+  if (
+    u.email !== payload.email ||
+    u.name !== payload.name ||
+    u.role !== payload.role
+  ) {
+    await db
+      .update(users)
+      .set({
+        email: payload.email,
+        name: payload.name,
+        role: payload.role,
+      })
+      .where(eq(users.id, namespacedId));
+  }
+  return { id: namespacedId, deactivated: false };
 }
 
 export async function OPTIONS(req: NextRequest) {
@@ -102,7 +109,10 @@ export async function GET(req: NextRequest) {
     return Response.redirect(new URL(`/login?sso_error=invalid_token`, req.url), 302);
   }
 
-  await upsertSsoUser(payload);
+  const { deactivated } = await upsertSsoUser(payload);
+  if (deactivated) {
+    return Response.redirect(new URL(`/login?sso_error=deactivated`, req.url), 302);
+  }
 
   const session = await createSession({
     sub: `erp:${payload.sub}`,
@@ -130,7 +140,13 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "invalid or expired token" }, { status: 401, headers: cors });
   }
 
-  const namespacedId = await upsertSsoUser(payload);
+  const { id: namespacedId, deactivated } = await upsertSsoUser(payload);
+  if (deactivated) {
+    return Response.json(
+      { error: "비활성화된 계정입니다" },
+      { status: 403, headers: cors },
+    );
+  }
 
   const session = await createSession({
     sub: namespacedId,
