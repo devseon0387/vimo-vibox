@@ -1,0 +1,2117 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비노트 UI v2 — 3-pane 통합 (PC·태블릿·모바일)</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #fafafa;
+    --surface-2: #f7f7f7;
+    --border: #ececec;
+    --border-hover: #d4d4d4;
+    --text: #111111;
+    --text-muted: #555555;
+    --text-soft: #666666;
+    --text-faint: #999999;
+    --text-placeholder: #a3a3a3;
+    --accent: #e85008;
+    --accent-hover: #c8430a;
+    --accent-soft: #fef0e8;
+    --hover: #f0f0f0;
+    --danger: #dc2626;
+    --success: #16a34a;
+    --personal: #0ea5e9;
+    --personal-soft: #e0f2fe;
+    --purple: #7c3aed;
+    --purple-soft: #f5f3ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: #ededed;
+    color: var(--text);
+    font-family: "Pretendard", -apple-system, "Apple SD Gothic Neo", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; }
+
+  .page {
+    max-width: 1520px;
+    margin: 0 auto;
+    padding: 56px 28px 120px;
+  }
+  .page-head h1 {
+    margin: 0 0 8px;
+    font-size: 28px;
+    letter-spacing: -0.02em;
+    font-weight: 800;
+  }
+  .page-head p {
+    margin: 0;
+    color: var(--text-soft);
+    font-size: 14.5px;
+    line-height: 1.6;
+    max-width: 920px;
+  }
+  .decision {
+    margin: 24px 0 0;
+    padding: 16px 20px;
+    background: white;
+    border-left: 4px solid var(--accent);
+    border-radius: 0 10px 10px 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-muted);
+    max-width: 920px;
+  }
+  .decision b { color: var(--text); }
+  .decision .pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    margin-right: 8px;
+    letter-spacing: 0.01em;
+  }
+
+  .toc {
+    margin: 28px 0 56px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    border-top: 1px solid #dcdcdc;
+    border-bottom: 1px solid #dcdcdc;
+    padding: 12px 0;
+  }
+  .toc a {
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+  }
+  .toc a:hover { border-color: var(--border); background: white; color: var(--text); }
+  .toc a strong { color: var(--accent); font-weight: 700; }
+
+  .section { margin: 72px 0 0; scroll-margin-top: 24px; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .section-head h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+  }
+  .section-head .tag {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .section-head .desc {
+    color: var(--text-soft);
+    font-size: 13.5px;
+    line-height: 1.55;
+    flex: 1 1 480px;
+  }
+
+  /* 디자인 토큰 표 */
+  .tokens {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    max-width: 1280px;
+    margin-bottom: 16px;
+  }
+  .token-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .token-card h5 {
+    margin: 0 0 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+  .swatch-row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+  }
+  .swatch {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    border: 1px solid rgba(0,0,0,0.06);
+    position: relative;
+  }
+  .swatch::after {
+    content: attr(data-label);
+    position: absolute;
+    bottom: -16px;
+    left: 0;
+    font-size: 9.5px;
+    color: var(--text-faint);
+    white-space: nowrap;
+  }
+  .token-card.measure ul { margin: 0; padding-left: 16px; font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+  .token-card.measure ul code { background: var(--surface-2); padding: 1px 5px; border-radius: 3px; font-size: 11.5px; }
+  .token-card.measure ul b { color: var(--text); font-weight: 600; }
+
+  /* === 프레임 공통 === */
+  .pc-frame {
+    width: 1440px;
+    height: 900px;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.04);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .pc-titlebar {
+    height: 32px;
+    background: linear-gradient(#f4f4f4, #ececec);
+    border-bottom: 1px solid #dcdcdc;
+    display: flex; align-items: center; padding: 0 12px; gap: 6px;
+    flex-shrink: 0;
+    z-index: 60;
+  }
+  .pc-titlebar .dot { width:11px; height:11px; border-radius:50%; }
+  .pc-titlebar .dot.r { background:#ff5f57; }
+  .pc-titlebar .dot.y { background:#febc2e; }
+  .pc-titlebar .dot.g { background:#28c840; }
+  .pc-titlebar .url {
+    flex:1; text-align:center; font-size:12px; color:#666;
+  }
+  .pc-frame > .app { flex: 1; display: flex; min-height: 0; }
+
+  /* === Rail (96px, 갤탭 동일) === */
+  .rail {
+    width: 96px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 18px 8px;
+    flex-shrink: 0;
+  }
+  .rail .logo {
+    width: 48px; height: 48px; margin: 0 auto 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), #c8430a);
+    color: white; font-weight: 800; font-size: 18px;
+    display: grid; place-items: center;
+    box-shadow: 0 4px 8px -2px rgba(232,80,8,0.35);
+    letter-spacing: -0.04em;
+  }
+  .rail nav { display: flex; flex-direction: column; gap: 4px; }
+  .rail-item {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    padding: 12px 4px; border-radius: 12px;
+    color: var(--text-soft); cursor: pointer;
+    min-height: 56px; justify-content: center;
+    position: relative;
+  }
+  .rail-item:hover { background: var(--hover); }
+  .rail-item.active {
+    background: white; color: var(--accent);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .rail-item span { font-size: 11.5px; font-weight: 600; }
+  .rail-item .badge {
+    position: absolute; top: 6px; right: 12px;
+    background: var(--accent); color: white;
+    font-size: 9.5px; font-weight: 700;
+    padding: 0 5px; height: 14px;
+    min-width: 14px; border-radius: 999px;
+    display: grid; place-items: center;
+  }
+  .rail .spacer { flex: 1; }
+  .rail .avatar {
+    margin: 0 auto; width: 40px; height: 40px; border-radius: 999px;
+    background: linear-gradient(135deg, var(--accent), #c8430a);
+    color: white; display: grid; place-items: center; font-weight: 700; font-size: 12.5px;
+  }
+
+  /* === List pane === */
+  .list-pane {
+    width: 320px; border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    background: white;
+    flex-shrink: 0;
+  }
+  .list-pane.tablet { width: 300px; }
+  .list-pane .h {
+    padding: 16px 18px 10px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .list-pane .h h3 {
+    margin: 0; font-size: 17px; font-weight: 800; letter-spacing: -0.02em;
+    flex: 1;
+  }
+  .list-pane .h .badge {
+    background: var(--surface-2); color: var(--text-muted);
+    font-size: 11px; padding: 2px 8px; border-radius: 999px;
+    font-weight: 600;
+  }
+  .list-pane .h .new {
+    width: 34px; height: 34px; border-radius: 999px;
+    background: var(--accent); color: white; display: grid; place-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px -3px rgba(232,80,8,0.4);
+  }
+  .list-pane .search {
+    margin: 0 14px 12px; position: relative;
+  }
+  .list-pane .search input {
+    width: 100%; background: var(--surface);
+    border: 1px solid transparent; border-radius: 10px;
+    padding: 10px 12px 10px 36px;
+    font-size: 13.5px; outline: none;
+    color: var(--text);
+  }
+  .list-pane .search .ic { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-faint); }
+  .list-pane .search .kbd {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10.5px;
+    color: var(--text-faint);
+    background: white; border: 1px solid var(--border); border-radius: 4px;
+    padding: 1px 5px;
+  }
+  .list-tabs {
+    display: flex; gap: 4px; padding: 0 14px 10px;
+  }
+  .list-tabs .t {
+    padding: 6px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+    color: var(--text-soft); cursor: pointer;
+  }
+  .list-tabs .t.active { background: var(--text); color: white; }
+  .list-body { flex: 1; overflow: auto; }
+  .note-card {
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    cursor: pointer; min-height: 64px; position: relative;
+  }
+  .note-card:hover { background: var(--surface); }
+  .note-card.active { background: var(--accent-soft); }
+  .note-card.active::before {
+    content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px;
+    background: var(--accent); border-radius: 0 2px 2px 0;
+  }
+  .note-card .row1 { display: flex; align-items: center; gap: 6px; }
+  .note-card .tt {
+    font-size: 14.5px; font-weight: 700; letter-spacing: -0.01em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    flex: 1;
+  }
+  .note-card .star { color: var(--accent); flex-shrink: 0; }
+  .note-card .pv {
+    font-size: 12.5px; color: var(--text-faint); margin-top: 4px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .note-card .meta {
+    font-size: 11.5px; color: var(--text-faint); margin-top: 6px;
+    display: flex; gap: 8px; align-items: center;
+  }
+  .note-card .meta .ft { color: var(--accent); font-weight: 600; }
+  .note-card .meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--text-faint); }
+  .note-card .meta .tag { color: var(--text-soft); }
+
+  .list-foot {
+    padding: 10px 16px 14px; border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11.5px; color: var(--text-faint);
+  }
+  .list-foot .sync-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 3px rgba(22,163,74,0.18);
+  }
+
+  /* === Main === */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg); }
+  .topbar {
+    height: 56px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 24px; gap: 12px;
+    flex-shrink: 0;
+  }
+  .topbar .crumb {
+    font-size: 13.5px; color: var(--text-soft);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .topbar .crumb b { color: var(--text); font-weight: 700; }
+  .topbar .crumb .sep { color: var(--text-faint); }
+  .topbar .spacer { flex: 1; }
+  .topbar .saved {
+    font-size: 12px; color: var(--text-faint);
+    display: inline-flex; gap: 6px; align-items: center;
+  }
+  .topbar .saved .ic-check { color: var(--success); }
+  .icon-btn {
+    width: 38px; height: 38px; display: grid; place-items: center;
+    border-radius: 9px; color: var(--text-soft); cursor: pointer;
+    background: transparent; border: none;
+  }
+  .icon-btn:hover { background: var(--hover); color: var(--text); }
+  .icon-btn.starred { color: var(--accent); }
+
+  /* === Home === */
+  .home {
+    flex: 1; overflow: auto;
+    padding: 44px 56px 80px;
+  }
+  .home .greet-row {
+    display: flex; align-items: flex-end; gap: 16px;
+    margin-bottom: 28px;
+  }
+  .home h1 {
+    margin: 0; font-size: 28px; font-weight: 800;
+    letter-spacing: -0.025em; line-height: 1.2;
+  }
+  .home .greet-row .sub {
+    color: var(--text-soft); font-size: 14px; padding-bottom: 4px;
+  }
+  .home .quick-row {
+    display: grid; grid-template-columns: 1.3fr 1fr 1fr;
+    gap: 14px; margin-bottom: 36px;
+    max-width: 1000px;
+  }
+  .quick-card {
+    border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px 22px;
+    background: white; cursor: pointer;
+    position: relative;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .quick-card:hover { border-color: var(--border-hover); }
+  .quick-card.primary {
+    background: linear-gradient(135deg, var(--accent), #c8430a);
+    color: white; border-color: transparent;
+    box-shadow: 0 12px 24px -14px rgba(232,80,8,0.6);
+  }
+  .quick-card.primary .lbl { color: rgba(255,255,255,0.85); }
+  .quick-card .lbl {
+    font-size: 11.5px; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;
+  }
+  .quick-card .tt {
+    margin: 10px 0 4px; font-size: 19px; font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+  .quick-card .meta { font-size: 12px; opacity: 0.75; }
+  .quick-card .corner { position: absolute; top: 16px; right: 16px; opacity: 0.75; }
+  .quick-card .kbd-hint {
+    margin-top: 12px; font-size: 11px;
+    background: rgba(255,255,255,0.18); color: rgba(255,255,255,0.9);
+    display: inline-block; padding: 2px 8px; border-radius: 5px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  .home h3.sec {
+    margin: 0 0 12px; font-size: 12.5px; font-weight: 700;
+    color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.07em;
+    display: flex; align-items: center; gap: 8px;
+    max-width: 1000px;
+  }
+  .home h3.sec .count {
+    background: var(--surface-2); color: var(--text-muted);
+    font-weight: 600; font-size: 11px; padding: 1px 6px; border-radius: 999px;
+    letter-spacing: 0;
+  }
+  .home h3.sec .more { margin-left: auto; font-size: 12px; color: var(--text-faint); font-weight: 500; letter-spacing: 0; text-transform: none; cursor: pointer; }
+  .home h3.sec .more:hover { color: var(--text); }
+
+  .pinned-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    margin-bottom: 36px; max-width: 1000px;
+  }
+  .pin-card {
+    background: white; border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .pin-card:hover { border-color: var(--border-hover); }
+  .pin-card .lbl {
+    font-size: 10.5px; font-weight: 700; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .pin-card .tt { font-size: 14.5px; font-weight: 700; margin: 4px 0 4px; letter-spacing: -0.01em; }
+  .pin-card .ex { font-size: 12px; color: var(--text-faint); line-height: 1.45;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+
+  .inbox-strip {
+    display: flex; gap: 10px; padding-bottom: 8px;
+    margin-bottom: 36px; max-width: 1000px;
+    overflow-x: auto;
+  }
+  .inbox-chip {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 14px; flex-shrink: 0;
+    min-width: 240px; cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .inbox-chip:hover { background: white; border-color: var(--border-hover); }
+  .inbox-chip .lbl { font-size: 10.5px; color: var(--text-faint); font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; }
+  .inbox-chip .tt { font-size: 13px; font-weight: 600; margin-top: 4px; letter-spacing: -0.01em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* === Editor === */
+  .editor-wrap { flex: 1; display: flex; min-height: 0; }
+  .editor-pane {
+    flex: 1; overflow: auto;
+    position: relative;
+  }
+  .editor-inner {
+    max-width: 760px; margin: 0 auto;
+    padding: 48px 56px 200px;
+  }
+  .editor-inner .doc-meta {
+    color: var(--text-faint); font-size: 12.5px;
+    display: flex; gap: 12px; align-items: center;
+    margin-bottom: 18px;
+  }
+  .editor-inner .doc-meta .tag-inline {
+    background: var(--accent-soft); color: var(--accent);
+    padding: 1px 7px; border-radius: 4px;
+    font-weight: 500; font-size: 12px;
+  }
+  .editor-inner h1.title {
+    margin: 0 0 20px; font-size: 34px; font-weight: 800;
+    letter-spacing: -0.025em; line-height: 1.2;
+    border: none; outline: none;
+  }
+  .editor-inner .body {
+    font-size: 16.5px; line-height: 1.85; color: #2a2a2a;
+  }
+  .editor-inner .body h2 {
+    font-size: 22px; font-weight: 700; margin: 36px 0 12px;
+    letter-spacing: -0.015em;
+  }
+  .editor-inner .body h3 { font-size: 17.5px; font-weight: 700; margin: 26px 0 10px; }
+  .editor-inner .body p { margin: 0 0 16px; }
+  .editor-inner .body blockquote {
+    border-left: 3px solid var(--accent);
+    padding: 4px 16px; margin: 20px 0;
+    color: var(--text-muted);
+    background: var(--accent-soft);
+    border-radius: 0 8px 8px 0;
+  }
+  .editor-inner .body ul { padding-left: 22px; margin: 0 0 16px; }
+  .editor-inner .body li { margin-bottom: 4px; }
+  .editor-inner .body code {
+    background: var(--surface-2); padding: 2px 6px;
+    border-radius: 4px; font-size: 14.5px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .editor-inner .body .wiki {
+    color: var(--accent); border-bottom: 1px dashed var(--accent);
+    padding-bottom: 1px; cursor: pointer;
+  }
+  .editor-inner .body .tag-pill {
+    color: var(--personal); background: var(--personal-soft);
+    padding: 1px 6px; border-radius: 4px; font-size: 14.5px;
+    font-weight: 500;
+  }
+  /* selection highlight (for AI menu screenshot) */
+  .editor-inner .body .selected {
+    background: #c7e2ff;
+    color: inherit;
+  }
+
+  /* === Floating toolbar (selection-anchored) === */
+  .floating-toolbar {
+    position: absolute;
+    background: var(--text); color: white; border-radius: 12px;
+    padding: 6px;
+    display: flex; gap: 2px; align-items: center;
+    box-shadow: 0 12px 24px -6px rgba(0,0,0,0.35);
+    z-index: 20;
+  }
+  .floating-toolbar button {
+    background: transparent; border: none; color: rgba(255,255,255,0.85);
+    width: 34px; height: 34px; border-radius: 8px; cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .floating-toolbar button:hover { background: rgba(255,255,255,0.12); color: white; }
+  .floating-toolbar .divider { width: 1px; height: 20px; background: rgba(255,255,255,0.18); margin: 0 4px; }
+  .floating-toolbar .ai-btn {
+    background: var(--accent); color: white; padding: 0 14px;
+    font-size: 12.5px; font-weight: 600; width: auto; gap: 5px;
+    display: inline-flex; align-items: center; height: 34px;
+  }
+  .floating-toolbar .ai-btn:hover { background: var(--accent-hover); }
+
+  /* === Right tool panel === */
+  .tool-panel {
+    width: 280px; border-left: 1px solid var(--border);
+    background: var(--surface);
+    display: flex; flex-direction: column;
+    flex-shrink: 0;
+  }
+  .tool-panel .tabs {
+    display: flex; padding: 14px 14px 0; gap: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tool-panel .tabs .t {
+    padding: 8px 10px; font-size: 12.5px; font-weight: 600;
+    color: var(--text-soft); cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tool-panel .tabs .t.active {
+    color: var(--text); border-bottom-color: var(--accent);
+  }
+  .tool-panel .pane { padding: 18px 18px 14px; overflow: auto; flex: 1; }
+  .tool-panel h6 {
+    margin: 0 0 8px; font-size: 10.5px; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;
+  }
+  .toc-list { list-style: none; padding: 0; margin: 0 0 20px; font-size: 13px; }
+  .toc-list li { padding: 5px 0 5px 12px; color: var(--text-muted); cursor: pointer; border-left: 2px solid transparent; line-height: 1.4; }
+  .toc-list li:hover { color: var(--text); }
+  .toc-list li.active { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+  .toc-list li.h2 { padding-left: 12px; }
+  .toc-list li.h3 { padding-left: 22px; font-size: 12.5px; }
+
+  .meta-row {
+    display: flex; gap: 8px; font-size: 12px; color: var(--text-muted);
+    padding: 5px 0;
+  }
+  .meta-row .k { color: var(--text-faint); width: 56px; flex-shrink: 0; }
+  .meta-row .v { color: var(--text); }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .chip {
+    display: inline-block; font-size: 11.5px;
+    padding: 2px 8px; border-radius: 999px;
+    background: white; border: 1px solid var(--border);
+    color: var(--text-soft);
+  }
+  .chip.tag { background: var(--personal-soft); border-color: transparent; color: var(--personal); font-weight: 500; }
+  .chip.add { background: transparent; border: 1px dashed var(--border-hover); color: var(--text-faint); cursor: pointer; }
+
+  .tool-panel .divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+  .version-item {
+    padding: 10px 12px; border: 1px solid var(--border);
+    border-radius: 9px; background: white; margin-bottom: 6px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .version-item:hover { border-color: var(--border-hover); }
+  .version-item .row1 { display: flex; align-items: center; gap: 8px; }
+  .version-item .when { font-size: 12.5px; font-weight: 600; color: var(--text); }
+  .version-item .reason { font-size: 11px; color: var(--text-faint); margin-left: auto;
+    background: var(--surface); padding: 1px 6px; border-radius: 4px;
+  }
+  .version-item .diff { font-size: 11.5px; color: var(--text-faint); margin-top: 4px; }
+  .version-item .diff .plus { color: var(--success); font-weight: 600; }
+  .version-item .diff .minus { color: var(--danger); font-weight: 600; }
+
+  .backlink-item { font-size: 12.5px; color: var(--text-muted); padding: 6px 0; cursor: pointer; }
+  .backlink-item:hover { color: var(--text); }
+  .backlink-item .src { font-weight: 600; color: var(--text); }
+  .backlink-item .ctx { color: var(--text-faint); margin-top: 2px; font-size: 11.5px;
+    border-left: 2px solid var(--border); padding-left: 8px; }
+
+  /* === ⌘K Command Palette === */
+  .palette-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(17,17,17,0.36);
+    backdrop-filter: blur(2px);
+    z-index: 100;
+    display: grid; place-items: flex-start center;
+    padding-top: 120px;
+  }
+  .palette {
+    width: 640px;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 30px 60px -16px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+  .palette .search-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  .palette .search-row svg { color: var(--text-faint); flex-shrink: 0; }
+  .palette .search-row input {
+    flex: 1; border: none; outline: none;
+    font-size: 17px; color: var(--text);
+    font-family: inherit;
+  }
+  .palette .search-row input::placeholder { color: var(--text-placeholder); }
+  .palette .search-row .esc {
+    font-size: 11px; color: var(--text-faint);
+    background: var(--surface-2); padding: 3px 8px; border-radius: 5px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .palette .body { max-height: 480px; overflow: auto; padding: 8px 0 14px; }
+  .palette .group h5 {
+    margin: 12px 22px 4px;
+    font-size: 10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;
+  }
+  .palette .item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 9px 22px;
+    cursor: pointer;
+    font-size: 13.5px;
+  }
+  .palette .item:hover, .palette .item.active { background: var(--accent-soft); }
+  .palette .item.active { color: var(--accent); }
+  .palette .item .ic {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: var(--surface-2); color: var(--text-soft);
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .palette .item.active .ic { background: white; color: var(--accent); }
+  .palette .item .tt { flex: 1; font-weight: 500; }
+  .palette .item .tt .ex {
+    display: block; font-size: 11.5px; color: var(--text-faint); font-weight: 400; margin-top: 1px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 380px;
+  }
+  .palette .item.active .tt .ex { color: var(--accent); opacity: 0.7; }
+  .palette .item .when { font-size: 11px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+  .palette .item.active .when { color: var(--accent); opacity: 0.7; }
+  .palette .item .kbd-row { display: flex; gap: 3px; }
+  .palette .item .kbd-row .k {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10.5px; color: var(--text-faint);
+    background: var(--surface-2); padding: 1px 5px; border-radius: 4px;
+  }
+  .palette .item.active .kbd-row .k { background: white; color: var(--accent); }
+  .palette .foot {
+    border-top: 1px solid var(--border);
+    padding: 8px 22px;
+    display: flex; gap: 18px; align-items: center;
+    font-size: 11px; color: var(--text-faint);
+  }
+  .palette .foot .hint { display: inline-flex; gap: 6px; align-items: center; }
+  .palette .foot .hint .k {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    background: var(--surface-2); padding: 1px 5px; border-radius: 4px;
+    color: var(--text-muted);
+  }
+
+  /* === AI Assist popover === */
+  .ai-popover {
+    position: absolute;
+    width: 320px; background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.06);
+    overflow: hidden;
+    z-index: 30;
+  }
+  .ai-popover .head {
+    padding: 12px 16px 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ai-popover .head .lbl {
+    font-size: 11.5px; color: var(--accent); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .ai-popover .head .spacer { flex: 1; }
+  .ai-popover .head .kbd {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10.5px; color: var(--text-faint);
+    background: var(--surface-2); padding: 1px 5px; border-radius: 4px;
+  }
+  .ai-popover .input-row {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .ai-popover .input-row input {
+    width: 100%; background: transparent; border: none; outline: none;
+    font-size: 13.5px; font-family: inherit;
+  }
+  .ai-popover .input-row input::placeholder { color: var(--text-placeholder); }
+  .ai-popover .ai-group h6 {
+    margin: 10px 14px 4px;
+    font-size: 10.5px; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;
+  }
+  .ai-popover .ai-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 14px;
+    cursor: pointer; font-size: 13px;
+  }
+  .ai-popover .ai-item:hover, .ai-popover .ai-item.active { background: var(--accent-soft); color: var(--accent); }
+  .ai-popover .ai-item .ic { width: 22px; height: 22px; display: grid; place-items: center; color: var(--text-soft); }
+  .ai-popover .ai-item:hover .ic, .ai-popover .ai-item.active .ic { color: var(--accent); }
+
+  /* === Tablet frame === */
+  .tablet-frame {
+    width: 1280px; height: 800px;
+    background: #1a1a1a;
+    border-radius: 36px;
+    padding: 24px;
+    box-shadow: 0 40px 80px -24px rgba(0,0,0,0.45);
+    position: relative;
+  }
+  .tablet-frame .screen {
+    width: 100%; height: 100%; background: white;
+    border-radius: 14px; overflow: hidden;
+    display: flex;
+    position: relative;
+  }
+  .tablet-frame .cam {
+    position: absolute; top: 50%; right: 8px; transform: translateY(-50%);
+    width: 6px; height: 6px; border-radius: 50%; background: #333;
+  }
+  .frame-label {
+    margin-top: 18px; font-size: 13px; color: var(--text-soft); text-align: center;
+    font-weight: 600;
+  }
+  .frame-label small { display: block; color: var(--text-faint); font-weight: 400; font-size: 11.5px; margin-top: 2px; }
+
+  /* === Mobile (재사용 from v1) === */
+  .device-row {
+    display: flex; flex-wrap: wrap; gap: 36px; margin-top: 24px;
+  }
+  .phone-frame {
+    width: 390px; height: 844px;
+    background: #111;
+    border-radius: 48px;
+    padding: 14px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.4);
+    position: relative;
+  }
+  .phone-frame .screen {
+    width: 100%; height: 100%;
+    background: white;
+    border-radius: 36px;
+    overflow: hidden;
+    position: relative;
+    display: flex; flex-direction: column;
+  }
+  .phone-frame .notch {
+    position: absolute; top: 22px; left: 50%; transform: translateX(-50%);
+    width: 110px; height: 28px; background: #111;
+    border-radius: 999px; z-index: 50;
+  }
+  .status-bar {
+    height: 44px; padding: 12px 24px 0;
+    display: flex; align-items: flex-start; justify-content: space-between;
+    font-size: 13px; font-weight: 600;
+  }
+  .m-header {
+    padding: 8px 14px; display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--border); background: white;
+  }
+  .m-header h1 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: -0.02em; flex: 1; }
+  .m-header .icon-btn { width: 36px; height: 36px; }
+
+  .m-body { flex: 1; overflow: auto; padding-bottom: 60px; }
+  .m-greet { padding: 18px 18px 12px; }
+  .m-greet h2 { margin: 0 0 4px; font-size: 22px; font-weight: 800; letter-spacing: -0.025em; }
+  .m-greet p { margin: 0; color: var(--text-soft); font-size: 13px; }
+  .m-cta {
+    margin: 0 16px 18px;
+    background: linear-gradient(135deg, var(--accent), #c8430a);
+    color: white; border-radius: 14px; padding: 16px 18px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 8px 20px -10px rgba(232,80,8,0.6);
+  }
+  .m-cta .plus {
+    width: 38px; height: 38px; border-radius: 999px;
+    background: rgba(255,255,255,0.22); display: grid; place-items: center;
+  }
+  .m-cta .ttl { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+  .m-cta .sub { font-size: 12px; opacity: 0.85; margin-top: 1px; }
+  .m-quick-row {
+    padding: 0 16px 18px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .m-quick {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px;
+  }
+  .m-quick .lbl { font-size: 11px; color: var(--text-faint); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+  .m-quick .tt { font-size: 14px; font-weight: 700; margin-top: 4px; letter-spacing: -0.01em; }
+  .m-quick .meta { font-size: 11.5px; color: var(--text-faint); margin-top: 2px; }
+  .m-section-h {
+    padding: 6px 18px;
+    font-size: 11px; font-weight: 700; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.07em;
+  }
+  .m-row {
+    padding: 12px 18px;
+    display: flex; gap: 12px; align-items: flex-start;
+    border-bottom: 1px solid var(--border);
+  }
+  .m-row .ic { color: var(--text-faint); margin-top: 1px; flex-shrink: 0; }
+  .m-row .ic.starred { color: var(--accent); }
+  .m-row .body { flex: 1; min-width: 0; }
+  .m-row .body .tt { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+  .m-row .body .ex { font-size: 12.5px; color: var(--text-faint); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .m-row .meta { font-size: 11.5px; color: var(--text-faint); white-space: nowrap; margin-top: 1px; }
+  .m-bottom-nav {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: saturate(180%) blur(10px);
+    border-top: 1px solid var(--border);
+    display: flex; padding: 6px 6px 18px;
+    z-index: 40;
+  }
+  .m-bottom-nav .tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    gap: 2px; padding: 8px 0;
+    color: var(--text-faint); font-size: 10.5px; font-weight: 600;
+  }
+  .m-bottom-nav .tab.active { color: var(--accent); }
+  .m-bottom-nav .tab.write-tab .wrap {
+    width: 44px; height: 44px; border-radius: 999px;
+    background: var(--accent); display: grid; place-items: center;
+    box-shadow: 0 6px 14px -4px rgba(232,80,8,0.5);
+    margin-top: -16px;
+  }
+  .m-bottom-nav .tab.write-tab span { color: var(--accent); margin-top: 1px; }
+  .m-editor-head {
+    padding: 6px 6px 6px 4px; display: flex; align-items: center; gap: 4px;
+    border-bottom: 1px solid var(--border); background: white;
+  }
+  .m-editor-head .icon-btn { width: 40px; height: 40px; }
+  .m-editor-head .saved { font-size: 11px; color: var(--text-faint); margin-left: auto; padding-right: 8px; }
+  .m-editor-body { flex: 1; overflow: auto; padding: 20px 18px 80px; }
+  .m-editor-body h1 { margin: 0 0 14px; font-size: 24px; font-weight: 800; letter-spacing: -0.025em; line-height: 1.25; }
+  .m-editor-body .meta { font-size: 11.5px; color: var(--text-faint); margin-bottom: 18px; display: flex; gap: 10px; }
+  .m-editor-body p { margin: 0 0 14px; font-size: 15.5px; line-height: 1.75; color: #2a2a2a; }
+  .m-editor-body h2 { margin: 22px 0 8px; font-size: 18px; font-weight: 700; }
+  .m-editor-body ul { padding-left: 20px; margin: 0 0 14px; }
+  .m-editor-body li { margin-bottom: 4px; font-size: 15.5px; line-height: 1.7; }
+  .m-editor-body .wiki { color: var(--accent); border-bottom: 1px dashed var(--accent); }
+  .m-editor-toolbar {
+    position: absolute; left: 14px; right: 14px; bottom: 14px;
+    background: rgba(20,20,20,0.96);
+    backdrop-filter: blur(8px);
+    color: white; border-radius: 14px; padding: 8px;
+    display: flex; gap: 2px; align-items: center;
+    box-shadow: 0 12px 24px -6px rgba(0,0,0,0.4);
+  }
+  .m-editor-toolbar button {
+    flex: 1; height: 38px; background: transparent; border: none; color: rgba(255,255,255,0.85);
+    border-radius: 8px; cursor: pointer; display: grid; place-items: center;
+  }
+  .m-editor-toolbar button:hover { background: rgba(255,255,255,0.1); }
+  .m-editor-toolbar .divider { width: 1px; height: 18px; background: rgba(255,255,255,0.18); margin: 0 4px; }
+  .m-editor-toolbar .ai { background: var(--accent); color: white; padding: 0 10px; font-size: 12px; font-weight: 600; flex: 0 0 auto; gap: 4px; display: inline-flex; align-items: center; }
+
+  /* notes */
+  .design-note {
+    margin: 20px 0 0; padding: 16px 18px;
+    background: white; border: 1px dashed #d4d4d4;
+    border-radius: 10px;
+    font-size: 13px; color: var(--text-soft); line-height: 1.65;
+    max-width: 1280px;
+  }
+  .design-note b { color: var(--text); }
+
+  /* sub-caption */
+  .frames-2col {
+    display: grid; grid-template-columns: 1fr; gap: 32px; margin-bottom: 12px;
+  }
+  .figure-cap {
+    margin: 12px 0 0;
+    font-size: 12.5px; color: var(--text-soft);
+    font-weight: 600;
+  }
+  .figure-cap small { color: var(--text-faint); font-weight: 400; }
+
+  /* shortcut hint - keyboard chip */
+  .shortcut-bar {
+    position: absolute; right: 28px; bottom: 24px;
+    background: var(--text); color: white;
+    border-radius: 12px; padding: 10px 14px;
+    font-size: 11.5px;
+    display: flex; gap: 18px; align-items: center;
+    box-shadow: 0 12px 24px -8px rgba(0,0,0,0.3);
+    z-index: 5;
+  }
+  .shortcut-bar .item { display: inline-flex; gap: 6px; align-items: center; color: rgba(255,255,255,0.85); }
+  .shortcut-bar .item .k {
+    background: rgba(255,255,255,0.12); padding: 2px 6px; border-radius: 4px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; color: white;
+    font-size: 10.5px;
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></symbol>
+    <symbol id="i-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></symbol>
+    <symbol id="i-star-o" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-hash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-bold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></symbol>
+    <symbol id="i-italic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></symbol>
+    <symbol id="i-underline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v8a6 6 0 0 0 12 0V3"/><line x1="4" y1="21" x2="20" y2="21"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></symbol>
+    <symbol id="i-quote" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.6L19 10l-5.1 1.4L12 17l-1.9-5.6L5 10l5.1-1.4z"/><path d="M19 17l.6 1.8 1.9.6-1.9.6L19 21l-.6-1.8-1.9-.6 1.9-.6z"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></symbol>
+    <symbol id="i-sidebar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 3 3 9 9 9"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L3 9"/><polyline points="12 7 12 12 16 14"/></symbol>
+    <symbol id="i-focus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M3 7V3h4"/><path d="M21 7V3h-4"/><path d="M3 17v4h4"/><path d="M21 17v4h-4"/></symbol>
+    <symbol id="i-shrink" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="9" x2="18" y2="9"/><line x1="6" y1="15" x2="18" y2="15"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></symbol>
+    <symbol id="i-translate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h6"/><path d="M5 12h6"/><path d="M8 4v2"/><path d="M8 12v6"/><path d="M14 16l4 4 4-4"/><path d="M14 4l4 4 4-4"/></symbol>
+    <symbol id="i-rewrite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
+    <symbol id="i-arrow-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></symbol>
+    <symbol id="i-cmd" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14V8l-3-5H8L5 8z"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
+  </defs>
+</svg>
+
+<div class="page">
+  <header class="page-head">
+    <h1>비노트 UI v2 — 3-pane 통합</h1>
+    <p>v1 검토 결과 갤탭(S9 FE+) 3-pane 디자인을 PC에도 적용. 모바일은 v1 그대로 유지. PC에선 가로 여유 공간에 <b>접을 수 있는 우측 도구 패널</b>(목차·백링크·버전·태그)을 추가해 활용도를 높이되, 기본은 접혀 있어 글쓰기 몰입을 깨지 않습니다.</p>
+    <div class="decision">
+      <span class="pill">결정</span>
+      <b>PC = 갤탭 = 같은 3-pane 골격</b>. 폭만 다르고 인지 구조는 동일. Rail 96px / List 320px(PC)·300px(태블릿) / Editor flex.<br/>
+      <span class="pill" style="background:var(--personal-soft);color:var(--personal)">유지</span>
+      <b>모바일은 v1 디자인 그대로</b> — 하단 5탭 + 중앙 새 글 FAB.
+    </div>
+  </header>
+
+  <nav class="toc">
+    <a href="#tokens"><strong>디자인 토큰</strong></a>
+    <a href="#pc-home"><strong>PC</strong> · 홈</a>
+    <a href="#pc-palette"><strong>PC</strong> · ⌘K 명령 팔레트</a>
+    <a href="#pc-editor"><strong>PC</strong> · 에디터 (도구 패널)</a>
+    <a href="#pc-ai"><strong>PC</strong> · ⌘/ AI 어시스트</a>
+    <a href="#tablet">태블릿 · S9 FE+ 에디터</a>
+    <a href="#mobile">모바일 · 3 화면</a>
+  </nav>
+
+  <!-- ============================================================= -->
+  <!-- 디자인 토큰                                                    -->
+  <!-- ============================================================= -->
+  <section id="tokens" class="section">
+    <div class="section-head">
+      <h2>디자인 토큰</h2>
+      <span class="tag">비박스 상속</span>
+      <div class="desc">비박스 globals.css에서 그대로 가져와 사용. 비노트만의 변형은 없음 — 두 앱이 시각적으로 같은 식구로 보이는 게 우선.</div>
+    </div>
+    <div class="tokens">
+      <div class="token-card">
+        <h5>표면 · 텍스트</h5>
+        <div class="swatch-row" style="margin-bottom:24px">
+          <div class="swatch" style="background:#ffffff" data-label="#fff"></div>
+          <div class="swatch" style="background:#fafafa" data-label="surface"></div>
+          <div class="swatch" style="background:#f7f7f7" data-label="surface-2"></div>
+          <div class="swatch" style="background:#ececec" data-label="border"></div>
+          <div class="swatch" style="background:#999" data-label="faint"></div>
+          <div class="swatch" style="background:#111" data-label="text"></div>
+        </div>
+      </div>
+      <div class="token-card">
+        <h5>액센트</h5>
+        <div class="swatch-row" style="margin-bottom:24px">
+          <div class="swatch" style="background:#e85008" data-label="accent"></div>
+          <div class="swatch" style="background:#c8430a" data-label="hover"></div>
+          <div class="swatch" style="background:#fef0e8" data-label="soft"></div>
+          <div class="swatch" style="background:#0ea5e9" data-label="personal"></div>
+          <div class="swatch" style="background:#16a34a" data-label="success"></div>
+          <div class="swatch" style="background:#dc2626" data-label="danger"></div>
+        </div>
+      </div>
+      <div class="token-card measure">
+        <h5>치수 (3-pane)</h5>
+        <ul>
+          <li>Rail <b>96px</b> · 행 높이 56px (터치)</li>
+          <li>List <b>320px</b> PC / <b>300px</b> 태블릿</li>
+          <li>Topbar <b>56px</b> · Editor 최대 폭 <b>760px</b></li>
+          <li>도구 패널 <b>280px</b> (옵션)</li>
+        </ul>
+      </div>
+      <div class="token-card measure">
+        <h5>타이포</h5>
+        <ul>
+          <li>본문 <code>16.5/1.85</code> · 글 제목 <code>34/1.2 800</code></li>
+          <li>리스트 카드 제목 <code>14.5/700</code></li>
+          <li>Pretendard · feature <code>cv11, ss01</code></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- PC · 홈                                                        -->
+  <!-- ============================================================= -->
+  <section id="pc-home" class="section">
+    <div class="section-head">
+      <h2>PC · 홈</h2>
+      <span class="tag">1440 × 900</span>
+      <div class="desc">홈에서도 가운데 리스트 패널은 <b>그대로 보임</b>. 다만 컨텍스트는 "최근". 우측 메인에 인사 + 빠른 카드 + 인박스 스트립 + 고정 노트 그리드.</div>
+    </div>
+
+    <div class="pc-frame">
+      <div class="pc-titlebar">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <div class="url">note.vibox.cloud</div>
+      </div>
+      <div class="app">
+        <!-- Rail -->
+        <aside class="rail">
+          <div class="logo">비</div>
+          <nav>
+            <div class="rail-item active"><svg width="22" height="22"><use href="#i-home"/></svg><span>홈</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-file"/></svg><span>전체</span></div>
+            <div class="rail-item">
+              <svg width="22" height="22"><use href="#i-inbox"/></svg>
+              <span>인박스</span>
+              <span class="badge">3</span>
+            </div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-star-o"/></svg><span>별표</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-hash"/></svg><span>태그</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-search"/></svg><span>검색</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-settings"/></svg><span>설정</span></div>
+          </nav>
+          <div class="spacer"></div>
+          <div class="avatar">선</div>
+        </aside>
+
+        <!-- List pane (recent) -->
+        <aside class="list-pane">
+          <div class="h">
+            <h3>최근</h3>
+            <span class="badge">163</span>
+            <div class="new"><svg width="18" height="18" style="color:white"><use href="#i-plus"/></svg></div>
+          </div>
+          <div class="search">
+            <span class="ic"><svg width="15" height="15"><use href="#i-search"/></svg></span>
+            <input placeholder="빠른 이동…" />
+            <span class="kbd">⌘K</span>
+          </div>
+          <div class="list-tabs">
+            <span class="t active">최근</span>
+            <span class="t">별표</span>
+            <span class="t">인박스</span>
+          </div>
+          <div class="list-body">
+            <div class="note-card">
+              <div class="row1">
+                <div class="tt">비박스 PWA 보강 회의록</div>
+                <svg width="13" height="13" class="star"><use href="#i-star"/></svg>
+              </div>
+              <div class="pv">Share Target · 아이콘 · 푸시 · Background Sync — MVP 완료…</div>
+              <div class="meta"><span class="ft">14분 전</span><span class="dot"></span><span>회의</span></div>
+            </div>
+            <div class="note-card">
+              <div class="row1"><div class="tt">도화 V2 — 무진 시나리오 초고</div></div>
+              <div class="pv">대주제 "거절을 거절하는 사람" — 4단 구조…</div>
+              <div class="meta"><span>2시간 전</span><span class="dot"></span><span>시나리오</span></div>
+            </div>
+            <div class="note-card">
+              <div class="row1">
+                <div class="tt">ailik 마케팅 기획서 v2</div>
+                <svg width="13" height="13" class="star"><use href="#i-star"/></svg>
+              </div>
+              <div class="pv">욕망×본질×표현 모델 적용. 글로벌 라이선스…</div>
+              <div class="meta"><span>어제</span><span class="dot"></span><span>프로젝트</span></div>
+            </div>
+            <div class="note-card">
+              <div class="row1"><div class="tt">krit 아키텍처 메모 — NLE 코어</div></div>
+              <div class="pv">타임라인 엔진을 C++로, UI를 Tauri로…</div>
+              <div class="meta"><span>2일 전</span><span class="dot"></span><span>프로젝트</span></div>
+            </div>
+            <div class="note-card">
+              <div class="row1"><div class="tt">2026-05-26 일기</div></div>
+              <div class="pv">아이맥 밝기 0 유지가 진짜 편함…</div>
+              <div class="meta"><span>2일 전</span><span class="dot"></span><span>일기</span></div>
+            </div>
+            <div class="note-card">
+              <div class="row1"><div class="tt">메뉴한컷 v0.3 — JSON 스키마</div></div>
+              <div class="pv">menu_id / sections / variants 통합. 변형은 JSON Patch로…</div>
+              <div class="meta"><span>3일 전</span><span class="dot"></span><span>프로젝트</span></div>
+            </div>
+            <div class="note-card">
+              <div class="row1"><div class="tt">wordcraft 마인드뱅크 정리</div></div>
+              <div class="pv">Claude에서 한 문장만 던지면 슬러그·예문…</div>
+              <div class="meta"><span>4일 전</span><span class="dot"></span><span>메모</span></div>
+            </div>
+            <div class="note-card">
+              <div class="row1"><div class="tt">heysquid 회의록 — 5월 4주차</div></div>
+              <div class="pv">디자인 리뷰 + 다음 스프린트 우선순위…</div>
+              <div class="meta"><span>5일 전</span><span class="dot"></span><span>회의</span></div>
+            </div>
+          </div>
+          <div class="list-foot">
+            <span class="sync-dot"></span>
+            <span>방금 동기화됨 · 비박스</span>
+          </div>
+        </aside>
+
+        <!-- Main: Home -->
+        <main class="main">
+          <div class="topbar">
+            <span class="crumb"><svg width="14" height="14" style="vertical-align:-2px;color:var(--text-faint)"><use href="#i-home"/></svg><b>홈</b></span>
+            <div class="spacer"></div>
+            <button class="icon-btn" title="명령 팔레트 ⌘K"><svg width="18" height="18"><use href="#i-cmd"/></svg></button>
+            <button class="icon-btn"><svg width="18" height="18"><use href="#i-bell"/></svg></button>
+            <button class="icon-btn"><svg width="18" height="18"><use href="#i-settings"/></svg></button>
+          </div>
+          <div class="home">
+            <div class="greet-row">
+              <h1>오늘 뭘 써볼까요, 선?</h1>
+              <span class="sub">2026년 5월 28일 목요일 · 이번 주 12개 작성 · 마지막 글 14분 전</span>
+            </div>
+
+            <div class="quick-row">
+              <div class="quick-card primary">
+                <div class="corner"><svg width="22" height="22" style="color:white"><use href="#i-edit"/></svg></div>
+                <div class="lbl">새 글</div>
+                <div class="tt">바로 쓰기 시작</div>
+                <div class="meta">빈 캔버스에서 시작</div>
+                <div class="kbd-hint">⌘N</div>
+              </div>
+              <div class="quick-card">
+                <div class="corner" style="color:var(--accent)"><svg width="20" height="20"><use href="#i-edit"/></svg></div>
+                <div class="lbl">이어쓰기</div>
+                <div class="tt">도화 V2 무진</div>
+                <div class="meta">2시간 전 · 시나리오 · 5,200자</div>
+              </div>
+              <div class="quick-card">
+                <div class="corner" style="color:var(--accent)"><svg width="20" height="20"><use href="#i-inbox"/></svg></div>
+                <div class="lbl">인박스</div>
+                <div class="tt">3개</div>
+                <div class="meta">갤탭에서 적은 단편 메모</div>
+              </div>
+            </div>
+
+            <h3 class="sec">고정 <span class="count">4</span> <span class="more">관리</span></h3>
+            <div class="pinned-grid">
+              <div class="pin-card">
+                <div class="lbl">기획</div>
+                <div class="tt">비박스 PWA 보강 회의록</div>
+                <div class="ex">Share Target · 아이콘 · 푸시 · Background Sync — MVP 완료. 남은 건 푸시 트리거 통합과 claim 자동화…</div>
+              </div>
+              <div class="pin-card">
+                <div class="lbl">시나리오</div>
+                <div class="tt">도화 V2 — 무진</div>
+                <div class="ex">대주제 "거절을 거절하는 사람" — 기승전결 대신 4단 구조. 등장인물 3명으로 축소…</div>
+              </div>
+              <div class="pin-card">
+                <div class="lbl">아키텍처</div>
+                <div class="tt">krit NLE 코어 분리안</div>
+                <div class="ex">타임라인 엔진을 C++로, UI를 Tauri로. 플러그인 ABI는 C-only로 고정…</div>
+              </div>
+            </div>
+
+            <h3 class="sec">인박스 <span class="count">3</span> <span class="more">정리하기 →</span></h3>
+            <div class="inbox-strip">
+              <div class="inbox-chip">
+                <div class="lbl">갤탭 · 어제</div>
+                <div class="tt">"메뉴한컷 변형 JSON Patch 케이스…"</div>
+              </div>
+              <div class="inbox-chip">
+                <div class="lbl">공유 · 2일 전</div>
+                <div class="tt">아티클 — Local-first software</div>
+              </div>
+              <div class="inbox-chip">
+                <div class="lbl">모바일 · 3일 전</div>
+                <div class="tt">"플릭툰 캐릭터 표정 시트…"</div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <div class="design-note">
+      <b>핵심:</b> 홈도 3-pane 골격 유지 — 사용자가 노트 사이를 빠르게 점프하다가 잠깐 홈으로 와서 인박스 확인하고 다시 글로 돌아가는 흐름을 끊지 않음.<br/>
+      <b>인박스 스트립</b>은 가로 스크롤 — 갤탭/모바일에서 적은 메모가 PC에서 시각적으로 "들어와 있다"는 느낌을 줘 정리 욕구 유도.<br/>
+      <b>왜 [+ 새 글] 카드는 그라데이션:</b> 홈에서 가장 빈번한 동작. 시각적 무게가 가장 무거워야 함. ⌘N 보조.
+    </div>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- PC · ⌘K 명령 팔레트                                            -->
+  <!-- ============================================================= -->
+  <section id="pc-palette" class="section">
+    <div class="section-head">
+      <h2>PC · ⌘K 명령 팔레트</h2>
+      <span class="tag">단축키 중심</span>
+      <div class="desc">홈/에디터 어디서든 ⌘K. 검색·이동·명령 한 입구. 노트 / 명령 / 폴더·태그 / 최근 4섹션 정렬.</div>
+    </div>
+
+    <div class="pc-frame">
+      <div class="pc-titlebar">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <div class="url">note.vibox.cloud</div>
+      </div>
+      <div class="app">
+        <!-- 동일 Rail -->
+        <aside class="rail">
+          <div class="logo">비</div>
+          <nav>
+            <div class="rail-item active"><svg width="22" height="22"><use href="#i-home"/></svg><span>홈</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-file"/></svg><span>전체</span></div>
+            <div class="rail-item">
+              <svg width="22" height="22"><use href="#i-inbox"/></svg>
+              <span>인박스</span>
+              <span class="badge">3</span>
+            </div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-star-o"/></svg><span>별표</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-hash"/></svg><span>태그</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-search"/></svg><span>검색</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-settings"/></svg><span>설정</span></div>
+          </nav>
+          <div class="spacer"></div>
+          <div class="avatar">선</div>
+        </aside>
+        <aside class="list-pane">
+          <div class="h">
+            <h3>최근</h3>
+            <span class="badge">163</span>
+            <div class="new"><svg width="18" height="18" style="color:white"><use href="#i-plus"/></svg></div>
+          </div>
+          <div class="search">
+            <span class="ic"><svg width="15" height="15"><use href="#i-search"/></svg></span>
+            <input placeholder="빠른 이동…" />
+            <span class="kbd">⌘K</span>
+          </div>
+          <div class="list-tabs">
+            <span class="t active">최근</span>
+            <span class="t">별표</span>
+            <span class="t">인박스</span>
+          </div>
+          <div class="list-body">
+            <div class="note-card"><div class="row1"><div class="tt">비박스 PWA 보강 회의록</div><svg width="13" height="13" class="star"><use href="#i-star"/></svg></div><div class="pv">Share Target · 아이콘 · 푸시…</div><div class="meta"><span class="ft">14분 전</span><span class="dot"></span><span>회의</span></div></div>
+            <div class="note-card"><div class="row1"><div class="tt">도화 V2 — 무진 시나리오 초고</div></div><div class="pv">대주제 "거절을 거절하는 사람"…</div><div class="meta"><span>2시간 전</span></div></div>
+            <div class="note-card"><div class="row1"><div class="tt">ailik 마케팅 기획서 v2</div><svg width="13" height="13" class="star"><use href="#i-star"/></svg></div><div class="pv">욕망×본질×표현 모델…</div><div class="meta"><span>어제</span></div></div>
+            <div class="note-card"><div class="row1"><div class="tt">krit 아키텍처 메모</div></div><div class="pv">타임라인 엔진을 C++로…</div><div class="meta"><span>2일 전</span></div></div>
+            <div class="note-card"><div class="row1"><div class="tt">2026-05-26 일기</div></div><div class="pv">아이맥 밝기 0 유지가…</div><div class="meta"><span>2일 전</span></div></div>
+          </div>
+        </aside>
+        <main class="main">
+          <div class="topbar">
+            <span class="crumb"><svg width="14" height="14" style="vertical-align:-2px;color:var(--text-faint)"><use href="#i-home"/></svg><b>홈</b></span>
+            <div class="spacer"></div>
+            <button class="icon-btn" title="명령 팔레트 ⌘K"><svg width="18" height="18"><use href="#i-cmd"/></svg></button>
+            <button class="icon-btn"><svg width="18" height="18"><use href="#i-bell"/></svg></button>
+            <button class="icon-btn"><svg width="18" height="18"><use href="#i-settings"/></svg></button>
+          </div>
+          <div class="home" style="filter:blur(0.5px);opacity:0.65;pointer-events:none">
+            <div class="greet-row">
+              <h1>오늘 뭘 써볼까요, 선?</h1>
+              <span class="sub">2026년 5월 28일 목요일</span>
+            </div>
+            <div class="quick-row">
+              <div class="quick-card primary">
+                <div class="lbl">새 글</div>
+                <div class="tt">바로 쓰기 시작</div>
+                <div class="meta">⌘N</div>
+              </div>
+              <div class="quick-card"><div class="lbl">이어쓰기</div><div class="tt">도화 V2 무진</div><div class="meta">2시간 전</div></div>
+              <div class="quick-card"><div class="lbl">인박스</div><div class="tt">3개</div><div class="meta">정리 안된</div></div>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      <!-- Palette overlay -->
+      <div class="palette-backdrop">
+        <div class="palette">
+          <div class="search-row">
+            <svg width="20" height="20"><use href="#i-search"/></svg>
+            <input value="비박스 " placeholder="검색하거나 명령 실행… (?로 도움말)" />
+            <span class="esc">esc</span>
+          </div>
+          <div class="body">
+            <div class="group">
+              <h5>노트 · 4</h5>
+              <div class="item active">
+                <div class="ic"><svg width="14" height="14"><use href="#i-file"/></svg></div>
+                <div class="tt">
+                  비박스 PWA 보강 회의록
+                  <span class="ex">Share Target · 아이콘 · 푸시 · Background Sync — MVP…</span>
+                </div>
+                <span class="when">14분 전</span>
+              </div>
+              <div class="item">
+                <div class="ic"><svg width="14" height="14"><use href="#i-file"/></svg></div>
+                <div class="tt">
+                  비박스 운영 메모 — launchd 6개
+                  <span class="ex">PM2 → LaunchDaemon 전환. 상태 확인은 sudo launchctl list…</span>
+                </div>
+                <span class="when">2주 전</span>
+              </div>
+              <div class="item">
+                <div class="ic"><svg width="14" height="14"><use href="#i-file"/></svg></div>
+                <div class="tt">
+                  vibox AI 자막 검수 D안
+                  <span class="ex">Vision LLM 검증 — 비박스 0.1.7 에 step 7/8…</span>
+                </div>
+                <span class="when">3주 전</span>
+              </div>
+              <div class="item">
+                <div class="ic"><svg width="14" height="14"><use href="#i-file"/></svg></div>
+                <div class="tt">
+                  2026-05-24 일기
+                  <span class="ex">하루종일 비박스 PWA 작업. 갤탭에서 설치까지…</span>
+                </div>
+                <span class="when">4일 전</span>
+              </div>
+            </div>
+            <div class="group">
+              <h5>명령</h5>
+              <div class="item">
+                <div class="ic"><svg width="14" height="14"><use href="#i-plus"/></svg></div>
+                <div class="tt">새 글</div>
+                <div class="kbd-row"><span class="k">⌘N</span></div>
+              </div>
+              <div class="item">
+                <div class="ic"><svg width="14" height="14"><use href="#i-sparkle"/></svg></div>
+                <div class="tt">AI 어시스트</div>
+                <div class="kbd-row"><span class="k">⌘/</span></div>
+              </div>
+              <div class="item">
+                <div class="ic"><svg width="14" height="14"><use href="#i-focus"/></svg></div>
+                <div class="tt">집중 모드 (Rail·List 숨김)</div>
+                <div class="kbd-row"><span class="k">⌘.</span></div>
+              </div>
+            </div>
+            <div class="group">
+              <h5>폴더 · 태그</h5>
+              <div class="item">
+                <div class="ic"><svg width="14" height="14"><use href="#i-hash"/></svg></div>
+                <div class="tt">#비박스 — 24개 노트</div>
+              </div>
+              <div class="item">
+                <div class="ic"><svg width="14" height="14"><use href="#i-folder"/></svg></div>
+                <div class="tt">회의 폴더 — 19개</div>
+              </div>
+            </div>
+          </div>
+          <div class="foot">
+            <span class="hint"><span class="k">↑↓</span> 이동</span>
+            <span class="hint"><span class="k">↵</span> 열기</span>
+            <span class="hint"><span class="k">⌘↵</span> 새 탭</span>
+            <span class="hint"><span class="k">esc</span> 닫기</span>
+            <span style="margin-left:auto;color:var(--text-faint)">FTS5 · 0.04s</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="design-note">
+      <b>왜 ⌘K가 중요한가:</b> 비박스의 검색·이동과 같은 패턴. 사용자가 두 앱을 옮겨다녀도 단축키 운지가 같음. 결과는 노트 본문(FTS5) + 명령 + 폴더/태그 모두 한 곳에서.<br/>
+      <b>차별점:</b> 결과 상단의 "노트" 섹션은 활성 행을 <b>오렌지 액센트</b>로 — 비박스 검색의 회색 호버와 다르게 키보드 운지 위치를 강하게 표시.
+    </div>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- PC · 에디터 + 도구 패널                                         -->
+  <!-- ============================================================= -->
+  <section id="pc-editor" class="section">
+    <div class="section-head">
+      <h2>PC · 에디터 (도구 패널 펼침)</h2>
+      <span class="tag">우측 280px</span>
+      <div class="desc">PC만의 추가 공간 활용. 우측에 목차·메타·백링크·버전 4탭. 기본은 접혀 있고 ⌘\\ 또는 상단 아이콘으로 토글.</div>
+    </div>
+
+    <div class="pc-frame">
+      <div class="pc-titlebar">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <div class="url">note.vibox.cloud / n / vibox-pwa-meeting</div>
+      </div>
+      <div class="app">
+        <aside class="rail">
+          <div class="logo">비</div>
+          <nav>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-home"/></svg><span>홈</span></div>
+            <div class="rail-item active"><svg width="22" height="22"><use href="#i-file"/></svg><span>전체</span></div>
+            <div class="rail-item">
+              <svg width="22" height="22"><use href="#i-inbox"/></svg>
+              <span>인박스</span>
+              <span class="badge">3</span>
+            </div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-star-o"/></svg><span>별표</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-hash"/></svg><span>태그</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-search"/></svg><span>검색</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-settings"/></svg><span>설정</span></div>
+          </nav>
+          <div class="spacer"></div>
+          <div class="avatar">선</div>
+        </aside>
+
+        <aside class="list-pane">
+          <div class="h">
+            <h3>전체</h3>
+            <span class="badge">163</span>
+            <div class="new"><svg width="18" height="18" style="color:white"><use href="#i-plus"/></svg></div>
+          </div>
+          <div class="search">
+            <span class="ic"><svg width="15" height="15"><use href="#i-search"/></svg></span>
+            <input placeholder="제목·태그·본문"/>
+            <span class="kbd">⌘K</span>
+          </div>
+          <div class="list-tabs">
+            <span class="t active">최근</span>
+            <span class="t">별표</span>
+            <span class="t">폴더</span>
+          </div>
+          <div class="list-body">
+            <div class="note-card active">
+              <div class="row1">
+                <div class="tt">비박스 PWA 보강 회의록</div>
+                <svg width="13" height="13" class="star"><use href="#i-star"/></svg>
+              </div>
+              <div class="pv">Share Target · 아이콘 · 푸시 · Background Sync…</div>
+              <div class="meta"><span class="ft">14분 전</span><span class="dot"></span><span>회의</span></div>
+            </div>
+            <div class="note-card"><div class="row1"><div class="tt">도화 V2 — 무진 시나리오 초고</div></div><div class="pv">대주제 "거절을 거절하는 사람"…</div><div class="meta"><span>2시간 전</span><span class="dot"></span><span>시나리오</span></div></div>
+            <div class="note-card"><div class="row1"><div class="tt">ailik 마케팅 기획서 v2</div><svg width="13" height="13" class="star"><use href="#i-star"/></svg></div><div class="pv">욕망×본질×표현 모델 적용…</div><div class="meta"><span>어제</span><span class="dot"></span><span>프로젝트</span></div></div>
+            <div class="note-card"><div class="row1"><div class="tt">krit 아키텍처 메모 — NLE 코어</div></div><div class="pv">타임라인 엔진을 C++로, UI를 Tauri로…</div><div class="meta"><span>2일 전</span><span class="dot"></span><span>프로젝트</span></div></div>
+            <div class="note-card"><div class="row1"><div class="tt">2026-05-26 일기</div></div><div class="pv">아이맥 밝기 0 유지가 진짜 편함…</div><div class="meta"><span>2일 전</span><span class="dot"></span><span>일기</span></div></div>
+            <div class="note-card"><div class="row1"><div class="tt">메뉴한컷 v0.3 — JSON 스키마</div></div><div class="pv">menu_id / sections / variants 통합…</div><div class="meta"><span>3일 전</span><span class="dot"></span><span>프로젝트</span></div></div>
+          </div>
+        </aside>
+
+        <main class="main">
+          <div class="topbar">
+            <span class="crumb">
+              <svg width="14" height="14" style="vertical-align:-2px;color:var(--text-faint)"><use href="#i-folder"/></svg>
+              회의 <span class="sep">/</span> <b>비박스 PWA 보강 회의록</b>
+            </span>
+            <div class="spacer"></div>
+            <span class="saved"><svg width="13" height="13" class="ic-check"><use href="#i-check"/></svg> 방금 저장됨</span>
+            <button class="icon-btn starred" title="별표"><svg width="18" height="18"><use href="#i-star"/></svg></button>
+            <button class="icon-btn" title="집중 모드 ⌘."><svg width="18" height="18"><use href="#i-focus"/></svg></button>
+            <button class="icon-btn" title="도구 패널 ⌘\\" style="background:var(--accent-soft);color:var(--accent)"><svg width="18" height="18"><use href="#i-sidebar"/></svg></button>
+            <button class="icon-btn"><svg width="18" height="18"><use href="#i-more"/></svg></button>
+          </div>
+          <div class="editor-wrap">
+            <div class="editor-pane">
+              <div class="editor-inner">
+                <div class="doc-meta">
+                  <span>2026-05-27 작성</span>
+                  <span>·</span>
+                  <span>1,243자 · 약 5분 분량</span>
+                  <span>·</span>
+                  <span class="tag-inline">#비박스</span>
+                  <span class="tag-inline">#회의록</span>
+                  <span class="tag-inline">#pwa</span>
+                </div>
+                <h1 class="title">비박스 PWA 보강 회의록</h1>
+                <div class="body">
+                  <p>2026-05-27, vibox-mac1, 16:00–17:20. 참석: 선, 클로드. 목표는 PWA MVP 마무리와 다음 스프린트 범위 확정.</p>
+                  <h2>합의된 것</h2>
+                  <ul>
+                    <li><strong>Share Target</strong> — 모바일 공유 시트에서 비노트로 텍스트/이미지 받기 동작 검증.</li>
+                    <li><strong>아이콘</strong> — 192/512px 두 벌 + maskable. 다크모드는 v0.3에서.</li>
+                    <li><strong>푸시</strong> — Service Worker push 등록까지 완료. 트리거 통합은 다음 차.</li>
+                    <li><strong>Background Sync</strong> — offline 큐 IndexedDB → online 회복 시 자동 flush.</li>
+                  </ul>
+                  <h2>남은 것</h2>
+                  <p>푸시 트리거 통합: <span class="wiki">[[받은편지함]]</span> · 코멘트 · AI 검수. claim 자동화는 launchd에 cron으로 5분마다 — 이미 <code>com.vibox.prune</code> 패턴 있음. screenshots는 갤탭에서 캡처해서 manifest.json에 올리면 끝.</p>
+                  <blockquote>"flush 중 ETag 불일치 → conflict 모달" — 이 케이스 실제로 한 번 봤는데, 모달이 좀 무거웠음. 시안 다시.</blockquote>
+                  <p>다음 미팅 후 종합본은 옵시디언 <span class="wiki">[[비박스/스프린트]]</span> 로.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right tool panel -->
+            <aside class="tool-panel">
+              <div class="tabs">
+                <div class="t active">목차</div>
+                <div class="t">메타</div>
+                <div class="t">백링크</div>
+                <div class="t">버전</div>
+              </div>
+              <div class="pane">
+                <ul class="toc-list">
+                  <li class="active">비박스 PWA 보강 회의록</li>
+                  <li class="h2">합의된 것</li>
+                  <li class="h3">Share Target</li>
+                  <li class="h3">아이콘</li>
+                  <li class="h3">푸시</li>
+                  <li class="h3">Background Sync</li>
+                  <li class="h2">남은 것</li>
+                </ul>
+
+                <h6>태그</h6>
+                <div class="chip-row" style="margin-bottom:14px">
+                  <span class="chip tag">#비박스</span>
+                  <span class="chip tag">#회의록</span>
+                  <span class="chip tag">#pwa</span>
+                  <span class="chip add">+ 추가</span>
+                </div>
+
+                <h6>경로</h6>
+                <div class="meta-row"><span class="k">폴더</span><span class="v">회의</span></div>
+                <div class="meta-row"><span class="k">파일</span><span class="v" style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px">vibox-pwa-meeting.md</span></div>
+                <div class="meta-row"><span class="k">작성</span><span class="v">2026-05-27</span></div>
+                <div class="meta-row"><span class="k">수정</span><span class="v">방금 전</span></div>
+                <div class="meta-row"><span class="k">길이</span><span class="v">1,243자 · 4,872 bytes</span></div>
+                <div class="meta-row"><span class="k">버전</span><span class="v">7개</span></div>
+
+                <div class="divider"></div>
+
+                <h6>백링크 · 2</h6>
+                <div class="backlink-item">
+                  <div class="src">비박스/스프린트</div>
+                  <div class="ctx">다음 미팅 후 종합본은 옵시디언 [[비박스 PWA 보강 회의록]] 로.</div>
+                </div>
+                <div class="backlink-item">
+                  <div class="src">2026-05-27 일기</div>
+                  <div class="ctx">오후엔 [[비박스 PWA 보강 회의록]] 정리만 1시간…</div>
+                </div>
+              </div>
+            </aside>
+          </div>
+          <div class="shortcut-bar">
+            <span class="item"><span class="k">⌘N</span>새 글</span>
+            <span class="item"><span class="k">⌘K</span>이동</span>
+            <span class="item"><span class="k">⌘/</span>AI</span>
+            <span class="item"><span class="k">⌘\\</span>패널</span>
+            <span class="item"><span class="k">⌘.</span>집중</span>
+          </div>
+        </main>
+      </div>
+    </div>
+    <div class="design-note">
+      <b>왜 우측 패널:</b> 갤탭에서는 화면이 좁아 우측 패널이 부담스럽지만, PC 1440에선 List(320) + Editor(700) 후에도 280px이 남음. 비워두기보다 글쓰기에 직접적인 도구(목차로 점프, 백링크 확인, 버전 복원)에 할당.<br/>
+      <b>기본은 접힘:</b> 첫 진입 시 패널은 숨겨져 있고 ⌘\\ 또는 상단 아이콘으로 토글. 사용자가 펼친 상태로 두면 그 상태 기억(localStorage).<br/>
+      <b>집중 모드 ⌘.</b>: Rail·List·도구 패널을 모두 숨기고 에디터만 — 글쓰기 몰입.
+    </div>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- PC · AI Assist                                                 -->
+  <!-- ============================================================= -->
+  <section id="pc-ai" class="section">
+    <div class="section-head">
+      <h2>PC · ⌘/ AI 어시스트</h2>
+      <span class="tag">선택 → 변형</span>
+      <div class="desc">텍스트 선택 후 ⌘/ — 인라인 팝오버. 자유 입력 + 7개 빠른 명령. claude CLI 사용 (BYOK 불필요).</div>
+    </div>
+
+    <div class="pc-frame">
+      <div class="pc-titlebar">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <div class="url">note.vibox.cloud / n / vibox-pwa-meeting</div>
+      </div>
+      <div class="app">
+        <aside class="rail">
+          <div class="logo">비</div>
+          <nav>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-home"/></svg><span>홈</span></div>
+            <div class="rail-item active"><svg width="22" height="22"><use href="#i-file"/></svg><span>전체</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-inbox"/></svg><span>인박스</span><span class="badge">3</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-star-o"/></svg><span>별표</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-hash"/></svg><span>태그</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-search"/></svg><span>검색</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-settings"/></svg><span>설정</span></div>
+          </nav>
+          <div class="spacer"></div>
+          <div class="avatar">선</div>
+        </aside>
+
+        <aside class="list-pane">
+          <div class="h">
+            <h3>전체</h3>
+            <span class="badge">163</span>
+            <div class="new"><svg width="18" height="18" style="color:white"><use href="#i-plus"/></svg></div>
+          </div>
+          <div class="search">
+            <span class="ic"><svg width="15" height="15"><use href="#i-search"/></svg></span>
+            <input placeholder="제목·태그·본문"/>
+            <span class="kbd">⌘K</span>
+          </div>
+          <div class="list-tabs">
+            <span class="t active">최근</span>
+            <span class="t">별표</span>
+            <span class="t">폴더</span>
+          </div>
+          <div class="list-body">
+            <div class="note-card active">
+              <div class="row1"><div class="tt">비박스 PWA 보강 회의록</div><svg width="13" height="13" class="star"><use href="#i-star"/></svg></div>
+              <div class="pv">Share Target · 아이콘 · 푸시 · Background Sync…</div>
+              <div class="meta"><span class="ft">14분 전</span><span class="dot"></span><span>회의</span></div>
+            </div>
+            <div class="note-card"><div class="row1"><div class="tt">도화 V2 — 무진 시나리오 초고</div></div><div class="pv">대주제 "거절을 거절하는 사람"…</div><div class="meta"><span>2시간 전</span></div></div>
+            <div class="note-card"><div class="row1"><div class="tt">ailik 마케팅 기획서 v2</div><svg width="13" height="13" class="star"><use href="#i-star"/></svg></div><div class="pv">욕망×본질×표현 모델…</div><div class="meta"><span>어제</span></div></div>
+            <div class="note-card"><div class="row1"><div class="tt">krit 아키텍처 메모</div></div><div class="pv">타임라인 엔진을 C++로…</div><div class="meta"><span>2일 전</span></div></div>
+            <div class="note-card"><div class="row1"><div class="tt">2026-05-26 일기</div></div><div class="pv">아이맥 밝기 0 유지가…</div><div class="meta"><span>2일 전</span></div></div>
+          </div>
+        </aside>
+
+        <main class="main">
+          <div class="topbar">
+            <span class="crumb">
+              <svg width="14" height="14" style="vertical-align:-2px;color:var(--text-faint)"><use href="#i-folder"/></svg>
+              회의 <span class="sep">/</span> <b>비박스 PWA 보강 회의록</b>
+            </span>
+            <div class="spacer"></div>
+            <span class="saved"><svg width="13" height="13" class="ic-check"><use href="#i-check"/></svg> 방금 저장됨</span>
+            <button class="icon-btn starred"><svg width="18" height="18"><use href="#i-star"/></svg></button>
+            <button class="icon-btn"><svg width="18" height="18"><use href="#i-focus"/></svg></button>
+            <button class="icon-btn"><svg width="18" height="18"><use href="#i-sidebar"/></svg></button>
+            <button class="icon-btn"><svg width="18" height="18"><use href="#i-more"/></svg></button>
+          </div>
+          <div class="editor-wrap">
+            <div class="editor-pane">
+              <div class="editor-inner">
+                <div class="doc-meta">
+                  <span>2026-05-27 작성</span>
+                  <span>·</span>
+                  <span>1,243자</span>
+                </div>
+                <h1 class="title">비박스 PWA 보강 회의록</h1>
+                <div class="body">
+                  <p>2026-05-27, vibox-mac1, 16:00–17:20. 참석: 선, 클로드. 목표는 PWA MVP 마무리와 다음 스프린트 범위 확정.</p>
+                  <h2>합의된 것</h2>
+                  <ul>
+                    <li><strong>Share Target</strong> — 모바일 공유 시트에서 비노트로 텍스트/이미지 받기 동작 검증.</li>
+                    <li><strong>아이콘</strong> — 192/512px 두 벌 + maskable.</li>
+                    <li><strong>푸시</strong> — Service Worker push 등록까지 완료.</li>
+                    <li><strong>Background Sync</strong> — offline 큐 IndexedDB → online 회복 시 자동 flush.</li>
+                  </ul>
+                  <h2>남은 것</h2>
+                  <p><span class="selected">푸시 트리거 통합: 받은편지함 · 코멘트 · AI 검수. claim 자동화는 launchd에 cron으로 5분마다 — 이미 com.vibox.prune 패턴 있음.</span> screenshots는 갤탭에서 캡처해서 manifest.json에 올리면 끝.</p>
+                </div>
+              </div>
+
+              <!-- Selection floating toolbar -->
+              <div class="floating-toolbar" style="left:200px;top:560px;">
+                <button title="굵게"><svg width="15" height="15"><use href="#i-bold"/></svg></button>
+                <button title="기울임"><svg width="15" height="15"><use href="#i-italic"/></svg></button>
+                <button title="밑줄"><svg width="15" height="15"><use href="#i-underline"/></svg></button>
+                <button title="링크"><svg width="15" height="15"><use href="#i-link"/></svg></button>
+                <div class="divider"></div>
+                <button title="리스트"><svg width="15" height="15"><use href="#i-list"/></svg></button>
+                <button title="인용"><svg width="15" height="15"><use href="#i-quote"/></svg></button>
+                <button title="코드"><svg width="15" height="15"><use href="#i-code"/></svg></button>
+                <div class="divider"></div>
+                <button class="ai-btn">
+                  <svg width="13" height="13"><use href="#i-sparkle"/></svg>
+                  AI <span style="opacity:0.7;font-family:ui-monospace,Menlo,monospace;font-size:10.5px;margin-left:2px">⌘/</span>
+                </button>
+              </div>
+
+              <!-- AI popover -->
+              <div class="ai-popover" style="left:200px;top:614px;">
+                <div class="head">
+                  <svg width="14" height="14" style="color:var(--accent)"><use href="#i-sparkle"/></svg>
+                  <span class="lbl">AI 어시스트</span>
+                  <span class="spacer"></span>
+                  <span style="font-size:11px;color:var(--text-faint)">102자 선택됨</span>
+                </div>
+                <div class="input-row">
+                  <input placeholder="이 부분을 어떻게 다듬을까요?" autofocus />
+                </div>
+                <div class="ai-group">
+                  <h6>자주 쓰는</h6>
+                  <div class="ai-item active">
+                    <span class="ic"><svg width="14" height="14"><use href="#i-shrink"/></svg></span>
+                    <span>더 짧게 (한 문장으로)</span>
+                  </div>
+                  <div class="ai-item">
+                    <span class="ic"><svg width="14" height="14"><use href="#i-expand"/></svg></span>
+                    <span>더 자세히</span>
+                  </div>
+                  <div class="ai-item">
+                    <span class="ic"><svg width="14" height="14"><use href="#i-edit"/></svg></span>
+                    <span>톤 다듬기 (정중하게)</span>
+                  </div>
+                  <div class="ai-item">
+                    <span class="ic"><svg width="14" height="14"><use href="#i-list"/></svg></span>
+                    <span>리스트로 만들기</span>
+                  </div>
+                </div>
+                <div class="ai-group">
+                  <h6>변환</h6>
+                  <div class="ai-item">
+                    <span class="ic"><svg width="14" height="14"><use href="#i-rewrite"/></svg></span>
+                    <span>다시 쓰기</span>
+                  </div>
+                  <div class="ai-item">
+                    <span class="ic"><svg width="14" height="14"><use href="#i-translate"/></svg></span>
+                    <span>영어로 번역</span>
+                  </div>
+                  <div class="ai-item">
+                    <span class="ic"><svg width="14" height="14"><use href="#i-arrow-down"/></svg></span>
+                    <span>아래에 이어쓰기</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <div class="design-note">
+      <b>플로팅 툴바 + AI 팝오버:</b> 선택 즉시 텍스트 위에 툴바, AI 버튼을 누르거나 ⌘/를 누르면 그 아래로 팝오버. claude CLI가 백엔드 — BYOK·API 키 설정 안 필요.<br/>
+      <b>왜 자유 입력 + 빠른 명령 같이 두나:</b> 자주 쓰는 7개는 즉각 실행, 그 외 의도는 자유 입력. 빈번한 패턴(짧게/길게/톤)은 학습돼서 상단 정렬.<br/>
+      <b>적용 후 흐름:</b> AI 결과는 인라인 diff로 표시 → 채택 / 거부 / 다시 시도. 채택 시 자동 버전 기록(reason="ai").
+    </div>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- 태블릿                                                          -->
+  <!-- ============================================================= -->
+  <section id="tablet" class="section">
+    <div class="section-head">
+      <h2>태블릿 · 갤탭 S9 FE+ (1280×800)</h2>
+      <span class="tag">기준 디자인</span>
+      <div class="desc">PC가 이걸 따라옴. 도구 패널은 없음(접힘이 기본) — 갤탭은 글쓰기 몰입이 최우선. BT 키보드 페어링 감지 시 우측 하단에 단축키 힌트.</div>
+    </div>
+
+    <div class="tablet-frame">
+      <div class="cam"></div>
+      <div class="screen">
+        <aside class="rail">
+          <div class="logo">비</div>
+          <nav>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-home"/></svg><span>홈</span></div>
+            <div class="rail-item active"><svg width="22" height="22"><use href="#i-file"/></svg><span>전체</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-inbox"/></svg><span>인박스</span><span class="badge">3</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-star-o"/></svg><span>별표</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-hash"/></svg><span>태그</span></div>
+            <div class="rail-item"><svg width="22" height="22"><use href="#i-search"/></svg><span>검색</span></div>
+          </nav>
+          <div class="spacer"></div>
+          <div class="avatar">선</div>
+        </aside>
+
+        <aside class="list-pane tablet">
+          <div class="h">
+            <h3>전체</h3>
+            <span class="badge">163</span>
+            <div class="new"><svg width="18" height="18" style="color:white"><use href="#i-plus"/></svg></div>
+          </div>
+          <div class="search">
+            <span class="ic"><svg width="15" height="15"><use href="#i-search"/></svg></span>
+            <input placeholder="제목·태그·본문" />
+          </div>
+          <div class="list-tabs">
+            <span class="t active">최근</span>
+            <span class="t">별표</span>
+            <span class="t">인박스</span>
+          </div>
+          <div class="list-body">
+            <div class="note-card active">
+              <div class="row1"><div class="tt">비박스 PWA 보강 회의록</div><svg width="13" height="13" class="star"><use href="#i-star"/></svg></div>
+              <div class="pv">Share Target · 아이콘 · 푸시 · Background Sync — MVP 완료…</div>
+              <div class="meta"><span class="ft">14분 전</span><span class="dot"></span><span>회의 · #비박스</span></div>
+            </div>
+            <div class="note-card">
+              <div class="row1"><div class="tt">도화 V2 — 무진 시나리오 초고</div></div>
+              <div class="pv">대주제 "거절을 거절하는 사람" — 4단 구조…</div>
+              <div class="meta"><span>2시간 전</span><span class="dot"></span><span>시나리오</span></div>
+            </div>
+            <div class="note-card">
+              <div class="row1"><div class="tt">ailik 마케팅 기획서 v2</div><svg width="13" height="13" class="star"><use href="#i-star"/></svg></div>
+              <div class="pv">욕망×본질×표현 모델 적용. 글로벌 라이선스…</div>
+              <div class="meta"><span>어제</span><span class="dot"></span><span>프로젝트</span></div>
+            </div>
+            <div class="note-card">
+              <div class="row1"><div class="tt">krit 아키텍처 메모 — NLE 코어</div></div>
+              <div class="pv">타임라인 엔진을 C++로, UI를 Tauri로…</div>
+              <div class="meta"><span>2일 전</span><span class="dot"></span><span>프로젝트</span></div>
+            </div>
+            <div class="note-card">
+              <div class="row1"><div class="tt">2026-05-26 일기</div></div>
+              <div class="pv">아이맥 밝기 0 유지가 진짜 편함…</div>
+              <div class="meta"><span>2일 전</span><span class="dot"></span><span>일기</span></div>
+            </div>
+          </div>
+        </aside>
+
+        <main class="main">
+          <div class="topbar">
+            <span class="crumb">
+              <svg width="14" height="14" style="vertical-align:-2px;color:var(--text-faint)"><use href="#i-folder"/></svg>
+              회의 <span class="sep">/</span> <b>비박스 PWA 보강 회의록</b>
+            </span>
+            <div class="spacer"></div>
+            <span class="saved"><svg width="13" height="13" class="ic-check"><use href="#i-check"/></svg> 방금 저장됨</span>
+            <button class="icon-btn starred"><svg width="20" height="20"><use href="#i-star"/></svg></button>
+            <button class="icon-btn"><svg width="20" height="20"><use href="#i-sparkle"/></svg></button>
+            <button class="icon-btn"><svg width="20" height="20"><use href="#i-more"/></svg></button>
+          </div>
+          <div class="editor-wrap" style="position:relative">
+            <div class="editor-pane">
+              <div class="editor-inner" style="max-width:720px;padding:40px 56px 200px">
+                <div class="doc-meta">
+                  <span>2026-05-27 작성</span><span>·</span><span>1,243자</span><span>·</span>
+                  <span class="tag-inline">#비박스</span>
+                  <span class="tag-inline">#회의록</span>
+                </div>
+                <h1 class="title">비박스 PWA 보강 회의록</h1>
+                <div class="body">
+                  <p>2026-05-27, vibox-mac1, 16:00–17:20. 참석: 선, 클로드. 목표는 PWA MVP 마무리와 다음 스프린트 범위 확정.</p>
+                  <h2>합의된 것</h2>
+                  <ul>
+                    <li><strong>Share Target</strong> — 모바일 공유 시트에서 비노트로 텍스트/이미지 받기.</li>
+                    <li><strong>아이콘</strong> — 192/512px 두 벌 + maskable.</li>
+                    <li><strong>푸시</strong> — Service Worker push 등록까지 완료.</li>
+                    <li><strong>Background Sync</strong> — offline 큐 IndexedDB.</li>
+                  </ul>
+                  <h2>남은 것</h2>
+                  <p>푸시 트리거 통합: <span class="wiki">[[받은편지함]]</span> · 코멘트 · AI 검수. claim 자동화는 launchd에 cron으로 5분마다.</p>
+                  <blockquote>"flush 중 ETag 불일치 → conflict 모달" — 모달이 좀 무거웠음. 시안 다시.</blockquote>
+                </div>
+              </div>
+            </div>
+            <div class="shortcut-bar">
+              <span class="item"><span class="k">⌘N</span>새 글</span>
+              <span class="item"><span class="k">⌘K</span>이동</span>
+              <span class="item"><span class="k">⌘/</span>AI</span>
+              <span class="item"><span class="k">⌘.</span>집중</span>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <div class="frame-label">갤럭시탭 S9 FE+ · 가로 거치<small>96px Rail · 300px List · 키보드 페어링 시 우측 하단 단축키 힌트</small></div>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- 모바일                                                          -->
+  <!-- ============================================================= -->
+  <section id="mobile" class="section">
+    <div class="section-head">
+      <h2>모바일 · 390×844</h2>
+      <span class="tag">v1 유지</span>
+      <div class="desc">하단 5탭 + 중앙 새 글 FAB. 풀스크린 에디터, 키보드 위 sticky 툴바. 변경 없음.</div>
+    </div>
+
+    <div class="device-row">
+      <!-- Home -->
+      <div>
+        <div class="phone-frame">
+          <div class="notch"></div>
+          <div class="screen">
+            <div class="status-bar">
+              <span>9:41</span>
+              <div style="display:flex;gap:5px;align-items:center">
+                <span style="font-size:11px">●●●●</span><span style="font-size:11px">📶</span><span style="font-size:11px">100%</span>
+              </div>
+            </div>
+            <div class="m-header">
+              <button class="icon-btn"><svg width="20" height="20"><use href="#i-menu"/></svg></button>
+              <h1>비노트</h1>
+              <button class="icon-btn"><svg width="20" height="20"><use href="#i-search"/></svg></button>
+              <button class="icon-btn"><svg width="20" height="20"><use href="#i-bell"/></svg></button>
+            </div>
+            <div class="m-body">
+              <div class="m-greet">
+                <h2>오늘 뭐 써볼까요?</h2>
+                <p>5월 28일 목요일 · 이번 주 12개</p>
+              </div>
+              <div class="m-cta">
+                <div class="plus"><svg width="18" height="18" style="color:white"><use href="#i-edit"/></svg></div>
+                <div>
+                  <div class="ttl">바로 쓰기 시작</div>
+                  <div class="sub">빈 캔버스에서 시작</div>
+                </div>
+                <div style="margin-left:auto;opacity:0.7"><svg width="16" height="16" style="color:white"><use href="#i-plus"/></svg></div>
+              </div>
+              <div class="m-quick-row">
+                <div class="m-quick">
+                  <div class="lbl">인박스</div>
+                  <div class="tt">3개</div>
+                  <div class="meta">정리 안된</div>
+                </div>
+                <div class="m-quick">
+                  <div class="lbl">이어쓰기</div>
+                  <div class="tt">도화 V2</div>
+                  <div class="meta">2시간 전</div>
+                </div>
+              </div>
+              <div class="m-section-h">최근</div>
+              <div class="m-row">
+                <span class="ic starred"><svg width="16" height="16"><use href="#i-star"/></svg></span>
+                <div class="body"><div class="tt">비박스 PWA 보강 회의록</div><div class="ex">Share Target · 아이콘 · 푸시…</div></div>
+                <div class="meta">14분</div>
+              </div>
+              <div class="m-row">
+                <span class="ic"><svg width="16" height="16"><use href="#i-file"/></svg></span>
+                <div class="body"><div class="tt">도화 V2 — 무진 시나리오</div><div class="ex">대주제 "거절을 거절하는 사람"…</div></div>
+                <div class="meta">2h</div>
+              </div>
+              <div class="m-row">
+                <span class="ic starred"><svg width="16" height="16"><use href="#i-star"/></svg></span>
+                <div class="body"><div class="tt">ailik 마케팅 기획서 v2</div><div class="ex">욕망×본질×표현 모델 적용…</div></div>
+                <div class="meta">어제</div>
+              </div>
+              <div class="m-row">
+                <span class="ic"><svg width="16" height="16"><use href="#i-file"/></svg></span>
+                <div class="body"><div class="tt">krit 아키텍처 메모</div><div class="ex">타임라인 엔진을 C++로…</div></div>
+                <div class="meta">2d</div>
+              </div>
+              <div class="m-row">
+                <span class="ic"><svg width="16" height="16"><use href="#i-file"/></svg></span>
+                <div class="body"><div class="tt">2026-05-26 일기</div><div class="ex">아이맥 밝기 0 유지가 진짜…</div></div>
+                <div class="meta">2d</div>
+              </div>
+            </div>
+            <nav class="m-bottom-nav">
+              <div class="tab active"><svg width="20" height="20"><use href="#i-home"/></svg><span>홈</span></div>
+              <div class="tab"><svg width="20" height="20"><use href="#i-search"/></svg><span>검색</span></div>
+              <div class="tab write-tab"><div class="wrap"><svg width="22" height="22" style="color:white"><use href="#i-plus"/></svg></div><span>새 글</span></div>
+              <div class="tab"><svg width="20" height="20"><use href="#i-star-o"/></svg><span>별표</span></div>
+              <div class="tab"><svg width="20" height="20"><use href="#i-folder"/></svg><span>폴더</span></div>
+            </nav>
+          </div>
+        </div>
+        <div class="frame-label">홈<small>중앙 FAB로 새 글</small></div>
+      </div>
+
+      <!-- Editor -->
+      <div>
+        <div class="phone-frame">
+          <div class="notch"></div>
+          <div class="screen">
+            <div class="status-bar">
+              <span>9:41</span>
+              <div style="display:flex;gap:5px;align-items:center">
+                <span style="font-size:11px">●●●●</span><span style="font-size:11px">📶</span><span style="font-size:11px">100%</span>
+              </div>
+            </div>
+            <div class="m-editor-head">
+              <button class="icon-btn"><svg width="20" height="20"><use href="#i-back"/></svg></button>
+              <button class="icon-btn" title="별표"><svg width="20" height="20" style="color:var(--accent)"><use href="#i-star"/></svg></button>
+              <span class="saved"><svg width="11" height="11" style="color:var(--success);vertical-align:-1px"><use href="#i-check"/></svg> 저장됨</span>
+              <button class="icon-btn"><svg width="20" height="20"><use href="#i-more"/></svg></button>
+            </div>
+            <div class="m-editor-body">
+              <div class="meta">
+                <span>회의 / #비박스</span><span>·</span><span>1,243자</span>
+              </div>
+              <h1>비박스 PWA 보강 회의록</h1>
+              <p>2026-05-27, vibox-mac1, 16:00–17:20. 참석: 선, 클로드.</p>
+              <h2>합의된 것</h2>
+              <ul>
+                <li>Share Target — 검증 완료</li>
+                <li>아이콘 192/512 + maskable</li>
+                <li>푸시 SW 등록까지 OK</li>
+                <li>Background Sync — offline 큐</li>
+              </ul>
+              <h2>남은 것</h2>
+              <p>푸시 트리거 통합: <span class="wiki">[[받은편지함]]</span> · 코멘트 · AI 검수. claim 자동화는 launchd에 cron…</p>
+            </div>
+            <div class="m-editor-toolbar">
+              <button title="굵게"><svg width="16" height="16"><use href="#i-bold"/></svg></button>
+              <button title="기울임"><svg width="16" height="16"><use href="#i-italic"/></svg></button>
+              <button title="리스트"><svg width="16" height="16"><use href="#i-list"/></svg></button>
+              <button title="인용"><svg width="16" height="16"><use href="#i-quote"/></svg></button>
+              <button title="링크"><svg width="16" height="16"><use href="#i-link"/></svg></button>
+              <div class="divider"></div>
+              <button class="ai"><svg width="13" height="13"><use href="#i-sparkle"/></svg> AI</button>
+            </div>
+          </div>
+        </div>
+        <div class="frame-label">에디터 — 풀스크린<small>키보드 위 sticky 툴바</small></div>
+      </div>
+
+      <!-- Search -->
+      <div>
+        <div class="phone-frame">
+          <div class="notch"></div>
+          <div class="screen">
+            <div class="status-bar">
+              <span>9:41</span>
+              <div style="display:flex;gap:5px;align-items:center">
+                <span style="font-size:11px">●●●●</span><span style="font-size:11px">📶</span><span style="font-size:11px">100%</span>
+              </div>
+            </div>
+            <div class="m-header" style="padding-bottom:0">
+              <button class="icon-btn"><svg width="20" height="20"><use href="#i-back"/></svg></button>
+              <div style="flex:1;position:relative;">
+                <input style="width:100%;background:var(--surface);border:1px solid transparent;border-radius:10px;padding:10px 12px 10px 36px;font-size:16px;outline:none" placeholder="검색…" value="비박스" />
+                <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-faint)"><svg width="16" height="16"><use href="#i-search"/></svg></span>
+              </div>
+              <button class="icon-btn"><svg width="20" height="20"><use href="#i-x"/></svg></button>
+            </div>
+            <div style="padding:10px 14px 4px;display:flex;gap:6px;border-bottom:1px solid var(--border);overflow-x:auto">
+              <span style="font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:999px;background:var(--text);color:white;flex-shrink:0">전체</span>
+              <span style="font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:999px;color:var(--text-soft);flex-shrink:0">제목</span>
+              <span style="font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:999px;color:var(--text-soft);flex-shrink:0">본문</span>
+              <span style="font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:999px;color:var(--text-soft);flex-shrink:0">태그</span>
+              <span style="font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:999px;color:var(--text-soft);flex-shrink:0">별표만</span>
+            </div>
+            <div class="m-body">
+              <div class="m-section-h">결과 4개</div>
+              <div class="m-row">
+                <span class="ic starred"><svg width="16" height="16"><use href="#i-star"/></svg></span>
+                <div class="body"><div class="tt">비박스 PWA 보강 회의록</div><div class="ex"><span style="background:#fef3c7;padding:1px 2px">비박스</span> PWA 보강 회의록…</div></div>
+              </div>
+              <div class="m-row">
+                <span class="ic"><svg width="16" height="16"><use href="#i-file"/></svg></span>
+                <div class="body"><div class="tt">비박스 운영 메모</div><div class="ex">launchd 6개 — <span style="background:#fef3c7;padding:1px 2px">비박스</span> 운영은 PM2 X…</div></div>
+              </div>
+              <div class="m-row">
+                <span class="ic"><svg width="16" height="16"><use href="#i-file"/></svg></span>
+                <div class="body"><div class="tt">vibox AI 자막 검수 D안</div><div class="ex">Vision LLM — <span style="background:#fef3c7;padding:1px 2px">비박스</span> 0.1.7…</div></div>
+              </div>
+              <div class="m-row">
+                <span class="ic"><svg width="16" height="16"><use href="#i-file"/></svg></span>
+                <div class="body"><div class="tt">2026-05-24 일기</div><div class="ex">하루종일 <span style="background:#fef3c7;padding:1px 2px">비박스</span> PWA 작업…</div></div>
+              </div>
+            </div>
+            <nav class="m-bottom-nav">
+              <div class="tab"><svg width="20" height="20"><use href="#i-home"/></svg><span>홈</span></div>
+              <div class="tab active"><svg width="20" height="20"><use href="#i-search"/></svg><span>검색</span></div>
+              <div class="tab write-tab"><div class="wrap"><svg width="22" height="22" style="color:white"><use href="#i-plus"/></svg></div><span>새 글</span></div>
+              <div class="tab"><svg width="20" height="20"><use href="#i-star-o"/></svg><span>별표</span></div>
+              <div class="tab"><svg width="20" height="20"><use href="#i-folder"/></svg><span>폴더</span></div>
+            </nav>
+          </div>
+        </div>
+        <div class="frame-label">검색 — FTS5 하이라이트<small>키보드 위 필터칩</small></div>
+      </div>
+    </div>
+  </section>
+
+  <footer style="margin-top:80px;padding:24px 0;border-top:1px solid #dcdcdc;color:var(--text-faint);font-size:12px;text-align:center">
+    vinote · UI v2 · 2026-05-28 · 갤탭 3-pane을 PC·태블릿 통합 · 모바일은 v1 유지
+  </footer>
+</div>
+
+</body>
+</html>

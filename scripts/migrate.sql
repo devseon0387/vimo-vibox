@@ -339,3 +339,22 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS push_subscriptions_endpoint_unique
   ON push_subscriptions(endpoint);
+
+-- 2026-05-27: AI 검수 결과에 대한 사용자 피드백 (OCR/Claude 프롬프트 개선 분석용)
+-- comment_id 는 FK 미설정 — 재검수로 AI 댓글 삭제·재삽입돼도 피드백은 보존.
+-- ai_body/suggestion/ocr_wrong 스냅샷을 함께 저장해 댓글이 사라져도 분석 가능.
+CREATE TABLE IF NOT EXISTS ai_review_feedback (
+  id            TEXT PRIMARY KEY,
+  comment_id    TEXT NOT NULL,
+  file_path     TEXT NOT NULL,
+  reporter_id   TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  verdict       TEXT NOT NULL,        -- good | bad | partial
+  reason_tag    TEXT,                 -- ocr_misread | wrong_correction | context_wrong | not_a_typo | partial_fix | other
+  note          TEXT,
+  ai_body       TEXT,
+  ai_suggestion TEXT,
+  ai_ocr_wrong  TEXT,
+  video_time_ms INTEGER,
+  created_at    INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_ai_feedback_comment ON ai_review_feedback(comment_id);
