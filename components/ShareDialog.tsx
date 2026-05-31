@@ -46,7 +46,7 @@ export function ShareDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           path: entry.path,
-          mode,
+          ...(entry.isFolder ? {} : { mode }),
           expiresInDays: expiresInDays > 0 ? expiresInDays : null,
         }),
       });
@@ -86,13 +86,19 @@ export function ShareDialog({
       maxWidth="max-w-md"
     >
       <div className="p-6">
-        <div className="text-[12px] text-text-faint mb-1">파일</div>
+        <div className="text-[12px] text-text-faint mb-1">{entry.isFolder ? "폴더" : "파일"}</div>
         <div className="text-[14px] font-semibold text-text mb-6 truncate">
           {entry.name}
         </div>
 
         {step === "configure" && (
           <>
+            {entry.isFolder ? (
+              <div className="mb-5 text-[12.5px] text-text-muted leading-relaxed bg-surface border border-border rounded-md p-3">
+                받는 사람이 이 폴더 안의 파일을 탐색하고 다운로드할 수 있어요.
+                폴더에 파일을 추가하면 공유에도 자동 반영됩니다.
+              </div>
+            ) : (
             <div className="mb-5">
               <label className="block text-[12px] font-semibold text-text-soft mb-2">
                 모드
@@ -144,6 +150,7 @@ export function ShareDialog({
                 </button>
               </div>
             </div>
+            )}
 
             <div className="mb-5">
               <label className="block text-[12px] font-semibold text-text-soft mb-2">

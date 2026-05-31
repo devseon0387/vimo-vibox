@@ -27,6 +27,10 @@ export const shareLinks = sqliteTable("share_links", {
   mode: text("mode", { enum: ["preview", "full"] })
     .notNull()
     .default("preview"),
+  // 공유 종류: file (단일/묶음 파일) | folder (폴더 통째 — 동적 탐색)
+  kind: text("kind", { enum: ["file", "folder"] })
+    .notNull()
+    .default("file"),
   allowComments: integer("allow_comments", { mode: "boolean" })
     .notNull()
     .default(false),

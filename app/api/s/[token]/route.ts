@@ -7,7 +7,7 @@ import { db } from "@/lib/db/client";
 import { shareLinks } from "@/lib/db/schema";
 import { resolveSafePath, statPath } from "@/lib/fs/storage";
 import { streamWithTrafficLog } from "@/lib/traffic";
-import { resolveAllowedPaths } from "@/lib/share/paths";
+import { resolveAllowedPaths, isPathInShare } from "@/lib/share/paths";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import mime from "../../download/mime";
 
@@ -56,12 +56,22 @@ export async function GET(
     await bcrypt.compare(password || "x", DUMMY_BCRYPT_HASH).catch(() => {});
   }
 
-  // 멀티 파일 지원: ?p=/foo.mp4 로 특정 파일 선택 가능
+  // 멀티 파일 / 폴더 공유: ?p=/foo.mp4 로 특정 파일 선택.
+  // 폴더 공유는 공유 폴더 하위 경로만 허용(isPathInShare) — 경계 밖이면 거부.
   const requestedPath = url.searchParams.get("p");
-  const allowedPaths = resolveAllowedPaths(link);
-  const targetPath = requestedPath && allowedPaths.includes(requestedPath)
-    ? requestedPath
-    : link.filePath;
+  let targetPath: string;
+  if (link.kind === "folder") {
+    if (!requestedPath || !isPathInShare(link, requestedPath)) {
+      return new Response("forbidden", { status: 403 });
+    }
+    targetPath = requestedPath;
+  } else {
+    const allowedPaths = resolveAllowedPaths(link);
+    targetPath =
+      requestedPath && allowedPaths.includes(requestedPath)
+        ? requestedPath
+        : link.filePath;
+  }
 
   // 다운로드 요청인데 다운로드 금지된 경우 차단
   const isDownload = url.searchParams.get("download") === "1";

@@ -354,10 +354,6 @@ export function FileTable({
 
   const onShare = (entry: FileEntry, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    if (entry.isFolder) {
-      showToast("지금은 폴더 공유를 지원하지 않아요", "error");
-      return;
-    }
     setShareEntry(entry);
   };
 

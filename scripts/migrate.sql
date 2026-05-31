@@ -358,3 +358,6 @@ CREATE TABLE IF NOT EXISTS ai_review_feedback (
   created_at    INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_ai_feedback_comment ON ai_review_feedback(comment_id);
+
+-- 2026-05-31: 폴더 공유 — share_links.kind (file | folder)
+ALTER TABLE share_links ADD COLUMN kind TEXT NOT NULL DEFAULT 'file';

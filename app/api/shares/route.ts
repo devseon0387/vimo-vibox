@@ -80,12 +80,19 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // 모든 파일 존재 확인
+  // 존재 확인 + 종류 판별 (파일 vs 폴더). 폴더는 한 번에 하나만 (동적 탐색 공유).
+  let shareKind: "file" | "folder" = "file";
   for (const p of rawPaths) {
     try {
       const { stat } = await statPath(p);
       if (stat.isDirectory()) {
-        return NextResponse.json({ error: `폴더 공유는 아직 지원하지 않아요: ${p}` }, { status: 400 });
+        if (rawPaths.length > 1) {
+          return NextResponse.json(
+            { error: "폴더는 한 번에 하나만 공유할 수 있어요" },
+            { status: 400 },
+          );
+        }
+        shareKind = "folder";
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "unknown";
@@ -116,8 +123,9 @@ export async function POST(req: NextRequest) {
   await db.insert(shareLinks).values({
     id: randomUUID(),
     token,
-    filePath: primaryPath, // 첫 파일 (backward compat)
+    filePath: primaryPath, // 첫 파일 또는 폴더 경로 (backward compat)
     paths: isMulti ? JSON.stringify(rawPaths) : null,
+    kind: shareKind,
     title,
     mode,
     allowComments,

@@ -4,8 +4,10 @@ import path from "node:path";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { shareLinks } from "@/lib/db/schema";
-import { resolveAllowedPaths } from "@/lib/share/paths";
+import { resolveAllowedPaths, shareFolderRoot } from "@/lib/share/paths";
+import { listDirectory } from "@/lib/fs/storage";
 import { SharePageClient } from "./share-client";
+import { ShareFolderBrowser } from "./share-folder-browser";
 
 type Kind = "video" | "image" | "audio" | "pdf" | "other";
 
@@ -94,7 +96,44 @@ export default async function SharePage({
 
   const expired = !!link.expiresAt && link.expiresAt.getTime() < Date.now();
 
-  // paths 컬럼이 있으면 멀티, 없으면 단일 (invalid JSON 은 안전 폴백)
+  // 폴더 공유 — 동적 탐색 브라우저
+  if (link.kind === "folder") {
+    const root = shareFolderRoot(link) ?? link.filePath;
+    let entries: Array<{
+      name: string;
+      path: string;
+      isFolder: boolean;
+      kind: string;
+      size: number;
+      modifiedAt: number;
+    }> = [];
+    if (!expired) {
+      try {
+        const list = await listDirectory(root);
+        entries = list.map((e) => ({
+          name: e.name,
+          path: e.path,
+          isFolder: e.isFolder,
+          kind: e.kind,
+          size: e.size,
+          modifiedAt: e.modifiedAt,
+        }));
+      } catch {}
+    }
+    return (
+      <ShareFolderBrowser
+        token={token}
+        title={link.title ?? path.basename(root) ?? "공유 폴더"}
+        root={root}
+        initialEntries={entries}
+        allowDownload={link.allowDownload}
+        expired={expired}
+        expiresAt={link.expiresAt ? link.expiresAt.toISOString() : null}
+      />
+    );
+  }
+
+  // 파일 공유 (기존) — paths 컬럼이 있으면 멀티, 없으면 단일
   const paths = resolveAllowedPaths(link);
 
   const files = paths.map((p) => ({
