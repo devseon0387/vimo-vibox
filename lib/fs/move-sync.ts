@@ -16,96 +16,110 @@ import {
  * - 파일: exact match만 갱신
  * - 폴더: from = to OR from으로 시작하는 모든 경로의 prefix 치환
  *
- * 호출 시점: fs.rename 성공 후. 이 함수가 실패하면 throw — 상위에서 처리.
+ * better-sqlite3 는 동기 드라이버라 transaction 콜백도 반드시 동기여야 한다.
+ * async 콜백을 주면 "Transaction function cannot return a promise" 로 throw 되어
+ * rename/move 시 DB 동기화가 통째로 실패한다(파일은 이동했는데 DB는 옛 경로).
+ * 따라서 콜백 내부는 await 없이 .run()/.all() 동기 실행을 쓴다.
+ *
+ * 호출 시점: fs.rename 성공 후. 실패하면 throw — 상위에서 처리.
  */
-export async function syncDbPathsAfterMove(
+export function syncDbPathsAfterMove(
   from: string,
   to: string,
   isDir: boolean,
-): Promise<void> {
+): void {
   const fromPrefix = from + "/";
   const toPrefix = to + "/";
   const likePattern = fromPrefix + "%";
-  // SQL substr(s, X)에서 X는 1-based. 우리는 fromPrefix 길이만큼 잘라낸 다음을 원함.
+  // SQL substr(s, X)에서 X는 1-based. fromPrefix 길이만큼 잘라낸 다음을 원함.
   const substrFrom = fromPrefix.length + 1;
 
-  await db.transaction(async (tx) => {
+  db.transaction((tx) => {
     // ───── 1) file_uploads.path (PK) ─────
-    await tx.update(fileUploads).set({ path: to }).where(eq(fileUploads.path, from));
+    tx.update(fileUploads).set({ path: to }).where(eq(fileUploads.path, from)).run();
     if (isDir) {
-      await tx
+      tx
         .update(fileUploads)
         .set({ path: sql`${toPrefix} || substr(${fileUploads.path}, ${substrFrom})` })
-        .where(like(fileUploads.path, likePattern));
+        .where(like(fileUploads.path, likePattern))
+        .run();
     }
 
     // ───── 2) comments.file_path ─────
-    await tx.update(comments).set({ filePath: to }).where(eq(comments.filePath, from));
+    tx.update(comments).set({ filePath: to }).where(eq(comments.filePath, from)).run();
     if (isDir) {
-      await tx
+      tx
         .update(comments)
         .set({ filePath: sql`${toPrefix} || substr(${comments.filePath}, ${substrFrom})` })
-        .where(like(comments.filePath, likePattern));
+        .where(like(comments.filePath, likePattern))
+        .run();
     }
 
     // ───── 3) scan_history.file_path ─────
-    await tx.update(scanHistory).set({ filePath: to }).where(eq(scanHistory.filePath, from));
+    tx.update(scanHistory).set({ filePath: to }).where(eq(scanHistory.filePath, from)).run();
     if (isDir) {
-      await tx
+      tx
         .update(scanHistory)
         .set({ filePath: sql`${toPrefix} || substr(${scanHistory.filePath}, ${substrFrom})` })
-        .where(like(scanHistory.filePath, likePattern));
+        .where(like(scanHistory.filePath, likePattern))
+        .run();
     }
 
     // ───── 4) encoding_jobs.file_path ─────
-    await tx.update(encodingJobs).set({ filePath: to }).where(eq(encodingJobs.filePath, from));
+    tx.update(encodingJobs).set({ filePath: to }).where(eq(encodingJobs.filePath, from)).run();
     if (isDir) {
-      await tx
+      tx
         .update(encodingJobs)
         .set({ filePath: sql`${toPrefix} || substr(${encodingJobs.filePath}, ${substrFrom})` })
-        .where(like(encodingJobs.filePath, likePattern));
+        .where(like(encodingJobs.filePath, likePattern))
+        .run();
     }
 
     // ───── 5) hls_assets.file_path (UNIQUE) ─────
-    await tx.update(hlsAssets).set({ filePath: to }).where(eq(hlsAssets.filePath, from));
+    tx.update(hlsAssets).set({ filePath: to }).where(eq(hlsAssets.filePath, from)).run();
     if (isDir) {
-      await tx
+      tx
         .update(hlsAssets)
         .set({ filePath: sql`${toPrefix} || substr(${hlsAssets.filePath}, ${substrFrom})` })
-        .where(like(hlsAssets.filePath, likePattern));
+        .where(like(hlsAssets.filePath, likePattern))
+        .run();
     }
 
     // ───── 6) client_videos.file_path ─────
-    await tx.update(clientVideos).set({ filePath: to }).where(eq(clientVideos.filePath, from));
+    tx.update(clientVideos).set({ filePath: to }).where(eq(clientVideos.filePath, from)).run();
     if (isDir) {
-      await tx
+      tx
         .update(clientVideos)
         .set({ filePath: sql`${toPrefix} || substr(${clientVideos.filePath}, ${substrFrom})` })
-        .where(like(clientVideos.filePath, likePattern));
+        .where(like(clientVideos.filePath, likePattern))
+        .run();
     }
 
     // ───── 7) share_views.file_path ─────
-    await tx.update(shareViews).set({ filePath: to }).where(eq(shareViews.filePath, from));
+    tx.update(shareViews).set({ filePath: to }).where(eq(shareViews.filePath, from)).run();
     if (isDir) {
-      await tx
+      tx
         .update(shareViews)
         .set({ filePath: sql`${toPrefix} || substr(${shareViews.filePath}, ${substrFrom})` })
-        .where(like(shareViews.filePath, likePattern));
+        .where(like(shareViews.filePath, likePattern))
+        .run();
     }
 
     // ───── 8) share_links.file_path ─────
-    await tx.update(shareLinks).set({ filePath: to }).where(eq(shareLinks.filePath, from));
+    tx.update(shareLinks).set({ filePath: to }).where(eq(shareLinks.filePath, from)).run();
     if (isDir) {
-      await tx
+      tx
         .update(shareLinks)
         .set({ filePath: sql`${toPrefix} || substr(${shareLinks.filePath}, ${substrFrom})` })
-        .where(like(shareLinks.filePath, likePattern));
+        .where(like(shareLinks.filePath, likePattern))
+        .run();
     }
 
     // ───── 9) share_links.paths (JSON 배열) — JS에서 파싱 후 매칭 항목 치환 ─────
-    const rows = await tx
+    const rows = tx
       .select({ id: shareLinks.id, paths: shareLinks.paths })
-      .from(shareLinks);
+      .from(shareLinks)
+      .all();
     for (const r of rows) {
       if (!r.paths) continue;
       let arr: unknown;
@@ -129,10 +143,11 @@ export async function syncDbPathsAfterMove(
         return p;
       });
       if (changed) {
-        await tx
+        tx
           .update(shareLinks)
           .set({ paths: JSON.stringify(next) })
-          .where(eq(shareLinks.id, r.id));
+          .where(eq(shareLinks.id, r.id))
+          .run();
       }
     }
   });
