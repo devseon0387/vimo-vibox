@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useLongPress } from "@/lib/use-long-press";
 import { Thumbnail } from "./Thumbnail";
 import type { FileEntry } from "@/lib/fs/storage";
@@ -96,6 +96,7 @@ export function FileTable({
   onEmptyUploadClick?: () => void;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [deleting, setDeleting] = useState<string | null>(null);
   const [previewEntry, setPreviewEntry] = useState<FileEntry | null>(null);
   const [moveEntry, setMoveEntry] = useState<FileEntry | null>(null);
@@ -115,7 +116,9 @@ export function FileTable({
 
   const onOpen = (entry: FileEntry) => {
     if (entry.isFolder) {
-      router.push(`/?path=${encodeURIComponent(entry.path)}`);
+      // 현재 라우트(/team 등)를 유지하며 폴더 진입. 과거엔 `/?path=` 하드코딩이라
+      // 홈이 대시보드로 바뀐 뒤 폴더 클릭이 대시보드로 튕기던 버그.
+      router.push(`${pathname}?path=${encodeURIComponent(entry.path)}`);
     } else if (isVideo(entry)) {
       router.push(`/vimo-box?path=${encodeURIComponent(entry.path)}`);
     } else if (isPreviewable(entry)) {

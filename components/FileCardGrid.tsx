@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import type { FileEntry } from "@/lib/fs/storage";
 import { useLongPress } from "@/lib/use-long-press";
 import {
@@ -406,6 +406,7 @@ export function FileCardGrid({
   onEmptyUploadClick?: () => void;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [deleting, setDeleting] = useState<string | null>(null);
   const [previewEntry, setPreviewEntry] = useState<FileEntry | null>(null);
   const [moveEntry, setMoveEntry] = useState<FileEntry | null>(null);
@@ -424,7 +425,8 @@ export function FileCardGrid({
 
   const onOpen = (entry: FileEntry) => {
     if (entry.isFolder) {
-      router.push(`/?path=${encodeURIComponent(entry.path)}`);
+      // 현재 라우트(/team 등) 유지하며 폴더 진입 (과거 `/?path=` 하드코딩 버그 수정)
+      router.push(`${pathname}?path=${encodeURIComponent(entry.path)}`);
     } else if (isVideo(entry)) {
       router.push(`/vimo-box?path=${encodeURIComponent(entry.path)}`);
     } else if (isPreviewable(entry)) {
