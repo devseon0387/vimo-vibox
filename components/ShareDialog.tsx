@@ -19,6 +19,7 @@ export function ShareDialog({
 }) {
   const [step, setStep] = useState<Step>("configure");
   const [mode, setMode] = useState<Mode>("preview");
+  const [includeFeedback, setIncludeFeedback] = useState(false);
   const [expiresInDays, setExpiresInDays] = useState<number>(7);
   const [creating, setCreating] = useState(false);
   const [token, setToken] = useState<string | null>(null);
@@ -29,6 +30,7 @@ export function ShareDialog({
     if (!open) return;
     setStep("configure");
     setMode("preview");
+    setIncludeFeedback(false);
     setExpiresInDays(7);
     setToken(null);
     setCopied(false);
@@ -47,6 +49,7 @@ export function ShareDialog({
         body: JSON.stringify({
           path: entry.path,
           ...(entry.isFolder ? {} : { mode }),
+          ...(!entry.isFolder && mode === "full" ? { includeFeedback } : {}),
           expiresInDays: expiresInDays > 0 ? expiresInDays : null,
         }),
       });
@@ -152,6 +155,34 @@ export function ShareDialog({
             </div>
             )}
 
+            {!entry.isFolder && mode === "full" && (
+              <button
+                type="button"
+                onClick={() => setIncludeFeedback((v) => !v)}
+                className={`w-full flex items-start gap-2.5 p-3 mb-5 rounded-md border text-left transition-colors ${
+                  includeFeedback
+                    ? "border-accent bg-accent-soft"
+                    : "border-border hover:border-border-hover bg-white"
+                }`}
+              >
+                <span
+                  className={`mt-px shrink-0 w-4 h-4 rounded grid place-items-center border transition-colors ${
+                    includeFeedback ? "bg-accent border-accent" : "border-border bg-white"
+                  }`}
+                >
+                  {includeFeedback && <Check size={11} strokeWidth={3} className="text-white" />}
+                </span>
+                <div>
+                  <div className="text-[12.5px] font-semibold text-text">
+                    내가 남긴 피드백도 함께 보이기
+                  </div>
+                  <div className="text-[10.5px] text-text-muted mt-0.5 leading-snug">
+                    이 파일에 팀이 남긴 타임라인 피드백을 받는 사람도 봅니다 · 링크에서만 보이고 끄면 다시 숨겨져요
+                  </div>
+                </div>
+              </button>
+            )}
+
             <div className="mb-5">
               <label className="block text-[12px] font-semibold text-text-soft mb-2">
                 만료 기간
@@ -194,8 +225,9 @@ export function ShareDialog({
 
         {step === "ready" && token && (
           <>
-            <div className="text-[12.5px] text-success font-semibold mb-3">
-              ✓ 링크가 만들어졌습니다
+            <div className="flex items-center gap-1.5 text-[12.5px] text-success font-semibold mb-3">
+              <Check size={14} strokeWidth={2.6} />
+              링크가 만들어졌습니다
             </div>
 
             <div className="bg-surface border border-border rounded-md p-3 mb-3">

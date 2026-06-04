@@ -37,6 +37,12 @@ export const shareLinks = sqliteTable("share_links", {
   allowDownload: integer("allow_download", { mode: "boolean" })
     .notNull()
     .default(true),
+  // 받는 사람에게 "팀이 이 파일에 남긴 피드백"도 함께 보여줄지 (per-share).
+  // true면 공유 뷰 코멘트 API가 게스트 아닌(팀) 코멘트를 함께 반환한다.
+  // 코멘트의 visibility는 건드리지 않음 — 이 링크에서만 드러나고, 끄거나 폐기하면 다시 숨음(비파괴적).
+  includeFeedback: integer("include_feedback", { mode: "boolean" })
+    .notNull()
+    .default(false),
   createdBy: text("created_by")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),

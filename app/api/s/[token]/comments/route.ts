@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { and, asc, eq, or } from "drizzle-orm";
+import { and, asc, eq, ne, or } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db/client";
 import { comments, shareLinks } from "@/lib/db/schema";
@@ -53,8 +53,11 @@ export async function GET(
   const { link, allowedPaths } = check;
   const filePath = p && allowedPaths.includes(p) ? p : link.filePath;
 
-  // 클라이언트 뷰: visibility='client' (스태프가 공개로 전환한 것)
-  //                 + 이 공유 링크로 남긴 게스트 댓글 (shareToken 매칭)
+  // 클라이언트 뷰에 보일 댓글:
+  //  - visibility='client' (스태프가 공개로 전환한 것)
+  //  - 이 공유 링크로 남긴 게스트 댓글 (shareToken 매칭)
+  //  - link.includeFeedback 이면: 팀(게스트 아닌) 피드백도 함께 — 코멘트 visibility는 안 바꾸고
+  //    이 링크에서만 드러냄(비파괴적·되돌릴 수 있음). "내가 남긴 피드백도 함께 보이기" 옵션의 핵심.
   // 순화본 대신 원문 body 사용 — 클라이언트는 본인이 쓴 글 그대로 보여야 함
   const rows = await db
     .select()
@@ -68,6 +71,7 @@ export async function GET(
             eq(comments.authorId, "guest"),
             eq(comments.shareToken, token),
           ),
+          ...(link.includeFeedback ? [ne(comments.authorId, "guest")] : []),
         ),
       ),
     )

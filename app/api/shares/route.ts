@@ -32,6 +32,7 @@ export async function GET() {
       mode: r.mode,
       allowComments: r.allowComments,
       allowDownload: r.allowDownload,
+      includeFeedback: r.includeFeedback,
       expiresAt: r.expiresAt,
       hasPassword: !!r.passwordHash,
       downloadCount: r.downloadCount,
@@ -54,11 +55,9 @@ export async function POST(req: NextRequest) {
   const session = await getCurrentSession();
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  // staff(admin/member)만 외부 공유 발급 — partner가 검수 전 작업물을 외부 노출 못하게
-  // (/api/external/share-links와 정책 통일)
-  if (session.role !== "admin" && session.role !== "member") {
-    return NextResponse.json({ error: "manager only" }, { status: 403 });
-  }
+  // 2026-06-03 — 파트너도 공유 링크 발급 허용 (사용자 요청).
+  // 아래 canAccessFile 검사가 "본인이 접근 가능한 파일"만 공유하도록 보장하므로,
+  // 파트너는 자기 파일만 공유 가능 (남의 파일/타인 작업물은 여전히 403).
 
   const body = await req.json().catch(() => null);
 
@@ -119,6 +118,9 @@ export async function POST(req: NextRequest) {
     body?.allowComments !== undefined
       ? !!body.allowComments
       : mode === "full";
+  // "내가 남긴 피드백도 함께 보이기" — 풀모드(피드백 받기)에서만 의미. 코멘트 visibility는 안 바꾸고
+  // 공유 뷰 코멘트 API가 이 플래그를 보고 팀 피드백을 함께 반환한다.
+  const includeFeedback = body?.includeFeedback === true && mode === "full";
 
   await db.insert(shareLinks).values({
     id: randomUUID(),
@@ -130,6 +132,7 @@ export async function POST(req: NextRequest) {
     mode,
     allowComments,
     allowDownload: body?.allowDownload !== false, // 기본 true
+    includeFeedback,
     createdBy: session.sub,
     expiresAt,
     passwordHash,
