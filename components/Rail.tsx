@@ -13,6 +13,8 @@ type RailItem = {
   icon: typeof LayoutDashboard;
   href: string;
   adminOnly?: boolean;
+  /** 파트너(외부 편집자)에게는 숨김 — 내부 검수 큐 등 */
+  hideForPartner?: boolean;
   /** 활성 아이콘 색상 (액티브 + 호버) — 공간 구분용 */
   accentColor?: string;
 };
@@ -21,21 +23,25 @@ const RAIL_ITEMS: RailItem[] = [
   { key: "home", label: "홈", icon: LayoutDashboard, href: "/" },
   { key: "mybox", label: "My box", icon: Package, href: "/my/box", accentColor: "#0ea5e9" },
   { key: "team", label: "비모", icon: Users, href: "/team", accentColor: "#e85008" },
-  { key: "activity", label: "활동", icon: Activity, href: "/inbox" },
+  { key: "activity", label: "활동", icon: Activity, href: "/inbox", hideForPartner: true },
   { key: "admin", label: "관리", icon: Settings, href: "/admin/users", adminOnly: true },
 ];
 
 export function Rail({
   isAdmin,
+  isPartner = false,
   userInitials,
 }: {
   isAdmin: boolean;
+  isPartner?: boolean;
   userInitials: string;
 }) {
   const pathname = usePathname();
   const active = railFromPath(pathname);
 
-  const visibleItems = RAIL_ITEMS.filter((it) => !it.adminOnly || isAdmin);
+  const visibleItems = RAIL_ITEMS.filter(
+    (it) => (!it.adminOnly || isAdmin) && !(it.hideForPartner && isPartner),
+  );
 
   return (
     <aside className="w-[84px] bg-surface border-r border-border flex flex-col py-4 px-2 shrink-0 h-screen">

@@ -13,7 +13,7 @@ function formatBytes(b: number | null | undefined): string {
   return `${(b / Math.pow(1000, i)).toFixed(i <= 1 ? 0 : 1)} ${u[i]}`;
 }
 
-export function MyboxMenu() {
+export function MyboxMenu({ isPartner = false }: { isPartner?: boolean }) {
   const [usage, setUsage] = useState<Usage | null>(null);
 
   useEffect(() => {
@@ -59,11 +59,16 @@ export function MyboxMenu() {
       <MenuItem href="/my/box?recent=1" icon={Clock} label="최근" />
       <MenuItem href="/my/box?starred=1" icon={Star} label="즐겨찾기" />
 
-      <MenuSection label="기록" />
-      <MenuItem href="/my/stats" icon={Activity} label="내 기록" />
+      {/* 파트너는 내부 영역(내 기록·휴지통) 숨김 */}
+      {!isPartner && (
+        <>
+          <MenuSection label="기록" />
+          <MenuItem href="/my/stats" icon={Activity} label="내 기록" />
 
-      <MenuSection label="기타" />
-      <MenuItem href="/trash" icon={Trash2} label="휴지통" />
+          <MenuSection label="기타" />
+          <MenuItem href="/trash" icon={Trash2} label="휴지통" />
+        </>
+      )}
     </MenuShell>
   );
 }

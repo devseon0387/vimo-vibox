@@ -10,14 +10,15 @@ import { MenuRouter } from "./menus/MenuRouter";
 export async function Sidebar() {
   const session = await getCurrentSession();
   const isAdmin = session?.role === "admin";
+  const isPartner = session?.role === "partner";
   const initials = (session?.name ?? session?.username ?? "?")
     .slice(0, 2)
     .toUpperCase();
 
   return (
     <div className="flex h-screen">
-      <Rail isAdmin={isAdmin} userInitials={initials} />
-      <MenuRouter isAdmin={isAdmin} />
+      <Rail isAdmin={isAdmin} isPartner={isPartner} userInitials={initials} />
+      <MenuRouter isAdmin={isAdmin} isPartner={isPartner} />
     </div>
   );
 }

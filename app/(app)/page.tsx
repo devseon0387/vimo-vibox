@@ -1,5 +1,6 @@
 import { getCurrentSession } from "@/lib/auth/session";
 import { SpaceCard } from "@/components/SpaceCard";
+import { PartnerHome } from "@/components/PartnerHome";
 import { MyFilesCarousel } from "@/components/dashboard/MyFilesCarousel";
 import { NewCommentsCard } from "@/components/dashboard/NewCommentsCard";
 import { ShareActivityCard } from "@/components/dashboard/ShareActivityCard";
@@ -35,6 +36,22 @@ export default async function HomePage() {
   const isManager = session.role === "admin" || session.role === "member";
   const userName = session.name ?? session.username ?? "";
   const showPersonal = !isPartner;
+
+  // 파트너(외부 편집자) 전용 홈 — 두 공간(내 보관함 + 비모 납품) 탭, 검수/받은편지함 없음.
+  // 백엔드(개인 공간 격리·쿼터·업로드)는 이미 지원하므로 홈만 분기한다.
+  if (isPartner) {
+    const [partnerPersonal, partnerFiles] = await Promise.all([
+      getPersonalSummary(session.sub),
+      getMyRecentFiles(session.sub, 30),
+    ]);
+    return (
+      <PartnerHome
+        userName={userName}
+        personalSummary={partnerPersonal}
+        recentFiles={partnerFiles}
+      />
+    );
+  }
 
   // 병렬 페치 — 모든 쿼리 동시에
   const [personalData, recentFiles, newComments, shareActivity, inboxItems, teamSummary] =
