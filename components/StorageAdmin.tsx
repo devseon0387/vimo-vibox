@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { HardDrive, Search, Trash2, Loader2, CheckCircle2 } from "lucide-react";
+import {
+  HardDrive,
+  Search,
+  Trash2,
+  Loader2,
+  CheckCircle2,
+  AlertTriangle,
+} from "lucide-react";
 import { useConfirm } from "./ConfirmDialog";
 import { useToast } from "./Toast";
 import type { ReconcileReport } from "@/lib/reconcile";
@@ -54,7 +61,8 @@ export function StorageAdmin() {
   };
 
   const onApply = async () => {
-    if (!report || report.totalBytesFreed === 0) return;
+    if (!report || nothingToDo) return;
+    if (report.storageSuspect) return; // 마운트 의심 시 삭제 차단 (서버도 거부)
     const ok = await confirm({
       title: "저장소 정리 실행",
       message: (
@@ -109,7 +117,7 @@ export function StorageAdmin() {
           )}
           스캔 (드라이런)
         </button>
-        {report && report.totalBytesFreed > 0 && !report.applied && (
+        {report && !nothingToDo && !report.applied && !report.storageSuspect && (
           <button
             onClick={onApply}
             disabled={loading !== null}
@@ -154,7 +162,30 @@ export function StorageAdmin() {
         </div>
       )}
 
-      {report && nothingToDo && !report.applied && (
+      {report && report.storageSuspect && !report.applied && (
+        <div className="border border-[#fed7aa] bg-[#fff7ed] rounded-lg p-4 mb-5 flex items-start gap-2.5">
+          <AlertTriangle
+            size={18}
+            strokeWidth={2.5}
+            className="text-danger mt-0.5 shrink-0"
+          />
+          <div>
+            <div className="text-[13.5px] font-semibold text-text">
+              스토리지 마운트 의심 — 삭제가 차단됐어요
+            </div>
+            <div className="text-[12px] text-text-muted mt-0.5">
+              DB는 참조하는데 디스크엔 파일이 0개인 영역:{" "}
+              <span className="font-semibold text-text">
+                {report.suspectZones.join(", ")}
+              </span>
+              . 외장 볼륨이 언마운트됐을 수 있어요. 이 상태로 삭제하면 해당 영역의 DB
+              기록이 통째로 지워집니다. STORAGE_ROOT 마운트를 확인한 뒤 다시 스캔하세요.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {report && nothingToDo && !report.storageSuspect && !report.applied && (
         <div className="border border-border rounded-lg py-10 px-6 text-center bg-white">
           <CheckCircle2
             size={28}
