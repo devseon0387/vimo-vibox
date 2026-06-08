@@ -447,7 +447,10 @@ function TeamTab({ files, summary }: { files: MyRecentFile[]; summary: DeliveryS
                   <FeedbackPanel
                     state={cache[f.path]}
                     needsNewVersion={f.needsNewVersion}
-                    onNewVersion={() => openUpload(parentDir(f.path))}
+                    // 같은 파일명으로 덮어쓰기 — 새 버전이 그 자리에 올라가 수정요청이 검수중으로 전환(중복 안 생김)
+                    onNewVersion={() =>
+                      openUpload(parentDir(f.path), { asFilename: f.filename, conflictMode: "overwrite" })
+                    }
                     folderHref={`/team?path=${encodeURIComponent(parentDir(f.path))}`}
                   />
                 )}

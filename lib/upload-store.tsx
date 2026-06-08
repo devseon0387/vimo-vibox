@@ -40,6 +40,12 @@ type UploadOptions = {
   onComplete?: (entry: UploadEntry) => void;
 };
 
+type OpenUploadOptions = UploadOptions & {
+  /** 지정 시 선택한 파일을 이 이름으로 바꿔 업로드 — "새 버전 올리기"가 원본을 같은 경로로
+   *  덮어쓰도록(다른 이름이면 중복 파일이 생기고 수정요청이 안 풀림). 기본 conflictMode=overwrite. */
+  asFilename?: string;
+};
+
 type UploadContextValue = {
   uploads: UploadEntry[];
   enqueue: (
@@ -49,7 +55,7 @@ type UploadContextValue = {
   ) => string;
   /** 클릭 제스처 안에서 호출 — 숨은 파일 피커를 열고, 선택 시 targetPath로 enqueue.
    *  (페이지 이동 후 자동 클릭은 브라우저가 막으므로 CTA 버튼이 직접 이 함수를 호출해야 한다.) */
-  openUpload: (targetPath: string, options?: UploadOptions) => void;
+  openUpload: (targetPath: string, options?: OpenUploadOptions) => void;
   cancel: (id: string) => void;
   dismiss: (id: string) => void;
   /** 자주 쓰이는 합계 — 도크 헤더 표시용 */
@@ -212,8 +218,8 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
   // 클릭 제스처 보존형 업로드 — CTA 버튼이 직접 openUpload 호출 → 같은 제스처로 OS 파일창이 열린다.
   // (이동 후 destination 에서 input.click() 하는 방식은 사용자 활성화가 소실돼 브라우저가 막음.)
   const pickerInputRef = useRef<HTMLInputElement>(null);
-  const pickerTarget = useRef<{ path: string; options?: UploadOptions } | null>(null);
-  const openUpload = useCallback((targetPath: string, options?: UploadOptions) => {
+  const pickerTarget = useRef<{ path: string; options?: OpenUploadOptions } | null>(null);
+  const openUpload = useCallback((targetPath: string, options?: OpenUploadOptions) => {
     pickerTarget.current = { path: targetPath, options };
     pickerInputRef.current?.click();
   }, []);
@@ -223,7 +229,21 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
       const t = pickerTarget.current;
       pickerTarget.current = null;
       e.target.value = ""; // 같은 파일 다시 선택 가능하도록 리셋
-      if (t && files.length) enqueue(t.path, files, t.options);
+      if (!t || files.length === 0) return;
+      if (t.options?.asFilename) {
+        // "새 버전 올리기": 선택 파일을 원본 이름으로 바꿔 같은 경로에 덮어씀 → 수정요청 깔끔히 해소(중복 안 생김)
+        const f0 = files[0];
+        const renamed = new File([f0], t.options.asFilename, {
+          type: f0.type,
+          lastModified: f0.lastModified,
+        });
+        enqueue(t.path, [renamed], {
+          conflictMode: t.options.conflictMode ?? "overwrite",
+          onComplete: t.options.onComplete,
+        });
+      } else {
+        enqueue(t.path, files, t.options);
+      }
     },
     [enqueue],
   );
