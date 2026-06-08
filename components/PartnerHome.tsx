@@ -7,6 +7,7 @@ import {
   Lock,
   Upload,
   ArrowRight,
+  ChevronRight,
   CheckCircle2,
   AlertCircle,
   Clock,
@@ -294,8 +295,102 @@ function TeamReviewGauge({ summary }: { summary: DeliverySummary }) {
   );
 }
 
+type PartnerCmt = {
+  id: string;
+  authorName: string;
+  authorRole: "admin" | "member" | "partner" | "guest" | null;
+  body: string;
+  videoTimeMs: number | null;
+  kind: string;
+  createdAt: number;
+};
+type CmtState = PartnerCmt[] | "loading" | "error" | undefined;
+
+function fmtVideoTime(ms: number | null): string | null {
+  if (ms == null || ms <= 0) return null; // 0 = 특정 시점 아님(일반 코멘트) → 표시 안 함
+  const s = Math.floor(ms / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+
+/** 펼침 패널 — 그 납품물의 매니저 피드백(코멘트) + 수정요청이면 "새 버전 올리기".
+ *  파트너의 "피드백 읽고 → 고쳐 다시 올리기" 동선을 홈에서 끝낸다. */
+function FeedbackPanel({
+  state,
+  needsNewVersion,
+  onNewVersion,
+  folderHref,
+}: {
+  state: CmtState;
+  needsNewVersion: boolean;
+  onNewVersion: () => void;
+  folderHref: string;
+}) {
+  return (
+    <div className="mb-2 ml-4 mr-1 rounded-xl border border-border bg-surface px-3 py-2.5">
+      {state === undefined || state === "loading" ? (
+        <p className="text-[12px] text-text-faint py-1.5">피드백 불러오는 중…</p>
+      ) : state === "error" ? (
+        <p className="text-[12px] text-text-faint py-1.5">피드백을 불러오지 못했어요</p>
+      ) : state.length === 0 ? (
+        <p className="text-[12px] text-text-faint py-1.5">아직 코멘트가 없어요</p>
+      ) : (
+        <ul className="space-y-1.5">
+          {state.slice(0, 4).map((c) => {
+            const t = fmtVideoTime(c.videoTimeMs);
+            const isMgr = c.authorRole === "admin" || c.authorRole === "member";
+            return (
+              <li key={c.id} className="text-[12px] leading-snug">
+                <span className="font-semibold" style={{ color: isMgr ? "var(--team-dark)" : "var(--text-soft)" }}>
+                  {c.authorName || (isMgr ? "비모팀" : "나")}
+                </span>
+                {t && <span className="ml-1.5 tabular-nums text-text-faint">{t}</span>}
+                <span className="text-text-soft"> · {c.body}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <div className="flex items-center gap-3 mt-2.5">
+        {needsNewVersion && (
+          <button
+            type="button"
+            onClick={onNewVersion}
+            className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-white rounded-lg px-3 py-1.5 transition-transform hover:-translate-y-0.5"
+            style={{ background: "var(--team-color)" }}
+          >
+            <Upload size={13} strokeWidth={2.4} /> 새 버전 올리기
+          </button>
+        )}
+        <Link href={folderHref} className="text-[11.5px] font-medium text-text-faint hover:text-text transition-colors">
+          비모 폴더에서 열기
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 function TeamTab({ files, summary }: { files: MyRecentFile[]; summary: DeliverySummary }) {
   const { openUpload } = useUpload();
+  // 어떤 행이 펼쳐졌는지 + 파일별 코멘트 캐시(펼칠 때 lazy fetch)
+  const [openPath, setOpenPath] = useState<string | null>(null);
+  const [cache, setCache] = useState<Record<string, CmtState>>({});
+
+  const parentDir = (p: string) => {
+    const i = p.lastIndexOf("/");
+    return i > 0 ? p.slice(0, i) : "/";
+  };
+
+  const toggle = (path: string) => {
+    setOpenPath((cur) => (cur === path ? null : path));
+    if (cache[path] === undefined) {
+      setCache((c) => ({ ...c, [path]: "loading" }));
+      fetch(`/api/comments?path=${encodeURIComponent(path)}`)
+        .then((r) => (r.ok ? r.json() : Promise.reject()))
+        .then((d) => setCache((c) => ({ ...c, [path]: (d.comments ?? []) as PartnerCmt[] })))
+        .catch(() => setCache((c) => ({ ...c, [path]: "error" })));
+    }
+  };
+
   return (
     <div>
       <TeamReviewGauge summary={summary} />
@@ -314,26 +409,48 @@ function TeamTab({ files, summary }: { files: MyRecentFile[]; summary: DeliveryS
           {files.map((f, i) => {
             const s = teamFileStatus(f);
             const StatusIcon = s.Icon;
+            const isOpen = openPath === f.path;
             return (
               <li
                 key={f.path}
-                className="pa-row flex items-center gap-3 py-2.5 -mx-2 px-2 rounded-md hover:bg-surface-2 transition-colors"
+                className="pa-row"
                 style={{ animationDelay: `calc(var(--pa-stagger) * ${i})` }}
               >
-                <span className="w-1 h-7 rounded-full flex-none" style={{ background: "var(--team-color)" }} />
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-medium truncate">{f.filename}</div>
-                  <div className="text-[11px] text-text-faint">
-                    {formatRelative(f.uploadedAt)}
-                    {f.commentCount ? ` · 코멘트 ${f.commentCount}` : ""}
-                  </div>
-                </div>
-                <span
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold flex-none ${s.cls}`}
-                  style={{ background: s.bg, color: s.color }}
+                <button
+                  type="button"
+                  onClick={() => toggle(f.path)}
+                  aria-expanded={isOpen}
+                  className="w-full text-left flex items-center gap-3 py-2.5 -mx-2 px-2 rounded-md hover:bg-surface-2 transition-colors"
                 >
-                  <StatusIcon size={11} strokeWidth={2.4} /> {s.label}
-                </span>
+                  <span className="w-1 h-7 rounded-full flex-none" style={{ background: "var(--team-color)" }} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13px] font-medium truncate">{f.filename}</div>
+                    <div className="text-[11px] text-text-faint">
+                      {formatRelative(f.uploadedAt)}
+                      {f.commentCount ? ` · 코멘트 ${f.commentCount}` : ""}
+                    </div>
+                  </div>
+                  <span
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold flex-none ${s.cls}`}
+                    style={{ background: s.bg, color: s.color }}
+                  >
+                    <StatusIcon size={11} strokeWidth={2.4} /> {s.label}
+                  </span>
+                  <ChevronRight
+                    size={15}
+                    strokeWidth={2.2}
+                    className="flex-none text-text-faint transition-transform"
+                    style={{ transform: isOpen ? "rotate(90deg)" : "none" }}
+                  />
+                </button>
+                {isOpen && (
+                  <FeedbackPanel
+                    state={cache[f.path]}
+                    needsNewVersion={f.needsNewVersion}
+                    onNewVersion={() => openUpload(parentDir(f.path))}
+                    folderHref={`/team?path=${encodeURIComponent(parentDir(f.path))}`}
+                  />
+                )}
               </li>
             );
           })}
