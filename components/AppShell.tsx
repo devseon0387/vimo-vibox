@@ -13,9 +13,12 @@ import { railFromPath } from "@/lib/rail";
 export function AppShell({
   sidebar,
   children,
+  isPartner = false,
 }: {
   sidebar: ReactNode;
   children: ReactNode;
+  /** 파트너(외부 편집자) 셸: 모바일 Bell·활동탭(내부 검수 큐 /inbox) 숨김 */
+  isPartner?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -91,15 +94,18 @@ export function AppShell({
             <Menu size={20} strokeWidth={2.2} />
           </button>
           <div className="flex-1" />
-          <Link
-            href="/inbox"
-            aria-label="받은편지함"
-            className="p-2 relative rounded hover:bg-hover text-text"
-          >
-            <Bell size={19} strokeWidth={2.1} />
-            {/* unread dot — 추후 실제 카운트 hook 으로 교체 */}
-            <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-accent" />
-          </Link>
+          {/* 파트너는 받은편지함(/inbox = 내부 검수 큐) 접근 X — 모바일 Bell 숨김 */}
+          {!isPartner && (
+            <Link
+              href="/inbox"
+              aria-label="받은편지함"
+              className="p-2 relative rounded hover:bg-hover text-text"
+            >
+              <Bell size={19} strokeWidth={2.1} />
+              {/* unread dot — 추후 실제 카운트 hook 으로 교체 */}
+              <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-accent" />
+            </Link>
+          )}
           <button
             onClick={() => setSearchOpen((v) => !v)}
             aria-label={searchOpen ? "검색 닫기" : "검색 열기"}
@@ -137,8 +143,8 @@ export function AppShell({
         <div className="md:pb-0 pb-16">{children}</div>
       </main>
 
-      {/* 모바일 Bottom Tab Bar — 홈·My box·비모·활동 */}
-      <MobileTabBar pathname={pathname} />
+      {/* 모바일 Bottom Tab Bar — 홈·My box·비모·활동 (파트너는 활동 제외) */}
+      <MobileTabBar pathname={pathname} isPartner={isPartner} />
 
       <CommandPalette />
       <ShortcutHelp />
@@ -147,9 +153,9 @@ export function AppShell({
   );
 }
 
-function MobileTabBar({ pathname }: { pathname: string }) {
+function MobileTabBar({ pathname, isPartner = false }: { pathname: string; isPartner?: boolean }) {
   const rail = railFromPath(pathname);
-  const tabs: Array<{
+  const allTabs: Array<{
     key: typeof rail;
     href: string;
     label: string;
@@ -163,6 +169,8 @@ function MobileTabBar({ pathname }: { pathname: string }) {
     { key: "team", href: "/team", label: "비모", Icon: Users, tint: "#e85008" },
     { key: "activity", href: "/inbox", label: "활동", Icon: Activity, showDot: true },
   ];
+  // 파트너는 활동(/inbox = 내부 검수 큐)에 접근 X — 탭에서 제외
+  const tabs = isPartner ? allTabs.filter((t) => t.key !== "activity") : allTabs;
   return (
     <nav
       className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-border flex"

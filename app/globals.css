@@ -168,6 +168,60 @@
   animation: check-jelly 0.6s ease-out;
 }
 
+/* ───── 파트너 애니메이션 (균형 강도) ───── */
+:root {
+  --pa-dur: 0.4s;
+  --pa-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --pa-stagger: 70ms;
+}
+@layer base {
+  @keyframes pa-glow {
+    0%, 100% { box-shadow: 0 0 0 0 transparent; }
+    50%      { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+  }
+  @keyframes pa-shake {
+    0%, 100% { transform: rotate(0); }
+    20%      { transform: rotate(-12deg); }
+    40%      { transform: rotate(10deg); }
+    60%      { transform: rotate(-6deg); }
+  }
+  @keyframes pa-pop {
+    0%   { transform: scale(0.7); opacity: 0; }
+    60%  { transform: scale(1.08); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes pa-slide-down {
+    0%   { transform: translateY(-14px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes pa-bell {
+    0%, 100% { transform: rotate(0); }
+    25%      { transform: rotate(14deg); }
+    50%      { transform: rotate(-10deg); }
+    75%      { transform: rotate(6deg); }
+  }
+  @keyframes pa-fade-up {
+    0%   { transform: translateY(12px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+}
+/* 수정요청 배지 — 글로우 펄스 + 아이콘 흔들 (주의 환기) */
+.pa-revise { animation: pa-glow 1s var(--pa-ease) infinite; }
+.pa-revise svg { animation: pa-shake 1s var(--pa-ease) infinite; transform-origin: center; }
+/* 승인 배지 — 등장 pop */
+.pa-pop { animation: pa-pop var(--pa-dur) var(--pa-ease) both; }
+/* 수정요청 배너 — slide-down + 종 흔들 */
+.pa-banner { animation: pa-slide-down var(--pa-dur) var(--pa-ease) both; }
+.pa-banner .pa-bell { animation: pa-bell 0.8s var(--pa-ease) 0.3s 2; transform-origin: top center; }
+/* 리스트 항목 — 순차 등장 (animation-delay는 인라인으로 부여) */
+.pa-row { animation: pa-fade-up var(--pa-dur) var(--pa-ease) both; }
+/* 접근성: 모션 최소화 선호 시 전부 끔 */
+@media (prefers-reduced-motion: reduce) {
+  .pa-revise, .pa-revise svg, .pa-pop, .pa-banner, .pa-banner .pa-bell, .pa-row {
+    animation: none !important;
+  }
+}
+
 * { box-sizing: border-box; }
 
 html, body {
