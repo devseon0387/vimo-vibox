@@ -37,6 +37,7 @@ PROTECTED_EXCLUDES=(
   # 운영 머신에서만 관리하는 config (덮어쓰기 금지)
   --exclude 'litestream.yml'
   --exclude 'scripts/com.vibox.*.plist'
+  --exclude 'scripts/vibox-health.env'
 )
 
 # -------- ROLLBACK --------
@@ -51,7 +52,7 @@ if [[ "${1:-}" == "--rollback" ]]; then
   ssh "${REMOTE_HOST}" "rsync -a --delete \
     --exclude='_data/' --exclude='_storage/' --exclude='node_modules/' \
     --exclude='Notes/' --exclude='Library/' --exclude='Personal/' \
-    --exclude='litestream.yml' --exclude='scripts/com.vibox.*.plist' \
+    --exclude='litestream.yml' --exclude='scripts/com.vibox.*.plist' --exclude='scripts/vibox-health.env' \
     ${ROLLBACK_DIR}/ ${REMOTE_PATH}/"
 
   echo "[2/3] DB 복원"
@@ -79,7 +80,7 @@ echo "[1/6] 롤백 스냅샷 저장 (코드 + DB)"
 ssh "${REMOTE_HOST}" "rsync -a --delete \
   --exclude='_data/' --exclude='_storage/' --exclude='node_modules/' \
   --exclude='Notes/' --exclude='Library/' --exclude='Personal/' \
-  --exclude='logs/' \
+  --exclude='logs/' --exclude='scripts/vibox-health.env' \
   ${REMOTE_PATH}/ ${ROLLBACK_DIR}/ && \
   cp ${REMOTE_PATH}/_data/${DB_NAME} ${REMOTE_PATH}/_data/${DB_NAME}.rollback && \
   cp ${REMOTE_PATH}/_data/${DB_NAME} ${REMOTE_PATH}/_data/${DB_NAME}.backup-${TS} && \
