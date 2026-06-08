@@ -11,6 +11,7 @@ import {
   getMyShareActivity,
   getInboxItems,
   getPersonalSummary,
+  getPartnerDeliverySummary,
 } from "@/lib/dashboard/queries";
 import { db } from "@/lib/db/client";
 import { fileUploads } from "@/lib/db/schema";
@@ -40,15 +41,18 @@ export default async function HomePage() {
   // 파트너(외부 편집자) 전용 홈 — 두 공간(내 보관함 + 비모 납품) 탭, 검수/받은편지함 없음.
   // 백엔드(개인 공간 격리·쿼터·업로드)는 이미 지원하므로 홈만 분기한다.
   if (isPartner) {
-    const [partnerPersonal, partnerFiles] = await Promise.all([
+    const [partnerPersonal, partnerFiles, deliverySummary] = await Promise.all([
       getPersonalSummary(session.sub),
       getMyRecentFiles(session.sub, 30),
+      getPartnerDeliverySummary(session.sub),
     ]);
     return (
       <PartnerHome
+        userId={session.sub}
         userName={userName}
         personalSummary={partnerPersonal}
         recentFiles={partnerFiles}
+        deliverySummary={deliverySummary}
       />
     );
   }

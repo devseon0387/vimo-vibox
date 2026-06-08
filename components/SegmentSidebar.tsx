@@ -47,7 +47,7 @@ const SPACES: Space[] = [
     label: "홈",
     icon: LayoutDashboard,
     href: "/",
-    cta: { label: "새로 올리기", href: "/?upload=1", color: "var(--accent)" },
+    cta: { label: "새로 올리기", href: "/my/box?upload=1", color: "var(--accent)" },
   },
   {
     key: "mybox",

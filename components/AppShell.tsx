@@ -155,7 +155,7 @@ export function AppShell({
 
 function MobileTabBar({ pathname, isPartner = false }: { pathname: string; isPartner?: boolean }) {
   const rail = railFromPath(pathname);
-  const allTabs: Array<{
+  type Tab = {
     key: typeof rail;
     href: string;
     label: string;
@@ -163,21 +163,31 @@ function MobileTabBar({ pathname, isPartner = false }: { pathname: string; isPar
     tint?: string;
     /** 활성 알림 dot 표시 — 예: 활동 탭. 추후 unread count hook 으로 교체 */
     showDot?: boolean;
-  }> = [
+    /** lucide 아이콘 대신 vimo 투톤 마크 사용 (파트너 비모 — PC 사이드바 세그먼트와 일치) */
+    mark?: boolean;
+  };
+  // 매니저(admin/member)·일반: 홈·My box·비모·활동
+  const managerTabs: Tab[] = [
     { key: "home", href: "/", label: "홈", Icon: LayoutDashboard },
     { key: "mybox", href: "/my/box", label: "My box", Icon: Package, tint: "#0ea5e9" },
     { key: "team", href: "/team", label: "비모", Icon: Users, tint: "#e85008" },
     { key: "activity", href: "/inbox", label: "활동", Icon: Activity, showDot: true },
   ];
-  // 파트너는 활동(/inbox = 내부 검수 큐)에 접근 X — 탭에서 제외
-  const tabs = isPartner ? allTabs.filter((t) => t.key !== "activity") : allTabs;
+  // 파트너(외부 편집자): 홈·비모·보관함 — 사이드바 세그먼트와 순서·라벨 일치.
+  // 활동(/inbox=내부 검수 큐) 없음. "비모"는 납품처인 Rendering 폴더로 직행.
+  const partnerTabs: Tab[] = [
+    { key: "home", href: "/", label: "홈", Icon: LayoutDashboard },
+    { key: "team", href: "/team?path=/Rendering", label: "비모", Icon: Users, tint: "#e85008", mark: true },
+    { key: "mybox", href: "/my/box", label: "보관함", Icon: Package, tint: "#0ea5e9" },
+  ];
+  const tabs = isPartner ? partnerTabs : managerTabs;
   return (
     <nav
       className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-border flex"
       style={{ height: 64, paddingBottom: "env(safe-area-inset-bottom, 0)" }}
       aria-label="모바일 메인 탭"
     >
-      {tabs.map(({ key, href, label, Icon, tint, showDot }) => {
+      {tabs.map(({ key, href, label, Icon, tint, showDot, mark }) => {
         const active = rail === key;
         // 비활성 시 회색 통일 (Rail과 같은 위계 처리). 활성 시 tint 또는 accent.
         const color = active ? (tint ?? "var(--accent)") : "var(--text-soft)";
@@ -189,7 +199,22 @@ function MobileTabBar({ pathname, isPartner = false }: { pathname: string; isPar
             style={{ color }}
           >
             <span className="relative inline-flex">
-              <Icon size={20} strokeWidth={active ? 2.4 : 2} />
+              {mark ? (
+                // 비모 = vimo 투톤 마크. 활성=풀컬러 / 비활성=회색(사이드바와 동일 처리)
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src="/vimo-mark.svg"
+                  alt=""
+                  style={{
+                    height: 18,
+                    width: "auto",
+                    filter: active ? "none" : "saturate(0) opacity(0.5)",
+                    transition: "filter .2s ease",
+                  }}
+                />
+              ) : (
+                <Icon size={20} strokeWidth={active ? 2.4 : 2} />
+              )}
               {showDot && (
                 <span
                   className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full"

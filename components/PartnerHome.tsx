@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useUpload } from "@/lib/upload-store";
 import {
   Lock,
   Upload,
@@ -10,7 +11,7 @@ import {
   AlertCircle,
   Clock,
 } from "lucide-react";
-import type { MyRecentFile, PersonalSummary } from "@/lib/dashboard/queries";
+import type { MyRecentFile, PersonalSummary, DeliverySummary } from "@/lib/dashboard/queries";
 
 /**
  * 파트너(외부 편집자) 전용 홈.
@@ -50,25 +51,38 @@ function teamFileStatus(f: MyRecentFile) {
 }
 
 export function PartnerHome({
+  userId,
   userName,
   personalSummary,
   recentFiles,
+  deliverySummary,
 }: {
+  userId: string;
   userName: string;
   personalSummary: PersonalSummary;
   recentFiles: MyRecentFile[];
+  deliverySummary: DeliverySummary;
 }) {
   const [tab, setTab] = useState<"team" | "personal">("team");
+  // 입장 애니메이션(stagger fade-up·pop)은 초기 로드 1회만. 탭 전환 땐 끈다(매번 재생되면 튐).
+  const [animate, setAnimate] = useState(true);
   const teamRef = useRef<HTMLButtonElement>(null);
   const personalRef = useRef<HTMLButtonElement>(null);
   const [underline, setUnderline] = useState({ left: 0, width: 0 });
   useEffect(() => {
-    const el = tab === "team" ? teamRef.current : personalRef.current;
-    if (el) setUnderline({ left: el.offsetLeft, width: el.offsetWidth });
+    // 활성 탭으로 밑줄 측정 — 탭 변경 시 + 리사이즈/회전 시에도 재측정(어긋남 방지)
+    const measure = () => {
+      const el = tab === "team" ? teamRef.current : personalRef.current;
+      if (el) setUnderline({ left: el.offsetLeft, width: el.offsetWidth });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
   }, [tab]);
   const teamFiles = recentFiles.filter((f) => f.space === "team");
   const personalFiles = recentFiles.filter((f) => f.space === "personal");
-  const needsAction = teamFiles.filter((f) => f.needsNewVersion).length;
+  // 수정요청 배너 — 전체 납품 기준 정확 집계(최근 30건이 아닌 deliverySummary)
+  const needsAction = deliverySummary.revise;
 
   const pct =
     personalSummary.quotaBytes > 0
@@ -99,10 +113,18 @@ export function PartnerHome({
 
       {/* 탭 — 라벨(무엇) 위, 공개 범위(누가 보나) 아래 2줄 스택.
           좁은 화면에서도 줄바꿈으로 깨지지 않고, 공개 범위가 항상 함께 보인다. */}
-      <div className="relative flex border-b border-border mb-5">
+      <div role="tablist" aria-label="공간 선택" className="relative flex border-b border-border mb-5">
         <button
           ref={teamRef}
-          onClick={() => setTab("team")}
+          role="tab"
+          id="ptab-team"
+          aria-selected={tab === "team"}
+          aria-controls="ppanel"
+          tabIndex={tab === "team" ? 0 : -1}
+          onClick={() => { setTab("team"); setAnimate(false); }}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowRight") { e.preventDefault(); setTab("personal"); setAnimate(false); personalRef.current?.focus(); }
+          }}
           className="relative flex flex-col items-start pb-2.5 mr-7 transition-colors"
           style={{ color: tab === "team" ? "var(--team-color)" : "#999999" }}
         >
@@ -126,7 +148,15 @@ export function PartnerHome({
         </button>
         <button
           ref={personalRef}
-          onClick={() => setTab("personal")}
+          role="tab"
+          id="ptab-personal"
+          aria-selected={tab === "personal"}
+          aria-controls="ppanel"
+          tabIndex={tab === "personal" ? 0 : -1}
+          onClick={() => { setTab("personal"); setAnimate(false); }}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowLeft") { e.preventDefault(); setTab("team"); setAnimate(false); teamRef.current?.focus(); }
+          }}
           className="relative flex flex-col items-start pb-2.5 transition-colors"
           style={{ color: tab === "personal" ? "var(--personal)" : "#999999" }}
         >
@@ -152,33 +182,43 @@ export function PartnerHome({
         />
       </div>
 
-      {tab === "team" ? (
-        <TeamTab files={teamFiles} />
-      ) : (
-        <PersonalTab files={personalFiles} pct={pct} summary={personalSummary} />
-      )}
+      {/* 탭 내용 — tabpanel. 입장 애니메이션은 .pa-enter 하위에서만(초기 로드). 탭 전환 시 pa-enter 제거로 잔잔 */}
+      <div
+        id="ppanel"
+        role="tabpanel"
+        aria-labelledby={tab === "team" ? "ptab-team" : "ptab-personal"}
+        tabIndex={0}
+        className={animate ? "pa-enter" : undefined}
+      >
+        {tab === "team" ? (
+          <TeamTab files={teamFiles} summary={deliverySummary} />
+        ) : (
+          <PersonalTab files={personalFiles} pct={pct} summary={personalSummary} userId={userId} />
+        )}
+      </div>
     </div>
   );
 }
 
 /** 슬림 업로드 바 — 한 줄, 화면을 지배하지 않되 드래그·클릭 업로드를 분명히 안내 */
 function UploadBar({
-  href,
+  onClick,
   color,
   soft,
   label,
   sub,
 }: {
-  href: string;
+  onClick: () => void;
   color: string;
   soft: string;
   label: string;
   sub: string;
 }) {
   return (
-    <Link
-      href={href}
-      className="group flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg"
+    <button
+      type="button"
+      onClick={onClick}
+      className="group w-full text-left flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg"
       style={{ border: `1.5px dashed ${color}59`, background: soft }}
     >
       <span className="grid place-items-center w-9 h-9 rounded-lg flex-none" style={{ background: color, color: "#fff" }}>
@@ -195,7 +235,7 @@ function UploadBar({
         strokeWidth={2.2}
         className="flex-none text-text-faint transition-transform group-hover:translate-x-0.5"
       />
-    </Link>
+    </button>
   );
 }
 
@@ -223,11 +263,44 @@ function SeeAllLink({ href, color, label }: { href: string; color: string; label
   );
 }
 
-function TeamTab({ files }: { files: MyRecentFile[] }) {
+/** 비모 탭 상단 검수 현황 게이지 — 보관함 탭의 용량 게이지(PersonalTab)와 동일 구조·높이.
+ *  탭 전환 시 업로드 바·리스트 자리가 고정되고(정렬), 검수중·수정요청·승인 비율을 한눈에 보여준다. */
+function TeamReviewGauge({ summary }: { summary: DeliverySummary }) {
+  const { total, review, revise, approve } = summary;
+  const w = (n: number) => (total > 0 ? `${(n / total) * 100}%` : "0%");
+  return (
+    <div className="mb-4">
+      <div className="flex items-center justify-between text-[11px] text-text-faint mb-1.5">
+        <span className="inline-flex items-center gap-1">
+          <Clock size={11} strokeWidth={2.4} /> 비모 검수 현황
+        </span>
+        <span className="tabular-nums">{total > 0 ? `납품 ${total}건` : "아직 없음"}</span>
+      </div>
+      {/* 분할 게이지: 검수중(sky) · 수정요청(orange) · 승인(green). 용량 게이지와 같은 h-1.5 트랙.
+          pa-gauge-fill 래퍼가 탭 전환·로드마다 왼쪽에서 차오른다(scaleX, 레이아웃 영향 없음). */}
+      <div
+        role="img"
+        aria-label={`검수 현황 — 검수 중 ${review}건, 수정 요청 ${revise}건, 승인 ${approve}건`}
+        className="w-full h-1.5 rounded-full overflow-hidden"
+        style={{ background: "var(--team-soft)" }}
+      >
+        <div className="h-full w-full flex pa-gauge-fill">
+          <div className="h-full" style={{ background: "#38bdf8", width: w(review) }} />
+          <div className="h-full" style={{ background: "#fb923c", width: w(revise) }} />
+          <div className="h-full" style={{ background: "#4ade80", width: w(approve) }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TeamTab({ files, summary }: { files: MyRecentFile[]; summary: DeliverySummary }) {
+  const { openUpload } = useUpload();
   return (
     <div>
+      <TeamReviewGauge summary={summary} />
       <UploadBar
-        href="/team?upload=1"
+        onClick={() => openUpload("/Rendering")}
         color="#e85008"
         soft="#fef0e8"
         label="완성본을 비모에 납품"
@@ -277,11 +350,14 @@ function PersonalTab({
   files,
   pct,
   summary,
+  userId,
 }: {
   files: MyRecentFile[];
   pct: number;
   summary: PersonalSummary;
+  userId: string;
 }) {
+  const { openUpload } = useUpload();
   return (
     <div>
       {/* 용량 */}
@@ -295,12 +371,12 @@ function PersonalTab({
           </span>
         </div>
         <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "var(--personal-soft)" }}>
-          <div className="h-full" style={{ background: "var(--personal)", width: `${pct}%` }} />
+          <div className="h-full pa-gauge-fill" style={{ background: "var(--personal)", width: `${pct}%` }} />
         </div>
       </div>
 
       <UploadBar
-        href="/my/box?upload=1"
+        onClick={() => openUpload(`/personal/${userId}`)}
         color="#0ea5e9"
         soft="#f0f9ff"
         label="내 보관함에 저장"

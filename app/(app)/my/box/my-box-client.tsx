@@ -111,6 +111,17 @@ export function MyBoxClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ?upload=1 로 진입하면 파일 피커를 바로 연다 (CTA가 폴더만 열고 끝나는 죽은 링크가 되지 않도록).
+  // 클릭 → 클라이언트 내비게이션 직후라 같은 document 의 transient activation 이 살아 있어 대부분 동작한다.
+  useEffect(() => {
+    if (searchParams.get("upload") !== "1") return;
+    fileInputRef.current?.click();
+    const sp = new URLSearchParams(searchParams.toString());
+    sp.delete("upload");
+    router.replace(`/my/box${sp.toString() ? `?${sp.toString()}` : ""}`, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const onSelectFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const arr = Array.from(files);

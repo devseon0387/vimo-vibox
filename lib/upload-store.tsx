@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ChangeEvent,
 } from "react";
 import { useRouter } from "next/navigation";
 import { startUpload, type ConflictMode, type UploadStats } from "@/lib/upload";
@@ -46,6 +47,9 @@ type UploadContextValue = {
     files: File[],
     options?: UploadOptions,
   ) => string;
+  /** 클릭 제스처 안에서 호출 — 숨은 파일 피커를 열고, 선택 시 targetPath로 enqueue.
+   *  (페이지 이동 후 자동 클릭은 브라우저가 막으므로 CTA 버튼이 직접 이 함수를 호출해야 한다.) */
+  openUpload: (targetPath: string, options?: UploadOptions) => void;
   cancel: (id: string) => void;
   dismiss: (id: string) => void;
   /** 자주 쓰이는 합계 — 도크 헤더 표시용 */
@@ -205,6 +209,25 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
     [router, scheduleDismiss],
   );
 
+  // 클릭 제스처 보존형 업로드 — CTA 버튼이 직접 openUpload 호출 → 같은 제스처로 OS 파일창이 열린다.
+  // (이동 후 destination 에서 input.click() 하는 방식은 사용자 활성화가 소실돼 브라우저가 막음.)
+  const pickerInputRef = useRef<HTMLInputElement>(null);
+  const pickerTarget = useRef<{ path: string; options?: UploadOptions } | null>(null);
+  const openUpload = useCallback((targetPath: string, options?: UploadOptions) => {
+    pickerTarget.current = { path: targetPath, options };
+    pickerInputRef.current?.click();
+  }, []);
+  const onPickerChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files ? Array.from(e.target.files) : [];
+      const t = pickerTarget.current;
+      pickerTarget.current = null;
+      e.target.value = ""; // 같은 파일 다시 선택 가능하도록 리셋
+      if (t && files.length) enqueue(t.path, files, t.options);
+    },
+    [enqueue],
+  );
+
   // beforeunload 가드 — 진행 중 업로드 있으면 탭 닫기·새로고침 시 경고
   useEffect(() => {
     const hasRunning = uploads.some((u) => u.status === "running");
@@ -242,13 +265,24 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
   const value: UploadContextValue = {
     uploads,
     enqueue,
+    openUpload,
     cancel,
     dismiss,
     summary,
   };
 
   return (
-    <UploadContext.Provider value={value}>{children}</UploadContext.Provider>
+    <UploadContext.Provider value={value}>
+      {children}
+      {/* 전역 숨은 파일 피커 — openUpload() 가 클릭 제스처 안에서 연다 */}
+      <input
+        ref={pickerInputRef}
+        type="file"
+        multiple
+        hidden
+        onChange={onPickerChange}
+      />
+    </UploadContext.Provider>
   );
 }
 

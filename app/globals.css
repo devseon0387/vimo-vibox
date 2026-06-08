@@ -204,20 +204,26 @@
     0%   { transform: translateY(12px); opacity: 0; }
     100% { transform: translateY(0); opacity: 1; }
   }
+  @keyframes pa-gauge {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
 }
 /* 수정요청 배지 — 글로우 펄스 + 아이콘 흔들 (주의 환기) */
 .pa-revise { animation: pa-glow 1s var(--pa-ease) infinite; }
 .pa-revise svg { animation: pa-shake 1s var(--pa-ease) infinite; transform-origin: center; }
-/* 승인 배지 — 등장 pop */
-.pa-pop { animation: pa-pop var(--pa-dur) var(--pa-ease) both; }
+/* 승인 배지 — 등장 pop (.pa-enter 하위에서만 = 초기 로드 1회, 탭 전환 시 재생 안 함) */
+.pa-enter .pa-pop { animation: pa-pop var(--pa-dur) var(--pa-ease) both; }
 /* 수정요청 배너 — slide-down + 종 흔들 */
 .pa-banner { animation: pa-slide-down var(--pa-dur) var(--pa-ease) both; }
 .pa-banner .pa-bell { animation: pa-bell 0.8s var(--pa-ease) 0.3s 2; transform-origin: top center; }
-/* 리스트 항목 — 순차 등장 (animation-delay는 인라인으로 부여) */
-.pa-row { animation: pa-fade-up var(--pa-dur) var(--pa-ease) both; }
+/* 리스트 항목 — 순차 등장 (animation-delay 인라인). .pa-enter 하위에서만 = 탭 전환 땐 잔잔 */
+.pa-enter .pa-row { animation: pa-fade-up var(--pa-dur) var(--pa-ease) both; }
+/* 게이지 채움 — 탭 전환·로드마다 왼쪽에서 차오름 (scaleX = 레이아웃 영향 없음, 의도적 모션) */
+.pa-gauge-fill { transform-origin: left center; animation: pa-gauge 0.55s var(--pa-ease) both; }
 /* 접근성: 모션 최소화 선호 시 전부 끔 */
 @media (prefers-reduced-motion: reduce) {
-  .pa-revise, .pa-revise svg, .pa-pop, .pa-banner, .pa-banner .pa-bell, .pa-row {
+  .pa-revise, .pa-revise svg, .pa-pop, .pa-banner, .pa-banner .pa-bell, .pa-row, .pa-gauge-fill {
     animation: none !important;
   }
 }
