@@ -14,13 +14,11 @@ import {
   Sparkles,
   Code2,
 } from "lucide-react";
-import { MenuShell, MenuSearch, MenuSection, MenuItem } from "./MenuShell";
+import { MenuSection, MenuItem } from "./MenuShell";
 
 export function AdminMenu() {
   return (
-    <MenuShell title="관리">
-      <MenuSearch placeholder="관리 항목 검색" />
-
+    <>
       <MenuSection label="팀" />
       <MenuItem href="/admin/users" icon={Users} label="사용자" matchPrefix="/admin/users" />
       <MenuItem href="/shares" icon={LinkIcon} label="공유 링크" matchExact />
@@ -42,6 +40,6 @@ export function AdminMenu() {
       <MenuSection label="앱" />
       <MenuItem href="/admin/updates" icon={Sparkles} label="업데이트" matchPrefix="/admin/updates" />
       <MenuItem href="/dev/notes" icon={Code2} label="개발 노트" matchPrefix="/dev/notes" />
-    </MenuShell>
+    </>
   );
 }

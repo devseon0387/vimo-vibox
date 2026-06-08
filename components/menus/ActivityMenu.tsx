@@ -1,7 +1,7 @@
 "use client";
 
 import { Inbox, Eye, BarChart3, Link as LinkIcon } from "lucide-react";
-import { MenuShell, MenuSearch, MenuSection, MenuItem } from "./MenuShell";
+import { MenuSection, MenuItem } from "./MenuShell";
 
 /**
  * 활동 컨텍스트 — 업로더의 작업 반응 + 매니저 검수 작업을 한 곳에.
@@ -10,9 +10,7 @@ import { MenuShell, MenuSearch, MenuSection, MenuItem } from "./MenuShell";
  */
 export function ActivityMenu() {
   return (
-    <MenuShell title="활동">
-      <MenuSearch placeholder="활동 검색" />
-
+    <>
       <MenuSection label="내 작업 반응" />
       <MenuItem href="/shares" icon={LinkIcon} label="내 공유 링크" />
       <MenuItem href="/insights" icon={Eye} label="공유 조회" />
@@ -20,6 +18,6 @@ export function ActivityMenu() {
       <MenuSection label="매니저" />
       <MenuItem href="/inbox" icon={Inbox} label="받은편지함" />
       <MenuItem href="/insights" icon={BarChart3} label="검수 통계" />
-    </MenuShell>
+    </>
   );
 }

@@ -2,7 +2,7 @@
 
 import { FolderOpen, Clock, Star, Trash2, Activity } from "lucide-react";
 import { useEffect, useState } from "react";
-import { MenuShell, MenuSearch, MenuSection, MenuItem } from "./MenuShell";
+import { MenuSection, MenuItem } from "./MenuShell";
 
 type Usage = { usedBytes: number; quotaBytes: number; pct: number; fileCount: number };
 
@@ -30,9 +30,7 @@ export function MyboxMenu({ isPartner = false }: { isPartner?: boolean }) {
   }, []);
 
   return (
-    <MenuShell title="My box">
-      <MenuSearch placeholder="내 파일 검색" />
-
+    <>
       {/* 사용량 게이지 — /api/my/box/usage 실데이터 */}
       <div className="px-4 py-3 border-b border-border">
         <div className="flex items-center justify-between text-[11px] text-text-faint mb-1.5">
@@ -69,6 +67,6 @@ export function MyboxMenu({ isPartner = false }: { isPartner?: boolean }) {
           <MenuItem href="/trash" icon={Trash2} label="휴지통" />
         </>
       )}
-    </MenuShell>
+    </>
   );
 }

@@ -11,7 +11,7 @@ import {
   Activity,
   Trash2,
 } from "lucide-react";
-import { MenuShell, MenuSearch, MenuSection, MenuItem } from "./MenuShell";
+import { MenuSection, MenuItem } from "./MenuShell";
 
 /**
  * 홈(대시보드) 컨텍스트 메뉴 — 두 공간(My box · 비모 프로젝트) 명시.
@@ -23,9 +23,7 @@ import { MenuShell, MenuSearch, MenuSection, MenuItem } from "./MenuShell";
 export function HomeMenu({ isPartner = false }: { isPartner?: boolean }) {
   if (isPartner) {
     return (
-      <MenuShell title="홈">
-        <MenuSearch />
-
+      <>
         <MenuSection label="바로가기" />
         <MenuItem href="/" icon={LayoutDashboard} label="대시보드" matchExact />
         <MenuItem href="/shares" icon={LinkIcon} label="내 공유 링크" matchExact />
@@ -34,15 +32,18 @@ export function HomeMenu({ isPartner = false }: { isPartner?: boolean }) {
         <MenuItem href="/my/box" icon={Package} label="모든 파일" matchPrefix="/my/box" />
 
         <MenuSection label="비모" />
-        <MenuItem href="/team" icon={Users} label="납품한 작업물" matchExact />
-      </MenuShell>
+        <MenuItem
+          href="/team?path=/Rendering"
+          icon={Users}
+          label="납품한 작업물"
+          matchQueryPath="/Rendering"
+        />
+      </>
     );
   }
 
   return (
-    <MenuShell title="홈">
-      <MenuSearch />
-
+    <>
       <MenuSection label="바로가기" />
       <MenuItem href="/" icon={LayoutDashboard} label="대시보드" matchExact />
       <MenuItem href="/?upload=1" icon={Upload} label="새로 올리기" />
@@ -59,6 +60,6 @@ export function HomeMenu({ isPartner = false }: { isPartner?: boolean }) {
 
       <MenuSection label="기타" />
       <MenuItem href="/trash" icon={Trash2} label="휴지통" matchExact />
-    </MenuShell>
+    </>
   );
 }

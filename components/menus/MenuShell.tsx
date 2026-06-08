@@ -129,25 +129,33 @@ export function MenuItem({
 
   const padLeft = indent === 2 ? "pl-11" : indent === 1 ? "pl-7" : "pl-3";
 
+  // 활성 색은 현재 공간 색(--space-accent, 사이드바가 주입)을 따른다. 변수 없으면 기본 accent.
+  // My box=하늘 / 비모=주황 처럼 활성 공간과 메뉴 강조 색이 일치 (v3 풀-틴트 절제 적용).
+  const activeColor = "var(--space-accent, var(--accent))";
+
   return (
     <Link
       href={href}
       className={`
         mx-2 my-px flex items-center gap-2.5 ${padLeft} pr-3 py-1.5 rounded-md
         text-[13.5px] transition-colors
-        ${isActive
-          ? "bg-accent-soft text-accent font-medium"
-          : "text-text-soft hover:bg-surface"
-        }
+        ${isActive ? "font-medium" : "text-text-soft hover:bg-surface"}
       `}
+      style={
+        isActive
+          ? {
+              color: activeColor,
+              background: `color-mix(in srgb, ${activeColor} 12%, transparent)`,
+            }
+          : undefined
+      }
     >
       <Icon size={14} strokeWidth={2} className="shrink-0 opacity-90" />
       <span className="truncate">{label}</span>
       {badge !== undefined && (
         <span
-          className={`ml-auto text-[11px] ${
-            isActive ? "text-accent" : "text-text-faint"
-          }`}
+          className="ml-auto text-[11px]"
+          style={{ color: isActive ? activeColor : "var(--text-faint)" }}
         >
           {badge}
         </span>

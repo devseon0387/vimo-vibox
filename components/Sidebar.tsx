@@ -1,24 +1,28 @@
 import { getCurrentSession } from "@/lib/auth/session";
-import { Rail } from "./Rail";
-import { MenuRouter } from "./menus/MenuRouter";
+import { SegmentSidebar } from "./SegmentSidebar";
 
 /**
- * 사이드바 = Rail (84px) + 컨텍스트 메뉴 (240px) = 324px.
- * Rail은 4개 항목 (홈/개발/내박스/관리) — 개발·관리는 admin 전용.
- * 메뉴는 Rail 선택에 따라 바뀜 (URL 기반).
+ * 사이드바 = 단일 컬럼(232px) 세그먼트 사이드바.
+ * 세그먼트 컨트롤(홈/My box/비모/활동) + 공간별 컬러 CTA + 활성 공간 섹션 + 유저/관리 푸터.
+ * (이전: Rail 84px + 컨텍스트 메뉴 240px = 324px 2단 → 단일 232px로 합침)
  */
 export async function Sidebar() {
   const session = await getCurrentSession();
   const isAdmin = session?.role === "admin";
   const isPartner = session?.role === "partner";
+  const name = session?.name ?? session?.username ?? "사용자";
+  const subtitle = session?.username ?? (isAdmin ? "관리자" : "팀원");
   const initials = (session?.name ?? session?.username ?? "?")
     .slice(0, 2)
     .toUpperCase();
 
   return (
-    <div className="flex h-screen">
-      <Rail isAdmin={isAdmin} isPartner={isPartner} userInitials={initials} />
-      <MenuRouter isAdmin={isAdmin} isPartner={isPartner} />
-    </div>
+    <SegmentSidebar
+      isAdmin={isAdmin}
+      isPartner={isPartner}
+      initials={initials}
+      name={name}
+      subtitle={subtitle}
+    />
   );
 }
