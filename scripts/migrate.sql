@@ -361,3 +361,7 @@ CREATE INDEX IF NOT EXISTS idx_ai_feedback_comment ON ai_review_feedback(comment
 
 -- 2026-05-31: 폴더 공유 — share_links.kind (file | folder)
 ALTER TABLE share_links ADD COLUMN kind TEXT NOT NULL DEFAULT 'file';
+
+-- 2026-06-04: 피드백 공유 — share_links.include_feedback (켜면 그 파일의 팀 코멘트도 게스트 뷰에 노출)
+-- schema.ts: integer mode boolean → SQLite INTEGER, false=0. (drizzle 0002 와 동일, migrate.sql 누락 보강)
+ALTER TABLE share_links ADD COLUMN include_feedback INTEGER NOT NULL DEFAULT 0;
