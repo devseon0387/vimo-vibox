@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 /* Minimalist Utility (Linear/Vercel 풍, 라이트 전용) */
+/* @tokens:vibox:start */
 :root {
   --bg: #ffffff;
   --surface: #fafafa;
@@ -11,7 +12,7 @@
   --text-soft: #666666;
   --text-faint: #999999;
   --text-placeholder: #a3a3a3;
-  --accent: #e85008;          /* 비박스 브랜드 오렌지 (logo) */
+  --accent: #e85008;
   --accent-hover: #c8430a;
   --accent-soft: #fef0e8;
   --hover: #f0f0f0;
@@ -24,15 +25,14 @@
   --warning-soft: #fef3c7;
   --purple: #7c3aed;
   --purple-soft: #f5f3ff;
-
-  /* 두 공간 토큰 (홈 dashboard / Rail / 파일 라벨) */
-  --personal: #0ea5e9;       /* My box = sky */
+  --personal: #0ea5e9;
   --personal-soft: #e0f2fe;
   --personal-dark: #0369a1;
-  --team-color: #e85008;      /* 비모 = brand orange (accent 동일) */
+  --team-color: #e85008;
   --team-soft: #fef0e8;
   --team-dark: #c8430a;
 }
+/* @tokens:vibox:end */
 
 @theme inline {
   --color-bg: var(--bg);
