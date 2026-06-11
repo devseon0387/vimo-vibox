@@ -33,20 +33,20 @@ export async function GET(req: NextRequest) {
     .join(" ");
 
   try {
-    const rows = await db.all<{
+    const rows = (await db.execute(
+      sql`SELECT path, title,
+            substr(coalesce(excerpt, ''), 1, 200) AS body_snip,
+            0 AS rank
+          FROM note_index
+          WHERE title ILIKE '%' || ${tokens} || '%'
+             OR excerpt ILIKE '%' || ${tokens} || '%'
+          LIMIT ${limit}`,
+    )) as unknown as {
       path: string;
       title: string;
       body_snip: string;
       rank: number;
-    }>(
-      sql`SELECT path, title,
-            snippet(note_fts, 2, '[[', ']]', '…', 20) AS body_snip,
-            bm25(note_fts) AS rank
-          FROM note_fts
-          WHERE note_fts MATCH ${tokens}
-          ORDER BY rank
-          LIMIT ${limit}`,
-    );
+    }[];
     return Response.json(
       {
         hits: rows.map((r) => ({

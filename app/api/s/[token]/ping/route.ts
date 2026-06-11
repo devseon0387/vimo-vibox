@@ -130,12 +130,12 @@ export async function POST(
       target: [shareViews.shareToken, shareViews.visitorId, shareViews.filePath],
       set: {
         lastEventAt: now,
-        maxPositionSec: sql`MAX(${shareViews.maxPositionSec}, ${positionSec})`,
+        maxPositionSec: sql`GREATEST(${shareViews.maxPositionSec}, ${positionSec})`,
         totalWatchSec: sql`${shareViews.totalWatchSec} + ${watchedDeltaSec}`,
         durationSec: durationSec ?? sql`${shareViews.durationSec}`,
         completed: sql`CASE
           WHEN COALESCE(${durationSec ?? null}, ${shareViews.durationSec}) IS NOT NULL
-            AND MAX(${shareViews.maxPositionSec}, ${positionSec}) >= COALESCE(${durationSec ?? null}, ${shareViews.durationSec}) * 0.95
+            AND GREATEST(${shareViews.maxPositionSec}, ${positionSec}) >= COALESCE(${durationSec ?? null}, ${shareViews.durationSec}) * 0.95
           THEN 1
           ELSE ${shareViews.completed}
         END`,

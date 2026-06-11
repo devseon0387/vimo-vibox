@@ -46,7 +46,7 @@ export function HomeMenu({ isPartner = false }: { isPartner?: boolean }) {
     <>
       <MenuSection label="바로가기" />
       <MenuItem href="/" icon={LayoutDashboard} label="대시보드" matchExact />
-      <MenuItem href="/my/box?upload=1" icon={Upload} label="새로 올리기" />
+      <MenuItem href="/?upload=1" icon={Upload} label="새로 올리기" />
       <MenuItem href="/shares" icon={LinkIcon} label="내 공유 링크" matchExact />
 
       <MenuSection label="My box" />

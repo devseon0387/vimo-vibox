@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
   let failed = 0;
   // 부분 실패 시 전체 롤백 — 일부만 들어가 운영자가 다시 import 못하는 상황 방지
   try {
-    db.transaction((tx) => {
+    await db.transaction(async (tx) => {
       for (const eid of erpIds) {
         if (existingSet.has(eid)) continue;
         const row = erpById.get(eid);
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
         usedSlugs.add(slug);
 
         try {
-          tx.insert(clients).values({
+          await tx.insert(clients).values({
             id: randomUUID(),
             name: row.name,
             slug,
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
             active: row.status === "active",
             erpClientId: row.id,
             createdBy: session.sub,
-          }).run();
+          });
           added++;
         } catch (e) {
           // 동시 import로 UNIQUE 충돌해도 전체 롤백

@@ -69,14 +69,7 @@ export function PartnerSidebar({
   };
 
   return (
-    <div
-      className="w-[232px] bg-white border-r border-border flex flex-col h-screen"
-      style={{
-        // 활성 공간 색을 하위 MenuItem(--space-accent)에 전파 — 세그먼트와 메뉴 활성색 일치(SegmentSidebar와 동일)
-        ["--space-accent" as string]:
-          active === "mybox" ? "#0ea5e9" : active === "team" ? "#e85008" : "var(--accent)",
-      }}
-    >
+    <div className="w-[232px] bg-white border-r border-border flex flex-col h-screen">
       {/* 로고 */}
       <Link
         href="/"

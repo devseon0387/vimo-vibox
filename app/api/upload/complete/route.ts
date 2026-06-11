@@ -9,7 +9,6 @@ import {
 import { generateThumbInBackground, isVideoPath } from "@/lib/fs/thumbnail";
 import { db } from "@/lib/db/client";
 import { fileUploads } from "@/lib/db/schema";
-import { sql } from "drizzle-orm";
 import { logTraffic } from "@/lib/traffic";
 import { enqueue as enqueueHLS } from "@/lib/encoding/queue";
 import { invalidateDirSizeCache } from "../init/route";
@@ -71,7 +70,7 @@ export async function POST(req: NextRequest) {
           set: {
             uploadedBy: session.sub,
             uploadedByName: session.name ?? session.username,
-            uploadedAt: sql`(unixepoch() * 1000)`,
+            uploadedAt: new Date(),
             episodeId: meta.episodeId ?? null,
             projectId: meta.projectId ?? null,
             partnerId: meta.partnerId ?? null,

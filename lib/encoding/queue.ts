@@ -140,8 +140,8 @@ async function tryStart(): Promise<void> {
         .update(encodingJobs)
         .set({ status: "running", startedAt: new Date(), progress: 0 })
         .where(and(eq(encodingJobs.id, next.id), eq(encodingJobs.status, "queued")));
-      // better-sqlite3 driver: result는 RunResult { changes: number }
-      const changes = (result as unknown as { changes?: number }).changes ?? 0;
+      // postgres-js driver: 영향 행수는 result.count (cf. lib/traffic.ts pruneTrafficLog)
+      const changes = (result as unknown as { count?: number }).count ?? 0;
       if (changes === 0) continue;
 
       activeWorkers++;

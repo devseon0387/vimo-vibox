@@ -14,8 +14,8 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   // 셸을 역할로 분기한다.
-  // - 파트너(외부 편집자): AppShell + PartnerSidebar(세그먼트 사이드바). 모바일은 Bell·활동탭 숨김(isPartner).
-  // - 매니저(admin/member)·일반: AppShell + Sidebar(SegmentSidebar).
+  // - 파트너(외부 편집자): 사이드바 없는 미니멀 상단바(PartnerShell). 공간 전환은 홈 본문 두 탭이 담당.
+  // - 매니저(admin/member)·일반: 좌측 사이드바(Rail + 컨텍스트 메뉴) 유지.
   const session = await getCurrentSession();
   const isPartner = session?.role === "partner";
 
@@ -23,7 +23,6 @@ export default async function AppLayout({
     <UploadProvider>
       {isPartner ? (
         <AppShell
-          isPartner
           sidebar={
             <PartnerSidebar
               userName={session?.name ?? session?.username ?? ""}

@@ -117,7 +117,7 @@ export async function PATCH(req: NextRequest) {
     // 모든 DB 참조 경로를 from→to 로 동기 갱신 (트랜잭션). 실패 시 reconcile이 잡지만
     // 즉시 에러 표면화하여 운영자가 알아챌 수 있게.
     try {
-      syncDbPathsAfterMove(from, to, isDir);
+      await syncDbPathsAfterMove(from, to, isDir);
     } catch (e) {
       console.error("[files PATCH] syncDbPathsAfterMove failed:", e);
       return NextResponse.json(

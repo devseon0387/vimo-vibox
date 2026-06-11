@@ -41,7 +41,8 @@ export function logTraffic(params: LogParams & { bytes: number }): void {
         shareToken: params.shareToken ?? null,
         userId: params.userId ?? null,
       })
-      .run?.();
+      .execute()
+      .catch(() => {});
   } catch {
     /* 로그 실패는 무시 */
   }
@@ -60,13 +61,10 @@ export function logTraffic(params: LogParams & { bytes: number }): void {
  * 기본 90일 이상 경과한 행을 지워 테이블 크기·쿼리 성능 유지.
  * launchd 크론에서 호출 (scripts/com.vibox.prune.plist).
  */
-export function pruneTrafficLog(keepDays = 90): number {
+export async function pruneTrafficLog(keepDays = 90): Promise<number> {
   const cutoff = new Date(Date.now() - keepDays * 24 * 60 * 60 * 1000);
-  const result = db
-    .delete(trafficLog)
-    .where(lt(trafficLog.at, cutoff))
-    .run?.();
-  return (result as { changes?: number } | undefined)?.changes ?? 0;
+  const result = await db.delete(trafficLog).where(lt(trafficLog.at, cutoff));
+  return (result as unknown as { count?: number }).count ?? 0;
 }
 
 export function streamWithTrafficLog(

@@ -231,16 +231,15 @@ async function runScanAsync(
       // 기존 AI 댓글 삭제 + 새 이슈 INSERT 를 트랜잭션으로 묶어 중간 실패·동시 scan race 차단.
       // 트랜잭션 안에서 던지면 자동 롤백 → 클라이언트는 일관된 상태만 봄.
       let inserted = 0;
-      db.transaction((tx) => {
-        tx
+      await db.transaction(async (tx) => {
+        await tx
           .delete(comments)
           .where(
             and(
               eq(comments.filePath, filePath),
               eq(comments.authorId, AI_USER_ID),
             ),
-          )
-          .run();
+          );
 
         for (const iss of result.issues ?? []) {
           try {
@@ -258,7 +257,7 @@ async function runScanAsync(
               startMs: Math.max(0, Math.floor(startSec * 1000)),
               endMs: Math.max(0, Math.floor(endSec * 1000)),
             });
-            tx.insert(comments).values({
+            await tx.insert(comments).values({
               id: randomUUID(),
               filePath,
               authorId: AI_USER_ID,
@@ -270,7 +269,7 @@ async function runScanAsync(
               autoKind: "feedback",
               annotation,
               body: `"${wrong}" → "${correct}" · ${iss.issue}`,
-            }).run();
+            });
             inserted++;
           } catch {
             // 개별 이슈 직렬화 실패는 skip — 트랜잭션은 유지 (전체 롤백 안 함)

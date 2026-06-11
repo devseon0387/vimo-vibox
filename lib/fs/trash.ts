@@ -42,10 +42,10 @@ export async function moveToTrash(
 
   await fs.rename(abs, trashPath);
 
-  db.transaction((tx) => {
-    tx.delete(shareLinks).where(eq(shareLinks.filePath, relativePath)).run();
+  await db.transaction(async (tx) => {
+    await tx.delete(shareLinks).where(eq(shareLinks.filePath, relativePath));
 
-    tx.insert(trashItems).values({
+    await tx.insert(trashItems).values({
       id,
       originalPath: relativePath,
       name,
@@ -53,7 +53,7 @@ export async function moveToTrash(
       size,
       deletedBy: userId,
       deletedByName: userName,
-    }).run();
+    });
   });
   return id;
 }
@@ -114,16 +114,16 @@ export async function permanentDelete(trashId: string): Promise<void> {
   const prefixLike = originalPath + "/%";
 
   // 파일·디렉터리 모두에 안전한 prefix 매칭 — 파일이면 prefix=참고만
-  db.transaction((tx) => {
+  await db.transaction(async (tx) => {
     // 휴지통 row 삭제
-    tx.delete(trashItems).where(eq(trashItems.id, trashId)).run();
+    await tx.delete(trashItems).where(eq(trashItems.id, trashId));
     // 관련 DB 메타 정리 (orphan 방지) — exact + dir prefix
-    tx.delete(comments).where(or(eq(comments.filePath, originalPath), like(comments.filePath, prefixLike))).run();
-    tx.delete(fileUploads).where(or(eq(fileUploads.path, originalPath), like(fileUploads.path, prefixLike))).run();
-    tx.delete(hlsAssets).where(or(eq(hlsAssets.filePath, originalPath), like(hlsAssets.filePath, prefixLike))).run();
-    tx.delete(encodingJobs).where(or(eq(encodingJobs.filePath, originalPath), like(encodingJobs.filePath, prefixLike))).run();
+    await tx.delete(comments).where(or(eq(comments.filePath, originalPath), like(comments.filePath, prefixLike)));
+    await tx.delete(fileUploads).where(or(eq(fileUploads.path, originalPath), like(fileUploads.path, prefixLike)));
+    await tx.delete(hlsAssets).where(or(eq(hlsAssets.filePath, originalPath), like(hlsAssets.filePath, prefixLike)));
+    await tx.delete(encodingJobs).where(or(eq(encodingJobs.filePath, originalPath), like(encodingJobs.filePath, prefixLike)));
     // shareLinks는 moveToTrash 단계에서 이미 정리됨 (남은 케이스: 휴지통 이후 새로 만들었을 가능성)
-    tx.delete(shareLinks).where(or(eq(shareLinks.filePath, originalPath), like(shareLinks.filePath, prefixLike))).run();
+    await tx.delete(shareLinks).where(or(eq(shareLinks.filePath, originalPath), like(shareLinks.filePath, prefixLike)));
   });
 
   await fs.rm(trashPath, { recursive: true, force: true });

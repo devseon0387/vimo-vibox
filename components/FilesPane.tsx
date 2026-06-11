@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { LayoutGrid, List } from "lucide-react";
 import type { FileEntry } from "@/lib/fs/storage";
 import { ActionBar } from "./ActionBar";
@@ -58,20 +57,6 @@ export function FilesPane({
     // 서버에서 새 entries 가 도착하면 (router.refresh 후) 숨김 상태 초기화
     setHiddenPaths(new Set());
   }, [entries]);
-
-  // ?upload=1 진입 시 업로드 피커 열기 (CTA 죽은 링크 방지). 현재 폴더(루트면 /Rendering)로 업로드.
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
-  useEffect(() => {
-    if (searchParams.get("upload") !== "1") return;
-    emptyUploadInputRef.current?.click();
-    const sp = new URLSearchParams(searchParams.toString());
-    sp.delete("upload");
-    const qs = sp.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const hideOptimistic = useCallback((paths: string[]) => {
     setHiddenPaths((prev) => {

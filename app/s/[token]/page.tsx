@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import path from "node:path";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { shareLinks, users } from "@/lib/db/schema";
+import { shareLinks } from "@/lib/db/schema";
 import { resolveAllowedPaths, shareFolderRoot } from "@/lib/share/paths";
 import { listDirectory } from "@/lib/fs/storage";
 import { SharePageClient } from "./share-client";
@@ -142,17 +142,6 @@ export default async function SharePage({
     kind: detectKind(path.basename(p)),
   }));
 
-  // 보낸이 이름 (있으면 "OOO 드림" 표시)
-  let sender: string | null = null;
-  if (link.createdBy) {
-    const c = await db
-      .select({ name: users.name })
-      .from(users)
-      .where(eq(users.id, link.createdBy))
-      .limit(1);
-    sender = c[0]?.name ?? null;
-  }
-
   return (
     <SharePageClient
       token={token}
@@ -160,8 +149,9 @@ export default async function SharePage({
       files={files}
       expired={expired}
       expiresAt={link.expiresAt ? link.expiresAt.toISOString() : null}
+      allowComments={link.allowComments && link.mode === "full"}
       allowDownload={link.allowDownload}
-      sender={sender}
+      mode={link.mode}
     />
   );
 }

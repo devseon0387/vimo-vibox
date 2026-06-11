@@ -21,13 +21,13 @@ export async function GET(req: NextRequest) {
   if (g.res) return g.res;
 
   // 폴더: DISTINCT + count
-  const folders = await db.all<{ folder: string; n: number }>(
+  const folders = (await db.execute(
     sql`SELECT folder, COUNT(*) AS n
         FROM note_index
         WHERE folder IS NOT NULL
         GROUP BY folder
         ORDER BY folder`,
-  );
+  )) as unknown as { folder: string; n: number }[];
 
   // 태그: JSON 컬럼에서 추출 — note 개수 적으면 JS로 집계가 더 간단
   const rows = await db
@@ -51,10 +51,12 @@ export async function GET(req: NextRequest) {
     .map(([name, n]) => ({ name, n }))
     .sort((a, b) => b.n - a.n);
 
-  const totalCount = await db.all<{ n: number }>(sql`SELECT COUNT(*) AS n FROM note_index`);
-  const starredCount = await db.all<{ n: number }>(
-    sql`SELECT COUNT(*) AS n FROM note_index WHERE starred = 1`,
-  );
+  const totalCount = (await db.execute(
+    sql`SELECT COUNT(*) AS n FROM note_index`,
+  )) as unknown as { n: number }[];
+  const starredCount = (await db.execute(
+    sql`SELECT COUNT(*) AS n FROM note_index WHERE starred = true`,
+  )) as unknown as { n: number }[];
 
   return Response.json(
     {

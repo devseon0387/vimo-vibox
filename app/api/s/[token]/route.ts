@@ -98,7 +98,8 @@ export async function GET(
     .update(shareLinks)
     .set({ downloadCount: sql`${shareLinks.downloadCount} + 1` })
     .where(eq(shareLinks.id, link.id))
-    .run?.();
+    .execute()
+    .catch(() => {});
 
   const filename = path.basename(abs);
   const encodedName = encodeURIComponent(filename);

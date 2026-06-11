@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       ? Math.max(7, Math.min(365, parseInt(daysParam, 10)))
       : 90;
 
-  const deleted = pruneTrafficLog(days);
+  const deleted = await pruneTrafficLog(days);
   return NextResponse.json({ ok: true, deleted, keepDays: days });
 }
 

@@ -190,7 +190,7 @@ export async function GET(req: NextRequest) {
     .groupBy(trafficLog.source);
 
   // 일별 트렌드 (선택 범위, 최대 90일)
-  const dayExpr = sql<string>`date(${trafficLog.at} / 1000, 'unixepoch', 'localtime')`;
+  const dayExpr = sql<string>`to_char(${trafficLog.at}, 'YYYY-MM-DD')`;
   const dailyRows = await db
     .select({
       day: dayExpr,

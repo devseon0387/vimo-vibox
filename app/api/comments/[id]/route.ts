@@ -141,9 +141,9 @@ export async function DELETE(
   }
 
   // 답글 + 본 댓글을 단일 트랜잭션으로 (서버 죽으면 둘 다 롤백)
-  db.transaction((tx) => {
-    tx.delete(comments).where(eq(comments.parentId, id)).run();
-    tx.delete(comments).where(eq(comments.id, id)).run();
+  await db.transaction(async (tx) => {
+    await tx.delete(comments).where(eq(comments.parentId, id));
+    await tx.delete(comments).where(eq(comments.id, id));
   });
 
   return NextResponse.json({ ok: true });

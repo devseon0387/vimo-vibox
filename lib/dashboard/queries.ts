@@ -149,61 +149,6 @@ export async function getMyRecentFiles(userId: string, limit = 12): Promise<MyRe
   });
 }
 
-/** 파트너 비모(team) 납품 전체 검수 현황 요약 — 최근 N건이 아닌 전 기간 집계.
- *  PartnerHome 검수 현황 게이지가 정확한 총계를 보이도록 별도 계산(getMyRecentFiles 와 같은 status 로직). */
-export type DeliverySummary = {
-  total: number;
-  review: number;
-  revise: number;
-  approve: number;
-};
-
-export async function getPartnerDeliverySummary(userId: string): Promise<DeliverySummary> {
-  const rows = await db
-    .select({ path: fileUploads.path, uploadedAt: fileUploads.uploadedAt })
-    .from(fileUploads)
-    .where(eq(fileUploads.uploadedBy, userId));
-  // 비모(team) 공간만 — 개인 보관함 제외
-  const team = rows.filter((r) => spaceOfPath(r.path, userId) === "team");
-  if (team.length === 0) return { total: 0, review: 0, revise: 0, approve: 0 };
-
-  const paths = team.map((r) => r.path);
-  const managers = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(inArray(users.role, ["admin", "member"]));
-  const managerIds = managers.map((m) => m.id);
-  const managerCmtRows = managerIds.length === 0
-    ? []
-    : await db
-        .select({
-          filePath: comments.filePath,
-          kind: comments.kind,
-          latestAt: sql<number>`max(${comments.createdAt})`.as("latestAt"),
-        })
-        .from(comments)
-        .where(and(inArray(comments.filePath, paths), inArray(comments.authorId, managerIds)))
-        .groupBy(comments.filePath, comments.kind);
-  const cmtMap = new Map<string, { latestAt: number; kinds: Set<string> }>();
-  for (const r of managerCmtRows) {
-    const cur = cmtMap.get(r.filePath) ?? { latestAt: 0, kinds: new Set<string>() };
-    if (Number(r.latestAt) > cur.latestAt) cur.latestAt = Number(r.latestAt);
-    cur.kinds.add(r.kind);
-    cmtMap.set(r.filePath, cur);
-  }
-
-  let review = 0, revise = 0, approve = 0;
-  for (const r of team) {
-    const c = cmtMap.get(r.path);
-    const approved = c?.kinds.has("approve") ?? false;
-    const needsNew = !!c && r.uploadedAt.getTime() < c.latestAt && !approved;
-    if (approved) approve++;
-    else if (needsNew) revise++;
-    else review++;
-  }
-  return { total: team.length, review, revise, approve };
-}
-
 /** 내가 올린 파일에 달린 최근 코멘트 (24시간 이내) */
 export type MyNewComment = {
   id: string;

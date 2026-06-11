@@ -8,7 +8,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import matter from "gray-matter";
-import { sql, eq, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { noteIndex, noteVersions } from "@/lib/db/schema";
 import { getZoneRoot } from "@/lib/fs/storage";
@@ -64,7 +64,7 @@ export async function reindexNote(notePath: string): Promise<{ ok: true; mtimeMs
   } catch (e) {
     // 파일 없으면 인덱스에서도 제거
     await db.delete(noteIndex).where(eq(noteIndex.path, notePath));
-    await db.run(sql`DELETE FROM note_fts WHERE path = ${notePath}`);
+    // FTS deferred (PG)
     return { ok: false, error: e instanceof Error ? e.message : "read failed" };
   }
 
@@ -108,11 +108,7 @@ export async function reindexNote(notePath: string): Promise<{ ok: true; mtimeMs
       },
     });
 
-  // note_fts upsert — content='' (external content) 이므로 직접 INSERT/DELETE
-  await db.run(sql`DELETE FROM note_fts WHERE path = ${notePath}`);
-  await db.run(
-    sql`INSERT INTO note_fts (path, title, body) VALUES (${notePath}, ${title}, ${parsed.content})`,
-  );
+  // FTS deferred (PG)
 
   return { ok: true, mtimeMs: modifiedAt };
 }
@@ -151,7 +147,7 @@ export async function reindexAll(): Promise<{ indexed: number; failed: number }>
   const orphan = all.filter((r) => !liveSet.has(r.path)).map((r) => r.path);
   for (const p of orphan) {
     await db.delete(noteIndex).where(eq(noteIndex.path, p));
-    await db.run(sql`DELETE FROM note_fts WHERE path = ${p}`);
+    // FTS deferred (PG)
   }
 
   return { indexed: indexed.length, failed: failed.length };
