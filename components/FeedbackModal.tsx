@@ -7,6 +7,11 @@ import { ChevronLeft, ChevronUp, ChevronDown } from "lucide-react";
 import { useConfirm } from "./ConfirmDialog";
 import { useToast } from "./Toast";
 import {
+  ensureDirectProbe,
+  directMediaUrl,
+  directStreamBase,
+} from "@/lib/media-route";
+import {
   CategoryIcon,
   CategoryIconBox,
 } from "./CategoryIcon";
@@ -401,10 +406,13 @@ export function FeedbackModal({
     if (!v) return;
     let handle: { destroy: () => void } | null = null;
     let cancelled = false;
+    // 로그인 유저 + 프로브 확정 시 hls.js 세그먼트를 u1/u2:8443 직결로 (공유 게스트는 CF)
+    const dBase = shareContext ? null : directStreamBase(filePath ?? "");
+    const directManifest = dBase ? dBase + hlsManifestUrl : undefined;
     void (async () => {
       const { attachHls } = await import("@/lib/hls-client");
       if (cancelled) return;
-      handle = await attachHls(v, hlsManifestUrl);
+      handle = await attachHls(v, hlsManifestUrl, directManifest);
     })();
     return () => {
       cancelled = true;
@@ -960,7 +968,10 @@ export function FeedbackModal({
     : `/api/download?path=${encodeURIComponent(entry.path)}&inline=1`;
   const poster = shareContext
     ? undefined
-    : `/api/thumb?path=${encodeURIComponent(entry.path)}`;
+    : directMediaUrl(
+        `/api/thumb?path=${encodeURIComponent(entry.path)}`,
+        entry.path,
+      );
 
   return (
     <>
@@ -1966,6 +1977,7 @@ function TimelineStrip({
 
   // 모달 열릴 때 썸네일 배치 preload (호버 시 즉시 표시)
   useEffect(() => {
+    ensureDirectProbe();
     if (disableThumbs) return;
     if (!filePath) return;
     // duration이 유효하지 않거나 비정상이면 skip (Infinity/NaN 방지)
@@ -1979,7 +1991,10 @@ function TimelineStrip({
     let count = 0;
     for (let t = 0; t <= totalSec && count < MAX_REQUESTS; t += interval) {
       const img = new Image();
-      img.src = `/api/thumb?path=${encodeURIComponent(filePath)}&t=${t}`;
+      img.src = directMediaUrl(
+        `/api/thumb?path=${encodeURIComponent(filePath)}&t=${t}`,
+        filePath,
+      );
       count++;
     }
   }, [filePath, duration, disableThumbs]);
@@ -2040,7 +2055,10 @@ function TimelineStrip({
                   style={{ width: `${THUMB_W}px` }}
                 >
                   <img
-                    src={`/api/thumb?path=${encodeURIComponent(filePath)}&t=${Math.floor(hoverState.timeMs / 1000)}`}
+                    src={directMediaUrl(
+                      `/api/thumb?path=${encodeURIComponent(filePath)}&t=${Math.floor(hoverState.timeMs / 1000)}`,
+                      filePath,
+                    )}
                     alt=""
                     className="block w-[180px] h-[101px] object-cover bg-black"
                     onError={(e) => {

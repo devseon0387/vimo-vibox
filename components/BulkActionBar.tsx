@@ -5,6 +5,7 @@ import { Download, Trash2, MoveRight, X } from "lucide-react";
 import type { FileEntry } from "@/lib/fs/storage";
 import { useConfirm } from "./ConfirmDialog";
 import { useToast } from "./Toast";
+import { directDownloadUrl } from "@/lib/media-route";
 import { useState } from "react";
 import { MoveDialog } from "./MoveDialog";
 
@@ -47,7 +48,7 @@ export function BulkActionBar({
   const onDownload = () => {
     const paths = selected.map((e) => encodeURIComponent(e.path)).join(",");
     const a = document.createElement("a");
-    a.href = `/api/download/zip?paths=${paths}`;
+    a.href = directDownloadUrl(`/api/download/zip?paths=${paths}`, paths);
     a.click();
   };
 

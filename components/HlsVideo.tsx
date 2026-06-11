@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { attachHls } from "@/lib/hls-client";
+import { directStreamBase } from "@/lib/media-route";
 
 /**
  * HLS 자동 감지 비디오 플레이어.
@@ -70,8 +71,11 @@ export function HlsVideo({
     if (!v) return;
     let handle: { destroy: () => void } | null = null;
     let cancelled = false;
+    // 로그인 유저 + 프로브 확정 시 직결(u1/u2:8443). 공유 게스트는 CF 유지.
+    const dBase = shareToken ? null : directStreamBase(filePath);
+    const directManifest = dBase ? dBase + manifestUrl : undefined;
     void (async () => {
-      handle = await attachHls(v, manifestUrl);
+      handle = await attachHls(v, manifestUrl, directManifest);
       if (cancelled) handle.destroy();
     })();
     return () => {

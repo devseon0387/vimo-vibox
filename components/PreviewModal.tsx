@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Modal } from "./Modal";
 import type { FileEntry } from "@/lib/fs/storage";
 import { Download, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ensureDirectProbe,
+  directMediaUrl,
+  directDownloadUrl,
+} from "@/lib/media-route";
 
 function isImage(k: FileEntry["kind"]) {
   return k === "image";
@@ -39,6 +44,15 @@ export function PreviewModal({
   entries?: FileEntry[];
   onNavigate?: (direction: -1 | 1) => void;
 }) {
+  // 미디어 직결(u1:8443) 실패 시 CF 폴백 플래그
+  const [srcFailed, setSrcFailed] = useState(false);
+  useEffect(() => {
+    ensureDirectProbe();
+  }, []);
+  useEffect(() => {
+    setSrcFailed(false);
+  }, [entry?.path]);
+
   // ←/→ 키 네비게이션 + Space 토글 (Quick Look UX)
   useEffect(() => {
     if (!open) return;
@@ -73,6 +87,9 @@ export function PreviewModal({
 
   if (!entry) return null;
   const src = `/api/download?path=${encodeURIComponent(entry.path)}&inline=1`;
+  // 이미지·영상은 직결(u1:8443)로 받아 빠르게 — 실패하면 CF 폴백. (오디오·PDF는 CF 유지)
+  const mediaSrc = srcFailed ? src : directMediaUrl(src, entry.path);
+  const onMediaError = () => setSrcFailed(true);
 
   // 현재 entry가 entries 배열의 몇 번째인지 + 이전/다음 navigable 인덱스 계산
   let counter: { index: number; total: number } | null = null;
@@ -87,15 +104,24 @@ export function PreviewModal({
     body = (
       <div className="bg-[#1a1a1a] grid place-items-center py-6 px-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt={entry.name} className="max-w-full max-h-[75vh] object-contain" />
+        <img
+          src={mediaSrc}
+          onError={onMediaError}
+          alt={entry.name}
+          className="max-w-full max-h-[75vh] object-contain"
+        />
       </div>
     );
   } else if (isVideo(entry.kind)) {
-    const poster = `/api/thumb?path=${encodeURIComponent(entry.path)}`;
+    const poster = directMediaUrl(
+      `/api/thumb?path=${encodeURIComponent(entry.path)}`,
+      entry.path,
+    );
     body = (
       <div className="bg-black grid place-items-center">
         <video
-          src={src}
+          src={mediaSrc}
+          onError={onMediaError}
           poster={poster}
           controls
           autoPlay
@@ -127,7 +153,10 @@ export function PreviewModal({
           이 파일은 브라우저에서 미리볼 수 없습니다
         </div>
         <a
-          href={`/api/download?path=${encodeURIComponent(entry.path)}`}
+          href={directDownloadUrl(
+            `/api/download?path=${encodeURIComponent(entry.path)}`,
+            entry.path,
+          )}
           download={entry.name}
           className="inline-flex items-center gap-2 bg-accent text-white px-5 py-2.5 rounded-md text-[14px] font-semibold hover:bg-accent-hover"
         >

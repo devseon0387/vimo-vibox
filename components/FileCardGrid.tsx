@@ -30,6 +30,8 @@ import { useToast } from "./Toast";
 import { ContextMenu, type CtxItem } from "./ContextMenu";
 import { EmptyState } from "./EmptyState";
 import { TimeCell } from "./TimeCell";
+import { ThumbImg } from "./ThumbImg";
+import { directDownloadUrl } from "@/lib/media-route";
 
 function useGridCols(): number {
   const [cols, setCols] = useState(2);
@@ -109,21 +111,16 @@ function NonVideoThumb({ kind }: { kind: FileEntry["kind"] }) {
 }
 
 function VideoThumb({ path }: { path: string }) {
-  const [failed, setFailed] = useState(false);
-  if (failed) {
-    return (
-      <div className="absolute inset-0 flex items-center justify-center text-white/30">
-        <FileIconSvg size={40} strokeWidth={1.5} />
-      </div>
-    );
-  }
+  // 썸네일은 u1/u2 직결(:8443)로 받아 CF(LAX) 지연 우회 — 실패 시 CF 폴백.
   return (
-    <img
-      src={`/api/thumb?path=${encodeURIComponent(path)}`}
-      alt=""
-      loading="lazy"
+    <ThumbImg
+      path={path}
       className="absolute inset-0 w-full h-full object-cover"
-      onError={() => setFailed(true)}
+      fallback={
+        <div className="absolute inset-0 flex items-center justify-center text-white/30">
+          <FileIconSvg size={40} strokeWidth={1.5} />
+        </div>
+      }
     />
   );
 }
@@ -432,7 +429,13 @@ export function FileCardGrid({
     } else if (isPreviewable(entry)) {
       setPreviewEntry(entry);
     } else {
-      window.open(`/api/download?path=${encodeURIComponent(entry.path)}`, "_self");
+      window.open(
+        directDownloadUrl(
+          `/api/download?path=${encodeURIComponent(entry.path)}`,
+          entry.path,
+        ),
+        "_self",
+      );
     }
   };
 
@@ -651,10 +654,16 @@ export function FileCardGrid({
     e?.stopPropagation();
     const a = document.createElement("a");
     if (entry.isFolder) {
-      a.href = `/api/download/zip?path=${encodeURIComponent(entry.path)}`;
+      a.href = directDownloadUrl(
+        `/api/download/zip?path=${encodeURIComponent(entry.path)}`,
+        entry.path,
+      );
       a.download = `${entry.name}.zip`;
     } else {
-      a.href = `/api/download?path=${encodeURIComponent(entry.path)}`;
+      a.href = directDownloadUrl(
+        `/api/download?path=${encodeURIComponent(entry.path)}`,
+        entry.path,
+      );
       a.download = entry.name;
     }
     a.click();

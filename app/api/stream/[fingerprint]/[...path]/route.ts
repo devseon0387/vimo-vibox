@@ -11,6 +11,12 @@ import { canAccessFile } from "@/lib/auth/access";
 import { getHLSDir } from "@/lib/fs/hls";
 import { resolveAllowedPaths } from "@/lib/share/paths";
 import { logTraffic } from "@/lib/traffic";
+import { corsHeaders, preflight } from "@/lib/auth/cors";
+
+// hls.js 직결(u1/u2:8443) 재생을 위한 CORS preflight. 동일오리진(CF) 요청은 영향 없음.
+export async function OPTIONS(req: NextRequest) {
+  return preflight(req.headers.get("origin"));
+}
 
 /**
  * HLS 스트리밍 엔드포인트.
@@ -32,6 +38,8 @@ export async function GET(
   req: NextRequest,
   ctx: { params: Promise<{ fingerprint: string; path: string[] }> },
 ) {
+  // 직결(크로스오리진) 요청이면 CORS 헤더, 동일오리진(CF)이면 빈 객체 → 기존 동작 그대로
+  const cors = corsHeaders(req.headers.get("origin"));
   const { fingerprint, path: parts } = await ctx.params;
   if (!/^[a-f0-9]{16}$/.test(fingerprint)) {
     return new Response("invalid fingerprint", { status: 400 });
@@ -86,7 +94,7 @@ export async function GET(
   }
 
   if (!authorized) {
-    return new Response("unauthorized", { status: 401 });
+    return new Response("unauthorized", { status: 401, headers: cors });
   }
 
   const filePath = path.join(getHLSDir(fingerprint), subPath);
@@ -113,6 +121,7 @@ export async function GET(
     return new Response(null, {
       status: 304,
       headers: {
+        ...cors,
         ETag: etag,
         "Cache-Control": cacheControl,
         Vary: "Accept-Encoding",
@@ -137,6 +146,7 @@ export async function GET(
   // rsc/next-router-* 가 CF 캐시 키를 분산시키는 것 차단
   return new Response(webStream, {
     headers: {
+      ...cors,
       "Content-Type": contentType,
       "Content-Length": String(stat.size),
       "Cache-Control": cacheControl,

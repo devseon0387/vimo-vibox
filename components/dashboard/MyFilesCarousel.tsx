@@ -2,6 +2,7 @@ import Link from "next/link";
 import { FolderOpen, ChevronRight, MessageCircle, Eye, Lock, Check, ArrowUp } from "lucide-react";
 import type { MyRecentFile } from "@/lib/dashboard/queries";
 import { SpaceLabel } from "./SpaceLabel";
+import { ThumbImg } from "@/components/ThumbImg";
 
 function relativeTime(ms: number): string {
   const diff = Date.now() - ms;
@@ -66,11 +67,10 @@ export function MyFilesCarousel({ files }: { files: MyRecentFile[] }) {
             <div className="aspect-[4/3] relative bg-surface">
               {/* 썸네일 — /api/thumb 활용. 영상 아니면 placeholder */}
               {/* 썸네일 없는 파일은 bg-surface 그대로 노출 — 안전한 client/server 호환 */}
-              <img
-                src={`/api/thumb?path=${encodeURIComponent(f.path)}`}
-                alt=""
+              <ThumbImg
+                path={f.path}
                 className="w-full h-full object-cover"
-                loading="lazy"
+                fallback={null}
               />
               <div className="absolute top-1.5 left-1.5">
                 <SpaceLabel space={f.space} size="sm" />

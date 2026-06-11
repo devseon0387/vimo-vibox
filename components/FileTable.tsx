@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useLongPress } from "@/lib/use-long-press";
 import { Thumbnail } from "./Thumbnail";
+import { directDownloadUrl } from "@/lib/media-route";
 import type { FileEntry } from "@/lib/fs/storage";
 import { Download, Trash2, Pencil, Link as LinkIcon, MoveRight } from "lucide-react";
 import { useConfirm } from "./ConfirmDialog";
@@ -124,7 +125,13 @@ export function FileTable({
     } else if (isPreviewable(entry)) {
       setPreviewEntry(entry);
     } else {
-      window.open(`/api/download?path=${encodeURIComponent(entry.path)}`, "_self");
+      window.open(
+        directDownloadUrl(
+          `/api/download?path=${encodeURIComponent(entry.path)}`,
+          entry.path,
+        ),
+        "_self",
+      );
     }
   };
 
@@ -343,10 +350,16 @@ export function FileTable({
     e?.stopPropagation();
     const a = document.createElement("a");
     if (entry.isFolder) {
-      a.href = `/api/download/zip?path=${encodeURIComponent(entry.path)}`;
+      a.href = directDownloadUrl(
+        `/api/download/zip?path=${encodeURIComponent(entry.path)}`,
+        entry.path,
+      );
       a.download = `${entry.name}.zip`;
     } else {
-      a.href = `/api/download?path=${encodeURIComponent(entry.path)}`;
+      a.href = directDownloadUrl(
+        `/api/download?path=${encodeURIComponent(entry.path)}`,
+        entry.path,
+      );
       a.download = entry.name;
     }
     a.click();
