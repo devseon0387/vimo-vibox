@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Lock, AlertCircle } from "lucide-react";
+import { Lock } from "lucide-react";
 import type { MyRecentFile, PersonalSummary } from "@/lib/dashboard/queries";
 import {
   formatBytes,
@@ -13,26 +13,26 @@ import {
 } from "./home-ui";
 
 /**
- * 파트너(외부 편집자) 전용 홈.
- * 두 공간을 "탭"으로 전환 — 라벨이 곧 공개 범위 안내라 헷갈리지 않음.
- *  - 비모에 납품한 작업물 (비모팀이 봄, orange) + 상태 배지
- *  - 내 보관함 My box (나만 봄, sky) + 용량
- * 검수 큐·받은편지함·팀 통계 등 매니저 기능은 노출하지 않는다.
- * 파트너 셸(PartnerShell)은 사이드바가 없으므로(상단바만), 이 두 탭이 곧 파트너의
- * 공간 전환 1차 내비다. 각 탭 하단의 "모두 보기"로 풀 브라우저(/my/box·/team)로 내려간다.
- *
- * 레이아웃: 콘텐츠가 적은 파트너 화면이라 720px 집중형 가운데 컬럼으로 둔다.
- * 업로드는 슬림 바(상태 확인이 1순위, 올리기는 명확하되 화면을 지배하지 않게).
+ * 매니저(admin/member) 홈.
+ * PartnerHome과 같은 디자인 언어 — 두 공간을 "탭"으로 전환(비모 프로젝트 / My box),
+ * 슬림 업로드 바 + 상태 배지 파일 리스트 + 드릴인. 파트너와 달리 매니저는 오버사이트가
+ * 있으므로(검수 코멘트·공유 활동·받은편지함) 탭 아래에 children으로 받아 렌더한다.
+ * (파트너 홈보다 콘텐츠가 많아 720 → 880px 컬럼.)
  */
-
-export function PartnerHome({
+export function ManagerHome({
   userName,
   personalSummary,
   recentFiles,
+  newCommentsCount,
+  pendingCount,
+  children,
 }: {
   userName: string;
   personalSummary: PersonalSummary;
   recentFiles: MyRecentFile[];
+  newCommentsCount: number;
+  pendingCount: number;
+  children?: React.ReactNode;
 }) {
   const [tab, setTab] = useState<"team" | "personal">("team");
   const teamRef = useRef<HTMLButtonElement>(null);
@@ -42,39 +42,32 @@ export function PartnerHome({
     const el = tab === "team" ? teamRef.current : personalRef.current;
     if (el) setUnderline({ left: el.offsetLeft, width: el.offsetWidth });
   }, [tab]);
+
   const teamFiles = recentFiles.filter((f) => f.space === "team");
   const personalFiles = recentFiles.filter((f) => f.space === "personal");
-  const needsAction = teamFiles.filter((f) => f.needsNewVersion).length;
 
   const pct =
     personalSummary.quotaBytes > 0
       ? Math.min(100, Math.round((personalSummary.usedBytes / personalSummary.quotaBytes) * 100))
       : 0;
 
+  const statusParts: string[] = [];
+  if (newCommentsCount > 0) statusParts.push(`새 코멘트 ${newCommentsCount}건`);
+  if (pendingCount > 0) statusParts.push(`검수 대기 ${pendingCount}건`);
+
   return (
-    <div className="px-4 md:px-8 py-6 md:py-9 mx-auto w-full max-w-[720px]">
+    <div className="px-4 md:px-8 py-6 md:py-9 mx-auto w-full max-w-[880px]">
       {/* 인사 */}
       <div className="mb-6">
         <h1 className="text-[22px] md:text-[24px] font-bold">
           안녕하세요{userName ? `, ${userName}님` : ""}
         </h1>
-        {needsAction > 0 ? (
-          <p
-            className="pa-banner text-[12.5px] mt-1 font-medium inline-flex items-center gap-1.5"
-            style={{ color: "var(--team-dark)" }}
-          >
-            <AlertCircle size={13} strokeWidth={2.4} className="pa-bell" />
-            수정 요청 {needsAction}건이 있어요 — 확인 후 다시 올려주세요
-          </p>
-        ) : (
-          <p className="text-[12.5px] text-text-faint mt-1">
-            작업물을 올리고, 받은 피드백을 확인하세요
-          </p>
-        )}
+        <p className="text-[12.5px] text-text-faint mt-1">
+          {statusParts.length > 0 ? statusParts.join(" · ") : "오늘도 좋은 작업 되세요"}
+        </p>
       </div>
 
-      {/* 탭 — 라벨(무엇) 위, 공개 범위(누가 보나) 아래 2줄 스택.
-          좁은 화면에서도 줄바꿈으로 깨지지 않고, 공개 범위가 항상 함께 보인다. */}
+      {/* 두 공간 탭 — 비모 프로젝트 / My box (라벨 위, 공개 범위 아래 2줄 스택) */}
       <div className="relative flex border-b border-border mb-5">
         <button
           ref={teamRef}
@@ -94,10 +87,13 @@ export function PartnerHome({
                 transition: "filter var(--pa-dur) var(--pa-ease)",
               }}
             />
-            비모에 납품한 작업물
+            비모 프로젝트
           </span>
-          <span className="text-[10.5px] font-normal mt-0.5 ml-[21px]" style={{ color: tab === "team" ? "var(--team-dark)" : "#bbbbbb" }}>
-            비모팀이 봅니다
+          <span
+            className="text-[10.5px] font-normal mt-0.5 ml-[21px]"
+            style={{ color: tab === "team" ? "var(--team-dark)" : "#bbbbbb" }}
+          >
+            팀 공유 · 검수
           </span>
         </button>
         <button
@@ -108,9 +104,12 @@ export function PartnerHome({
         >
           <span className="flex items-center gap-1.5 text-[13.5px] font-semibold">
             <Lock size={14} strokeWidth={2.4} />
-            내 보관함
+            My box
           </span>
-          <span className="text-[10.5px] font-normal mt-0.5 ml-[20px]" style={{ color: tab === "personal" ? "var(--personal-dark)" : "#bbbbbb" }}>
+          <span
+            className="text-[10.5px] font-normal mt-0.5 ml-[20px]"
+            style={{ color: tab === "personal" ? "var(--personal-dark)" : "#bbbbbb" }}
+          >
             나만 봅니다
           </span>
         </button>
@@ -133,23 +132,36 @@ export function PartnerHome({
       ) : (
         <PersonalTab files={personalFiles} pct={pct} summary={personalSummary} />
       )}
+
+      {/* 매니저 오버사이트 — 코멘트 · 공유 · 받은편지함 (파트너 홈엔 없는 부분) */}
+      {children && <div className="mt-10 pt-6 border-t border-border">{children}</div>}
     </div>
   );
 }
 
 function TeamTab({ files }: { files: MyRecentFile[] }) {
+  const review = files.filter((f) => !f.approved && !f.needsNewVersion).length;
+  const revise = files.filter((f) => f.needsNewVersion).length;
+  const approved = files.filter((f) => f.approved).length;
   return (
     <div>
       <UploadBar
         href="/team?upload=1"
         color="#e85008"
         soft="#fef0e8"
-        label="완성본을 비모에 납품"
-        sub="올리면 비모팀이 바로 보고 검수를 시작합니다"
+        label="비모 프로젝트에 올리기"
+        sub="팀이 보고 검수를 진행합니다"
       />
-      <SectionHeader label="납품한 작업물" count={files.length} />
+      {files.length > 0 && (
+        <p className="text-[11.5px] text-text-faint mt-3 px-0.5">
+          검수 중 {review} · 수정 요청 {revise} · 승인 {approved}
+        </p>
+      )}
+      <SectionHeader label="최근 작업물" count={files.length} />
       {files.length === 0 ? (
-        <p className="text-[12.5px] text-text-faint py-10 text-center">아직 납품한 작업물이 없습니다</p>
+        <p className="text-[12.5px] text-text-faint py-10 text-center">
+          아직 비모 프로젝트에 올린 작업물이 없습니다
+        </p>
       ) : (
         <ul className="divide-y divide-border">
           {files.map((f, i) => {
@@ -181,7 +193,7 @@ function TeamTab({ files }: { files: MyRecentFile[] }) {
         </ul>
       )}
       {files.length > 0 && (
-        <SeeAllLink href="/team?path=/Rendering" color="var(--team-color)" label="비모 폴더에서 모두 보기" />
+        <SeeAllLink href="/team" color="var(--team-color)" label="비모 프로젝트에서 모두 보기" />
       )}
     </div>
   );
