@@ -1,4 +1,4 @@
-import { pgTable, text, integer, bigint, boolean, real, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, bigint, boolean, real, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
 // 타임스탬프: SQLite integer(ms) → PG timestamptz(mode:date). JS 타입은 Date 그대로라 앱 코드 무변경.
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
@@ -209,20 +209,33 @@ export const apiTokens = pgTable("api_tokens", {
 export type ApiToken = typeof apiTokens.$inferSelect;
 export type NewApiToken = typeof apiTokens.$inferInsert;
 
-export const shareViews = pgTable("share_views", {
-  id: text("id").primaryKey(),
-  shareToken: text("share_token").notNull(),
-  filePath: text("file_path").notNull(),
-  visitorId: text("visitor_id").notNull(),
-  ip: text("ip"),
-  userAgent: text("user_agent"),
-  openedAt: ts("opened_at").notNull(),
-  lastEventAt: ts("last_event_at").notNull(),
-  maxPositionSec: real("max_position_sec").notNull().default(0),
-  totalWatchSec: real("total_watch_sec").notNull().default(0),
-  durationSec: real("duration_sec"),
-  completed: boolean("completed").notNull().default(false),
-});
+export const shareViews = pgTable(
+  "share_views",
+  {
+    id: text("id").primaryKey(),
+    shareToken: text("share_token").notNull(),
+    filePath: text("file_path").notNull(),
+    visitorId: text("visitor_id").notNull(),
+    ip: text("ip"),
+    userAgent: text("user_agent"),
+    openedAt: ts("opened_at").notNull(),
+    lastEventAt: ts("last_event_at").notNull(),
+    maxPositionSec: real("max_position_sec").notNull().default(0),
+    totalWatchSec: real("total_watch_sec").notNull().default(0),
+    durationSec: real("duration_sec"),
+    completed: boolean("completed").notNull().default(false),
+  },
+  // ping/route.ts 의 onConflictDoUpdate(target = token+visitor+path)가 의존하는 유니크 인덱스.
+  // SQLite 시절 migrate.sql 에만 있고 PG schema 엔 누락 → PG 이전 후 share_view 업서트가
+  // "no unique constraint" 로 깨지던 원인(THEN 1 타입에러가 먼저 떠 가려졌었음).
+  (t) => [
+    uniqueIndex("idx_share_views_visitor_unique").on(
+      t.shareToken,
+      t.visitorId,
+      t.filePath,
+    ),
+  ],
+);
 export type ShareView = typeof shareViews.$inferSelect;
 export type NewShareView = typeof shareViews.$inferInsert;
 

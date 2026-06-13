@@ -136,7 +136,7 @@ export async function POST(
         completed: sql`CASE
           WHEN COALESCE(${durationSec ?? null}, ${shareViews.durationSec}) IS NOT NULL
             AND GREATEST(${shareViews.maxPositionSec}, ${positionSec}) >= COALESCE(${durationSec ?? null}, ${shareViews.durationSec}) * 0.95
-          THEN 1
+          THEN true
           ELSE ${shareViews.completed}
         END`,
       },
