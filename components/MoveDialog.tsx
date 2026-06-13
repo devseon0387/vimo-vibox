@@ -5,7 +5,7 @@ import { ChevronRight, Folder, ArrowLeft, MoveRight } from "lucide-react";
 import { Modal } from "./Modal";
 import type { FileEntry } from "@/lib/fs/storage";
 import { useToast } from "./Toast";
-import { humanError } from "@/lib/human-error";
+import { stripDisplayPrefix } from "@/lib/path-display";
 
 export function MoveDialog({
   entry,
@@ -13,6 +13,7 @@ export function MoveDialog({
   open,
   onClose,
   onMoved,
+  displayPrefix,
 }: {
   entry: FileEntry | null;
   /** 다중 선택 일괄 이동 시 같이 옮길 추가 항목들 */
@@ -20,8 +21,15 @@ export function MoveDialog({
   open: boolean;
   onClose: () => void;
   onMoved: () => void;
+  /**
+   * 개인 드라이브 컨텍스트(/personal/{userId}). 지정하면 그 안에서만 탐색하고
+   * 브레드크럼/대상표시에서 prefix를 가린다. 미지정(team/rendering)이면 루트("/")부터 탐색.
+   */
+  displayPrefix?: string;
 }) {
-  const [path, setPath] = useState<string>("/");
+  // 탐색 기준 루트 — 개인 드라이브면 personalRoot, 아니면 전체 루트
+  const rootPath = displayPrefix || "/";
+  const [path, setPath] = useState<string>(rootPath);
   const [folders, setFolders] = useState<FileEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [moving, setMoving] = useState(false);
@@ -29,8 +37,8 @@ export function MoveDialog({
 
   useEffect(() => {
     if (!open) return;
-    setPath("/");
-  }, [open, entry?.path]);
+    setPath(rootPath);
+  }, [open, entry?.path, rootPath]);
 
   useEffect(() => {
     if (!open) return;
@@ -58,7 +66,15 @@ export function MoveDialog({
 
   if (!entry) return null;
 
-  const segments = path === "/" ? [] : path.split("/").filter(Boolean);
+  // 화면 표시는 prefix 제거한 상대경로 기준
+  const relPath = stripDisplayPrefix(path, displayPrefix);
+  const segments = relPath === "/" ? [] : relPath.split("/").filter(Boolean);
+  // 표시 세그먼트 i까지의 FULL 경로 (탐색/이동에 사용)
+  const fullAt = (i: number) => {
+    const sub = "/" + segments.slice(0, i + 1).join("/");
+    return displayPrefix ? displayPrefix + sub : sub;
+  };
+  const parentFull = segments.length <= 1 ? rootPath : fullAt(segments.length - 2);
 
   const currentParent = entry.path.split("/").slice(0, -1).join("/") || "/";
   const targetSame = path === currentParent;
@@ -91,17 +107,17 @@ export function MoveDialog({
           failed++;
         }
       }
+      const destLabel = relPath === "/" ? "루트로" : `${relPath}으로`;
       if (failed === 0) {
         toast.success(
           isMulti ? (
             <>
-              <span className="font-semibold">{success}개 항목</span>{" "}
-              {path === "/" ? "루트로" : `${path}으로`} 이동됨
+              <span className="font-semibold">{success}개 항목</span> {destLabel}{" "}
+              이동됨
             </>
           ) : (
             <>
-              <span className="font-semibold">{entry.name}</span>{" "}
-              {path === "/" ? "루트로" : `${path}으로`} 이동됨
+              <span className="font-semibold">{entry.name}</span> {destLabel} 이동됨
             </>
           ),
         );
@@ -133,13 +149,12 @@ export function MoveDialog({
         <div className="text-[12px] text-text-faint mb-2">대상 폴더</div>
         <div className="flex items-center gap-1 text-[13px] mb-3 flex-wrap">
           <button
-            onClick={() => setPath("/")}
+            onClick={() => setPath(rootPath)}
             className="hover:text-accent text-text-muted transition-colors"
           >
-            Vibox
+            {displayPrefix ? "My Box" : "Vibox"}
           </button>
           {segments.map((seg, i) => {
-            const next = "/" + segments.slice(0, i + 1).join("/");
             const isLast = i === segments.length - 1;
             return (
               <span key={i} className="flex items-center gap-1">
@@ -148,7 +163,7 @@ export function MoveDialog({
                   <span className="text-text font-semibold">{seg}</span>
                 ) : (
                   <button
-                    onClick={() => setPath(next)}
+                    onClick={() => setPath(fullAt(i))}
                     className="hover:text-accent text-text-muted transition-colors"
                   >
                     {seg}
@@ -160,11 +175,9 @@ export function MoveDialog({
         </div>
 
         <div className="bg-surface border border-border rounded-md max-h-[260px] overflow-y-auto mb-4">
-          {path !== "/" && (
+          {path !== rootPath && (
             <button
-              onClick={() =>
-                setPath("/" + segments.slice(0, -1).join("/") || "/")
-              }
+              onClick={() => setPath(parentFull)}
               className="w-full flex items-center gap-2 px-4 py-2 text-[13px] text-text-muted hover:bg-white border-b border-border"
             >
               <ArrowLeft size={13} />
@@ -177,7 +190,7 @@ export function MoveDialog({
           {!loading && folders.length === 0 && (
             <div className="p-6 text-center text-[12.5px] text-text-faint">
               여기엔 폴더가 없습니다
-              {path === "/" && " (루트에 이동)"}
+              {path === rootPath && " (현재 위치에 이동)"}
             </div>
           )}
           {folders.map((f) => (
@@ -194,7 +207,7 @@ export function MoveDialog({
         </div>
 
         <div className="text-[12px] text-text-soft mb-4">
-          이동 대상: <span className="font-mono text-text">{path}</span>
+          이동 대상: <span className="font-mono text-text">{relPath}</span>
         </div>
 
         <div className="flex gap-2">

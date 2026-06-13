@@ -26,6 +26,16 @@ import { PreviewModal, isPreviewableEntry } from "./PreviewModal";
 import { SpaceLabel } from "./dashboard/SpaceLabel";
 import { MoveDialog } from "./MoveDialog";
 import { ShareDialog } from "./ShareDialog";
+import { stripDisplayPrefix } from "@/lib/path-display";
+import {
+  startInternalDrag,
+  endInternalDrag,
+  getActiveDrag,
+  isInternalDrag,
+  readInternalDragPaths,
+  isValidDropTarget,
+  movePathsTo,
+} from "@/lib/dnd-move";
 import { useToast } from "./Toast";
 import { ContextMenu, type CtxItem } from "./ContextMenu";
 import { EmptyState } from "./EmptyState";
@@ -135,11 +145,14 @@ function Card({
   onShare,
   onDownload,
   onDelete,
+  onMoveDrop,
   deleting,
   selected,
   focused,
   onToggleSelect,
+  selectedPaths,
   hasSelection,
+  displayPrefix,
   onFocus,
   onContextMenu,
 }: {
@@ -152,6 +165,7 @@ function Card({
   onShare: (e: FileEntry, ev?: React.MouseEvent) => void;
   onDownload: (e: FileEntry, ev?: React.MouseEvent) => void;
   onDelete: (e: FileEntry, ev?: React.MouseEvent) => void;
+  onMoveDrop?: (srcPaths: string[], destDir: string) => void;
   deleting: boolean;
   selected: boolean;
   focused: boolean;
@@ -159,11 +173,22 @@ function Card({
     path: string,
     opts?: { range?: boolean; toggle?: boolean },
   ) => void;
+  selectedPaths?: Set<string>;
   hasSelection: boolean;
+  displayPrefix?: string;
   onFocus: () => void;
   onContextMenu: (entry: FileEntry, ev: React.MouseEvent) => void;
 }) {
   const [hover, setHover] = useState(false);
+  const [dropHover, setDropHover] = useState(false);
+  // 드래그 소스 (파일·폴더 공통)
+  const dragStart = (e: React.DragEvent) => {
+    if ((e.target as HTMLElement).closest("input,button")) {
+      e.preventDefault();
+      return;
+    }
+    startInternalDrag(e, entry.path, selectedPaths);
+  };
   const longPress = useLongPress(
     () => {
       if (onToggleSelect) onToggleSelect(entry.path, { toggle: true });
@@ -212,6 +237,27 @@ function Card({
     return (
       <div
         data-card-idx={index}
+        draggable
+        onDragStart={dragStart}
+        onDragEnd={endInternalDrag}
+        onDragOver={(e) => {
+          const src = getActiveDrag();
+          if (isInternalDrag(e) && src && isValidDropTarget(src, entry.path)) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            if (!dropHover) setDropHover(true);
+          }
+        }}
+        onDragLeave={() => {
+          if (dropHover) setDropHover(false);
+        }}
+        onDrop={(e) => {
+          setDropHover(false);
+          const src = readInternalDragPaths(e);
+          if (!src || !isValidDropTarget(src, entry.path)) return;
+          e.preventDefault();
+          onMoveDrop?.(src, entry.path);
+        }}
         onClick={handleClick}
         onContextMenu={(e) => onContextMenu(entry, e)}
         onPointerDown={longPress.onPointerDown}
@@ -224,11 +270,13 @@ function Card({
       >
         <div
           className={`aspect-[16/10] bg-surface border rounded-lg flex items-center justify-center mb-2 transition-colors relative ${
-            selected
-              ? "border-accent ring-2 ring-accent/30"
-              : focused
-                ? "border-accent ring-2 ring-accent/50"
-                : "border-border group-hover:border-border-hover"
+            dropHover
+              ? "border-accent ring-2 ring-accent bg-accent-soft"
+              : selected
+                ? "border-accent ring-2 ring-accent/30"
+                : focused
+                  ? "border-accent ring-2 ring-accent/50"
+                  : "border-border group-hover:border-border-hover"
           }`}
         >
           {SelectCheckbox}
@@ -248,6 +296,13 @@ function Card({
                 className="p-1 text-text-soft hover:text-text"
               >
                 <MoveRight size={12} strokeWidth={2} />
+              </button>
+              <button
+                onClick={(e) => onShare(entry, e)}
+                title="폴더 공유 링크"
+                className="p-1 text-text-soft hover:text-accent"
+              >
+                <LinkIcon size={12} strokeWidth={2} />
               </button>
               <button
                 onClick={(e) => onDelete(entry, e)}
@@ -301,11 +356,13 @@ function Card({
         )}
 
         <div className="absolute top-1.5 left-1.5 flex gap-1 items-center">
-          <SpaceLabel
-            space={entry.path.startsWith("/personal/") ? "personal" : "team"}
-            size="sm"
-            withText={false}
-          />
+          {!displayPrefix && (
+            <SpaceLabel
+              space={entry.path.startsWith("/personal/") ? "personal" : "team"}
+              size="sm"
+              withText={false}
+            />
+          )}
           {stats && stats.commentCount > 0 && (
             <>
               <span className="bg-black/70 text-white text-[10.5px] font-semibold px-1.5 py-0.5 rounded flex items-center gap-0.5 backdrop-blur-sm">
@@ -388,6 +445,7 @@ export function FileCardGrid({
   onOptimisticHide,
   onOptimisticUnhide,
   onEmptyUploadClick,
+  displayPrefix,
 }: {
   entries: FileEntry[];
   basePath: string;
@@ -401,6 +459,8 @@ export function FileCardGrid({
   onOptimisticHide?: (paths: string[]) => void;
   onOptimisticUnhide?: (paths: string[]) => void;
   onEmptyUploadClick?: () => void;
+  /** 개인 드라이브 컨텍스트(/personal/{userId}) — URL/표시에서 가릴 prefix */
+  displayPrefix?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -422,9 +482,10 @@ export function FileCardGrid({
 
   const onOpen = (entry: FileEntry) => {
     if (entry.isFolder) {
-      // 현재 라우트(/team 등) 유지하며 폴더 진입 (과거 `/?path=` 하드코딩 버그 수정)
-      router.push(`${pathname}?path=${encodeURIComponent(entry.path)}`);
-    } else if (isVideo(entry)) {
+      // 현재 라우트(/team·/my/box 등) 유지하며 폴더 진입. 개인 드라이브는 prefix 가림.
+      const target = stripDisplayPrefix(entry.path, displayPrefix);
+      router.push(`${pathname}?path=${encodeURIComponent(target)}`);
+    } else if (isVideo(entry) && !displayPrefix) {
       router.push(`/vimo-box?path=${encodeURIComponent(entry.path)}`);
     } else if (isPreviewable(entry)) {
       setPreviewEntry(entry);
@@ -679,6 +740,23 @@ export function FileCardGrid({
     setMoveEntry(entry);
   };
 
+  // 드래그앤드롭으로 폴더에 떨어뜨려 이동
+  const onMoveDrop = async (srcPaths: string[], destDir: string) => {
+    onOptimisticHide?.(srcPaths);
+    const { success, failed } = await movePathsTo(srcPaths, destDir);
+    if (failed > 0) {
+      onOptimisticUnhide?.(srcPaths);
+      showToast(`${failed}개 이동 실패`, "error");
+    } else if (success > 0) {
+      showToast(
+        <>
+          <span className="font-semibold">{success}개</span> 이동됨
+        </>,
+      );
+    }
+    router.refresh();
+  };
+
   const copyPath = async (path: string) => {
     try {
       await navigator.clipboard.writeText(path);
@@ -721,13 +799,11 @@ export function FileCardGrid({
       onSelect: () => onMove(entry),
     });
     items.push({ kind: "separator" });
-    if (!entry.isFolder) {
-      items.push({
-        kind: "item",
-        label: "공유 링크 만들기",
-        onSelect: () => onShare(entry),
-      });
-    }
+    items.push({
+      kind: "item",
+      label: entry.isFolder ? "폴더 공유 링크 만들기" : "공유 링크 만들기",
+      onSelect: () => onShare(entry),
+    });
     items.push({
       kind: "item",
       label: entry.isFolder ? "ZIP 다운로드" : "다운로드",
@@ -736,7 +812,7 @@ export function FileCardGrid({
     items.push({
       kind: "item",
       label: "경로 복사",
-      onSelect: () => copyPath(entry.path),
+      onSelect: () => copyPath(stripDisplayPrefix(entry.path, displayPrefix)),
     });
     items.push({ kind: "separator" });
     items.push({
@@ -754,7 +830,7 @@ export function FileCardGrid({
       <>
         <EmptyState
           currentPath={basePath}
-          isRoot={basePath === "/"}
+          isRoot={basePath === "/" || basePath === displayPrefix}
           onUploadClick={onEmptyUploadClick}
         />
         {confirmDialog}
@@ -781,11 +857,14 @@ export function FileCardGrid({
             onShare={onShare}
             onDownload={onDownload}
             onDelete={onDelete}
+            onMoveDrop={onMoveDrop}
             deleting={deleting === entry.path}
             selected={selectedPaths?.has(entry.path) ?? false}
             focused={focusedIndex === idx}
             onToggleSelect={onToggleSelect}
+            selectedPaths={selectedPaths}
             hasSelection={(selectedPaths?.size ?? 0) > 0}
+            displayPrefix={displayPrefix}
             onFocus={() => setFocusedIndex(idx)}
             onContextMenu={onCardContextMenu}
           />
@@ -805,6 +884,7 @@ export function FileCardGrid({
         entry={moveEntry}
         open={!!moveEntry}
         onClose={() => setMoveEntry(null)}
+        displayPrefix={displayPrefix}
         onMoved={() => {
           if (moveEntry) onOptimisticHide?.([moveEntry.path]);
           router.refresh();

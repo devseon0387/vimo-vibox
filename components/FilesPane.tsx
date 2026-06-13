@@ -25,6 +25,7 @@ export function FilesPane({
   currentPath,
   session,
   stats,
+  displayPrefix,
 }: {
   entries: FileEntry[];
   currentPath: string;
@@ -33,6 +34,11 @@ export function FilesPane({
     string,
     { commentCount: number; openCount: number; uploaderName?: string | null }
   >;
+  /**
+   * 개인 드라이브 컨텍스트(/personal/{userId}). 지정하면 entries/currentPath 는 FULL 경로지만
+   * 폴더 열기 URL·브레드크럼·경로복사 등 사용자 표시에서 이 prefix 를 가린다(My Box).
+   */
+  displayPrefix?: string;
 }) {
   const toast = useToast();
   const { enqueue, uploads } = useUpload();
@@ -324,6 +330,7 @@ export function FilesPane({
           onOptimisticHide: hideOptimistic,
           onOptimisticUnhide: unhideOptimistic,
           onEmptyUploadClick,
+          displayPrefix,
         };
         // 모바일(<md)에선 view 무관 카드 그리드 강제 (표는 좁은 화면에서 가로 스크롤 강제 → UX 나쁨)
         if (view === "grid") return <FileCardGrid {...fileViewProps} />;

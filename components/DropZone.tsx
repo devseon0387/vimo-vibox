@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Upload } from "lucide-react";
+import { VIBOX_MOVE_TYPE } from "@/lib/dnd-move";
 
 type FilePathed = File & { __relPath?: string };
 
@@ -66,8 +67,12 @@ export function DropZone({
   useEffect(() => {
     let dragCounter = 0;
 
-    const hasFiles = (e: DragEvent) =>
-      Array.from(e.dataTransfer?.types ?? []).includes("Files");
+    const hasFiles = (e: DragEvent) => {
+      const types = Array.from(e.dataTransfer?.types ?? []);
+      // 내부 이동 드래그는 업로드 오버레이를 띄우지 않는다 (DnD 이동과 충돌 방지)
+      if (types.includes(VIBOX_MOVE_TYPE)) return false;
+      return types.includes("Files");
+    };
 
     const onEnter = (e: DragEvent) => {
       if (!hasFiles(e)) return;

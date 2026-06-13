@@ -14,6 +14,16 @@ import { PreviewModal, isPreviewableEntry } from "./PreviewModal";
 import { SpaceLabel } from "./dashboard/SpaceLabel";
 import { MoveDialog } from "./MoveDialog";
 import { ShareDialog } from "./ShareDialog";
+import { stripDisplayPrefix } from "@/lib/path-display";
+import {
+  startInternalDrag,
+  endInternalDrag,
+  getActiveDrag,
+  isInternalDrag,
+  readInternalDragPaths,
+  isValidDropTarget,
+  movePathsTo,
+} from "@/lib/dnd-move";
 import { useToast } from "./Toast";
 import { ContextMenu, type CtxItem } from "./ContextMenu";
 import { EmptyState } from "./EmptyState";
@@ -80,6 +90,7 @@ export function FileTable({
   onOptimisticHide,
   onOptimisticUnhide,
   onEmptyUploadClick,
+  displayPrefix,
 }: {
   entries: FileEntry[];
   basePath: string;
@@ -95,6 +106,8 @@ export function FileTable({
   onOptimisticUnhide?: (paths: string[]) => void;
   /** EmptyState dropzone 클릭 시 파일 picker 트리거 */
   onEmptyUploadClick?: () => void;
+  /** 개인 드라이브 컨텍스트(/personal/{userId}) — URL/표시에서 가릴 prefix */
+  displayPrefix?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -117,10 +130,13 @@ export function FileTable({
 
   const onOpen = (entry: FileEntry) => {
     if (entry.isFolder) {
-      // 현재 라우트(/team 등)를 유지하며 폴더 진입. 과거엔 `/?path=` 하드코딩이라
+      // 현재 라우트(/team·/my/box 등)를 유지하며 폴더 진입. 과거엔 `/?path=` 하드코딩이라
       // 홈이 대시보드로 바뀐 뒤 폴더 클릭이 대시보드로 튕기던 버그.
-      router.push(`${pathname}?path=${encodeURIComponent(entry.path)}`);
-    } else if (isVideo(entry)) {
+      // 개인 드라이브는 URL에서 /personal/{userId} prefix를 가린다.
+      const target = stripDisplayPrefix(entry.path, displayPrefix);
+      router.push(`${pathname}?path=${encodeURIComponent(target)}`);
+    } else if (isVideo(entry) && !displayPrefix) {
+      // 비모 박스 비디오는 피드백 워크스페이스(vimo-box)로. 개인 드라이브는 인플레이스 미리보기.
       router.push(`/vimo-box?path=${encodeURIComponent(entry.path)}`);
     } else if (isPreviewable(entry)) {
       setPreviewEntry(entry);
@@ -375,6 +391,23 @@ export function FileTable({
     setMoveEntry(entry);
   };
 
+  // 드래그앤드롭으로 폴더에 떨어뜨려 이동
+  const onMoveDrop = async (srcPaths: string[], destDir: string) => {
+    onOptimisticHide?.(srcPaths);
+    const { success, failed } = await movePathsTo(srcPaths, destDir);
+    if (failed > 0) {
+      onOptimisticUnhide?.(srcPaths);
+      showToast(`${failed}개 이동 실패`, "error");
+    } else if (success > 0) {
+      showToast(
+        <>
+          <span className="font-semibold">{success}개</span> 이동됨
+        </>,
+      );
+    }
+    router.refresh();
+  };
+
   const copyPath = async (path: string) => {
     try {
       await navigator.clipboard.writeText(path);
@@ -417,13 +450,11 @@ export function FileTable({
       onSelect: () => onMove(entry),
     });
     items.push({ kind: "separator" });
-    if (!entry.isFolder) {
-      items.push({
-        kind: "item",
-        label: "공유 링크 만들기",
-        onSelect: () => onShare(entry),
-      });
-    }
+    items.push({
+      kind: "item",
+      label: entry.isFolder ? "폴더 공유 링크 만들기" : "공유 링크 만들기",
+      onSelect: () => onShare(entry),
+    });
     items.push({
       kind: "item",
       label: entry.isFolder ? "ZIP 다운로드" : "다운로드",
@@ -432,7 +463,7 @@ export function FileTable({
     items.push({
       kind: "item",
       label: "경로 복사",
-      onSelect: () => copyPath(entry.path),
+      onSelect: () => copyPath(stripDisplayPrefix(entry.path, displayPrefix)),
     });
     items.push({ kind: "separator" });
     items.push({
@@ -452,7 +483,7 @@ export function FileTable({
       {empty ? (
         <EmptyState
           currentPath={basePath}
-          isRoot={basePath === "/"}
+          isRoot={basePath === "/" || basePath === displayPrefix}
           onUploadClick={onEmptyUploadClick}
         />
       ) : (
@@ -527,6 +558,8 @@ export function FileTable({
                   onShare={onShare}
                   onDownload={onDownload}
                   onDelete={onDelete}
+                  onMoveDrop={onMoveDrop}
+                  displayPrefix={displayPrefix}
                   onFocus={() => setFocusedIndex(idx)}
                   onContextMenu={onRowContextMenu}
                 />
@@ -550,6 +583,7 @@ export function FileTable({
         entry={moveEntry}
         open={!!moveEntry}
         onClose={() => setMoveEntry(null)}
+        displayPrefix={displayPrefix}
         onMoved={() => {
           // 낙관적: 이동 시작 즉시 리스트에서 숨김 (서버 refresh 끝나면 자연스럽게 갱신)
           if (moveEntry) onOptimisticHide?.([moveEntry.path]);
@@ -588,6 +622,8 @@ function FileRow({
   onShare,
   onDownload,
   onDelete,
+  onMoveDrop,
+  displayPrefix,
   onFocus,
   onContextMenu,
 }: {
@@ -608,9 +644,12 @@ function FileRow({
   onShare: (e: FileEntry, ev?: React.MouseEvent) => void;
   onDownload: (e: FileEntry, ev?: React.MouseEvent) => void;
   onDelete: (e: FileEntry, ev?: React.MouseEvent) => void;
+  onMoveDrop?: (srcPaths: string[], destDir: string) => void;
+  displayPrefix?: string;
   onFocus: () => void;
   onContextMenu: (entry: FileEntry, ev: React.MouseEvent) => void;
 }) {
+  const [dropHover, setDropHover] = useState(false);
   const longPress = useLongPress(
     () => {
       if (onToggleSelect) onToggleSelect(entry.path, { toggle: true });
@@ -641,6 +680,36 @@ function FileRow({
   return (
     <tr
       data-row-idx={index}
+      draggable
+      onDragStart={(e) => {
+        // 체크박스·액션버튼에서 시작한 드래그는 무시
+        if ((e.target as HTMLElement).closest("input,button")) {
+          e.preventDefault();
+          return;
+        }
+        startInternalDrag(e, entry.path, selectedPaths);
+      }}
+      onDragEnd={endInternalDrag}
+      onDragOver={(e) => {
+        if (!entry.isFolder) return;
+        const src = getActiveDrag();
+        if (isInternalDrag(e) && src && isValidDropTarget(src, entry.path)) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+          if (!dropHover) setDropHover(true);
+        }
+      }}
+      onDragLeave={() => {
+        if (dropHover) setDropHover(false);
+      }}
+      onDrop={(e) => {
+        if (!entry.isFolder) return;
+        setDropHover(false);
+        const src = readInternalDragPaths(e);
+        if (!src || !isValidDropTarget(src, entry.path)) return;
+        e.preventDefault();
+        onMoveDrop?.(src, entry.path);
+      }}
       onClick={handleClick}
       onContextMenu={(e) => onContextMenu(entry, e)}
       onPointerDown={longPress.onPointerDown}
@@ -651,7 +720,7 @@ function FileRow({
         deleting ? "opacity-40" : ""
       } ${isSelected ? "bg-accent-soft hover:bg-accent-soft" : ""} ${
         isFocused ? "shadow-[inset_3px_0_0_0_var(--accent,_#3b82f6)] bg-accent-soft/40" : ""
-      }`}
+      } ${dropHover ? "ring-2 ring-inset ring-accent bg-accent-soft" : ""}`}
     >
       <td className="px-3 py-2.5 w-[36px]">
         {onToggleSelect && (
@@ -672,11 +741,13 @@ function FileRow({
       <td className="px-4 py-2.5">
         <div className="flex items-center gap-2.5 min-w-0">
           <Thumbnail kind={entry.kind} path={entry.path} />
-          <SpaceLabel
-            space={entry.path.startsWith("/personal/") ? "personal" : "team"}
-            size="sm"
-            withText={false}
-          />
+          {!displayPrefix && (
+            <SpaceLabel
+              space={entry.path.startsWith("/personal/") ? "personal" : "team"}
+              size="sm"
+              withText={false}
+            />
+          )}
           <span className="text-text truncate">{entry.name}</span>
         </div>
       </td>
@@ -708,15 +779,13 @@ function FileRow({
           >
             <MoveRight size={14} strokeWidth={2} />
           </button>
-          {!entry.isFolder && (
-            <button
-              onClick={(e) => onShare(entry, e)}
-              title="공유 링크"
-              className="p-1.5 rounded hover:bg-hover text-text-soft hover:text-accent"
-            >
-              <LinkIcon size={14} strokeWidth={2} />
-            </button>
-          )}
+          <button
+            onClick={(e) => onShare(entry, e)}
+            title={entry.isFolder ? "폴더 공유 링크" : "공유 링크"}
+            className="p-1.5 rounded hover:bg-hover text-text-soft hover:text-accent"
+          >
+            <LinkIcon size={14} strokeWidth={2} />
+          </button>
           <button
             onClick={(e) => onDownload(entry, e)}
             title={entry.isFolder ? "ZIP 다운로드" : "다운로드"}
