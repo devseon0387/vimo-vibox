@@ -7,6 +7,7 @@ import {
   createFolder,
   moveEntry,
   statPath,
+  parseZoneFromPath,
 } from "@/lib/fs/storage";
 import { moveToTrash } from "@/lib/fs/trash";
 import { syncDbPathsAfterMove } from "@/lib/fs/move-sync";
@@ -27,6 +28,16 @@ export async function GET(req: NextRequest) {
   if (error) return error;
 
   const rel = req.nextUrl.searchParams.get("path") || "/";
+
+  // 개인 드라이브(personal zone)는 본인/admin만 열람 가능.
+  // (이 게이트가 없으면 ?path=/personal/{타인ID} 로 남의 보관함 목록이 노출됨)
+  if (
+    parseZoneFromPath(rel).zone === "personal" &&
+    !(await canAccessFile(session!, rel))
+  ) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
   try {
     let entries = await listDirectory(rel);
 
@@ -104,6 +115,16 @@ export async function PATCH(req: NextRequest) {
 
   // 파트너는 본인 업로드한 파일만 이동·이름변경 가능
   if (!(await canAccessFile(session!, from))) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
+  // 이동 대상이 개인 드라이브면 그 소유자(또는 admin)만 허용.
+  // (이 게이트가 없으면 남의 personal 드라이브로 파일을 주입할 수 있음. rendering/library
+  //  대상 이동은 from 검사 + 기존 zone 정책으로 충분하므로 personal일 때만 추가 검사한다.)
+  if (
+    parseZoneFromPath(to).zone === "personal" &&
+    !(await canAccessFile(session!, to))
+  ) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

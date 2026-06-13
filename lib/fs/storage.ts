@@ -53,9 +53,15 @@ export function parseZoneFromPath(relativePath: string): {
 
 /** personal zone 소유자 ID 추출. /personal/{userId}/... → userId */
 export function personalOwnerOf(relativePath: string): string | null {
-  const { zone, sub } = parseZoneFromPath(relativePath);
+  const { zone, sub } = parseZoneFromPath(relativePath.replace(/\\/g, "/"));
   if (zone !== "personal") return null;
-  const parts = sub.split("/").filter(Boolean);
+  // `../` 를 정규화한 뒤 소유자를 뽑는다. 정규화 없이 첫 세그먼트만 보면
+  // `/personal/{내ID}/../{타인ID}` 가 normalize 시 `/personal/{타인ID}` 가 되는데도
+  // 소유자를 {내ID} 로 오판해 authz(canAccessFile)가 우회된다.
+  const normalizedSub = path.posix.normalize(
+    sub.startsWith("/") ? sub : "/" + sub,
+  );
+  const parts = normalizedSub.split("/").filter(Boolean);
   return parts[0] ?? null;
 }
 
