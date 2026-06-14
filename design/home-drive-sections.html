@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 · B 개선 — 섹션 구분</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --vimo:#F94000; --vimo-deep:#e85008; --vimo-soft:#fff1e8; --vimo-line:#f7cdb4; --vimo-ink:#9a3412;
+    --mybox:#f97316; --mybox-deep:#ea580c; --mybox-soft:#fff7ed; --mybox-line:#fed7aa;
+    --text:#1c1917; --muted:#78736e; --faint:#a8a29e;
+    --gallery:#eceae6; --line:#eeece8; --line2:#e6e3de; --surf:#faf9f7; --page:#f5f4f1;
+    --ok:#16a34a; --warn:#d97706; --danger:#dc2626;
+    --sh:0 1px 2px rgba(0,0,0,.04); --sh2:0 5px 18px rgba(0,0,0,.06); --sh3:0 22px 56px rgba(0,0,0,.13);
+    --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:var(--font);background:var(--gallery);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h2,h3,h4,p{margin:0} a{color:inherit;text-decoration:none}
+  .mono{font-variant-numeric:tabular-nums}
+
+  .topnav{position:sticky;top:0;z-index:50;background:rgba(247,246,243,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--line2)}
+  .topnav__in{max-width:1320px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:13px;flex-wrap:wrap}
+  .brandmark{width:30px;height:30px;border-radius:9px;flex:none;display:grid;place-items:center;background:linear-gradient(90deg,var(--vimo-deep) 0 50%,#f9a87a 50% 100%);color:#fff;font-weight:800;font-size:16px;box-shadow:var(--sh)}
+  .topnav h1{font-size:14.5px;font-weight:800;letter-spacing:-.01em}.topnav h1 span{color:var(--muted);font-weight:600}
+  .stateseg{display:flex;background:#e7e4df;border-radius:999px;padding:3px;margin-left:4px}
+  .stateseg span{font-size:12px;font-weight:700;color:var(--muted);padding:7px 13px;border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .stateseg span .pip{width:8px;height:8px;border-radius:50%;background:#c5c0b9}
+  .stateseg span.on{background:#fff;color:var(--text);box-shadow:var(--sh)}
+  .stateseg span[data-state="active"].on .pip{background:var(--vimo-deep)}
+  .stateseg span[data-state="empty"].on .pip{background:var(--mybox-deep)}
+  .tabs{display:flex;gap:5px;margin-left:auto;flex-wrap:wrap}
+  .tab{display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;font-size:12px;font-weight:600;color:var(--muted)}
+  .tab b{display:grid;place-items:center;width:18px;height:18px;border-radius:6px;background:#e4e1dc;color:#666;font-size:10.5px;font-weight:800}
+  .tab:hover{background:#fff;color:var(--text);box-shadow:var(--sh)}
+  .tab.is-active{background:var(--text);color:#fff}.tab.is-active b{background:rgba(255,255,255,.22);color:#fff}
+
+  .intro{padding:36px 24px 6px;max-width:1320px;margin:0 auto}
+  .intro h2{font-size:25px;font-weight:800;letter-spacing:-.02em}
+  .intro p{color:var(--muted);font-size:14px;margin-top:9px;max-width:840px;line-height:1.68}
+
+  .variant{padding:32px 0 4px}
+  .vhead{max-width:1320px;margin:0 auto;padding:0 24px 16px;display:flex;align-items:flex-end;gap:15px;flex-wrap:wrap}
+  .vhead .num{font-size:13px;font-weight:800;color:#fff;background:var(--text);width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none}
+  .vhead .ttl{font-size:19px;font-weight:800;letter-spacing:-.02em}.vhead .ttl em{font-style:normal;color:var(--vimo)}
+  .vhead .lede{color:var(--muted);font-size:12.5px;margin-top:4px;max-width:660px}
+
+  .frame{max-width:1300px;margin:0 auto;background:#fff;border:1px solid var(--line2);border-radius:20px;overflow:hidden;box-shadow:var(--sh3)}
+  .frame__bar{height:42px;display:flex;align-items:center;gap:8px;padding:0 16px;background:var(--surf);border-bottom:1px solid var(--line)}
+  .dots{display:flex;gap:6px}.dots i{width:11px;height:11px;border-radius:50%;background:#ddd9d3;display:inline-block}
+  .url{margin-left:8px;font-size:12px;color:#9a948e;background:#fff;border:1px solid var(--line);border-radius:8px;padding:5px 13px;display:flex;align-items:center;gap:7px}
+  .url svg{width:12px;height:12px;color:#16a34a}.url .tag{margin-left:6px;font-size:10px;font-weight:700;color:var(--vimo-deep);background:#fff1e8;border-radius:5px;padding:1px 6px}
+  .screen{height:656px;overflow:hidden;position:relative;background:#fff}
+  .statelabel{position:absolute;top:11px;right:11px;z-index:8;font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;display:flex;align-items:center;gap:6px;box-shadow:var(--sh)}
+  .statelabel .d{width:7px;height:7px;border-radius:50%}
+  body.state-active .statelabel{background:#fff1e8;color:#b4480f} body.state-active .statelabel .d{background:var(--vimo-deep)}
+  body.state-empty .statelabel{background:var(--mybox-soft);color:#9a3412} body.state-empty .statelabel .d{background:var(--mybox-deep)}
+  body.state-active .statelabel .t-empty{display:none} body.state-empty .statelabel .t-active{display:none}
+  body.state-active .st--empty{display:none} body.state-empty .st--active{display:none}
+  .g2{display:grid;grid-template-columns:206px 1fr;height:100%}
+
+  /* 사이드바 */
+  .sb{padding:16px 12px;border-right:1px solid var(--line);background:var(--surf);display:flex;flex-direction:column;gap:2px}
+  .me{display:flex;align-items:center;gap:9px;padding:4px 8px 12px}.me .n{font-weight:700;font-size:12.5px}.me .r{font-size:10.5px;color:var(--faint)}
+  .av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;flex:none}
+  .nav{display:flex;align-items:center;gap:11px;padding:8px 11px;border-radius:10px;color:#57524d;font-weight:500;font-size:13px;cursor:pointer}
+  .nav svg{width:17px;height:17px;color:#a8a29e}.nav:hover{background:#f0eeea}
+  .nav.on{background:#f0ede8;color:var(--text);font-weight:600}.nav.on svg{color:var(--vimo-deep)}
+  .nav.box svg{color:var(--mybox-deep)}
+  .nav .ct{margin-left:auto;font-size:10.5px;font-weight:800;color:#fff;background:var(--vimo-deep);border-radius:999px;padding:1px 7px}
+  .nav .ct.zero{background:#d8d4ce}
+  .sb .store{margin-top:auto;padding:8px;font-size:10.5px;color:var(--faint)}.sb .bar{height:5px;background:#ebe8e3;border-radius:99px;margin-top:6px;overflow:hidden}.sb .bar i{display:block;height:100%;width:32%;background:var(--mybox)}
+
+  .main{overflow:hidden;display:flex;flex-direction:column}
+  .toolbar{display:flex;align-items:center;gap:10px;padding:13px 22px;border-bottom:1px solid var(--line)}
+  .toolbar .title{font-size:15.5px;font-weight:800}
+  .toolbar .right{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .tsearch{display:flex;align-items:center;gap:8px;background:#f4f2ef;border-radius:10px;padding:7px 12px;color:var(--faint);font-size:12.5px;width:150px}.tsearch svg{width:15px;height:15px}
+  .vt{display:flex;background:#f1efeb;border-radius:9px;padding:3px}.vt span{width:28px;height:25px;display:grid;place-items:center;border-radius:7px;color:#a39d97;cursor:pointer}.vt span.on{background:#fff;color:var(--text);box-shadow:var(--sh)}.vt span svg{width:15px;height:15px}
+  .btn{font-family:inherit;font-size:12.5px;font-weight:600;border:1px solid var(--line2);background:#fff;color:var(--text);padding:8px 13px;border-radius:10px;display:inline-flex;align-items:center;gap:7px;cursor:pointer}.btn svg{width:15px;height:15px}.btn:hover{box-shadow:var(--sh)}
+  .btn--vimo{background:var(--vimo-deep);border-color:var(--vimo-deep);color:#fff} .btn--box{background:var(--mybox-deep);border-color:var(--mybox-deep);color:#fff}
+  .btn--sm{padding:6px 11px;font-size:12px}
+
+  /* 썸네일/아이콘/행 */
+  .mini{border-radius:6px;flex:none;overflow:hidden}
+  .c1{background:linear-gradient(135deg,#7c3a1d,#c2683a)} .c2{background:linear-gradient(135deg,#243b57,#4a7ba6)} .c4{background:linear-gradient(135deg,#1a3a30,#357d63)} .c5{background:linear-gradient(135deg,#4a3b1c,#a98a3e)} .c6{background:linear-gradient(135deg,#3a2b2b,#7d5a4a)}
+  .fico{display:grid;place-items:center;background:#f3f1ed;color:#8a8580;border-radius:8px;flex:none}.fico.box{background:var(--mybox-soft);color:var(--mybox-deep)}.fico svg{width:16px;height:16px}
+  .lrow{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:9px;cursor:pointer}
+  .lrow:hover{background:var(--surf)}
+  .lrow .t{font-size:13px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lrow .mini{width:38px;height:24px}.lrow .fico{width:28px;height:28px}
+  .lrow .cell{font-size:11.5px;color:var(--faint);white-space:nowrap} .lrow .loc{font-size:11px;color:var(--vimo-ink);font-weight:600}
+  .vchip{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:7px;flex:none;display:inline-flex;align-items:center;gap:4px}.vchip svg{width:11px;height:11px}
+  .vchip.fix{background:var(--danger);color:#fff} .vchip.rev{background:var(--vimo);color:#fff} .vchip.ok{background:var(--ok);color:#fff}
+  .quiet{padding:11px 12px;color:var(--faint);font-size:12.5px;display:flex;align-items:center;gap:8px}.quiet svg{width:15px;height:15px}
+
+  /* B 밴드 (비모 — 공통 유지) */
+  .vband{display:flex;align-items:center;gap:10px;background:linear-gradient(95deg,var(--vimo-deep),var(--vimo));color:#fff;border-radius:12px;padding:11px 15px;box-shadow:0 5px 16px rgba(232,80,8,.2)}
+  .vband .mk{width:25px;height:25px;border-radius:7px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-weight:800;font-size:12px}
+  .vband .t{font-size:13.5px;font-weight:800}.vband .sum{font-size:11px;opacity:.92;font-weight:500}
+  .vband .pill{margin-left:auto;background:rgba(255,255,255,.2);border-radius:999px;padding:3px 11px;font-size:10.5px;font-weight:700}
+
+  /* ── 1. 섹션 카드 ── */
+  .s1{background:var(--page);padding:15px 20px;height:100%;overflow:hidden;display:flex;flex-direction:column;gap:13px}
+  .scard{background:#fff;border:1px solid var(--line2);border-radius:14px;overflow:hidden}
+  .scard.vimo{border:1.5px solid var(--vimo-line);box-shadow:0 5px 18px rgba(232,80,8,.09)}
+  .scard .vband{border-radius:0;box-shadow:none;margin:0}
+  .scard .hd{display:flex;align-items:center;gap:9px;padding:11px 14px;font-size:13px;font-weight:800;border-bottom:1px solid var(--line)}
+  .scard .hd svg{width:15px;height:15px}.scard .hd.box svg{color:var(--mybox-deep)}.scard .hd.done{color:var(--faint)}.scard .hd.done svg{color:var(--faint)}
+  .scard .hd .sum{font-weight:500;font-size:11px;color:var(--faint)}
+  .scard .rows{padding:5px 9px 9px}
+
+  /* ── 2. 밴드 헤더 통일 ── */
+  .s2{padding:14px 22px 0;overflow:hidden}
+  .secband{display:flex;align-items:center;gap:9px;border-radius:11px;padding:10px 14px;font-weight:800;font-size:13px}
+  .secband svg{width:15px;height:15px}
+  .secband.box{background:var(--mybox-soft);color:var(--mybox-deep);border:1px solid var(--mybox-line)}
+  .secband.gray{background:#f1efeb;color:#78736e}
+  .secband .sum{font-weight:500;font-size:11px;opacity:.85}
+  .s2 .rows{padding:3px 4px 4px}.s2 .grp{margin-top:12px}
+
+  /* ── 3. 배경 블록(존) ── */
+  .s3{padding:14px 20px 0;overflow:hidden}
+  .zblock{border-radius:14px;padding:6px 12px 11px;margin-bottom:11px}
+  .zblock.vimo{background:linear-gradient(180deg,#fff4ec,#fffaf6);border:1px solid #f9dcc8}
+  .zblock.box{background:var(--surf);border:1px solid var(--line2)}
+  .zblock.gray{background:#f4f3f0;border:1px solid var(--line2)}
+  .zblock .vband{margin:6px 0 4px}
+  .zh{display:flex;align-items:center;gap:9px;padding:11px 6px 8px;font-size:13px;font-weight:800}
+  .zh svg{width:15px;height:15px}.zh.box{color:var(--mybox-deep)}.zh.done{color:var(--faint)}.zh.done svg{color:var(--faint)}
+  .zh .sum{font-weight:500;font-size:11px;color:var(--faint)}
+
+  /* ── 4. 굵은 헤더 + 구분선 ── */
+  .s4{padding:14px 24px 0;overflow:hidden}
+  .bighd{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:800;margin:20px 0 6px;padding-bottom:9px;border-bottom:2px solid var(--line2)}
+  .bighd:first-child{margin-top:4px}
+  .bighd svg{width:17px;height:17px}.bighd.box svg{color:var(--mybox-deep)}.bighd.done{color:var(--faint);font-size:13.5px}.bighd.done svg{color:var(--faint)}
+  .bighd .ct{font-size:11px;font-weight:800;color:#fff;background:var(--mybox-deep);border-radius:999px;padding:1px 8px}
+  .bighd .sum{font-weight:500;font-size:12px;color:var(--faint);margin-left:2px}
+
+  .foot{max-width:1320px;margin:0 auto;padding:36px 24px 80px}
+  .foot__card{background:#fff;border:1px solid var(--line2);border-radius:20px;padding:24px 26px;box-shadow:var(--sh)}
+  .foot__card h3{font-size:15px;font-weight:800}.foot__card p{color:var(--muted);font-size:13.5px;margin-top:9px;line-height:1.65}
+  .foot__card .next{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap}
+  .pill{font-size:12.5px;font-weight:600;color:#555;background:#f4f2ef;border:1px solid var(--line2);border-radius:999px;padding:8px 14px}
+
+  svg.lucide{width:1em;height:1em;stroke-width:1.9;flex:none;vertical-align:-.15em}.nav svg{width:17px;height:17px}
+  @media(max-width:1340px){.frame,.vhead,.topnav__in,.intro,.foot{max-width:1140px}.screen{height:640px}}
+</style>
+</head>
+<body class="state-active">
+
+<nav class="topnav"><div class="topnav__in">
+  <div class="brandmark">V</div>
+  <h1>비박스 드라이브 <span>· B 개선 — 섹션 구분</span></h1>
+  <div class="stateseg" id="seg">
+    <span data-state="active" class="on"><span class="pip"></span>비모 일 있음</span>
+    <span data-state="empty"><span class="pip"></span>없음</span>
+  </div>
+  <div class="tabs">
+    <a class="tab" href="#a"><b>1</b> 섹션 카드</a>
+    <a class="tab" href="#b"><b>2</b> 밴드 헤더 통일</a>
+    <a class="tab" href="#c"><b>3</b> 배경 블록</a>
+    <a class="tab" href="#d"><b>4</b> 굵은 헤더+구분선</a>
+  </div>
+</div></nav>
+
+<div class="intro">
+  <h2>B의 주황 밴드는 그대로, 섹션을 확실히 나눈다</h2>
+  <p>비모와의 작업은 B의 솔리드 주황 밴드를 유지하고, <b>"비모 / My box / 지난 비모 작업" 세 섹션의 경계를 더 또렷하게</b> 만든 4가지입니다. 카드로 감싸기 · 모든 섹션에 헤더 밴드 · 배경 블록으로 존 분리 · 굵은 헤더+구분선(미니멀). 위 토글로 있음/없음을 확인하세요.</p>
+</div>
+
+<!-- ============ 1. 섹션 카드 ============ -->
+<section class="variant" id="a">
+  <div class="vhead"><div class="num">1</div>
+    <div><div class="ttl">섹션 카드 <em>· 각 섹션을 카드로</em></div>
+      <div class="lede">세 섹션을 각각 하얀 카드로 감싸 회색 배경 위에 띄움. 카드 경계로 "여기까지가 비모, 여기부터 My box"가 명확.</div></div>
+  </div>
+  <div class="frame"><div class="frame__bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="tag">파트너</span></div></div>
+  <div class="screen"><div class="statelabel"><span class="d"></span><span class="t-active">비모 일 있음</span><span class="t-empty">비모 일 없음</span></div>
+    <div class="st st--active"><div class="g2">
+      <aside class="sb">
+        <div class="me"><div class="av" style="background:#1c1917">서</div><div><div class="n">서준</div><div class="r">파트너 · 외부 편집</div></div></div>
+        <div class="nav on"><svg data-lucide="house"></svg> 홈</div><div class="nav"><svg data-lucide="handshake"></svg> 비모와의 작업 <span class="ct">2</span></div><div class="nav box"><svg data-lucide="hard-drive"></svg> My box</div><div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+        <div class="store">저장공간 32%<div class="bar"><i></i></div></div>
+      </aside>
+      <main class="main">
+        <div class="toolbar"><div class="title">홈</div><div class="right"><span class="tsearch"><svg data-lucide="search"></svg> 검색</span><span class="vt"><span class="on"><svg data-lucide="list"></svg></span><span><svg data-lucide="layout-grid"></svg></span></span><button class="btn btn--vimo btn--sm"><svg data-lucide="upload"></svg>업로드</button></div></div>
+        <div class="s1">
+          <div class="scard vimo"><div class="vband"><div class="mk">V</div><div><div class="t">비모와의 작업</div><div class="sum">진행 중 2건 · 마감 임박 1</div></div><span class="pill">지금 작업 중</span></div>
+            <div class="rows">
+              <div class="lrow"><div class="mini c1"></div><div class="t">브랜드필름_최종_v3.mp4</div><span class="vchip fix"><svg data-lucide="alert-triangle"></svg>수정 요청</span><span class="loc">#1042 · D-2</span></div>
+              <div class="lrow"><div class="mini c4"></div><div class="t">광고_30s_v2.mp4</div><span class="vchip rev"><svg data-lucide="eye"></svg>검수중</span><span class="loc">#1039</span></div>
+            </div></div>
+          <div class="scard"><div class="hd box"><svg data-lucide="hard-drive"></svg>My box <span class="sum">· 내 보관함 23</span></div>
+            <div class="rows">
+              <div class="lrow"><div class="mini c1"></div><div class="t">성수카페_편집중.prproj</div><span class="cell">방금 · 38MB</span></div>
+              <div class="lrow"><div class="fico box"><svg data-lucide="folder"></svg></div><div class="t">레퍼런스</div><span class="cell">14개</span></div>
+              <div class="lrow"><div class="mini c5"></div><div class="t">촬영본_A_0312.mov</div><span class="cell">3일 전 · 8.4GB</span></div>
+            </div></div>
+          <div class="scard"><div class="hd done"><svg data-lucide="check-circle-2"></svg>지난 비모 작업 · 승인 <span class="sum">· 2 ▸</span></div></div>
+        </div>
+      </main>
+    </div></div>
+    <div class="st st--empty"><div class="g2">
+      <aside class="sb">
+        <div class="me"><div class="av" style="background:#1c1917">서</div><div><div class="n">서준</div><div class="r">파트너 · 외부 편집</div></div></div>
+        <div class="nav on"><svg data-lucide="house"></svg> 홈</div><div class="nav"><svg data-lucide="handshake"></svg> 비모와의 작업 <span class="ct zero">0</span></div><div class="nav box"><svg data-lucide="hard-drive"></svg> My box</div><div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+        <div class="store">저장공간 32%<div class="bar"><i></i></div></div>
+      </aside>
+      <main class="main">
+        <div class="toolbar"><div class="title">홈</div><div class="right"><span class="tsearch"><svg data-lucide="search"></svg> 검색</span><span class="vt"><span class="on"><svg data-lucide="list"></svg></span><span><svg data-lucide="layout-grid"></svg></span></span><button class="btn btn--box btn--sm"><svg data-lucide="upload"></svg>업로드</button></div></div>
+        <div class="s1">
+          <div class="scard"><div class="hd box" style="border-color:var(--mybox-line);background:var(--mybox-soft)"><svg data-lucide="hard-drive"></svg>My box <span class="sum">· 내 보관함 23 · 먼저 보임</span></div>
+            <div class="rows">
+              <div class="lrow"><div class="mini c1"></div><div class="t">성수카페_편집중.prproj</div><span class="cell">방금 · 38MB</span></div>
+              <div class="lrow"><div class="fico box"><svg data-lucide="folder"></svg></div><div class="t">레퍼런스</div><span class="cell">14개</span></div>
+              <div class="lrow"><div class="fico box"><svg data-lucide="folder"></svg></div><div class="t">촬영본</div><span class="cell">32개</span></div>
+              <div class="lrow"><div class="mini c5"></div><div class="t">촬영본_A_0312.mov</div><span class="cell">3일 전 · 8.4GB</span></div>
+            </div></div>
+          <div class="scard"><div class="hd done"><svg data-lucide="handshake"></svg>비모와의 작업 <span class="sum">· 진행 중 없음 · 지난 승인 2</span></div>
+            <div class="rows"><div class="quiet"><svg data-lucide="moon"></svg>진행 중인 비모 작업이 없어요. 비모가 작업을 열면 위에 카드로 강조됩니다.</div>
+              <div class="lrow" style="opacity:.66"><div class="mini c2"></div><div class="t">성수카페 티저</div><span class="vchip ok"><svg data-lucide="check"></svg>승인</span><span class="loc">#1011</span></div>
+              <div class="lrow" style="opacity:.66"><div class="mini c6"></div><div class="t">자동차 OO 런칭</div><span class="vchip ok"><svg data-lucide="check"></svg>승인</span><span class="loc">#0987</span></div>
+            </div></div>
+        </div>
+      </main>
+    </div></div>
+  </div></div>
+</section>
+
+<!-- ============ 2. 밴드 헤더 통일 ============ -->
+<section class="variant" id="b">
+  <div class="vhead"><div class="num">2</div>
+    <div><div class="ttl">밴드 헤더 통일 <em>· 섹션마다 띠</em></div>
+      <div class="lede">모든 섹션 머리에 헤더 띠를 — 비모는 솔리드 주황, My box는 옅은 주황, 지난은 회색. 반복되는 띠가 곧 구분선.</div></div>
+  </div>
+  <div class="frame"><div class="frame__bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="tag">파트너</span></div></div>
+  <div class="screen"><div class="statelabel"><span class="d"></span><span class="t-active">비모 일 있음</span><span class="t-empty">비모 일 없음</span></div>
+    <div class="st st--active"><div class="g2">
+      <aside class="sb">
+        <div class="me"><div class="av" style="background:#1c1917">서</div><div><div class="n">서준</div><div class="r">파트너 · 외부 편집</div></div></div>
+        <div class="nav on"><svg data-lucide="house"></svg> 홈</div><div class="nav"><svg data-lucide="handshake"></svg> 비모와의 작업 <span class="ct">2</span></div><div class="nav box"><svg data-lucide="hard-drive"></svg> My box</div><div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+        <div class="store">저장공간 32%<div class="bar"><i></i></div></div>
+      </aside>
+      <main class="main">
+        <div class="toolbar"><div class="title">홈</div><div class="right"><span class="tsearch"><svg data-lucide="search"></svg> 검색</span><span class="vt"><span class="on"><svg data-lucide="list"></svg></span><span><svg data-lucide="layout-grid"></svg></span></span><button class="btn btn--vimo btn--sm"><svg data-lucide="upload"></svg>업로드</button></div></div>
+        <div class="s2">
+          <div class="vband"><div class="mk">V</div><div><div class="t">비모와의 작업</div><div class="sum">진행 중 2건 · 마감 임박 1</div></div><span class="pill">지금 작업 중</span></div>
+          <div class="rows">
+            <div class="lrow"><div class="mini c1"></div><div class="t">브랜드필름_최종_v3.mp4</div><span class="vchip fix"><svg data-lucide="alert-triangle"></svg>수정 요청</span><span class="loc">#1042 · D-2</span></div>
+            <div class="lrow"><div class="mini c4"></div><div class="t">광고_30s_v2.mp4</div><span class="vchip rev"><svg data-lucide="eye"></svg>검수중</span><span class="loc">#1039</span></div>
+          </div>
+          <div class="secband box grp"><svg data-lucide="hard-drive"></svg><div class="t">My box</div><span class="sum">내 보관함 23</span></div>
+          <div class="rows">
+            <div class="lrow"><div class="mini c1"></div><div class="t">성수카페_편집중.prproj</div><span class="cell">방금 · 38MB</span></div>
+            <div class="lrow"><div class="fico box"><svg data-lucide="folder"></svg></div><div class="t">레퍼런스</div><span class="cell">14개</span></div>
+            <div class="lrow"><div class="mini c5"></div><div class="t">촬영본_A_0312.mov</div><span class="cell">3일 전 · 8.4GB</span></div>
+          </div>
+          <div class="secband gray grp"><svg data-lucide="check-circle-2"></svg><div class="t">지난 비모 작업 · 승인</div><span class="sum">2 ▸</span></div>
+          <div class="rows"><div class="lrow" style="opacity:.66"><div class="mini c2"></div><div class="t">성수카페 티저</div><span class="vchip ok"><svg data-lucide="check"></svg>승인</span><span class="loc">#1011</span></div></div>
+        </div>
+      </main>
+    </div></div>
+    <div class="st st--empty"><div class="g2">
+      <aside class="sb">
+        <div class="me"><div class="av" style="background:#1c1917">서</div><div><div class="n">서준</div><div class="r">파트너 · 외부 편집</div></div></div>
+        <div class="nav on"><svg data-lucide="house"></svg> 홈</div><div class="nav"><svg data-lucide="handshake"></svg> 비모와의 작업 <span class="ct zero">0</span></div><div class="nav box"><svg data-lucide="hard-drive"></svg> My box</div><div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+        <div class="store">저장공간 32%<div class="bar"><i></i></div></div>
+      </aside>
+      <main class="main">
+        <div class="toolbar"><div class="title">홈</div><div class="right"><span class="tsearch"><svg data-lucide="search"></svg> 검색</span><span class="vt"><span class="on"><svg data-lucide="list"></svg></span><span><svg data-lucide="layout-grid"></svg></span></span><button class="btn btn--box btn--sm"><svg data-lucide="upload"></svg>업로드</button></div></div>
+        <div class="s2">
+          <div class="secband box" style="font-size:13.5px;padding:12px 15px"><svg data-lucide="hard-drive"></svg><div class="t">My box</div><span class="sum">내 보관함 23 · 먼저 보임</span></div>
+          <div class="rows">
+            <div class="lrow"><div class="mini c1"></div><div class="t">성수카페_편집중.prproj</div><span class="cell">방금 · 38MB</span></div>
+            <div class="lrow"><div class="fico box"><svg data-lucide="folder"></svg></div><div class="t">레퍼런스</div><span class="cell">14개</span></div>
+            <div class="lrow"><div class="fico box"><svg data-lucide="folder"></svg></div><div class="t">촬영본</div><span class="cell">32개</span></div>
+            <div class="lrow"><div class="mini c5"></div><div class="t">촬영본_A_0312.mov</div><span class="cell">3일 전 · 8.4GB</span></div>
+          </div>
+          <div class="secband gray grp"><svg data-lucide="handshake"></svg><div class="t">비모와의 작업</div><span class="sum">진행 중 없음 · 지난 승인 2</span></div>
+          <div class="rows"><div class="quiet"><svg data-lucide="moon"></svg>진행 중인 비모 작업이 없어요. 비모가 작업을 열면 솔리드 주황 띠로 맨 위에 나타납니다.</div>
+            <div class="lrow" style="opacity:.66"><div class="mini c2"></div><div class="t">성수카페 티저</div><span class="vchip ok"><svg data-lucide="check"></svg>승인</span><span class="loc">#1011</span></div>
+            <div class="lrow" style="opacity:.66"><div class="mini c6"></div><div class="t">자동차 OO 런칭</div><span class="vchip ok"><svg data-lucide="check"></svg>승인</span><span class="loc">#0987</span></div>
+          </div>
+        </div>
+      </main>
+    </div></div>
+  </div></div>
+</section>
+
+<!-- ============ 3. 배경 블록 ============ -->
+<section class="variant" id="c">
+  <div class="vhead"><div class="num">3</div>
+    <div><div class="ttl">배경 블록 <em>· 존을 색으로 분리</em></div>
+      <div class="lede">섹션 전체를 옅은 배경 블록으로 — 비모는 주황 틴트, My box는 뉴트럴, 지난은 회색. 색 면이 곧 영역.</div></div>
+  </div>
+  <div class="frame"><div class="frame__bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="tag">파트너</span></div></div>
+  <div class="screen"><div class="statelabel"><span class="d"></span><span class="t-active">비모 일 있음</span><span class="t-empty">비모 일 없음</span></div>
+    <div class="st st--active"><div class="g2">
+      <aside class="sb">
+        <div class="me"><div class="av" style="background:#1c1917">서</div><div><div class="n">서준</div><div class="r">파트너 · 외부 편집</div></div></div>
+        <div class="nav on"><svg data-lucide="house"></svg> 홈</div><div class="nav"><svg data-lucide="handshake"></svg> 비모와의 작업 <span class="ct">2</span></div><div class="nav box"><svg data-lucide="hard-drive"></svg> My box</div><div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+        <div class="store">저장공간 32%<div class="bar"><i></i></div></div>
+      </aside>
+      <main class="main">
+        <div class="toolbar"><div class="title">홈</div><div class="right"><span class="tsearch"><svg data-lucide="search"></svg> 검색</span><span class="vt"><span class="on"><svg data-lucide="list"></svg></span><span><svg data-lucide="layout-grid"></svg></span></span><button class="btn btn--vimo btn--sm"><svg data-lucide="upload"></svg>업로드</button></div></div>
+        <div class="s3">
+          <div class="zblock vimo"><div class="vband"><div class="mk">V</div><div><div class="t">비모와의 작업</div><div class="sum">진행 중 2건 · 마감 임박 1</div></div><span class="pill">지금 작업 중</span></div>
+            <div class="lrow"><div class="mini c1"></div><div class="t">브랜드필름_최종_v3.mp4</div><span class="vchip fix"><svg data-lucide="alert-triangle"></svg>수정 요청</span><span class="loc">#1042 · D-2</span></div>
+            <div class="lrow"><div class="mini c4"></div><div class="t">광고_30s_v2.mp4</div><span class="vchip rev"><svg data-lucide="eye"></svg>검수중</span><span class="loc">#1039</span></div></div>
+          <div class="zblock box"><div class="zh box"><svg data-lucide="hard-drive"></svg>My box <span class="sum">· 내 보관함 23</span></div>
+            <div class="lrow"><div class="mini c1"></div><div class="t">성수카페_편집중.prproj</div><span class="cell">방금 · 38MB</span></div>
+            <div class="lrow"><div class="fico box"><svg data-lucide="folder"></svg></div><div class="t">레퍼런스</div><span class="cell">14개</span></div>
+            <div class="lrow"><div class="mini c5"></div><div class="t">촬영본_A_0312.mov</div><span class="cell">3일 전 · 8.4GB</span></div></div>
+          <div class="zblock gray"><div class="zh done"><svg data-lucide="check-circle-2"></svg>지난 비모 작업 · 승인 <span class="sum">· 2 ▸</span></div></div>
+        </div>
+      </main>
+    </div></div>
+    <div class="st st--empty"><div class="g2">
+      <aside class="sb">
+        <div class="me"><div class="av" style="background:#1c1917">서</div><div><div class="n">서준</div><div class="r">파트너 · 외부 편집</div></div></div>
+        <div class="nav on"><svg data-lucide="house"></svg> 홈</div><div class="nav"><svg data-lucide="handshake"></svg> 비모와의 작업 <span class="ct zero">0</span></div><div class="nav box"><svg data-lucide="hard-drive"></svg> My box</div><div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+        <div class="store">저장공간 32%<div class="bar"><i></i></div></div>
+      </aside>
+      <main class="main">
+        <div class="toolbar"><div class="title">홈</div><div class="right"><span class="tsearch"><svg data-lucide="search"></svg> 검색</span><span class="vt"><span class="on"><svg data-lucide="list"></svg></span><span><svg data-lucide="layout-grid"></svg></span></span><button class="btn btn--box btn--sm"><svg data-lucide="upload"></svg>업로드</button></div></div>
+        <div class="s3">
+          <div class="zblock box" style="background:var(--mybox-soft);border-color:var(--mybox-line)"><div class="zh box"><svg data-lucide="hard-drive"></svg>My box <span class="sum">· 내 보관함 23 · 먼저 보임</span></div>
+            <div class="lrow"><div class="mini c1"></div><div class="t">성수카페_편집중.prproj</div><span class="cell">방금 · 38MB</span></div>
+            <div class="lrow"><div class="fico box"><svg data-lucide="folder"></svg></div><div class="t">레퍼런스</div><span class="cell">14개</span></div>
+            <div class="lrow"><div class="fico box"><svg data-lucide="folder"></svg></div><div class="t">촬영본</div><span class="cell">32개</span></div>
+            <div class="lrow"><div class="mini c5"></div><div class="t">촬영본_A_0312.mov</div><span class="cell">3일 전 · 8.4GB</span></div></div>
+          <div class="zblock gray"><div class="zh done"><svg data-lucide="handshake"></svg>비모와의 작업 <span class="sum">· 진행 중 없음 · 지난 승인 2</span></div>
+            <div class="quiet"><svg data-lucide="moon"></svg>진행 중인 비모 작업이 없어요. 비모가 작업을 열면 주황 블록으로 맨 위에 나타납니다.</div>
+            <div class="lrow" style="opacity:.66"><div class="mini c2"></div><div class="t">성수카페 티저</div><span class="vchip ok"><svg data-lucide="check"></svg>승인</span><span class="loc">#1011</span></div>
+            <div class="lrow" style="opacity:.66"><div class="mini c6"></div><div class="t">자동차 OO 런칭</div><span class="vchip ok"><svg data-lucide="check"></svg>승인</span><span class="loc">#0987</span></div></div>
+        </div>
+      </main>
+    </div></div>
+  </div></div>
+</section>
+
+<!-- ============ 4. 굵은 헤더 + 구분선 ============ -->
+<section class="variant" id="d">
+  <div class="vhead"><div class="num">4</div>
+    <div><div class="ttl">굵은 헤더 + 구분선 <em>· 미니멀 분리</em></div>
+      <div class="lede">박스 없이 — 굵은 섹션 헤더 + 진한 구분선 + 넉넉한 여백만으로 구분. 가장 가볍고 깔끔. 비모만 밴드 유지.</div></div>
+  </div>
+  <div class="frame"><div class="frame__bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="tag">파트너</span></div></div>
+  <div class="screen"><div class="statelabel"><span class="d"></span><span class="t-active">비모 일 있음</span><span class="t-empty">비모 일 없음</span></div>
+    <div class="st st--active"><div class="g2">
+      <aside class="sb">
+        <div class="me"><div class="av" style="background:#1c1917">서</div><div><div class="n">서준</div><div class="r">파트너 · 외부 편집</div></div></div>
+        <div class="nav on"><svg data-lucide="house"></svg> 홈</div><div class="nav"><svg data-lucide="handshake"></svg> 비모와의 작업 <span class="ct">2</span></div><div class="nav box"><svg data-lucide="hard-drive"></svg> My box</div><div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+        <div class="store">저장공간 32%<div class="bar"><i></i></div></div>
+      </aside>
+      <main class="main">
+        <div class="toolbar"><div class="title">홈</div><div class="right"><span class="tsearch"><svg data-lucide="search"></svg> 검색</span><span class="vt"><span class="on"><svg data-lucide="list"></svg></span><span><svg data-lucide="layout-grid"></svg></span></span><button class="btn btn--vimo btn--sm"><svg data-lucide="upload"></svg>업로드</button></div></div>
+        <div class="s4">
+          <div class="vband" style="margin-bottom:4px"><div class="mk">V</div><div><div class="t">비모와의 작업</div><div class="sum">진행 중 2건 · 마감 임박 1</div></div><span class="pill">지금 작업 중</span></div>
+          <div class="lrow"><div class="mini c1"></div><div class="t">브랜드필름_최종_v3.mp4</div><span class="vchip fix"><svg data-lucide="alert-triangle"></svg>수정 요청</span><span class="loc">#1042 · D-2</span></div>
+          <div class="lrow"><div class="mini c4"></div><div class="t">광고_30s_v2.mp4</div><span class="vchip rev"><svg data-lucide="eye"></svg>검수중</span><span class="loc">#1039</span></div>
+          <div class="bighd box"><svg data-lucide="hard-drive"></svg>My box <span class="ct">23</span></div>
+          <div class="lrow"><div class="mini c1"></div><div class="t">성수카페_편집중.prproj</div><span class="cell">방금 · 38MB</span></div>
+          <div class="lrow"><div class="fico box"><svg data-lucide="folder"></svg></div><div class="t">레퍼런스</div><span class="cell">14개</span></div>
+          <div class="lrow"><div class="mini c5"></div><div class="t">촬영본_A_0312.mov</div><span class="cell">3일 전 · 8.4GB</span></div>
+          <div class="bighd done"><svg data-lucide="check-circle-2"></svg>지난 비모 작업 · 승인 <span class="sum">2 ▸</span></div>
+          <div class="lrow" style="opacity:.66"><div class="mini c2"></div><div class="t">성수카페 티저</div><span class="vchip ok"><svg data-lucide="check"></svg>승인</span><span class="loc">#1011</span></div>
+        </div>
+      </main>
+    </div></div>
+    <div class="st st--empty"><div class="g2">
+      <aside class="sb">
+        <div class="me"><div class="av" style="background:#1c1917">서</div><div><div class="n">서준</div><div class="r">파트너 · 외부 편집</div></div></div>
+        <div class="nav on"><svg data-lucide="house"></svg> 홈</div><div class="nav"><svg data-lucide="handshake"></svg> 비모와의 작업 <span class="ct zero">0</span></div><div class="nav box"><svg data-lucide="hard-drive"></svg> My box</div><div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+        <div class="store">저장공간 32%<div class="bar"><i></i></div></div>
+      </aside>
+      <main class="main">
+        <div class="toolbar"><div class="title">홈</div><div class="right"><span class="tsearch"><svg data-lucide="search"></svg> 검색</span><span class="vt"><span class="on"><svg data-lucide="list"></svg></span><span><svg data-lucide="layout-grid"></svg></span></span><button class="btn btn--box btn--sm"><svg data-lucide="upload"></svg>업로드</button></div></div>
+        <div class="s4">
+          <div class="bighd box" style="margin-top:4px;border-bottom-color:var(--mybox-line)"><svg data-lucide="hard-drive"></svg>My box <span class="ct">23</span><span class="sum">먼저 보임</span></div>
+          <div class="lrow"><div class="mini c1"></div><div class="t">성수카페_편집중.prproj</div><span class="cell">방금 · 38MB</span></div>
+          <div class="lrow"><div class="fico box"><svg data-lucide="folder"></svg></div><div class="t">레퍼런스</div><span class="cell">14개</span></div>
+          <div class="lrow"><div class="fico box"><svg data-lucide="folder"></svg></div><div class="t">촬영본</div><span class="cell">32개</span></div>
+          <div class="lrow"><div class="mini c5"></div><div class="t">촬영본_A_0312.mov</div><span class="cell">3일 전 · 8.4GB</span></div>
+          <div class="bighd done"><svg data-lucide="handshake"></svg>비모와의 작업 <span class="sum">진행 중 없음 · 지난 승인 2</span></div>
+          <div class="quiet"><svg data-lucide="moon"></svg>진행 중인 비모 작업이 없어요. 비모가 작업을 열면 주황 밴드로 맨 위에 나타납니다.</div>
+          <div class="lrow" style="opacity:.66"><div class="mini c2"></div><div class="t">성수카페 티저</div><span class="vchip ok"><svg data-lucide="check"></svg>승인</span><span class="loc">#1011</span></div>
+          <div class="lrow" style="opacity:.66"><div class="mini c6"></div><div class="t">자동차 OO 런칭</div><span class="vchip ok"><svg data-lucide="check"></svg>승인</span><span class="loc">#0987</span></div>
+        </div>
+      </main>
+    </div></div>
+  </div></div>
+</section>
+
+<footer class="foot">
+  <div class="foot__card">
+    <h3>어느 구분이 가장 파악하기 쉬운가요?</h3>
+    <p>1(카드)·3(배경 블록)은 경계가 가장 강하고, 2(밴드 통일)는 일관된 리듬, 4(굵은 헤더+선)는 가장 가볍고 깔끔합니다. 비모 밴드는 넷 다 유지했습니다. 끌리는 구분 방식을 고르면 — 그걸로 확정해 그리드·미리보기 뷰에도 같은 구분을 적용하고 ERP 데이터로 채웁니다.</p>
+    <div class="next"><span class="pill">① 구분 방식 선택 (1~4)</span><span class="pill">② 구분 수위 조정</span><span class="pill">③ 전 뷰 적용</span><span class="pill">④ 비모 ERP 연동</span></div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  if(window.lucide) lucide.createIcons();
+  var seg=document.getElementById('seg');
+  function setState(s){document.body.className='state-'+s;
+    seg.querySelectorAll('span[data-state]').forEach(function(el){el.classList.toggle('on',el.getAttribute('data-state')===s)});
+    if(history.replaceState) history.replaceState(null,'',s==='empty'?'#empty':'#active');}
+  seg.querySelectorAll('span[data-state]').forEach(function(el){el.addEventListener('click',function(){setState(el.getAttribute('data-state'))})});
+  if(location.hash==='#empty') setState('empty');
+  var tabs=[].slice.call(document.querySelectorAll('.tab'));
+  var secs=['a','b','c','d'].map(function(id){return document.getElementById(id)});
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){var id=e.target.id;tabs.forEach(function(t){t.classList.toggle('is-active',t.getAttribute('href')==='#'+id)})}})},{rootMargin:'-45% 0px -50% 0px'});
+  secs.forEach(function(s){io.observe(s)});
+</script>
+</body>
+</html>

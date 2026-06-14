@@ -1,29 +1,100 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Lock, AlertCircle } from "lucide-react";
-import type { MyRecentFile, PersonalSummary } from "@/lib/dashboard/queries";
+import Link from "next/link";
 import {
-  formatBytes,
-  formatRelative,
-  teamFileStatus,
-  UploadBar,
-  SectionHeader,
-  SeeAllLink,
-} from "./home-ui";
+  Search,
+  Upload,
+  HardDrive,
+  CheckCircle2,
+  Moon,
+  ChevronRight,
+  Film,
+  FileText,
+  Image as ImageIcon,
+  File as FileIcon,
+  type LucideIcon,
+} from "lucide-react";
+import type { MyRecentFile, PersonalSummary } from "@/lib/dashboard/queries";
+import { formatBytes, formatRelative, teamFileStatus } from "./home-ui";
 
 /**
- * 파트너(외부 편집자) 전용 홈.
- * 두 공간을 "탭"으로 전환 — 라벨이 곧 공개 범위 안내라 헷갈리지 않음.
- *  - 비모에 납품한 작업물 (비모팀이 봄, orange) + 상태 배지
- *  - 내 보관함 My box (나만 봄, sky) + 용량
- * 검수 큐·받은편지함·팀 통계 등 매니저 기능은 노출하지 않는다.
- * 파트너 셸(PartnerShell)은 사이드바가 없으므로(상단바만), 이 두 탭이 곧 파트너의
- * 공간 전환 1차 내비다. 각 탭 하단의 "모두 보기"로 풀 브라우저(/my/box·/team)로 내려간다.
- *
- * 레이아웃: 콘텐츠가 적은 파트너 화면이라 720px 집중형 가운데 컬럼으로 둔다.
- * 업로드는 슬림 바(상태 확인이 1순위, 올리기는 명확하되 화면을 지배하지 않게).
+ * 파트너(외부 편집자) 홈 — "드라이브" 카드 섹션 + 비모 일 적응.
+ *  - 비모와의 작업(=비모에 납품): 옅은 워시 헤더로 강조, 진행 중인 작업이 맨 위.
+ *  - My box(=내 보관함): 주황 톤, 개인 파일.
+ *  - 지난 비모 작업(승인): 항상 조회 가능, 흐리게.
+ * 비모 일이 없으면 My box가 맨 위로 올라오고, 비모 영역은 "진행 중 없음"으로 차분히 둔다.
+ * 톤은 비박스 앱 중성(#f7f7f7 surface-2 위 흰 카드), 주황은 가는 액센트로만.
  */
+
+const MYBOX = "#f97316";
+
+function glyph(name: string): LucideIcon {
+  const ext = name.split(".").pop()?.toLowerCase() ?? "";
+  if (["mp4", "mov", "m4v", "avi", "mkv", "webm"].includes(ext)) return Film;
+  if (["jpg", "jpeg", "png", "gif", "webp", "heic"].includes(ext)) return ImageIcon;
+  if (["pdf", "key", "ppt", "pptx", "doc", "docx", "txt", "md"].includes(ext)) return FileText;
+  return FileIcon;
+}
+
+function FileRow({
+  f,
+  href,
+  accent,
+  dim,
+}: {
+  f: MyRecentFile;
+  href: string;
+  accent: string;
+  dim?: boolean;
+}) {
+  const G = glyph(f.filename);
+  const isTeam = f.space === "team";
+  const s = teamFileStatus(f);
+  const SIcon = s.Icon;
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-surface-2 transition-colors"
+      style={dim ? { opacity: 0.62 } : undefined}
+    >
+      <span
+        className="grid place-items-center w-9 h-7 rounded-md flex-none"
+        style={{ background: "var(--surface-2)", color: accent }}
+      >
+        <G size={15} strokeWidth={2} />
+      </span>
+      <span className="flex-1 min-w-0 truncate text-[13px] font-medium">{f.filename}</span>
+      {isTeam && (
+        <span
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-bold flex-none"
+          style={{ background: s.bg, color: s.color }}
+        >
+          <SIcon size={11} strokeWidth={2.4} /> {s.label}
+        </span>
+      )}
+      <span className="text-[11px] text-text-faint flex-none tabular-nums w-[52px] text-right">
+        {formatRelative(f.uploadedAt)}
+      </span>
+    </Link>
+  );
+}
+
+function Card({
+  children,
+  vimo,
+}: {
+  children: React.ReactNode;
+  vimo?: boolean;
+}) {
+  return (
+    <section
+      className="bg-white border rounded-2xl overflow-hidden"
+      style={{ borderColor: vimo ? "#fbd9c4" : "var(--border)" }}
+    >
+      {children}
+    </section>
+  );
+}
 
 export function PartnerHome({
   userName,
@@ -34,216 +105,170 @@ export function PartnerHome({
   personalSummary: PersonalSummary;
   recentFiles: MyRecentFile[];
 }) {
-  const [tab, setTab] = useState<"team" | "personal">("team");
-  const teamRef = useRef<HTMLButtonElement>(null);
-  const personalRef = useRef<HTMLButtonElement>(null);
-  const [underline, setUnderline] = useState({ left: 0, width: 0 });
-  useEffect(() => {
-    const el = tab === "team" ? teamRef.current : personalRef.current;
-    if (el) setUnderline({ left: el.offsetLeft, width: el.offsetWidth });
-  }, [tab]);
-  const teamFiles = recentFiles.filter((f) => f.space === "team");
-  const personalFiles = recentFiles.filter((f) => f.space === "personal");
-  const needsAction = teamFiles.filter((f) => f.needsNewVersion).length;
+  const team = recentFiles.filter((f) => f.space === "team");
+  const personal = recentFiles.filter((f) => f.space === "personal");
+  const active = team.filter((f) => !f.approved);
+  const approved = team.filter((f) => f.approved);
+  const hasWork = active.length > 0;
+  const needsAction = active.filter((f) => f.needsNewVersion).length;
+
+  // ── 카드 빌더 ──────────────────────────────────────────────
+  const vimoActiveCard = (
+    <Card vimo key="vimo-active">
+      <div
+        className="flex items-center gap-2.5 px-3.5 py-3 border-b"
+        style={{ background: "var(--accent-soft)", borderColor: "#fbd9c4" }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/vimo-mark.svg" alt="" style={{ width: 18, height: "auto" }} />
+        <span className="text-[13px] font-extrabold" style={{ color: "var(--team-dark)" }}>
+          비모와의 작업
+        </span>
+        <span className="text-[11px] font-medium text-text-faint">
+          진행 중 {active.length}
+          {needsAction > 0 ? ` · 수정 요청 ${needsAction}` : ""}
+        </span>
+        <span
+          className="ml-auto inline-flex items-center gap-1.5 text-[10px] font-bold rounded-full px-2.5 py-1 bg-white"
+          style={{ border: "1px solid #fbd9c4", color: "var(--team-dark)" }}
+        >
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--team-color)" }} />
+          지금 작업 중
+        </span>
+      </div>
+      <div className="p-2">
+        {active.map((f) => (
+          <FileRow key={f.path} f={f} accent="var(--team-color)" href="/team?path=/Rendering" />
+        ))}
+      </div>
+    </Card>
+  );
 
   const pct =
     personalSummary.quotaBytes > 0
       ? Math.min(100, Math.round((personalSummary.usedBytes / personalSummary.quotaBytes) * 100))
       : 0;
 
-  return (
-    <div className="px-4 md:px-8 py-6 md:py-9 mx-auto w-full max-w-[720px]">
-      {/* 인사 */}
-      <div className="mb-6">
-        <h1 className="text-[22px] md:text-[24px] font-bold">
-          안녕하세요{userName ? `, ${userName}님` : ""}
-        </h1>
-        {needsAction > 0 ? (
-          <p
-            className="pa-banner text-[12.5px] mt-1 font-medium inline-flex items-center gap-1.5"
-            style={{ color: "var(--team-dark)" }}
+  const myBoxCard = (first?: boolean) => (
+    <Card key="mybox">
+      <div className="flex items-center gap-2.5 px-3.5 py-3 border-b border-border">
+        <HardDrive size={15} strokeWidth={2.2} style={{ color: MYBOX }} />
+        <span className="text-[13px] font-extrabold">My box</span>
+        <span className="text-[11px] font-medium text-text-faint">· 내 보관함 {personal.length}</span>
+        {first && (
+          <span
+            className="ml-auto text-[10px] font-bold text-white rounded-full px-2.5 py-0.5"
+            style={{ background: MYBOX }}
           >
-            <AlertCircle size={13} strokeWidth={2.4} className="pa-bell" />
-            수정 요청 {needsAction}건이 있어요 — 확인 후 다시 올려주세요
-          </p>
+            먼저 보임
+          </span>
+        )}
+        <Link
+          href="/my/box?upload=1"
+          className={`${first ? "" : "ml-auto"} inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-md hover:bg-surface-2 transition-colors`}
+          style={{ color: MYBOX }}
+        >
+          <Upload size={12} strokeWidth={2.3} /> 업로드
+        </Link>
+      </div>
+      <div className="p-2">
+        {personal.length === 0 ? (
+          <p className="text-[12.5px] text-text-faint py-6 text-center">보관함이 비어 있습니다</p>
         ) : (
-          <p className="text-[12.5px] text-text-faint mt-1">
-            작업물을 올리고, 받은 피드백을 확인하세요
-          </p>
+          personal.map((f) => <FileRow key={f.path} f={f} accent={MYBOX} href="/my/box" />)
         )}
       </div>
-
-      {/* 탭 — 라벨(무엇) 위, 공개 범위(누가 보나) 아래 2줄 스택.
-          좁은 화면에서도 줄바꿈으로 깨지지 않고, 공개 범위가 항상 함께 보인다. */}
-      <div className="relative flex border-b border-border mb-5">
-        <button
-          ref={teamRef}
-          onClick={() => setTab("team")}
-          className="relative flex flex-col items-start pb-2.5 mr-7 transition-colors"
-          style={{ color: tab === "team" ? "var(--team-color)" : "#999999" }}
-        >
-          <span className="flex items-center gap-1.5 text-[13.5px] font-semibold">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/vimo-mark.svg"
-              alt=""
-              style={{
-                width: 16,
-                height: "auto",
-                filter: tab === "team" ? "none" : "saturate(0) opacity(0.5)",
-                transition: "filter var(--pa-dur) var(--pa-ease)",
-              }}
-            />
-            비모에 납품한 작업물
-          </span>
-          <span className="text-[10.5px] font-normal mt-0.5 ml-[21px]" style={{ color: tab === "team" ? "var(--team-dark)" : "#bbbbbb" }}>
-            비모팀이 봅니다
-          </span>
-        </button>
-        <button
-          ref={personalRef}
-          onClick={() => setTab("personal")}
-          className="relative flex flex-col items-start pb-2.5 transition-colors"
-          style={{ color: tab === "personal" ? "var(--personal)" : "#999999" }}
-        >
-          <span className="flex items-center gap-1.5 text-[13.5px] font-semibold">
-            <Lock size={14} strokeWidth={2.4} />
-            내 보관함
-          </span>
-          <span className="text-[10.5px] font-normal mt-0.5 ml-[20px]" style={{ color: tab === "personal" ? "var(--personal-dark)" : "#bbbbbb" }}>
-            나만 봅니다
-          </span>
-        </button>
-        {/* 공통 밑줄 — 활성 탭으로 슬라이드 */}
-        <span
-          aria-hidden
-          className="absolute bottom-[-1px] h-0.5 rounded-full"
-          style={{
-            left: underline.left,
-            width: underline.width,
-            background: tab === "team" ? "var(--team-color)" : "var(--personal)",
-            transition:
-              "left var(--pa-dur) var(--pa-ease), width var(--pa-dur) var(--pa-ease), background var(--pa-dur)",
-          }}
-        />
-      </div>
-
-      {tab === "team" ? (
-        <TeamTab files={teamFiles} />
-      ) : (
-        <PersonalTab files={personalFiles} pct={pct} summary={personalSummary} />
-      )}
-    </div>
-  );
-}
-
-function TeamTab({ files }: { files: MyRecentFile[] }) {
-  return (
-    <div>
-      <UploadBar
-        href="/team?upload=1"
-        color="#e85008"
-        soft="#fef0e8"
-        label="완성본을 비모에 납품"
-        sub="올리면 비모팀이 바로 보고 검수를 시작합니다"
-      />
-      <SectionHeader label="납품한 작업물" count={files.length} />
-      {files.length === 0 ? (
-        <p className="text-[12.5px] text-text-faint py-10 text-center">아직 납품한 작업물이 없습니다</p>
-      ) : (
-        <ul className="divide-y divide-border">
-          {files.map((f, i) => {
-            const s = teamFileStatus(f);
-            const StatusIcon = s.Icon;
-            return (
-              <li
-                key={f.path}
-                className="pa-row flex items-center gap-3 py-2.5 -mx-2 px-2 rounded-md hover:bg-surface-2 transition-colors"
-                style={{ animationDelay: `calc(var(--pa-stagger) * ${i})` }}
-              >
-                <span className="w-1 h-7 rounded-full flex-none" style={{ background: "var(--team-color)" }} />
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-medium truncate">{f.filename}</div>
-                  <div className="text-[11px] text-text-faint">
-                    {formatRelative(f.uploadedAt)}
-                    {f.commentCount ? ` · 코멘트 ${f.commentCount}` : ""}
-                  </div>
-                </div>
-                <span
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold flex-none ${s.cls}`}
-                  style={{ background: s.bg, color: s.color }}
-                >
-                  <StatusIcon size={11} strokeWidth={2.4} /> {s.label}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      {files.length > 0 && (
-        <SeeAllLink href="/team?path=/Rendering" color="var(--team-color)" label="비모 폴더에서 모두 보기" />
-      )}
-    </div>
-  );
-}
-
-function PersonalTab({
-  files,
-  pct,
-  summary,
-}: {
-  files: MyRecentFile[];
-  pct: number;
-  summary: PersonalSummary;
-}) {
-  return (
-    <div>
-      {/* 용량 */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between text-[11px] text-text-faint mb-1.5">
-          <span className="inline-flex items-center gap-1">
-            <Lock size={11} strokeWidth={2.4} /> 나만 보는 개인 보관함
-          </span>
+      <div className="px-3.5 pb-3 -mt-0.5">
+        <div className="flex items-center justify-between text-[10.5px] text-text-faint mb-1">
+          <span>저장 공간</span>
           <span className="tabular-nums">
-            {formatBytes(summary.usedBytes)} / {formatBytes(summary.quotaBytes)}
+            {formatBytes(personalSummary.usedBytes)} / {formatBytes(personalSummary.quotaBytes)}
           </span>
         </div>
-        <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "var(--personal-soft)" }}>
-          <div className="h-full" style={{ background: "var(--personal)", width: `${pct}%` }} />
+        <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "#fff3ea" }}>
+          <div className="h-full rounded-full" style={{ background: MYBOX, width: `${pct}%` }} />
+        </div>
+      </div>
+    </Card>
+  );
+
+  const pastCard = (
+    <Card key="past">
+      <div className="flex items-center gap-2.5 px-3.5 py-3 text-text-faint">
+        <CheckCircle2 size={15} strokeWidth={2.2} />
+        <span className="text-[13px] font-extrabold">지난 비모 작업 · 승인</span>
+        <span className="text-[11px] font-medium">· {approved.length}</span>
+        <ChevronRight size={15} strokeWidth={2.2} className="ml-auto" />
+      </div>
+      {approved.length > 0 && (
+        <div className="px-2 pb-2 -mt-1">
+          {approved.slice(0, 3).map((f) => (
+            <FileRow key={f.path} f={f} accent="var(--team-color)" href="/team?path=/Rendering" dim />
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+
+  const vimoEmptyCard = (
+    <Card key="vimo-empty">
+      <div className="flex items-center gap-2.5 px-3.5 py-3 border-b border-border text-text-faint">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/vimo-mark.svg" alt="" style={{ width: 17, height: "auto", filter: "saturate(0.15) opacity(0.7)" }} />
+        <span className="text-[13px] font-extrabold">비모와의 작업</span>
+        <span className="text-[11px] font-medium">· 진행 중 없음 · 지난 승인 {approved.length}</span>
+      </div>
+      <div className="p-2">
+        <div className="flex items-center gap-2 px-2.5 py-2.5 text-[12.5px] text-text-faint">
+          <Moon size={15} strokeWidth={2} />
+          진행 중인 비모 작업이 없어요. 비모가 작업을 열면 위에 카드로 강조됩니다.
+        </div>
+        {approved.slice(0, 3).map((f) => (
+          <FileRow key={f.path} f={f} accent="var(--team-color)" href="/team?path=/Rendering" dim />
+        ))}
+      </div>
+    </Card>
+  );
+
+  return (
+    <div className="min-h-full bg-surface-2">
+      {/* 툴바 */}
+      <div className="bg-white border-b border-border px-4 md:px-8 py-3 flex items-center gap-3">
+        <h1 className="text-[15.5px] font-bold truncate">
+          안녕하세요{userName ? `, ${userName}님` : ""}
+        </h1>
+        <div className="ml-auto flex items-center gap-2">
+          <Link
+            href="/?focus=search"
+            className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-2 text-text-faint text-[12.5px] hover:bg-hover transition-colors"
+          >
+            <Search size={14} strokeWidth={2} /> 검색
+          </Link>
+          <Link
+            href="/team?upload=1"
+            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-white px-3.5 py-2 rounded-lg transition-colors"
+            style={{ background: "var(--accent)" }}
+          >
+            <Upload size={15} strokeWidth={2.2} /> 업로드
+          </Link>
         </div>
       </div>
 
-      <UploadBar
-        href="/my/box?upload=1"
-        color="#0ea5e9"
-        soft="#f0f9ff"
-        label="내 보관함에 저장"
-        sub="나만 봅니다 · 비모팀에 전달되지 않아요"
-      />
-
-      <SectionHeader label="내 파일" count={files.length} />
-      {files.length === 0 ? (
-        <p className="text-[12.5px] text-text-faint py-10 text-center">보관함이 비어 있습니다</p>
-      ) : (
-        <ul className="divide-y divide-border">
-          {files.map((f, i) => (
-            <li
-              key={f.path}
-              className="pa-row flex items-center gap-3 py-2.5 -mx-2 px-2 rounded-md hover:bg-surface-2 transition-colors"
-              style={{ animationDelay: `calc(var(--pa-stagger) * ${i})` }}
-            >
-              <span className="w-1 h-7 rounded-full flex-none" style={{ background: "var(--personal)" }} />
-              <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-medium truncate">{f.filename}</div>
-                <div className="text-[11px] text-text-faint">{formatRelative(f.uploadedAt)}</div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-      {files.length > 0 && (
-        <SeeAllLink href="/my/box" color="var(--personal)" label="내 보관함에서 모두 보기" />
-      )}
+      {/* 카드 — 비모 일 유무에 따라 순서 변경 */}
+      <div className="px-4 md:px-8 py-5 mx-auto w-full max-w-[940px] flex flex-col gap-3.5">
+        {hasWork ? (
+          <>
+            {vimoActiveCard}
+            {myBoxCard(false)}
+            {pastCard}
+          </>
+        ) : (
+          <>
+            {myBoxCard(true)}
+            {vimoEmptyCard}
+          </>
+        )}
+      </div>
     </div>
   );
 }

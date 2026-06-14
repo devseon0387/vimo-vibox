@@ -3,120 +3,92 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, Search, LogOut, type LucideIcon } from "lucide-react";
+import { House, HardDrive, Share2, LogOut, type LucideIcon } from "lucide-react";
 import { logoutAction } from "@/app/login/actions";
-import { MenuRouter } from "@/components/menus/MenuRouter";
 
 /**
- * 파트너 전용 세그먼트 사이드바 (시안 1 채택).
- * 232px 단일 컬럼: 로고 · 검색 · 3분할 세그먼트(홈/비모/보관함) · 공간 CTA · 활성 섹션 · 유저 푸터.
- * "비모" 세그먼트는 비모 투톤 마크(/vimo-mark.svg, 왼쪽 진한·오른쪽 연한)를 아이콘으로 쓴다.
- * (이전 PartnerShell의 미니멀 상단바를 대체. 공간 전환을 사이드바가 담당.)
+ * 파트너 전용 사이드바 — 그룹 라벨(클라우드 / 라이브러리) + 저장공간(프로필 아래).
+ * 로고 · 프로필 · 저장공간 · 홈 · [클라우드: 비모와의 작업 · My box] · [라이브러리: 공유].
+ * 톤은 비박스 중성(흰 배경·#ececec 경계), 주황은 가는 액센트로만. My box도 주황 계열.
  */
-type SpaceKey = "home" | "team" | "mybox";
 
-function activeKey(pathname: string): SpaceKey {
+const MYBOX = "#f97316";
+
+function activeKey(pathname: string): "home" | "team" | "mybox" | "shares" {
   if (pathname.startsWith("/team")) return "team";
   if (pathname.startsWith("/my")) return "mybox";
+  if (pathname.startsWith("/shares")) return "shares";
   return "home";
 }
 
 export function PartnerSidebar({
   userName,
   initials,
+  usedBytes,
+  quotaBytes,
 }: {
   userName: string;
   initials: string;
+  usedBytes: number;
+  quotaBytes: number;
 }) {
   const pathname = usePathname();
   const active = activeKey(pathname);
-  const activeIdx = active === "home" ? 0 : active === "team" ? 1 : 2;
+  const pct = quotaBytes > 0 ? Math.min(100, Math.round((usedBytes / quotaBytes) * 100)) : 0;
 
-  const seg = (
-    key: SpaceKey,
+  const item = (
+    key: "home" | "team" | "mybox" | "shares",
+    href: string,
     label: string,
-    tint: string,
-    opts: { icon?: LucideIcon; href: string; mark?: boolean }
+    opts: { icon?: LucideIcon; mark?: boolean; tint?: string }
   ) => {
     const on = active === key;
     const Icon = opts.icon;
+    const tint = opts.tint ?? "var(--accent)";
     return (
       <Link
-        key={key}
-        href={opts.href}
-        className="relative z-10 flex-1 flex flex-col items-center gap-1 py-2 rounded-lg transition-colors duration-300"
-        style={on ? { color: tint, fontWeight: 700 } : { color: "var(--text-soft)", fontWeight: 500 }}
+        href={href}
+        className="flex items-center gap-3 px-2.5 py-2 rounded-[10px] text-[13px] font-medium transition-colors"
+        style={
+          on
+            ? { background: "var(--surface-2)", color: "var(--text)", fontWeight: 600 }
+            : { color: "var(--text-soft)" }
+        }
       >
         {opts.mark ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src="/vimo-mark.svg"
-            alt="비모"
-            style={{
-              width: 18,
-              height: "auto",
-              filter: on ? "none" : "saturate(0) opacity(0.45)",
-              transform: on ? "scale(1.1)" : "scale(1)",
-              transition: "filter var(--pa-dur) var(--pa-ease), transform var(--pa-dur) var(--pa-ease)",
-            }}
+            alt=""
+            style={{ width: 17, height: "auto", filter: on ? "none" : "saturate(0.25) opacity(0.7)" }}
           />
         ) : Icon ? (
-          <Icon size={17} strokeWidth={2} />
+          <Icon size={17} strokeWidth={2} style={{ color: on ? tint : "#9a9a9a" }} />
         ) : null}
-        <span className="text-[10.5px] tracking-tight leading-none">{label}</span>
+        <span className="truncate">{label}</span>
       </Link>
     );
   };
 
   return (
-    <div className="w-[232px] bg-white border-r border-border flex flex-col h-screen">
+    <div className="w-[222px] bg-white border-r border-border flex flex-col h-screen">
       {/* 로고 */}
       <Link
         href="/"
-        className="px-4 pt-5 pb-3 flex items-center gap-2 hover:opacity-80 transition-opacity"
+        className="px-4 pt-4 pb-3 flex items-center gap-2 hover:opacity-80 transition-opacity"
       >
-        <Image src="/logo.png" alt="Vibox" width={28} height={28} priority className="rounded" />
-        <span className="text-[16px] font-bold tracking-tight text-text">비박스</span>
+        <Image src="/logo.png" alt="Vibox" width={26} height={26} priority className="rounded" />
+        <span className="text-[15px] font-bold tracking-tight text-text">비박스</span>
       </Link>
 
-      {/* 검색 (홈으로) */}
-      <Link
-        href="/?focus=search"
-        className="mx-3 mb-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-surface text-text-faint text-[12.5px] hover:bg-hover transition-colors"
-      >
-        <Search size={14} strokeWidth={2} /> 검색
-      </Link>
-
-      {/* 세그먼트 컨트롤 — 공간 전환 */}
-      <div className="mx-3 mb-2 relative flex items-stretch p-1 rounded-xl bg-surface">
-        <span
-          aria-hidden
-          className="absolute top-1 bottom-1 rounded-lg bg-white shadow-[0_1px_2px_rgba(0,0,0,0.06)]"
-          style={{
-            left: "0.25rem",
-            width: "calc((100% - 0.5rem) / 3)",
-            transform: `translateX(calc(${activeIdx} * 100%))`,
-            transition: "transform var(--pa-dur) var(--pa-ease)",
-          }}
-        />
-        {seg("home", "홈", "var(--accent)", { icon: LayoutDashboard, href: "/" })}
-        {seg("team", "비모", "#e85008", { href: "/team?path=/Rendering", mark: true })}
-        {seg("mybox", "보관함", "#0ea5e9", { icon: Package, href: "/my/box" })}
-      </div>
-
-      {/* 활성 공간 섹션 — 공간(홈/비모/보관함) 전환에 따라 자동 변경 */}
-      <div className="flex-1 overflow-y-auto pb-2">
-        <MenuRouter isAdmin={false} isPartner />
-      </div>
-
-      {/* 푸터: 유저 · 로그아웃 */}
-      <div className="mt-auto border-t border-border px-3 py-2.5 flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-[#C8430A] text-white grid place-items-center text-[12px] font-bold shrink-0">
+      {/* 프로필 */}
+      <div className="px-3 flex items-center gap-2.5">
+        <span className="w-[30px] h-[30px] rounded-full bg-gradient-to-br from-accent to-[#C8430A] text-white grid place-items-center text-[12px] font-bold shrink-0">
           {initials}
-        </div>
+        </span>
         <div className="min-w-0 flex-1">
-          <div className="text-[13px] font-semibold text-text truncate">{userName || "파트너"}</div>
-          <div className="text-[11px] text-text-faint truncate">외부 편집자 · 파트너</div>
+          <div className="text-[12.5px] font-bold text-text truncate">{userName || "파트너"}</div>
+          <div className="text-[10.5px] text-text-faint truncate">외부 편집 · 파트너</div>
         </div>
         <form action={logoutAction}>
           <button
@@ -128,7 +100,35 @@ export function PartnerSidebar({
           </button>
         </form>
       </div>
+
+      {/* 저장공간 — 프로필 바로 아래 */}
+      <div className="px-3 pt-3 pb-3">
+        <div className="flex items-center justify-between text-[10.5px] text-text-faint mb-1.5">
+          <span className="font-semibold text-text-muted">저장 공간</span>
+          <span className="tabular-nums">{pct}%</span>
+        </div>
+        <div className="w-full h-1.5 rounded-full overflow-hidden bg-[#ececec]">
+          <div className="h-full rounded-full" style={{ background: MYBOX, width: `${pct}%` }} />
+        </div>
+      </div>
+
+      <div className="mx-3 h-px bg-border" />
+
+      {/* 내비게이션 — 그룹 라벨 */}
+      <nav className="px-3 pt-2 flex-1 overflow-y-auto">
+        {item("home", "/", "홈", { icon: House })}
+
+        <div className="text-[10.5px] font-bold text-text-faint tracking-wide px-2.5 pt-3.5 pb-1.5">
+          클라우드
+        </div>
+        {item("team", "/team?path=/Rendering", "비모와의 작업", { mark: true, tint: "#e85008" })}
+        {item("mybox", "/my/box", "My box", { icon: HardDrive, tint: MYBOX })}
+
+        <div className="text-[10.5px] font-bold text-text-faint tracking-wide px-2.5 pt-3.5 pb-1.5">
+          라이브러리
+        </div>
+        {item("shares", "/shares", "공유", { icon: Share2 })}
+      </nav>
     </div>
   );
 }
-

@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 · 프로젝트=폴더 모델 — 카드 · 드릴다운 · 히어로</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --vimo:#e85008; --vimo-ink:#c2410c; --vimo-soft:#fef0e8; --vimo-line:#fbd9c4;
+    --mybox:#f97316; --mybox-soft:#fff3ea; --mybox-line:#fed7aa;
+    --text:#171717; --muted:#5f5f5f; --soft:#525252; --faint:#999;
+    --page:#f5f5f5; --surf:#fafafa; --line:#ececec; --line2:#e3e3e3; --hair:#f1f1f1; --dash:#d6d6d6;
+    --danger:#dc2626; --warn:#c2410c; --rev-bg:#e0f2fe; --rev-fg:#0369a1; --ok-bg:#f0fdf4; --ok-fg:#16a34a;
+    --req:#fff5ee;
+    --sh:0 1px 3px rgba(0,0,0,.06); --sh3:0 22px 56px rgba(0,0,0,.13);
+    --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);background:#e6e6e6;color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h2,h3,h4,p{margin:0} a{color:inherit;text-decoration:none}
+  svg.lucide{width:1em;height:1em;stroke-width:1.9;flex:none;vertical-align:-.15em}
+  .mono{font-variant-numeric:tabular-nums}
+
+  .topnav{position:sticky;top:0;z-index:50;background:rgba(246,246,246,.93);backdrop-filter:blur(14px);border-bottom:1px solid var(--line2)}
+  .topnav__in{max-width:1320px;margin:0 auto;padding:11px 24px;display:flex;align-items:center;gap:13px;flex-wrap:wrap}
+  .bm{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(90deg,var(--vimo) 0 50%,#f9a87a 50%);color:#fff;font-weight:800;font-size:16px;box-shadow:var(--sh)}
+  .topnav h1{font-size:14.5px;font-weight:800}.topnav h1 span{color:var(--muted);font-weight:600}
+  .tabs{display:flex;gap:5px;margin-left:auto;flex-wrap:wrap}
+  .tg{display:flex;align-items:center;gap:3px;background:#fff;border:1px solid var(--line2);border-radius:999px;padding:3px}
+  .tg b{font-size:10.5px;font-weight:800;color:var(--faint);padding:0 7px 0 9px}
+  .tab{padding:5px 11px;border-radius:999px;font-size:12px;font-weight:600;color:var(--muted)}
+  .tab:hover{background:var(--surf);color:var(--text)}.tab.on{background:var(--text);color:#fff}
+
+  .intro{padding:30px 24px 4px;max-width:1320px;margin:0 auto}
+  .intro h2{font-size:23px;font-weight:800;letter-spacing:-.02em}
+  .intro p{color:var(--muted);font-size:13.5px;margin-top:9px;max-width:940px;line-height:1.66}
+  .model{margin-top:14px;background:#fff;border:1px solid var(--line2);border-radius:14px;padding:15px 18px}
+  .model h4{font-size:12px;font-weight:800;color:var(--vimo-ink);display:flex;align-items:center;gap:7px}.model h4 svg{width:14px;height:14px}
+  .model .chain{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:11px}
+  .lvl{font-size:11.5px;font-weight:700;background:var(--surf);border:1px solid var(--line2);border-radius:9px;padding:6px 11px;color:var(--soft)}.lvl b{color:var(--text)}.lvl span{color:var(--faint);font-weight:500}
+  .arr{color:#c4c4c4}.arr svg{width:14px;height:14px}
+  .model p{font-size:11.5px;color:var(--faint);margin-top:10px;line-height:1.6}
+  .rank{display:flex;gap:7px;margin-top:13px;flex-wrap:wrap}
+  .rk{font-size:11.5px;font-weight:600;border-radius:999px;padding:5px 12px;background:#fff;border:1px solid var(--line2);color:var(--muted)}.rk b{color:var(--text);font-weight:800}.rk.win{border-color:var(--vimo-line);background:var(--vimo-soft);color:var(--vimo-ink)}
+
+  .dirhd{max-width:1320px;margin:38px auto 0;padding:0 24px}
+  .dirhd .k{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:800;color:#fff;background:var(--text);border-radius:999px;padding:5px 13px}
+  .dirhd h3{font-size:20px;font-weight:800;margin-top:11px;letter-spacing:-.01em}
+  .dirhd p{color:var(--muted);font-size:13px;margin-top:6px;max-width:920px;line-height:1.6}
+
+  .vhead{max-width:1320px;margin:22px auto 0;padding:0 24px 12px;display:flex;align-items:flex-end;gap:13px}
+  .vhead .num{font-size:11px;font-weight:800;color:#fff;background:var(--soft);padding:0 10px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none}
+  .vhead .num.home{background:var(--vimo)} .vhead .num.fold{background:var(--text)}
+  .vhead .ttl{font-size:16px;font-weight:800}.vhead .lede{color:var(--faint);font-size:12px;margin-top:2px}
+
+  .stage{max-width:1320px;margin:0 auto;padding:0 24px}
+  .frame{background:#fff;border:1px solid var(--line2);border-radius:16px;overflow:hidden;box-shadow:var(--sh3)}
+  .bar{height:36px;display:flex;align-items:center;gap:8px;padding:0 14px;background:var(--surf);border-bottom:1px solid var(--line)}
+  .dots{display:flex;gap:6px}.dots i{width:9px;height:9px;border-radius:50%;background:#dadada;display:inline-block}
+  .url{margin-left:6px;font-size:11px;color:#999;background:#fff;border:1px solid var(--line);border-radius:7px;padding:3px 11px;display:flex;align-items:center;gap:6px}.url svg{width:11px;height:11px;color:#16a34a}.url .t{margin-left:4px;font-size:9px;font-weight:700;color:var(--vimo);background:var(--vimo-soft);border-radius:5px;padding:1px 6px}
+  .app{display:grid;grid-template-columns:198px 222px 1fr;min-height:680px}
+
+  /* 사이드바 — 프로필 위, 로고 하단 */
+  .sb{background:var(--surf);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:13px 9px 0;font-size:12.5px}
+  .me{display:flex;align-items:center;gap:8px;padding:4px 6px}.me .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#e85008,#c8430a);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none}
+  .me .n{font-weight:700;font-size:12px}.me .r{font-size:9.5px;color:var(--faint)}.me .x{margin-left:auto;color:var(--faint)}.me .x svg{width:14px;height:14px}
+  .store{padding:6px 6px 9px}.store .l{display:flex;justify-content:space-between;font-size:9.5px;color:var(--faint);margin-bottom:4px}.store .l b{color:var(--muted);font-weight:600}
+  .store .b{height:5px;border-radius:99px;background:#e7e7e7;overflow:hidden}.store .b i{display:block;height:100%;background:var(--mybox)}
+  .dv{height:1px;background:var(--line);margin:7px 3px}
+  .lbl{font-size:9.5px;font-weight:700;color:var(--faint);letter-spacing:.05em;padding:9px 8px 4px}
+  .nav{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:8px;color:var(--soft);font-weight:500;cursor:pointer}.nav svg{width:15px;height:15px;color:#9a9a9a}
+  .nav.on{background:var(--page);color:var(--text);font-weight:600}.nav.on.home svg{color:var(--vimo)}
+  .sb-foot{margin-top:auto;border-top:1px solid var(--line);padding:11px 8px;display:flex;align-items:center;gap:8px}
+  .sb-foot .m{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:11px;background:linear-gradient(90deg,var(--vimo) 0 50%,#f9a87a 50%)}
+  .sb-foot .w{font-weight:800;font-size:13px;letter-spacing:-.01em}
+
+  /* 컨텍스트 패널 */
+  .panel{background:#fff;border-right:1px solid var(--line);padding:12px 8px;overflow:hidden;font-size:12.5px}
+  .panel-h{display:flex;align-items:center;gap:7px;padding:3px 7px 8px;font-weight:800;font-size:13px}.panel-h svg{width:15px;height:15px}.panel-h .vmk{width:15px;height:15px}
+  .psec{font-size:9.5px;font-weight:700;color:var(--faint);padding:9px 7px 3px;letter-spacing:.04em}
+  .pf{display:flex;align-items:center;gap:8px;padding:6px 7px;border-radius:7px;cursor:pointer;color:#333}.pf:hover{background:var(--surf)}
+  .pf svg{width:15px;height:15px;color:#a98e6a}.pf.v svg{color:#9a9a9a}.pf.b svg{color:var(--mybox)}.pf .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pf .c{font-size:10px;color:var(--faint)}
+  .pf.cur{background:var(--page);font-weight:700}
+  .pchild{display:flex;align-items:center;gap:8px;padding:5px 7px 5px 26px;border-radius:7px;color:var(--soft);font-size:12px;cursor:pointer}.pchild:hover{background:var(--surf)}.pchild svg{width:14px;height:14px;color:#a98e6a}.pchild.cur{background:var(--vimo-soft);color:var(--vimo-ink);font-weight:700}.pchild .c{margin-left:auto;font-size:10px;color:var(--faint)}.pchild.cur .c{color:var(--vimo-ink)}
+
+  /* 본문 */
+  .main{background:var(--page);overflow:hidden;display:flex;flex-direction:column}
+  .tbar{background:#fff;border-bottom:1px solid var(--line);padding:11px 18px;display:flex;align-items:center;gap:10px}
+  .tbar .hi{font-size:15px;font-weight:800}
+  .tbar .sr{margin-left:auto;display:flex;align-items:center;gap:6px;background:var(--page);border-radius:9px;padding:6px 11px;color:var(--faint);font-size:12px;width:120px}.tbar .sr svg{width:13px;height:13px}
+  .up{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#fff;padding:7px 13px;border-radius:9px}.up svg{width:14px;height:14px}.up.v{background:var(--vimo)}.up.b{background:var(--mybox)}
+  .body{padding:15px 20px 22px;overflow:hidden;flex:1}
+  .todohead{display:flex;align-items:center;gap:8px;margin:0 2px 11px;font-size:13px;font-weight:800}.todohead svg{width:15px;height:15px;color:var(--faint)}
+  .wait{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:6px;background:#ededed;color:#57524d}
+
+  .vmk{width:18px;height:18px;border-radius:5px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:10px;background:linear-gradient(90deg,var(--vimo) 0 50%,#f9a87a 50%);flex:none}
+  .vmk.sm{width:14px;height:14px;font-size:8px;border-radius:4px}
+
+  /* 상태칩 */
+  .st{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:8px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}.st svg{width:11px;height:11px}
+  .st.fix{background:#fff7ed;color:var(--warn)} .st.rev{background:var(--rev-bg);color:var(--rev-fg)} .st.ok{background:var(--ok-bg);color:var(--ok-fg)} .st.prog{background:#f5f5f5;color:var(--soft)}
+  .dl{font-size:11px;font-weight:700;color:var(--faint);display:inline-flex;align-items:center;gap:4px}.dl svg{width:11px;height:11px}.dl.due{color:var(--warn)}
+
+  /* 커버 위 칩 */
+  .cchip{background:rgba(10,10,10,.62);color:#fff;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:6px;display:inline-flex;align-items:center;gap:4px}.cchip svg{width:11px;height:11px}
+  .fchip{background:rgba(255,255,255,.92);color:var(--soft);font-size:9.5px;font-weight:700;padding:3px 6px;border-radius:7px;display:inline-flex;align-items:center;gap:4px}.fchip svg{width:11px;height:11px}
+  .pl{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.92)}.pl svg{width:22px;height:22px}
+  .dur{font-size:9.5px;font-weight:700;color:#fff;background:rgba(0,0,0,.55);padding:1px 6px;border-radius:4px}
+  .verbadge{font-size:9.5px;font-weight:800;padding:1px 7px;border-radius:6px;background:var(--vimo-soft);color:#c8430a}
+
+  /* 섹션 */
+  .seclbl{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800;margin:2px 2px 11px}.seclbl .t{color:var(--vimo-ink)}.seclbl.box .t{color:var(--text)}.seclbl .sum{font-weight:500;font-size:10.5px;color:var(--faint)}.seclbl .more{margin-left:auto;font-size:11px;font-weight:600;color:var(--faint)}.seclbl svg.hd{width:15px;height:15px;color:var(--mybox)}
+  .sec{margin-bottom:18px}
+
+  /* === 디렉션 1: 커버+구성 메타 카드 === */
+  .pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .pcard{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;cursor:pointer}.pcard:hover{box-shadow:var(--sh)}
+  .pcover{position:relative;aspect-ratio:16/9}
+  .pcover .tl{position:absolute;left:8px;top:8px}.pcover .bl{position:absolute;left:8px;bottom:8px}.pcover .br{position:absolute;right:8px;bottom:8px}
+  .ptitle{display:flex;align-items:center;gap:7px;padding:11px 14px 0;font-size:15px;font-weight:800}.ptitle .id{font-size:12px;color:var(--faint);font-weight:600}
+  .pmeta{display:flex;align-items:center;gap:6px;padding:6px 14px 0;font-size:11.5px;color:var(--faint);flex-wrap:wrap}.pmeta svg{width:12px;height:12px;color:#737373}.pmeta .it{display:inline-flex;align-items:center;gap:4px}.pmeta .sep{color:#d4d4d4}.pmeta .end{margin-left:auto}
+  .pfoot{display:flex;align-items:center;justify-content:space-between;padding:11px 14px 13px;margin-top:11px;border-top:1px solid var(--hair)}
+  .pcard.dim{opacity:.66}
+
+  /* === 디렉션 2: 가로 버전 타임라인 카드 === */
+  .pgrid2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  .pcard2{display:flex;gap:12px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;cursor:pointer}.pcard2.vimo{border-color:var(--vimo-line)}.pcard2:hover{box-shadow:var(--sh)}.pcard2.dim{opacity:.62}
+  .pthumb{position:relative;width:132px;height:88px;border-radius:10px;overflow:hidden;flex:none}
+  .pthumb .tl{position:absolute;left:7px;top:7px}.pthumb .tr{position:absolute;right:7px;top:7px}.pthumb .br{position:absolute;right:7px;bottom:7px;display:flex;align-items:center;gap:5px}
+  .pvpip{font-size:9.5px;font-weight:800;color:#fff;background:rgba(10,10,10,.55);padding:1px 6px;border-radius:6px}
+  .playc{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center;color:#222}.playc svg{width:12px;height:12px}
+  .pinfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+  .pinfo .r1{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:800}.pinfo .r1 .id{font-size:11.5px;color:var(--faint);font-weight:600}
+  .pinfo .r2{font-size:11.5px;color:var(--faint)}
+  .pinfo .r3{display:flex;align-items:center;gap:8px;margin-top:1px}
+  .pinfo .r4{font-size:11px;color:var(--faint);margin-top:auto}
+
+  /* 히어로 */
+  .hero{display:grid;grid-template-columns:300px 1fr;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff;margin-bottom:18px}.hero.vimo{border-color:var(--vimo-line)}
+  .hero .th{position:relative;min-height:202px}
+  .hero .th .tr{position:absolute;right:8px;top:8px}.hero .th .bl{position:absolute;left:8px;bottom:8px;display:flex;align-items:center;gap:6px}
+  .hero .info{padding:14px 17px;display:flex;flex-direction:column}
+  .crumb{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--faint);flex-wrap:wrap}.crumb .vmk{flex:none}.crumb b{color:var(--text);font-weight:700}.crumb svg.sep{width:12px;height:12px;color:#c4c4c4}.crumb svg.hd{width:13px;height:13px;color:var(--mybox)}
+  .hero h3{font-size:16.5px;font-weight:800;margin-top:7px;display:flex;align-items:center;gap:9px}
+  .hsub{font-size:11px;color:var(--faint);margin-top:2px}
+  .catchips{display:flex;gap:10px;margin-top:8px}.catchip{font-size:10.5px;color:#737373;display:inline-flex;align-items:center;gap:4px;font-weight:600}.catchip svg{width:12px;height:12px}
+  .reqbox{font-size:11.5px;color:#6a4a35;background:var(--req);border-radius:9px;padding:9px 11px;margin-top:10px;line-height:1.5;display:flex;gap:8px}.reqbox .ava{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#8a6fb0,#6d5a9c);color:#fff;font-size:9px;font-weight:700;display:grid;place-items:center;flex:none}
+  .hmeta{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--faint);margin-top:9px;flex-wrap:wrap}.hmeta .sep{color:#d4d4d4}.hmeta svg{width:11px;height:11px}
+  .act{margin-top:auto;padding-top:13px;display:flex;align-items:center;gap:8px}
+  .btn{font-size:12px;font-weight:600;border-radius:10px;padding:8px 13px;display:inline-flex;align-items:center;gap:6px;cursor:pointer}.btn svg{width:14px;height:14px}
+  .btn.pv{background:var(--vimo);color:#fff}.btn.pb{background:var(--mybox);color:#fff}.btn.g{background:#fff;border:1px solid var(--line2);color:var(--text)}
+  .btn.link{color:var(--faint);font-weight:600;padding:8px 4px}
+  .verdots{display:flex;align-items:center;gap:4px}.verdots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.5)}.verdots i.on{background:var(--vimo)}
+
+  /* 드릴다운 헤더 */
+  .ddhead{background:#fff;border-bottom:1px solid var(--line);padding:13px 20px}
+  .ddtop{display:flex;align-items:center;gap:10px}
+  .ddtop .crumb{flex:1}
+  .ddmeta{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--faint);margin-top:8px;flex-wrap:wrap}.ddmeta svg{width:12px;height:12px;color:#737373}.ddmeta .it{display:inline-flex;align-items:center;gap:4px}.ddmeta .sep{color:#d4d4d4}
+  .seg{display:flex;gap:6px;padding:0 20px;margin:14px 0 4px;flex-wrap:wrap}
+  .segb{font-size:11.5px;font-weight:600;color:var(--soft);padding:6px 11px;border-radius:8px;cursor:pointer}.segb:hover{background:var(--surf)}.segb.on{background:var(--text);color:#fff}.segb .c{opacity:.6;margin-left:3px}
+
+  /* 카테고리 섹션 */
+  .catsec{margin-bottom:18px}
+  .cathd{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;margin:0 2px 9px}.cathd .c{font-size:11px;font-weight:700;color:var(--faint);background:var(--surf);border:1px solid var(--line);border-radius:6px;padding:0 7px}.cathd .more{margin-left:auto;font-size:11px;font-weight:600;color:var(--faint)}.cathd svg{width:15px;height:15px;color:#737373}.catsec.faint{opacity:.66}
+
+  /* 영상 행 (디렉션1 완성본) */
+  .vrow{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:10px}
+  .vrow .top{display:flex;align-items:center;gap:12px;padding:10px 12px}
+  .vrow .vthumb{position:relative;width:96px;height:54px;border-radius:8px;overflow:hidden;flex:none}.vrow .vthumb .dur{position:absolute;right:5px;bottom:5px}
+  .vrow .vname{font-size:13.5px;font-weight:700}.vrow .vsub{font-size:11px;color:var(--faint);margin-top:2px}
+  .vseg{display:flex;gap:5px;margin-left:auto;align-items:center}
+  .vchip{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:7px;background:#f5f5f5;color:#737373;cursor:pointer}.vchip.on{background:var(--vimo-soft);color:#c8430a}.vchip .ll{font-size:8.5px;font-weight:700;opacity:.7;margin-left:3px}
+  .vexpand{border-top:1px solid var(--hair);padding:11px 12px 12px;background:var(--surf)}
+  .vexpand .meta{font-size:11px;color:var(--faint);display:flex;gap:7px;align-items:center}.vexpand .meta .sep{color:#d4d4d4}
+  .vexpand .req{font-size:11.5px;color:#6a4a35;background:var(--req);border-radius:8px;padding:8px 11px;margin-top:9px;line-height:1.5}
+  .vexpand .row{display:flex;align-items:center;gap:8px;margin-top:11px}
+
+  /* 자료 행 */
+  .arow{display:flex;align-items:center;gap:11px;padding:9px 12px;background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:8px}.arow svg.g{width:16px;height:16px;color:#737373}.arow .nm{font-size:12.5px;font-weight:600}.arow .c{margin-left:auto;font-size:11px;color:var(--faint)}.arow .dlg{color:var(--faint)}.arow .dlg svg{width:15px;height:15px}
+  .refgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .ref{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}.ref .rh{aspect-ratio:4/3;display:grid;place-items:center;color:#9a9a9a}.ref .rh svg{width:22px;height:22px}.ref .rn{font-size:11px;font-weight:600;padding:7px 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ref .rn .c{color:var(--faint);font-weight:500}
+
+  /* 디렉션2 버전 트랙 타임라인 */
+  .track{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:11px}.track.cur{border-color:var(--vimo-line)}
+  .trackhd{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:800}.trackhd .latest{margin-left:auto;font-size:11px;color:var(--faint);font-weight:600}
+  .vtl{margin-top:10px}
+  .vtlrow{display:flex;align-items:center;gap:11px;padding:9px 9px;border-radius:9px}.vtlrow.cur{background:var(--surf)}.vtlrow.old{opacity:.62}
+  .dotcol{display:flex;flex-direction:column;align-items:center;width:11px;flex:none;align-self:stretch}.dot{width:9px;height:9px;border-radius:50%;background:#d4d4d4;margin-top:5px}.dot.on{background:var(--vimo)}
+  .vtlrow .vthumb{position:relative;width:72px;height:42px;border-radius:7px;overflow:hidden;flex:none}
+  .vtlrow .vn{font-size:12.5px;font-weight:700}.vtlrow .vc{font-size:11px;color:var(--faint);margin-top:2px;max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .vtlrow .rt{margin-left:auto;display:flex;align-items:center;gap:8px}.vtlrow .when{font-size:10.5px;color:var(--faint)}
+
+  /* 빈/접이 */
+  .collap{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--soft);background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px;cursor:pointer}.collap svg{width:15px;height:15px;color:#737373}.collap .c{font-size:11px;color:var(--faint);font-weight:500}.collap .ch{margin-left:auto;color:#bbb}
+
+  .c1{background:linear-gradient(135deg,#7c3a1d,#c2683a)}.c2{background:linear-gradient(135deg,#243b57,#4a7ba6)}.c3{background:linear-gradient(135deg,#3d2d4f,#7d5a9c)}.c4{background:linear-gradient(135deg,#1a3a30,#357d63)}.c5{background:linear-gradient(135deg,#4a3b1c,#a98a3e)}.c6{background:linear-gradient(135deg,#2f3a44,#5a6b78)}
+
+  .foot{max-width:1320px;margin:0 auto;padding:36px 24px 80px}
+  .foot__card{background:#fff;border:1px solid var(--line2);border-radius:18px;padding:22px 26px;box-shadow:var(--sh)}
+  .foot__card h3{font-size:15px;font-weight:800}.foot__card p{color:var(--muted);font-size:13px;margin-top:8px;line-height:1.62}
+  .pill{font-size:12px;font-weight:600;color:#555;background:var(--page);border:1px solid var(--line2);border-radius:999px;padding:8px 14px}.next{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<nav class="topnav"><div class="topnav__in">
+  <div class="bm">V</div>
+  <h1>비박스 · 프로젝트=폴더 모델 <span>카드 · 드릴다운 · 히어로</span></h1>
+  <div class="tabs">
+    <div class="tg"><b>1 커버+메타</b><a class="tab" href="#d1home">홈</a><a class="tab" href="#d1folder">폴더 열기</a></div>
+    <div class="tg"><b>2 버전 타임라인</b><a class="tab" href="#d2home">홈</a><a class="tab" href="#d2folder">폴더 열기</a></div>
+  </div>
+</div></div></nav>
+
+<div class="intro">
+  <h2>작업물은 영상 한 개가 아니라 '프로젝트=폴더'</h2>
+  <p>한 프로젝트(성수 카페) 안에는 완성본 여러 버전·촬영 원본·레퍼런스·프로젝트 파일이 들어갑니다. 그래서 카드는 단일 영상이 아니라 <b>폴더(프로젝트)</b>를 드러내고, 열면 그 안의 영상·버전·자산이 펼쳐져야 합니다. 디자이너 5명이 발산한 방향을 심사해 상위 2개를 골랐습니다.</p>
+  <div class="model">
+    <h4><svg data-lucide="layers"></svg> 두 디렉션이 공유하는 4계층 모델</h4>
+    <div class="chain">
+      <span class="lvl"><b>프로젝트</b> <span>폴더 · #1042 · 마감</span></span>
+      <span class="arr"><svg data-lucide="chevron-right"></svg></span>
+      <span class="lvl"><b>카테고리</b> <span>완성본·촬영원본·레퍼런스·프로젝트파일</span></span>
+      <span class="arr"><svg data-lucide="chevron-right"></svg></span>
+      <span class="lvl"><b>영상</b> <span>버전군(브랜드필름)</span></span>
+      <span class="arr"><svg data-lucide="chevron-right"></svg></span>
+      <span class="lvl"><b>버전</b> <span>v1·v2·v3 · 상태</span></span>
+    </div>
+    <p>마감은 프로젝트 레벨 1개 · 상태(수정요청/검수중/승인)는 버전 레벨이 원천 → 영상=최신 버전 상태, 프로젝트=하위 영상 상태의 롤업. 이 한 모델·한 키(#1042)를 공유하면 비박스·비모ERP·파트너ERP가 같은 카드로 렌더됩니다.</p>
+  </div>
+  <div class="rank">
+    <span class="rk win"><b>1위</b> 커버+구성 메타 — 99</span>
+    <span class="rk win"><b>2위</b> 버전 타임라인 — 97</span>
+    <span class="rk">확장 드릴다운 — 93</span>
+    <span class="rk">모자이크 프리뷰 — 85</span>
+    <span class="rk">스택 카드 — 79</span>
+  </div>
+</div>
+
+<!-- =========================== 디렉션 1 =========================== -->
+<div class="dirhd">
+  <span class="k">디렉션 1</span>
+  <h3>커버+구성 메타 (Drive식 폴더 카드)</h3>
+  <p>대표 썸네일 커버에 조용한 폴더 마크 하나, 그 아래 한 줄 메타("완성본 3 · 원본 12 · 최신 v3 · 24개 항목")로 폴더를 안 열고도 무엇이 몇 개인지 정량 노출. 폴더를 열면 카테고리 세그먼트 + 영상별 버전 세그먼트.</p>
+</div>
+
+<!-- D1 홈 -->
+<div class="vhead" id="d1home"><div class="num home">홈</div><div><div class="ttl">홈 — 프로젝트 카드 그리드</div><div class="lede">히어로(가장 급한 영상 1건, 프로젝트 컨텍스트 동반) + 비모 프로젝트 카드 3장 + My box.</div></div></div>
+<div class="stage"><div class="frame"><div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="t">파트너</span></div></div>
+<div class="app">
+  <aside class="sb">
+    <div class="me"><span class="av">서</span><div><div class="n">서준</div><div class="r">외부 편집 · 파트너</div></div><span class="x"><svg data-lucide="log-out"></svg></span></div>
+    <div class="store"><div class="l"><b>저장 공간</b><span>41%</span></div><div class="b"><i style="width:41%"></i></div></div>
+    <div class="dv"></div>
+    <div class="nav on home"><svg data-lucide="house"></svg> 홈</div>
+    <div class="lbl">클라우드</div><div class="nav"><svg data-lucide="handshake"></svg> 비모와의 작업</div><div class="nav"><svg data-lucide="hard-drive"></svg> My box</div>
+    <div class="lbl">라이브러리</div><div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+    <div class="sb-foot"><div class="m">V</div><div class="w">비박스</div></div>
+  </aside>
+  <aside class="panel">
+    <div class="panel-h"><svg data-lucide="house" style="color:var(--vimo)"></svg> 바로가기</div>
+    <div class="psec">비모 프로젝트</div>
+    <div class="pf v"><svg data-lucide="folder"></svg><span class="nm">성수 카페</span><span class="c">24</span></div>
+    <div class="pf v"><svg data-lucide="folder"></svg><span class="nm">그래놀라</span><span class="c">11</span></div>
+    <div class="pf v"><svg data-lucide="folder"></svg><span class="nm">자동차 OO</span><span class="c">19</span></div>
+    <div class="psec">My box 폴더</div>
+    <div class="pf b"><svg data-lucide="folder"></svg><span class="nm">포트폴리오</span><span class="c">8</span></div>
+    <div class="pf b"><svg data-lucide="folder"></svg><span class="nm">촬영본 모음</span><span class="c">23</span></div>
+  </aside>
+  <main class="main">
+    <div class="tbar"><div class="hi">안녕하세요, 서준님</div><span class="sr"><svg data-lucide="search"></svg> 검색</span><span class="up v"><svg data-lucide="upload"></svg> 업로드</span></div>
+    <div class="body">
+      <div class="todohead"><svg data-lucide="target"></svg> 지금 할 일 <span class="wait">처리 대기 2건</span></div>
+      <!-- 히어로 -->
+      <div class="hero vimo">
+        <div class="th c1"><div class="tr"><span class="cchip"><svg data-lucide="layers"></svg>이 프로젝트 영상 4</span></div><div class="pl"><svg data-lucide="play"></svg></div><div class="bl"><span class="verbadge">v3</span><span class="dur">1:48</span></div></div>
+        <div class="info">
+          <div class="crumb"><span class="vmk sm">V</span> 성수 카페 <span class="mono">#1042</span> <svg data-lucide="chevron-right" class="sep"></svg> 완성본 <svg data-lucide="chevron-right" class="sep"></svg> <b>브랜드필름</b></div>
+          <h3>브랜드필름 v3 <span class="st fix"><svg data-lucide="alert-circle"></svg>수정 요청 2</span></h3>
+          <div class="catchips"><span class="catchip"><svg data-lucide="type"></svg>자막 1</span><span class="catchip"><svg data-lucide="palette"></svg>색보정 1</span></div>
+          <div class="reqbox"><span class="ava">박</span><span>0:42 자막 오타 '브랜대'→'브랜드', 1:15 컷 전환 다듬기 — 박매니저</span></div>
+          <div class="hmeta"><span class="dl due"><svg data-lucide="clock"></svg>D-2 · 6/16 마감</span><span class="sep">·</span>v3 업로드 2일 전<span class="sep">·</span>코멘트 4<span class="sep">·</span>최근 수정요청 3시간 전</div>
+          <div class="act"><span class="btn pv"><svg data-lucide="upload"></svg>새 버전(v4) 올리기</span><span class="btn g"><svg data-lucide="message-square"></svg>코멘트 보기</span><span class="btn link">프로젝트 열기 →</span></div>
+        </div>
+      </div>
+      <!-- 비모 프로젝트 카드 -->
+      <div class="sec"><div class="seclbl"><span class="vmk sm">V</span><span class="t">비모와의 작업</span><span class="sum">진행 중 프로젝트 3</span></div>
+        <div class="pgrid">
+          <div class="pcard"><div class="pcover c1"><div class="tl"><span class="fchip"><svg data-lucide="folder"></svg></span></div><div class="bl"><span class="cchip"><svg data-lucide="film"></svg>영상 4</span></div><div class="pl"><svg data-lucide="play"></svg></div></div>
+            <div class="ptitle"><span class="vmk sm">V</span>성수 카페 <span class="id mono">#1042</span></div>
+            <div class="pmeta"><span class="it"><svg data-lucide="check-circle-2"></svg>완성본 3</span><span class="sep">·</span><span class="it"><svg data-lucide="film"></svg>원본 12</span><span class="sep">·</span><span class="it"><svg data-lucide="git-branch"></svg>최신 v3</span><span class="end mono">24개 항목</span></div>
+            <div class="pfoot"><span class="st fix"><svg data-lucide="alert-circle"></svg>수정 요청 2</span><span class="dl due"><svg data-lucide="clock"></svg>D-2 · 6/16</span></div>
+          </div>
+          <div class="pcard"><div class="pcover c4"><div class="tl"><span class="fchip"><svg data-lucide="folder"></svg></span></div><div class="bl"><span class="cchip"><svg data-lucide="film"></svg>영상 2</span></div><div class="pl"><svg data-lucide="play"></svg></div></div>
+            <div class="ptitle"><span class="vmk sm">V</span>그래놀라 <span class="id mono">#1039</span></div>
+            <div class="pmeta"><span class="it"><svg data-lucide="check-circle-2"></svg>완성본 2</span><span class="sep">·</span><span class="it"><svg data-lucide="film"></svg>원본 6</span><span class="sep">·</span><span class="it"><svg data-lucide="git-branch"></svg>최신 v2</span><span class="end mono">11개 항목</span></div>
+            <div class="pfoot"><span class="st rev"><svg data-lucide="clock"></svg>검수 중</span><span class="dl"><svg data-lucide="clock"></svg>D-5</span></div>
+          </div>
+          <div class="pcard dim"><div class="pcover c6"><div class="tl"><span class="fchip"><svg data-lucide="folder"></svg></span></div><div class="bl"><span class="cchip"><svg data-lucide="film"></svg>영상 3</span></div><div class="pl"><svg data-lucide="play"></svg></div></div>
+            <div class="ptitle"><span class="vmk sm">V</span>자동차 OO <span class="id mono">#1011</span></div>
+            <div class="pmeta"><span class="it"><svg data-lucide="check-circle-2"></svg>완성본 3</span><span class="sep">·</span><span class="it"><svg data-lucide="film"></svg>원본 8</span><span class="sep">·</span><span class="it"><svg data-lucide="git-branch"></svg>최신 v4</span><span class="end mono">19개 항목</span></div>
+            <div class="pfoot"><span class="st ok"><svg data-lucide="check-circle-2"></svg>승인됨</span><span class="dl">납품 완료 5/28</span></div>
+          </div>
+        </div>
+      </div>
+      <!-- My box -->
+      <div class="sec"><div class="seclbl box"><svg data-lucide="hard-drive" class="hd"></svg><span class="t">My box</span><span class="sum">내 폴더 · 공유 중 4</span></div>
+        <div class="pgrid">
+          <div class="pcard"><div class="pcover c3"><div class="tl"><span class="fchip"><svg data-lucide="folder"></svg></span></div><div class="bl"><span class="cchip"><svg data-lucide="film"></svg>영상 5</span></div><div class="pl"><svg data-lucide="play"></svg></div></div>
+            <div class="ptitle"><svg data-lucide="hard-drive" style="width:16px;height:16px;color:var(--mybox)"></svg>포트폴리오</div>
+            <div class="pmeta"><span class="it"><svg data-lucide="film"></svg>영상 5</span><span class="sep">·</span><span class="it"><svg data-lucide="image"></svg>이미지 3</span><span class="end mono">8개 항목</span></div>
+            <div class="pfoot"><span class="st" style="background:var(--mybox-soft);color:var(--mybox)"><svg data-lucide="share-2"></svg>공유 중</span><span class="dl">3시간 전 코멘트</span></div>
+          </div>
+          <div class="pcard"><div class="pcover c5"><div class="tl"><span class="fchip"><svg data-lucide="folder"></svg></span></div><div class="bl"><span class="cchip"><svg data-lucide="film"></svg>원본 18</span></div></div>
+            <div class="ptitle"><svg data-lucide="hard-drive" style="width:16px;height:16px;color:var(--mybox)"></svg>촬영본 모음</div>
+            <div class="pmeta"><span class="it"><svg data-lucide="film"></svg>원본 18</span><span class="sep">·</span>112GB<span class="end mono">23개 항목</span></div>
+            <div class="pfoot"><span class="st prog"><svg data-lucide="folder"></svg>보관</span><span class="dl">어제</span></div>
+          </div>
+          <div class="pcard" style="border-style:dashed;border-color:var(--dash);background:var(--surf);display:grid;place-items:center;min-height:170px"><div style="text-align:center;color:var(--faint)"><svg data-lucide="folder-plus" style="width:24px;height:24px;color:var(--mybox)"></svg><div style="font-size:12px;font-weight:600;margin-top:8px">새 폴더 / 업로드</div></div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div></div></div>
+
+<!-- D1 폴더 드릴다운 -->
+<div class="vhead" id="d1folder"><div class="num fold">폴더</div><div><div class="ttl">폴더 열기 — 성수 카페 #1042</div><div class="lede">카테고리 세그먼트 + 완성본 섹션(영상별 버전 세그먼트, v3 펼침) + 촬영원본·레퍼런스·프로젝트파일.</div></div></div>
+<div class="stage"><div class="frame"><div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud/team<span class="t">성수 카페</span></div></div>
+<div class="app">
+  <aside class="sb">
+    <div class="me"><span class="av">서</span><div><div class="n">서준</div><div class="r">외부 편집 · 파트너</div></div><span class="x"><svg data-lucide="log-out"></svg></span></div>
+    <div class="store"><div class="l"><b>저장 공간</b><span>41%</span></div><div class="b"><i style="width:41%"></i></div></div>
+    <div class="dv"></div>
+    <div class="nav home"><svg data-lucide="house"></svg> 홈</div>
+    <div class="lbl">클라우드</div><div class="nav on"><svg data-lucide="handshake"></svg> 비모와의 작업</div><div class="nav"><svg data-lucide="hard-drive"></svg> My box</div>
+    <div class="lbl">라이브러리</div><div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+    <div class="sb-foot"><div class="m">V</div><div class="w">비박스</div></div>
+  </aside>
+  <aside class="panel">
+    <div class="panel-h"><span class="vmk">V</span> 성수 카페</div>
+    <div class="pf v cur"><svg data-lucide="folder-open" style="color:var(--vimo)"></svg><span class="nm">성수 카페</span><span class="c mono">#1042</span></div>
+    <div class="pchild cur"><svg data-lucide="check-circle-2"></svg> 완성본<span class="c">3</span></div>
+    <div class="pchild"><svg data-lucide="film"></svg> 촬영원본<span class="c">12</span></div>
+    <div class="pchild"><svg data-lucide="image"></svg> 레퍼런스<span class="c">5</span></div>
+    <div class="pchild"><svg data-lucide="file-cog"></svg> 프로젝트파일<span class="c">4</span></div>
+    <div class="psec">다른 프로젝트</div>
+    <div class="pf v"><svg data-lucide="folder"></svg><span class="nm">그래놀라</span><span class="c">11</span></div>
+    <div class="pf v"><svg data-lucide="folder"></svg><span class="nm">자동차 OO</span><span class="c">19</span></div>
+  </aside>
+  <main class="main">
+    <div class="ddhead">
+      <div class="ddtop">
+        <div class="crumb"><span class="vmk sm">V</span> 비모와의 작업 <svg data-lucide="chevron-right" class="sep"></svg> <b>성수 카페</b> <span class="mono" style="color:var(--faint)">#1042</span></div>
+        <span class="dl due"><svg data-lucide="clock"></svg>D-2 · 6/16</span><span class="st fix"><svg data-lucide="alert-circle"></svg>수정 요청 2</span>
+        <span class="btn g" style="padding:6px 11px"><svg data-lucide="download"></svg>전체 다운로드</span>
+      </div>
+      <div class="ddmeta"><span class="it"><svg data-lucide="check-circle-2"></svg>완성본 3</span><span class="sep">·</span><span class="it"><svg data-lucide="film"></svg>원본 12</span><span class="sep">·</span><span class="it"><svg data-lucide="git-branch"></svg>최신 v3</span><span class="sep">·</span><span class="mono">24개 항목</span><span class="sep">·</span>담당 박매니저</div>
+    </div>
+    <div class="seg"><span class="segb">전체</span><span class="segb on">완성본<span class="c">3</span></span><span class="segb">촬영원본<span class="c">12</span></span><span class="segb">레퍼런스<span class="c">5</span></span><span class="segb">프로젝트파일<span class="c">4</span></span></div>
+    <div class="body" style="padding-top:8px">
+      <!-- 완성본 -->
+      <div class="catsec"><div class="cathd"><svg data-lucide="check-circle-2"></svg>완성본<span class="c">3</span><span class="more">업로드 +</span></div>
+        <div class="vrow">
+          <div class="top"><div class="vthumb c1"><div class="pl"><svg data-lucide="play"></svg></div><span class="dur">1:48</span></div>
+            <div><div class="vname">브랜드필름</div><div class="vsub">3개 버전 · 최신 12분 전</div></div>
+            <div class="vseg"><span class="vchip on">v3<span class="ll">최신</span></span><span class="vchip">v2</span><span class="vchip">v1</span><span class="st fix" style="margin-left:6px"><svg data-lucide="alert-circle"></svg>수정 요청 2</span></div>
+          </div>
+          <div class="vexpand">
+            <div class="meta"><span>v3</span><span class="sep">·</span>1:48<span class="sep">·</span>284MB<span class="sep">·</span>업로드 2일 전<span class="sep">·</span>코멘트 4</div>
+            <div class="req">0:42 자막 오타 '브랜대'→'브랜드', 1:15 컷 전환 다듬기 — 박매니저</div>
+            <div class="row"><span class="btn pv"><svg data-lucide="upload"></svg>새 버전(v4) 전달</span><span class="btn g"><svg data-lucide="play"></svg>v3 보기</span><span class="btn g"><svg data-lucide="message-square"></svg>코멘트 4</span></div>
+          </div>
+        </div>
+        <div class="vrow"><div class="top"><div class="vthumb c4"><div class="pl"><svg data-lucide="play"></svg></div><span class="dur">0:30</span></div>
+          <div><div class="vname">광고_30s</div><div class="vsub">2개 버전 · 어제</div></div>
+          <div class="vseg"><span class="vchip on">v2<span class="ll">최신</span></span><span class="vchip">v1</span><span class="st rev" style="margin-left:6px"><svg data-lucide="clock"></svg>검수 중</span></div></div>
+        </div>
+        <div class="vrow"><div class="top"><div class="vthumb c2"><div class="pl"><svg data-lucide="play"></svg></div><span class="dur">0:15</span></div>
+          <div><div class="vname">티저_15s</div><div class="vsub">1개 버전 · 3일 전</div></div>
+          <div class="vseg"><span class="vchip on">v1</span><span class="st ok" style="margin-left:6px"><svg data-lucide="check-circle-2"></svg>승인됨</span></div></div>
+        </div>
+      </div>
+      <!-- 촬영원본 -->
+      <div class="catsec"><div class="cathd"><svg data-lucide="film"></svg>촬영원본<span class="c">12</span></div>
+        <div class="arow"><svg data-lucide="film" class="g"></svg><span class="nm">촬영본_A_0312.mov</span><span class="c">4.2GB · 03/12</span><span class="dlg"><svg data-lucide="download"></svg></span></div>
+        <div class="arow"><svg data-lucide="film" class="g"></svg><span class="nm">촬영본_B_0312.mov</span><span class="c">3.8GB · 03/12</span><span class="dlg"><svg data-lucide="download"></svg></span></div>
+        <div class="arow" style="opacity:.7;justify-content:center;color:var(--faint);font-size:11.5px;font-weight:600">+ 10개 더 보기</div>
+      </div>
+      <!-- 레퍼런스 -->
+      <div class="catsec"><div class="cathd"><svg data-lucide="image"></svg>레퍼런스<span class="c">5</span></div>
+        <div class="refgrid">
+          <div class="ref"><div class="rh c3"></div><div class="rn">무드보드_01.jpg <span class="c">이미지</span></div></div>
+          <div class="ref"><div class="rh" style="background:var(--surf)"><svg data-lucide="file-text"></svg></div><div class="rn">견적서_v2.pdf <span class="c">문서</span></div></div>
+          <div class="ref"><div class="rh" style="background:var(--surf)"><svg data-lucide="link"></svg></div><div class="rn">참고 영상 → <span class="c">링크</span></div></div>
+          <div class="ref"><div class="rh c6"></div><div class="rn">경쟁사_사례.mp4 <span class="c">영상</span></div></div>
+        </div>
+      </div>
+      <!-- 프로젝트파일 (접힘) -->
+      <div class="collap"><svg data-lucide="file-cog"></svg> 프로젝트파일<span class="c">· prproj · srt · wav 4개</span><span class="ch"><svg data-lucide="chevron-down"></svg></span></div>
+    </div>
+  </main>
+</div></div></div>
+
+<!-- =========================== 디렉션 2 =========================== -->
+<div class="dirhd">
+  <span class="k">디렉션 2</span>
+  <h3>버전 타임라인 (고치고 다시 올린다)</h3>
+  <p>프로젝트를 '한 영상의 버전 흐름(v1→v2→v3)'으로 봅니다. 카드 대표는 늘 최신본+버전핍, 폴더를 열면 영상(트랙)별로 각 버전의 피드백·상태가 위→아래로 쌓이는 타임라인. 편집 납품의 반복에 정확히 맞고, ERP 일감 상태머신과 같은 데이터 계약을 씁니다.</p>
+</div>
+
+<!-- D2 홈 -->
+<div class="vhead" id="d2home"><div class="num home">홈</div><div><div class="ttl">홈 — 가로 프로젝트 카드(버전핍)</div><div class="lede">히어로(버전 진행 점) + 가로형 프로젝트 카드(대표=최신본, 구성요약 한 줄, 지금 손댈 상태 1개).</div></div></div>
+<div class="stage"><div class="frame"><div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="t">파트너</span></div></div>
+<div class="app">
+  <aside class="sb">
+    <div class="me"><span class="av">서</span><div><div class="n">서준</div><div class="r">외부 편집 · 파트너</div></div><span class="x"><svg data-lucide="log-out"></svg></span></div>
+    <div class="store"><div class="l"><b>저장 공간</b><span>41%</span></div><div class="b"><i style="width:41%"></i></div></div>
+    <div class="dv"></div>
+    <div class="nav on home"><svg data-lucide="house"></svg> 홈</div>
+    <div class="lbl">클라우드</div><div class="nav"><svg data-lucide="handshake"></svg> 비모와의 작업</div><div class="nav"><svg data-lucide="hard-drive"></svg> My box</div>
+    <div class="lbl">라이브러리</div><div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+    <div class="sb-foot"><div class="m">V</div><div class="w">비박스</div></div>
+  </aside>
+  <aside class="panel">
+    <div class="panel-h"><svg data-lucide="house" style="color:var(--vimo)"></svg> 바로가기</div>
+    <div class="psec">비모 프로젝트</div>
+    <div class="pf v"><svg data-lucide="folder"></svg><span class="nm">성수 카페</span><span class="c">v3</span></div>
+    <div class="pf v"><svg data-lucide="folder"></svg><span class="nm">그래놀라</span><span class="c">v2</span></div>
+    <div class="pf v"><svg data-lucide="folder"></svg><span class="nm">자동차 OO</span><span class="c">v4</span></div>
+    <div class="psec">My box 폴더</div>
+    <div class="pf b"><svg data-lucide="folder"></svg><span class="nm">포트폴리오</span><span class="c">8</span></div>
+    <div class="pf b"><svg data-lucide="folder"></svg><span class="nm">촬영본 모음</span><span class="c">23</span></div>
+  </aside>
+  <main class="main">
+    <div class="tbar"><div class="hi">안녕하세요, 서준님</div><span class="sr"><svg data-lucide="search"></svg> 검색</span><span class="up v"><svg data-lucide="upload"></svg> 업로드</span></div>
+    <div class="body">
+      <div class="todohead"><svg data-lucide="target"></svg> 지금 할 일 <span class="wait">처리 대기 2건</span></div>
+      <!-- 히어로 (버전 점) -->
+      <div class="hero vimo">
+        <div class="th c1"><div class="tr"><span class="cchip"><svg data-lucide="layers"></svg>v3 · 3번째 버전</span></div><div class="pl"><svg data-lucide="play"></svg></div><div class="bl"><span class="dur">1:48</span><span class="verdots"><i></i><i></i><i class="on"></i></span></div></div>
+        <div class="info">
+          <div class="crumb"><span class="vmk sm">V</span> 비모와의 작업 <svg data-lucide="chevron-right" class="sep"></svg> 성수 카페 <span class="mono">#1042</span> <svg data-lucide="chevron-right" class="sep"></svg> <b>완성본</b></div>
+          <h3>브랜드필름 · v3 <span class="st fix"><svg data-lucide="alert-circle"></svg>수정 요청 2</span></h3>
+          <div class="hsub">v2에서 이어짐 · 3번째 버전</div>
+          <div class="reqbox"><span class="ava">박</span><span>0:42 로고 더 크게 / 인트로 0.5s 컷 — 박매니저</span></div>
+          <div class="hmeta"><span class="dl due"><svg data-lucide="clock"></svg>마감 D-2 · 6/16</span><span class="sep">·</span>코멘트 4<span class="sep">·</span>이전 버전 v2 반려<span class="sep">·</span>최신 12분 전</div>
+          <div class="act"><span class="btn pv"><svg data-lucide="upload"></svg>v4 업로드</span><span class="btn g"><svg data-lucide="message-square"></svg>v3 코멘트 보기</span><span class="btn link">이 프로젝트 보기 →</span></div>
+        </div>
+      </div>
+      <!-- 가로 카드 -->
+      <div class="sec"><div class="seclbl"><span class="vmk sm">V</span><span class="t">비모와의 작업</span><span class="sum">진행 중 프로젝트 3</span></div>
+        <div class="pgrid2">
+          <div class="pcard2 vimo"><div class="pthumb c1"><div class="tl"><span class="cchip"><svg data-lucide="layers"></svg>4</span></div><div class="tr"><span class="pvpip">v3</span></div><div class="br"><span class="playc"><svg data-lucide="play"></svg></span><span class="dur">1:48</span></div></div>
+            <div class="pinfo"><div class="r1"><span class="vmk sm">V</span>성수 카페 <span class="id mono">#1042</span></div>
+              <div class="r2">영상 3 · 원본 2 · 레퍼런스 4</div>
+              <div class="r3"><span class="st fix"><svg data-lucide="alert-circle"></svg>수정 요청 2</span><span class="dl due"><svg data-lucide="clock"></svg>D-2</span></div>
+              <div class="r4">브랜드필름_v3 · 12분 전 수정 요청</div></div>
+          </div>
+          <div class="pcard2 vimo"><div class="pthumb c4"><div class="tl"><span class="cchip"><svg data-lucide="layers"></svg>2</span></div><div class="tr"><span class="pvpip">v2</span></div><div class="br"><span class="playc"><svg data-lucide="play"></svg></span><span class="dur">0:30</span></div></div>
+            <div class="pinfo"><div class="r1"><span class="vmk sm">V</span>그래놀라 <span class="id mono">#1039</span></div>
+              <div class="r2">영상 2 · 원본 1 · 자막 1</div>
+              <div class="r3"><span class="st rev"><svg data-lucide="clock"></svg>검수 중</span></div>
+              <div class="r4">광고_30s_v2 · 어제 업로드</div></div>
+          </div>
+          <div class="pcard2 dim"><div class="pthumb c6"><div class="tl"><span class="cchip"><svg data-lucide="layers"></svg>3</span></div><div class="tr"><span class="pvpip">v4</span></div><div class="br"><span class="playc"><svg data-lucide="play"></svg></span><span class="dur">0:15</span></div></div>
+            <div class="pinfo"><div class="r1"><span class="vmk sm">V</span>자동차 OO <span class="id mono">#1011</span></div>
+              <div class="r2">영상 4 · 원본 3 · 프로젝트파일 1</div>
+              <div class="r3"><span class="st ok"><svg data-lucide="check-circle-2"></svg>승인됨</span></div>
+              <div class="r4">티저_15s_v4 · 3일 전 승인</div></div>
+          </div>
+          <div class="pcard2 vimo" style="border-style:dashed;border-color:var(--dash);align-items:center;justify-content:center;color:var(--faint)"><svg data-lucide="folder-plus" style="width:18px;height:18px;color:var(--vimo)"></svg><span style="font-size:12px;font-weight:600">새 작업은 비모가 열어줘요</span></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div></div></div>
+
+<!-- D2 폴더 드릴다운 -->
+<div class="vhead" id="d2folder"><div class="num fold">폴더</div><div><div class="ttl">폴더 열기 — 버전 타임라인</div><div class="lede">완성본 영상별 트랙. 각 트랙 안에서 v3(현재 손댈)→v2(반려)→v1(초안)이 위→아래로 쌓임.</div></div></div>
+<div class="stage"><div class="frame"><div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud/team<span class="t">성수 카페</span></div></div>
+<div class="app">
+  <aside class="sb">
+    <div class="me"><span class="av">서</span><div><div class="n">서준</div><div class="r">외부 편집 · 파트너</div></div><span class="x"><svg data-lucide="log-out"></svg></span></div>
+    <div class="store"><div class="l"><b>저장 공간</b><span>41%</span></div><div class="b"><i style="width:41%"></i></div></div>
+    <div class="dv"></div>
+    <div class="nav home"><svg data-lucide="house"></svg> 홈</div>
+    <div class="lbl">클라우드</div><div class="nav on"><svg data-lucide="handshake"></svg> 비모와의 작업</div><div class="nav"><svg data-lucide="hard-drive"></svg> My box</div>
+    <div class="lbl">라이브러리</div><div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+    <div class="sb-foot"><div class="m">V</div><div class="w">비박스</div></div>
+  </aside>
+  <aside class="panel">
+    <div class="panel-h"><span class="vmk">V</span> 성수 카페</div>
+    <div class="pf v cur"><svg data-lucide="folder-open" style="color:var(--vimo)"></svg><span class="nm">성수 카페</span><span class="c mono">#1042</span></div>
+    <div class="pchild cur"><svg data-lucide="git-branch"></svg> 브랜드필름<span class="c">v3</span></div>
+    <div class="pchild"><svg data-lucide="git-branch"></svg> 광고_30s<span class="c">v2</span></div>
+    <div class="pchild"><svg data-lucide="git-branch"></svg> 티저_15s<span class="c">v1</span></div>
+    <div class="psec">자료</div>
+    <div class="pchild"><svg data-lucide="film"></svg> 촬영원본<span class="c">2</span></div>
+    <div class="pchild"><svg data-lucide="image"></svg> 레퍼런스<span class="c">4</span></div>
+    <div class="pchild"><svg data-lucide="file-cog"></svg> 프로젝트파일<span class="c">1</span></div>
+  </aside>
+  <main class="main">
+    <div class="ddhead">
+      <div class="ddtop">
+        <div class="crumb"><span class="vmk sm">V</span> 비모와의 작업 <svg data-lucide="chevron-right" class="sep"></svg> <b>성수 카페</b> <span class="mono" style="color:var(--faint)">#1042</span></div>
+        <span class="dl due"><svg data-lucide="clock"></svg>D-2 · 6/16</span>
+        <span class="btn pv" style="padding:6px 11px"><svg data-lucide="upload"></svg>새 버전 업로드</span>
+      </div>
+      <div class="ddmeta"><span class="it"><svg data-lucide="git-branch"></svg>영상 3</span><span class="sep">·</span><span class="it"><svg data-lucide="film"></svg>원본 2</span><span class="sep">·</span><span class="it"><svg data-lucide="image"></svg>레퍼런스 4</span><span class="sep">·</span><span class="it"><svg data-lucide="file-cog"></svg>프로젝트파일 1</span></div>
+    </div>
+    <div class="body" style="padding-top:13px">
+      <!-- 트랙 1: 브랜드필름 (현재) -->
+      <div class="track cur">
+        <div class="trackhd"><svg data-lucide="git-branch" style="width:15px;height:15px;color:var(--vimo)"></svg>브랜드필름 <span class="st fix"><svg data-lucide="alert-circle"></svg>수정 요청 2</span><span class="latest">최신 v3</span></div>
+        <div class="vtl">
+          <div class="vtlrow cur"><div class="dotcol"><span class="dot on"></span></div><div class="vthumb c1"><div class="pl"><svg data-lucide="play"></svg></div></div>
+            <div><div class="vn">v3 · 1:48</div><div class="vc">0:42 자막 오타 '브랜대'→'브랜드', 1:15 컷 전환 다듬기</div></div>
+            <div class="rt"><span class="when">12분 전</span><span class="btn pv" style="padding:6px 11px"><svg data-lucide="upload"></svg>새 버전(v4)</span></div>
+          </div>
+          <div class="vtlrow old"><div class="dotcol"><span class="dot"></span></div><div class="vthumb c1"><div class="pl"><svg data-lucide="play"></svg></div></div>
+            <div><div class="vn">v2 · 1:50</div><div class="vc">BGM 변경 요청 — 반려</div></div>
+            <div class="rt"><span class="when">어제</span><span class="st prog"><svg data-lucide="corner-up-left"></svg>반려</span></div>
+          </div>
+          <div class="vtlrow old"><div class="dotcol"><span class="dot"></span></div><div class="vthumb c1"><div class="pl"><svg data-lucide="play"></svg></div></div>
+            <div><div class="vn">v1 · 1:52</div><div class="vc">초안 확인</div></div>
+            <div class="rt"><span class="when">3일 전</span></div>
+          </div>
+        </div>
+      </div>
+      <!-- 트랙 2: 광고_30s -->
+      <div class="track">
+        <div class="trackhd"><svg data-lucide="git-branch" style="width:15px;height:15px;color:#737373"></svg>광고_30s <span class="st rev"><svg data-lucide="clock"></svg>검수 중</span><span class="latest">최신 v2</span></div>
+        <div class="vtl">
+          <div class="vtlrow cur"><div class="dotcol"><span class="dot on"></span></div><div class="vthumb c4"><div class="pl"><svg data-lucide="play"></svg></div></div>
+            <div><div class="vn">v2 · 0:30</div><div class="vc">매니저 검수 대기 중</div></div>
+            <div class="rt"><span class="when">어제</span></div>
+          </div>
+          <div class="vtlrow old"><div class="dotcol"><span class="dot"></span></div><div class="vthumb c4"><div class="pl"><svg data-lucide="play"></svg></div></div>
+            <div><div class="vn">v1 · 0:30</div><div class="vc">로고 노출 시간 조정 요청</div></div>
+            <div class="rt"><span class="when">2일 전</span></div>
+          </div>
+        </div>
+      </div>
+      <!-- 트랙 3: 티저 (단일) -->
+      <div class="track">
+        <div class="trackhd"><svg data-lucide="git-branch" style="width:15px;height:15px;color:#737373"></svg>티저_15s <span class="st ok"><svg data-lucide="check-circle-2"></svg>승인됨</span><span class="latest">v1 단일</span></div>
+      </div>
+      <!-- 자료 (접이) -->
+      <div class="collap"><svg data-lucide="film"></svg> 촬영 원본<span class="c">· 2개 · 8.0GB</span><span class="ch"><svg data-lucide="chevron-down"></svg></span></div>
+      <div class="collap"><svg data-lucide="image"></svg> 레퍼런스<span class="c">· 무드보드 · 참고 링크 4개</span><span class="ch"><svg data-lucide="chevron-down"></svg></span></div>
+      <div class="collap"><svg data-lucide="file-cog"></svg> 프로젝트파일<span class="c">· prproj 1개 · 38MB</span><span class="ch"><svg data-lucide="chevron-down"></svg></span></div>
+    </div>
+  </main>
+</div></div></div>
+
+<footer class="foot">
+  <div class="foot__card">
+    <h3>어느 디렉션으로 갈까요?</h3>
+    <p>1(커버+구성 메타)은 Drive처럼 폴더를 안 열고도 "무엇이 몇 개"인지 한 줄로 보여줘 둘러보기·탐색에 강합니다. 2(버전 타임라인)는 "고치고 다시 올린다"는 편집 납품의 본질을 v1→v2→v3 흐름으로 그대로 담아, 비모/파트너 ERP의 일감 상태머신(검수중→수정요청→새버전→승인=정산 트리거)과 같은 계약을 씁니다. 둘 다 같은 4계층 모델을 공유하니, 카드 표현만 고르면 됩니다. 고르시면 <b>lib/projects/model.ts</b>(경로 파싱으로 그룹핑) + ProjectCard 컴포넌트로 실제 홈에 적용합니다.</p>
+    <div class="next"><span class="pill">① 디렉션 선택 (1 · 2)</span><span class="pill">② model.ts + ProjectCard 구현</span><span class="pill">③ 비모 ERP #1042 조인키 연동(후속)</span></div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>if(window.lucide) lucide.createIcons();</script>
+</body>
+</html>

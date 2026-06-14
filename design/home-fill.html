@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 · 홈 채우기 4안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --vimo:#e85008; --vimo-soft:#fef0e8; --vimo-line:#fbd9c4; --vimo-ink:#c2410c;
+    --mybox:#f97316; --mybox-soft:#fff3ea;
+    --text:#111; --muted:#5f5f5f; --soft:#666; --faint:#9a9a9a;
+    --gallery:#ececec; --line:#ececec; --line2:#e5e5e5; --surf:#fafafa; --surf2:#f7f7f7;
+    --ok:#16a34a; --warn:#c2700a; --danger:#dc2b02;
+    --sh:0 1px 2px rgba(0,0,0,.04); --sh2:0 5px 16px rgba(0,0,0,.05); --sh3:0 22px 56px rgba(0,0,0,.13);
+    --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);background:var(--gallery);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h2,h3,h4,p{margin:0} a{color:inherit;text-decoration:none}
+  .mono{font-variant-numeric:tabular-nums}
+  svg.lucide{width:1em;height:1em;stroke-width:1.9;flex:none;vertical-align:-.15em}
+
+  .topnav{position:sticky;top:0;z-index:50;background:rgba(248,248,248,.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--line2)}
+  .topnav__in{max-width:1380px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:13px}
+  .brandmark{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(90deg,var(--vimo) 0 50%,#f9a87a 50%);color:#fff;font-weight:800;font-size:16px;box-shadow:var(--sh)}
+  .topnav h1{font-size:14.5px;font-weight:800}.topnav h1 span{color:var(--muted);font-weight:600}
+  .tabs{display:flex;gap:5px;margin-left:auto;flex-wrap:wrap}
+  .tab{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--muted)}
+  .tab b{display:grid;place-items:center;width:18px;height:18px;border-radius:6px;background:#e3e3e3;color:#666;font-size:10.5px;font-weight:800}
+  .tab:hover{background:#fff;color:var(--text);box-shadow:var(--sh)}.tab.is-active{background:var(--text);color:#fff}.tab.is-active b{background:rgba(255,255,255,.22);color:#fff}
+
+  .intro{padding:34px 24px 4px;max-width:1380px;margin:0 auto}
+  .intro h2{font-size:24px;font-weight:800;letter-spacing:-.02em}
+  .intro p{color:var(--muted);font-size:14px;margin-top:9px;max-width:880px;line-height:1.65}
+  .vhead{max-width:1380px;margin:32px auto 0;padding:0 24px 14px;display:flex;align-items:flex-end;gap:14px}
+  .vhead .num{font-size:13px;font-weight:800;color:#fff;background:var(--text);width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none}
+  .vhead .ttl{font-size:18px;font-weight:800}.vhead .ttl em{font-style:normal;color:var(--vimo)}
+  .vhead .lede{color:var(--muted);font-size:12.5px;margin-top:3px}
+
+  .stage{max-width:1380px;margin:0 auto;padding:0 24px}
+  .frame{background:#fff;border:1px solid var(--line2);border-radius:18px;overflow:hidden;box-shadow:var(--sh3)}
+  .bar{height:38px;display:flex;align-items:center;gap:8px;padding:0 14px;background:var(--surf);border-bottom:1px solid var(--line)}
+  .dots{display:flex;gap:6px}.dots i{width:10px;height:10px;border-radius:50%;background:#dadada;display:inline-block}
+  .url{margin-left:8px;font-size:11.5px;color:#999;background:#fff;border:1px solid var(--line);border-radius:8px;padding:4px 12px;display:flex;align-items:center;gap:6px}.url svg{width:11px;height:11px;color:#16a34a}.url .tag{margin-left:5px;font-size:9.5px;font-weight:700;color:var(--vimo);background:var(--vimo-soft);border-radius:5px;padding:1px 6px}
+  .app{display:grid;grid-template-columns:200px 232px 1fr;height:712px}
+
+  /* 사이드바 */
+  .sb{background:var(--surf);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:13px 10px;font-size:12.5px}
+  .logo{display:flex;align-items:center;gap:8px;padding:3px 7px 10px;font-weight:800;font-size:13.5px}
+  .logo .m{width:23px;height:23px;border-radius:7px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:11px;background:linear-gradient(90deg,var(--vimo) 0 50%,#f9a87a 50%)}
+  .me{display:flex;align-items:center;gap:8px;padding:4px 6px}.me .av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#e85008,#c8430a);color:#fff;display:grid;place-items:center;font-size:10.5px;font-weight:700;flex:none}
+  .me .n{font-weight:700;font-size:11.5px}.me .r{font-size:9.5px;color:var(--faint)}
+  .store{padding:5px 6px 9px}.store .l{display:flex;justify-content:space-between;font-size:9.5px;color:var(--faint);margin-bottom:4px}.store .l b{color:var(--muted);font-weight:600}
+  .store .b{height:5px;border-radius:99px;background:#ececec;overflow:hidden}.store .b i{display:block;height:100%;width:32%;background:var(--mybox)}
+  .dv{height:1px;background:var(--line);margin:7px 3px}
+  .lbl{font-size:9.5px;font-weight:700;color:var(--faint);letter-spacing:.05em;padding:10px 8px 4px}
+  .nav{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:8px;color:var(--soft);font-weight:500;cursor:pointer}.nav svg{width:15px;height:15px;color:#9a9a9a}
+  .nav.on{background:var(--surf2);color:var(--text);font-weight:600}.nav.on.home svg{color:var(--vimo)}
+
+  /* 컨텍스트 패널 (홈 → 바로가기) */
+  .panel{background:#fff;border-right:1px solid var(--line);padding:13px 9px;overflow:hidden;font-size:12.5px}
+  .panel-h{display:flex;align-items:center;gap:7px;padding:3px 7px 8px;font-weight:800;font-size:13.5px}.panel-h svg{width:15px;height:15px}
+  .psec{font-size:9.5px;font-weight:700;color:var(--faint);padding:9px 7px 3px;letter-spacing:.04em}
+  .pf{display:flex;align-items:center;gap:8px;padding:6px 7px;border-radius:7px;cursor:pointer;color:#333}.pf:hover{background:var(--surf2)}
+  .pf svg{width:15px;height:15px;color:#a98e6a}.pf .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* 본문 공용 */
+  .main{background:var(--surf2);overflow:hidden;display:flex;flex-direction:column}
+  .tbar{background:#fff;border-bottom:1px solid var(--line);padding:12px 20px;display:flex;align-items:center;gap:10px}
+  .tbar .hi{font-size:15.5px;font-weight:800}
+  .tbar .up{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#fff;background:var(--vimo);padding:7px 13px;border-radius:9px}.tbar .up svg{width:14px;height:14px}
+  .tbar .sr{display:flex;align-items:center;gap:6px;background:var(--surf2);border-radius:9px;padding:6px 11px;color:var(--faint);font-size:12px;width:130px}.tbar .sr svg{width:13px;height:13px}
+  .body{padding:16px 22px;overflow:hidden;flex:1}
+  .lbl2{font-size:11px;font-weight:700;color:var(--faint);margin:0 2px 10px}
+  .card{background:#fff;border:1px solid var(--line2);border-radius:14px;overflow:hidden}
+  .card.vimo{border-color:var(--vimo-line)}
+  .hd{display:flex;align-items:center;gap:8px;padding:10px 13px;font-size:12.5px;font-weight:800;border-bottom:1px solid var(--line)}.hd svg{width:14px;height:14px}
+  .hd.wash{background:var(--vimo-soft);border-bottom-color:var(--vimo-line);color:var(--vimo-ink)}
+  .hd.box svg{color:var(--mybox)} .hd .sum{font-weight:500;font-size:10.5px;color:var(--faint)}
+  .hd .vmk{width:20px;height:20px;border-radius:5px;display:grid;place-items:center;font-weight:800;font-size:10px;color:#fff;background:linear-gradient(90deg,var(--vimo) 0 50%,#f9a87a 50%)}
+  .hd .live{margin-left:auto;font-size:9.5px;font-weight:700;border-radius:999px;padding:2px 9px;background:#fff;border:1px solid var(--vimo-line);color:var(--vimo)}
+  .rows{padding:5px 8px 8px}
+  .r{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:8px}.r:hover{background:var(--surf2)}
+  .r .fi{width:32px;height:21px;border-radius:5px;flex:none}
+  .r .ic{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;flex:none;background:var(--surf2);color:#a98e6a}.r .ic svg{width:15px;height:15px}
+  .r .t{flex:1;min-width:0;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .r .c{font-size:10.5px;color:var(--faint);flex:none}
+  .chip{font-size:10px;font-weight:700;padding:1px 7px;border-radius:6px;flex:none;display:inline-flex;align-items:center;gap:3px}.chip svg{width:10px;height:10px}
+  .chip.fix{background:#ffe7df;color:var(--danger)} .chip.rev{background:#fff1de;color:var(--warn)} .chip.ok{background:#e7f4ec;color:var(--ok)}
+  .th{border-radius:9px;overflow:hidden;aspect-ratio:16/10;position:relative}
+  .th .pl{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.92)}.th .pl svg{width:20px;height:20px}
+  .th .dur{position:absolute;right:6px;bottom:6px;font-size:9px;font-weight:700;color:#fff;background:rgba(0,0,0,.55);padding:1px 5px;border-radius:4px}
+  .g1{background:linear-gradient(135deg,#7c3a1d,#c2683a)} .g2{background:linear-gradient(135deg,#243b57,#4a7ba6)} .g3{background:linear-gradient(135deg,#3d2d4f,#7d5a9c)} .g4{background:linear-gradient(135deg,#1a3a30,#357d63)} .g5{background:linear-gradient(135deg,#4a3b1c,#a98a3e)}
+  .tg{cursor:pointer}.tg .nm{font-size:12px;font-weight:600;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tg .mt{font-size:10px;color:var(--faint);margin-top:1px}
+
+  .foot{max-width:1380px;margin:0 auto;padding:34px 24px 80px}
+  .foot__card{background:#fff;border:1px solid var(--line2);border-radius:18px;padding:22px 26px;box-shadow:var(--sh)}
+  .foot__card h3{font-size:15px;font-weight:800}.foot__card p{color:var(--muted);font-size:13.5px;margin-top:8px;line-height:1.62}
+  .foot__card .next{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}
+  .pill{font-size:12.5px;font-weight:600;color:#555;background:var(--surf2);border:1px solid var(--line2);border-radius:999px;padding:8px 14px}
+</style>
+</head>
+<body>
+
+<nav class="topnav"><div class="topnav__in">
+  <div class="brandmark">V</div>
+  <h1>비박스 · 홈 채우기 <span>4안 (사이드바·패널 고정, 본문만)</span></h1>
+  <div class="tabs">
+    <a class="tab" href="#a"><b>1</b> 썸네일 보강</a>
+    <a class="tab" href="#b"><b>2</b> 2열 균형</a>
+    <a class="tab" href="#c"><b>3</b> 벤토 타일</a>
+    <a class="tab" href="#d"><b>4</b> 최근 소식</a>
+  </div>
+</div></nav>
+
+<div class="intro">
+  <h2>홈 본문을 채우는 4가지 방향</h2>
+  <p>홈이 카드 몇 개라 세로로 비어 보였습니다. 대시보드·마케팅 히어로·좌측 띠 없이, <b>파트너가 실제로 볼 것</b>으로 채웁니다 — 최근 작업물 썸네일, 두 공간 균형, 벤토, 최근 소식. (비모 작업 있음 상태)</p>
+</div>
+
+<!-- 공용 사이드바+패널 매크로 (각 프레임에 반복) -->
+
+<!-- ===== 1. 썸네일 보강 ===== -->
+<div class="vhead"><div class="num">1</div><div><div class="ttl">썸네일 보강 <em>· 최근 작업물을 시각적으로</em></div><div class="lede">비모 작업 카드 아래에 최근 작업물 썸네일 그리드. 영상 회사답게 한눈에, 빈 공간이 채워짐.</div></div></div>
+<div class="stage"><div class="frame"><div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="tag">파트너</span></div></div>
+<div class="app">
+  <aside class="sb">
+    <div class="logo"><div class="m">V</div> 비박스</div>
+    <div class="me"><span class="av">서</span><div><div class="n">서준</div><div class="r">외부 편집 · 파트너</div></div></div>
+    <div class="store"><div class="l"><b>저장 공간</b><span>32%</span></div><div class="b"><i></i></div></div>
+    <div class="dv"></div>
+    <div class="nav on home"><svg data-lucide="house"></svg> 홈</div>
+    <div class="lbl">클라우드</div>
+    <div class="nav"><svg data-lucide="handshake"></svg> 비모와의 작업</div>
+    <div class="nav"><svg data-lucide="hard-drive"></svg> My box</div>
+    <div class="lbl">라이브러리</div>
+    <div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+  </aside>
+  <aside class="panel">
+    <div class="panel-h"><svg data-lucide="house" style="color:var(--vimo)"></svg> 바로가기</div>
+    <div class="psec">비모 프로젝트</div>
+    <div class="pf"><svg data-lucide="folder"></svg><span class="nm">성수 카페</span></div>
+    <div class="pf"><svg data-lucide="folder"></svg><span class="nm">그래놀라</span></div>
+    <div class="psec">My box 폴더</div>
+    <div class="pf"><svg data-lucide="folder" style="color:var(--mybox)"></svg><span class="nm">작업 중</span></div>
+    <div class="pf"><svg data-lucide="folder" style="color:var(--mybox)"></svg><span class="nm">레퍼런스</span></div>
+    <div class="pf"><svg data-lucide="folder" style="color:var(--mybox)"></svg><span class="nm">촬영본</span></div>
+  </aside>
+  <main class="main">
+    <div class="tbar"><div class="hi">안녕하세요, 서준님</div><span class="sr"><svg data-lucide="search"></svg> 검색</span><span class="up"><svg data-lucide="upload"></svg> 업로드</span></div>
+    <div class="body">
+      <div class="card vimo" style="margin-bottom:16px"><div class="hd wash"><div class="vmk">V</div>비모와의 작업 <span class="sum">진행 중 2 · 마감 임박 1</span><span class="live">지금 작업 중</span></div>
+        <div class="rows">
+          <div class="r"><span class="fi g1"></span><span class="t">브랜드필름_최종_v3.mp4</span><span class="chip fix"><svg data-lucide="alert-triangle"></svg>수정 요청</span><span class="c">#1042 · D-2</span></div>
+          <div class="r"><span class="fi g4"></span><span class="t">광고_30s_v2.mp4</span><span class="chip rev"><svg data-lucide="eye"></svg>검수중</span><span class="c">#1039</span></div>
+        </div></div>
+      <div class="lbl2">최근 작업물</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:16px">
+        <div class="tg"><div class="th g1"><div class="pl"><svg data-lucide="play"></svg></div><span class="dur">1:48</span></div><div class="nm">브랜드필름_최종_v3</div><div class="mt">성수 카페 · 22분 전</div></div>
+        <div class="tg"><div class="th g4"><div class="pl"><svg data-lucide="play"></svg></div><span class="dur">0:30</span></div><div class="nm">광고_30s_v2</div><div class="mt">그래놀라 · 1시간 전</div></div>
+        <div class="tg"><div class="th g3"><div class="pl"><svg data-lucide="play"></svg></div><span class="dur">2:12</span></div><div class="nm">룩북_컷편집_v1</div><div class="mt">뷰티 OO · 3시간 전</div></div>
+        <div class="tg"><div class="th g2"><div class="pl"><svg data-lucide="play"></svg></div><span class="dur">0:15</span></div><div class="nm">티저_15s_final</div><div class="mt">자동차 OO · 어제</div></div>
+      </div>
+      <div class="card"><div class="hd box"><svg data-lucide="hard-drive"></svg>My box <span class="sum">· 내 보관함 23</span></div>
+        <div class="rows">
+          <div class="r"><span class="fi g1"></span><span class="t">성수카페_편집중.prproj</span><span class="c">방금 · 38MB</span></div>
+          <div class="r"><span class="ic"><svg data-lucide="folder"></svg></span><span class="t">레퍼런스</span><span class="c">14개</span></div>
+        </div></div>
+    </div>
+  </main>
+</div></div></div>
+
+<!-- ===== 2. 2열 균형 ===== -->
+<div class="vhead"><div class="num">2</div><div><div class="ttl">2열 균형 <em>· 비모 / My box 나란히</em></div><div class="lede">두 공간을 좌우로 두고, 아래 전체폭으로 최근 작업물. 가로 폭을 꽉 채워 빈 느낌 해소.</div></div></div>
+<div class="stage"><div class="frame"><div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="tag">파트너</span></div></div>
+<div class="app">
+  <aside class="sb">
+    <div class="logo"><div class="m">V</div> 비박스</div>
+    <div class="me"><span class="av">서</span><div><div class="n">서준</div><div class="r">외부 편집 · 파트너</div></div></div>
+    <div class="store"><div class="l"><b>저장 공간</b><span>32%</span></div><div class="b"><i></i></div></div>
+    <div class="dv"></div>
+    <div class="nav on home"><svg data-lucide="house"></svg> 홈</div>
+    <div class="lbl">클라우드</div><div class="nav"><svg data-lucide="handshake"></svg> 비모와의 작업</div><div class="nav"><svg data-lucide="hard-drive"></svg> My box</div>
+    <div class="lbl">라이브러리</div><div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+  </aside>
+  <aside class="panel">
+    <div class="panel-h"><svg data-lucide="house" style="color:var(--vimo)"></svg> 바로가기</div>
+    <div class="psec">비모 프로젝트</div><div class="pf"><svg data-lucide="folder"></svg><span class="nm">성수 카페</span></div><div class="pf"><svg data-lucide="folder"></svg><span class="nm">그래놀라</span></div>
+    <div class="psec">My box 폴더</div><div class="pf"><svg data-lucide="folder" style="color:var(--mybox)"></svg><span class="nm">작업 중</span></div><div class="pf"><svg data-lucide="folder" style="color:var(--mybox)"></svg><span class="nm">레퍼런스</span></div><div class="pf"><svg data-lucide="folder" style="color:var(--mybox)"></svg><span class="nm">촬영본</span></div>
+  </aside>
+  <main class="main">
+    <div class="tbar"><div class="hi">안녕하세요, 서준님</div><span class="sr"><svg data-lucide="search"></svg> 검색</span><span class="up"><svg data-lucide="upload"></svg> 업로드</span></div>
+    <div class="body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div class="card vimo"><div class="hd wash"><div class="vmk">V</div>비모와의 작업 <span class="sum">진행 중 2</span></div>
+          <div class="rows">
+            <div class="r"><span class="fi g1"></span><span class="t">브랜드필름_v3.mp4</span><span class="chip fix">수정</span></div>
+            <div class="r"><span class="fi g4"></span><span class="t">광고_30s_v2.mp4</span><span class="chip rev">검수중</span></div>
+          </div></div>
+        <div class="card"><div class="hd box"><svg data-lucide="hard-drive"></svg>My box <span class="sum">23</span></div>
+          <div class="rows">
+            <div class="r"><span class="fi g1"></span><span class="t">성수카페_편집중.prproj</span><span class="c">방금</span></div>
+            <div class="r"><span class="ic"><svg data-lucide="folder"></svg></span><span class="t">레퍼런스</span><span class="c">14</span></div>
+          </div></div>
+      </div>
+      <div class="lbl2">최근 작업물</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">
+        <div class="tg"><div class="th g1"><div class="pl"><svg data-lucide="play"></svg></div></div><div class="nm">브랜드필름_v3</div></div>
+        <div class="tg"><div class="th g4"><div class="pl"><svg data-lucide="play"></svg></div></div><div class="nm">광고_30s_v2</div></div>
+        <div class="tg"><div class="th g3"><div class="pl"><svg data-lucide="play"></svg></div></div><div class="nm">룩북_컷편집</div></div>
+        <div class="tg"><div class="th g2"><div class="pl"><svg data-lucide="play"></svg></div></div><div class="nm">티저_15s</div></div>
+        <div class="tg"><div class="th g5"><div class="pl"><svg data-lucide="play"></svg></div></div><div class="nm">메이킹_30s</div></div>
+      </div>
+    </div>
+  </main>
+</div></div></div>
+
+<!-- ===== 3. 벤토 ===== -->
+<div class="vhead"><div class="num">3</div><div><div class="ttl">벤토 타일 <em>· 크기 다른 타일 배치</em></div><div class="lede">비모 작업은 크게, 최근·My box·공유는 작은 타일로. 모던하게 빈틈없이 채움.</div></div></div>
+<div class="stage"><div class="frame"><div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="tag">파트너</span></div></div>
+<div class="app">
+  <aside class="sb">
+    <div class="logo"><div class="m">V</div> 비박스</div>
+    <div class="me"><span class="av">서</span><div><div class="n">서준</div><div class="r">외부 편집 · 파트너</div></div></div>
+    <div class="store"><div class="l"><b>저장 공간</b><span>32%</span></div><div class="b"><i></i></div></div>
+    <div class="dv"></div>
+    <div class="nav on home"><svg data-lucide="house"></svg> 홈</div>
+    <div class="lbl">클라우드</div><div class="nav"><svg data-lucide="handshake"></svg> 비모와의 작업</div><div class="nav"><svg data-lucide="hard-drive"></svg> My box</div>
+    <div class="lbl">라이브러리</div><div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+  </aside>
+  <aside class="panel">
+    <div class="panel-h"><svg data-lucide="house" style="color:var(--vimo)"></svg> 바로가기</div>
+    <div class="psec">비모 프로젝트</div><div class="pf"><svg data-lucide="folder"></svg><span class="nm">성수 카페</span></div><div class="pf"><svg data-lucide="folder"></svg><span class="nm">그래놀라</span></div>
+    <div class="psec">My box 폴더</div><div class="pf"><svg data-lucide="folder" style="color:var(--mybox)"></svg><span class="nm">작업 중</span></div><div class="pf"><svg data-lucide="folder" style="color:var(--mybox)"></svg><span class="nm">레퍼런스</span></div><div class="pf"><svg data-lucide="folder" style="color:var(--mybox)"></svg><span class="nm">촬영본</span></div>
+  </aside>
+  <main class="main">
+    <div class="tbar"><div class="hi">안녕하세요, 서준님</div><span class="sr"><svg data-lucide="search"></svg> 검색</span><span class="up"><svg data-lucide="upload"></svg> 업로드</span></div>
+    <div class="body">
+      <div style="display:grid;grid-template-columns:1.5fr 1fr;grid-auto-rows:min-content;gap:13px">
+        <div class="card vimo" style="grid-row:span 2"><div class="hd wash"><div class="vmk">V</div>비모와의 작업 <span class="sum">진행 중 2 · 마감 임박 1</span><span class="live">작업 중</span></div>
+          <div class="rows">
+            <div class="r"><span class="fi g1"></span><span class="t">브랜드필름_최종_v3.mp4</span><span class="chip fix">수정</span></div>
+            <div class="r"><span class="fi g4"></span><span class="t">광고_30s_v2.mp4</span><span class="chip rev">검수중</span></div>
+            <div class="r"><span class="ic" style="background:#fff5ef"><svg data-lucide="message-square-text" style="color:var(--vimo)"></svg></span><span class="t" style="font-weight:500;font-size:12px;color:var(--muted)">"0:42 자막 오타 수정해 주세요" — 진우 PD</span></div>
+          </div></div>
+        <div class="card"><div class="hd" style="font-size:12px"><svg data-lucide="hard-drive" style="color:var(--mybox)"></svg>My box <span class="sum">23개 · 32%</span></div>
+          <div class="rows" style="padding:4px 8px 7px"><div class="r"><span class="fi g1"></span><span class="t">성수카페_편집중</span></div><div class="r"><span class="ic"><svg data-lucide="folder"></svg></span><span class="t">레퍼런스</span></div></div></div>
+        <div class="card"><div class="hd" style="font-size:12px"><svg data-lucide="share-2" style="color:var(--soft)"></svg>내 공유 <span class="sum">2 활성</span></div>
+          <div class="rows" style="padding:4px 8px 7px"><div class="r"><span class="ic"><svg data-lucide="link"></svg></span><span class="t">브랜드필름_v3</span><span class="c">12회</span></div></div></div>
+      </div>
+      <div class="lbl2" style="margin-top:14px">최근 작업물</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        <div class="tg"><div class="th g1"><div class="pl"><svg data-lucide="play"></svg></div></div><div class="nm">브랜드필름_v3</div></div>
+        <div class="tg"><div class="th g4"><div class="pl"><svg data-lucide="play"></svg></div></div><div class="nm">광고_30s_v2</div></div>
+        <div class="tg"><div class="th g3"><div class="pl"><svg data-lucide="play"></svg></div></div><div class="nm">룩북_컷편집</div></div>
+        <div class="tg"><div class="th g2"><div class="pl"><svg data-lucide="play"></svg></div></div><div class="nm">티저_15s</div></div>
+      </div>
+    </div>
+  </main>
+</div></div></div>
+
+<!-- ===== 4. 최근 소식 ===== -->
+<div class="vhead"><div class="num">4</div><div><div class="ttl">최근 소식 <em>· 비모와 오간 일</em></div><div class="lede">비모 피드백·승인·공유 조회 같은 소식을 한 줄씩. "무슨 일이 있었나"가 채워짐 (대시보드 아님).</div></div></div>
+<div class="stage"><div class="frame"><div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="tag">파트너</span></div></div>
+<div class="app">
+  <aside class="sb">
+    <div class="logo"><div class="m">V</div> 비박스</div>
+    <div class="me"><span class="av">서</span><div><div class="n">서준</div><div class="r">외부 편집 · 파트너</div></div></div>
+    <div class="store"><div class="l"><b>저장 공간</b><span>32%</span></div><div class="b"><i></i></div></div>
+    <div class="dv"></div>
+    <div class="nav on home"><svg data-lucide="house"></svg> 홈</div>
+    <div class="lbl">클라우드</div><div class="nav"><svg data-lucide="handshake"></svg> 비모와의 작업</div><div class="nav"><svg data-lucide="hard-drive"></svg> My box</div>
+    <div class="lbl">라이브러리</div><div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+  </aside>
+  <aside class="panel">
+    <div class="panel-h"><svg data-lucide="house" style="color:var(--vimo)"></svg> 바로가기</div>
+    <div class="psec">비모 프로젝트</div><div class="pf"><svg data-lucide="folder"></svg><span class="nm">성수 카페</span></div><div class="pf"><svg data-lucide="folder"></svg><span class="nm">그래놀라</span></div>
+    <div class="psec">My box 폴더</div><div class="pf"><svg data-lucide="folder" style="color:var(--mybox)"></svg><span class="nm">작업 중</span></div><div class="pf"><svg data-lucide="folder" style="color:var(--mybox)"></svg><span class="nm">레퍼런스</span></div><div class="pf"><svg data-lucide="folder" style="color:var(--mybox)"></svg><span class="nm">촬영본</span></div>
+  </aside>
+  <main class="main">
+    <div class="tbar"><div class="hi">안녕하세요, 서준님</div><span class="sr"><svg data-lucide="search"></svg> 검색</span><span class="up"><svg data-lucide="upload"></svg> 업로드</span></div>
+    <div class="body">
+      <div class="card vimo" style="margin-bottom:16px"><div class="hd wash"><div class="vmk">V</div>비모와의 작업 <span class="sum">진행 중 2 · 마감 임박 1</span><span class="live">지금 작업 중</span></div>
+        <div class="rows">
+          <div class="r"><span class="fi g1"></span><span class="t">브랜드필름_최종_v3.mp4</span><span class="chip fix"><svg data-lucide="alert-triangle"></svg>수정 요청</span><span class="c">#1042 · D-2</span></div>
+          <div class="r"><span class="fi g4"></span><span class="t">광고_30s_v2.mp4</span><span class="chip rev"><svg data-lucide="eye"></svg>검수중</span><span class="c">#1039</span></div>
+        </div></div>
+      <div class="lbl2">최근 소식</div>
+      <div class="card" style="margin-bottom:16px"><div class="rows" style="padding:4px 8px 6px">
+        <div class="r"><span class="ic" style="background:#fff5ef"><svg data-lucide="message-square-text" style="color:var(--vimo)"></svg></span><div style="flex:1;min-width:0"><div class="t" style="font-weight:500">진우 PD가 <b style="font-weight:700">수정 요청</b> — "0:42 자막 오타"</div><div class="c" style="margin-top:1px">브랜드필름_v3 · 2시간 전</div></div></div>
+        <div class="r"><span class="ic" style="background:#eef7f1"><svg data-lucide="check-circle-2" style="color:var(--ok)"></svg></span><div style="flex:1;min-width:0"><div class="t" style="font-weight:500">티저_15s_final <b style="font-weight:700">승인됨</b></div><div class="c" style="margin-top:1px">자동차 OO · 어제</div></div></div>
+        <div class="r"><span class="ic"><svg data-lucide="eye"></svg></span><div style="flex:1;min-width:0"><div class="t" style="font-weight:500">OO에이전시가 공유 링크를 봄 (12회)</div><div class="c" style="margin-top:1px">브랜드필름_v3 공유 · 3시간 전</div></div></div>
+      </div></div>
+      <div class="card"><div class="hd box"><svg data-lucide="hard-drive"></svg>My box <span class="sum">· 내 보관함 23</span></div>
+        <div class="rows"><div class="r"><span class="fi g1"></span><span class="t">성수카페_편집중.prproj</span><span class="c">방금</span></div></div></div>
+    </div>
+  </main>
+</div></div></div>
+
+<footer class="foot">
+  <div class="foot__card">
+    <h3>어느 방향으로 채울까요?</h3>
+    <p>1(썸네일)은 영상 회사답게 시각적, 2(2열)는 가로를 꽉 채워 균형, 3(벤토)는 모던·정보 밀도, 4(소식)는 "비모와 오간 일"로 맥락을 채웁니다. 섞을 수도 있어요(예: 1의 썸네일 + 4의 소식 한 줄). 고르면 실제 홈에 적용합니다.</p>
+    <div class="next"><span class="pill">① 방향 선택 (1~4, 혼합)</span><span class="pill">② 빈 상태(비모 작업 없음)도 적용</span><span class="pill">③ 실제 홈 구현</span></div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>if(window.lucide) lucide.createIcons();</script>
+</body>
+</html>

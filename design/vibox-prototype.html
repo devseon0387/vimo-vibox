@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 — 인터랙티브 프로토타입 v2 (보완 반영)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --vimo:#e85008; --vimo-ink:#c2410c; --vimo-soft:#fef0e8; --vimo-line:#fbd9c4;
+    --mybox:#f97316; --mybox-soft:#fff3ea; --mybox-line:#fed7aa;
+    --text:#171717; --muted:#5f5f5f; --soft:#525252; --faint:#999;
+    --page:#f5f5f5; --surf:#fafafa; --line:#ececec; --line2:#e3e3e3; --hair:#f1f1f1; --dash:#d6d6d6;
+    --danger:#dc2626; --warn:#c2410c; --rev-bg:#e0f2fe; --rev-fg:#0369a1; --ok-bg:#f0fdf4; --ok-fg:#16a34a;
+    --req:#fff5ee;
+    --sh:0 1px 3px rgba(0,0,0,.06); --sh2:0 4px 14px rgba(0,0,0,.08); --sh3:0 20px 60px rgba(0,0,0,.28);
+    --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:var(--font);background:var(--page);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.5;overflow:hidden}
+  h1,h2,h3,h4,p{margin:0} a{color:inherit;text-decoration:none} button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  svg.lucide{width:1em;height:1em;stroke-width:1.9;flex:none;vertical-align:-.15em}
+  .mono{font-variant-numeric:tabular-nums}
+  ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#d8d8d8;border-radius:8px;border:3px solid var(--page)}::-webkit-scrollbar-thumb:hover{background:#c4c4c4}
+  :focus-visible{outline:2px solid var(--vimo);outline-offset:1px;border-radius:6px}
+
+  .app{display:grid;grid-template-columns:212px 232px 1fr;height:100vh}
+
+  /* 사이드바 */
+  .sb{background:var(--surf);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:15px 11px 0;font-size:13px;overflow-y:auto}
+  .me{display:flex;align-items:center;gap:9px;padding:5px 7px}.me .av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#e85008,#c8430a);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none}
+  .me .n{font-weight:700;font-size:12.5px}.me .r{font-size:10px;color:var(--faint)}.me .x{margin-left:auto;color:var(--faint);padding:4px}.me .x:hover{color:var(--text)}.me .x svg{width:15px;height:15px}
+  .store{padding:8px 7px 10px;cursor:pointer;border-radius:8px}.store:hover{background:#f0f0f0}.store .l{display:flex;justify-content:space-between;font-size:10px;color:var(--faint);margin-bottom:5px}.store .l b{color:var(--muted);font-weight:600}
+  .store .b{height:5px;border-radius:99px;background:#e7e7e7;overflow:hidden}.store .b i{display:block;height:100%;background:var(--mybox);transition:width .4s}
+  .dv{height:1px;background:var(--line);margin:8px 4px}
+  .lbl{font-size:9.5px;font-weight:700;color:var(--faint);letter-spacing:.05em;padding:11px 9px 4px;display:flex;align-items:center;gap:6px}.lbl svg{width:12px;height:12px}
+  .nav{display:flex;align-items:center;gap:10px;padding:7px 9px;border-radius:9px;color:var(--soft);font-weight:500}.nav svg{width:16px;height:16px;color:#9a9a9a}.nav:hover{background:#f0f0f0}
+  .nav.on{background:var(--page);color:var(--text);font-weight:600}.nav.on.home svg{color:var(--vimo)}
+  .nav .star{margin-left:auto;color:var(--vimo)}.nav .star svg{width:13px;height:13px;fill:var(--vimo)}
+  .nav .c{margin-left:auto;font-size:10.5px;color:var(--faint);font-weight:600}
+  .sb-foot{margin-top:auto;border-top:1px solid var(--line);padding:13px 9px;display:flex;align-items:center;gap:9px;position:sticky;bottom:0;background:var(--surf)}
+  .sb-foot .m{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:12px;background:linear-gradient(90deg,var(--vimo) 0 50%,#f9a87a 50%)}
+  .sb-foot .w{font-weight:800;font-size:14px;letter-spacing:-.01em}
+
+  /* 컨텍스트 패널 */
+  .panel{background:#fff;border-right:1px solid var(--line);padding:14px 9px;overflow-y:auto;font-size:13px}
+  .panel-h{display:flex;align-items:center;gap:8px;padding:3px 8px 10px;font-weight:800;font-size:13.5px}.panel-h svg{width:16px;height:16px}.panel-h .vmk{width:16px;height:16px}
+  .psec{font-size:9.5px;font-weight:700;color:var(--faint);padding:11px 8px 4px;letter-spacing:.04em;display:flex;align-items:center;gap:6px}.psec svg{width:12px;height:12px}
+  .pf{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:8px;color:#333}.pf:hover{background:var(--surf)}
+  .pf svg{width:16px;height:16px;color:#a98e6a}.pf.v svg{color:#9a9a9a}.pf.b svg{color:var(--mybox)}.pf.star svg{color:var(--vimo);fill:var(--vimo)}.pf .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pf .c{font-size:10.5px;color:var(--faint)}
+  .pf.cur{background:var(--page);font-weight:700}
+  .pchild{display:flex;align-items:center;gap:9px;padding:6px 8px 6px 28px;border-radius:8px;color:var(--soft);font-size:12.5px}.pchild:hover{background:var(--surf)}.pchild svg{width:15px;height:15px;color:#a98e6a}.pchild.cur{background:var(--vimo-soft);color:var(--vimo-ink);font-weight:700}.pchild.cur svg{color:var(--vimo)}.pchild .c{margin-left:auto;font-size:10.5px;color:var(--faint)}.pchild.cur .c{color:var(--vimo-ink)}
+  .dlrow{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;cursor:pointer}.dlrow:hover{background:var(--surf)}.dlrow svg{width:13px;height:13px;color:var(--faint)}.dlrow .nm{flex:1;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dday{font-size:11px;font-weight:700;color:var(--faint)}.dday.urgent{color:var(--warn)}
+
+  /* 본문 */
+  .main{display:flex;flex-direction:column;overflow:hidden;background:var(--page)}
+  .tbar{background:#fff;border-bottom:1px solid var(--line);padding:12px 22px;display:flex;align-items:center;gap:12px;flex:none}
+  .tbar .hi{font-size:16px;font-weight:800}
+  .tbar .sr{margin-left:auto;display:flex;align-items:center;gap:7px;background:var(--page);border-radius:10px;padding:8px 13px;color:var(--faint);font-size:12.5px;width:230px;cursor:text}.tbar .sr svg{width:14px;height:14px}.tbar .sr .kbd{margin-left:auto}
+  .kbd{font-size:10px;font-weight:700;color:var(--soft);background:#fff;border:1px solid var(--line2);border-radius:5px;padding:1px 6px}
+  .icobtn{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--soft);position:relative}.icobtn:hover{background:var(--page)}.icobtn svg{width:17px;height:17px}.icobtn .badge{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--vimo);border:1.5px solid #fff}
+  .up{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:#fff;padding:8px 14px;border-radius:10px}.up svg{width:15px;height:15px}.up.v{background:var(--vimo)}.up.v:hover{background:#d4490a}.up.b{background:var(--mybox)}
+  .scroll{overflow-y:auto;flex:1}
+  .body{padding:18px 22px 40px;animation:fade .2s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  .todohead{display:flex;align-items:center;gap:9px;margin:0 2px 13px;font-size:13.5px;font-weight:800}.todohead svg{width:16px;height:16px;color:var(--faint)}
+  .wait{font-size:10px;font-weight:700;padding:3px 9px;border-radius:7px;background:#ededed;color:#57524d;cursor:pointer}.wait:hover{background:#e3e3e3}
+  .ghead{font-size:11px;font-weight:800;color:var(--faint);letter-spacing:.03em;margin:2px 2px 10px;display:flex;align-items:center;gap:6px}.ghead svg{width:13px;height:13px}.ghead.pin svg{color:var(--vimo);fill:var(--vimo)}
+
+  .vmk{width:18px;height:18px;border-radius:5px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:10px;background:linear-gradient(90deg,var(--vimo) 0 50%,#f9a87a 50%);flex:none}
+  .vmk.sm{width:14px;height:14px;font-size:8px;border-radius:4px}
+
+  .st{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:8px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}.st svg{width:11px;height:11px}
+  .st.fix{background:#fff7ed;color:var(--warn)} .st.rev{background:var(--rev-bg);color:var(--rev-fg)} .st.ok{background:var(--ok-bg);color:var(--ok-fg)} .st.prog{background:#f1f1f1;color:var(--soft)} .st.share{background:var(--mybox-soft);color:var(--mybox)}
+  .cbadge{font-size:10.5px;font-weight:700;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:7px}.cbadge svg{width:11px;height:11px}.cbadge.on{background:#fff7ed;color:var(--warn)}.cbadge.done{background:#eef0ef;color:var(--soft)}.cbadge .sl{font-weight:500;opacity:.6}
+  .dl{font-size:11.5px;font-weight:700;color:var(--faint);display:inline-flex;align-items:center;gap:4px}.dl svg{width:12px;height:12px}.dl.due{color:var(--warn)}
+
+  /* 썸네일 */
+  .thumb{position:relative;overflow:hidden;background-position:center;background-size:cover}
+  .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .thumb .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.02) 40%,rgba(0,0,0,.45))}
+  .thumb .pl{position:absolute;inset:0;display:grid;place-items:center}
+  .thumb .plc{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center;color:#1a1a1a;box-shadow:0 4px 14px rgba(0,0,0,.25);transition:transform .15s}.thumb .plc svg{width:20px;height:20px;margin-left:2px}
+  .thumb:hover .plc{transform:scale(1.08)}
+  .thumb .proc{position:absolute;inset:0;display:grid;place-items:center;background:rgba(20,20,20,.4);color:#fff;font-size:10px;font-weight:700;gap:6px;flex-direction:column}.thumb .proc svg{width:18px;height:18px;animation:spin 1.2s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .tl{position:absolute;left:9px;top:9px;display:flex;gap:5px}.tr{position:absolute;right:9px;top:9px;display:flex;gap:5px}.bl{position:absolute;left:9px;bottom:9px;display:flex;align-items:center;gap:6px}.br{position:absolute;right:9px;bottom:9px;display:flex;align-items:center;gap:6px}
+  .cchip{background:rgba(10,10,10,.6);color:#fff;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;backdrop-filter:blur(3px)}.cchip svg{width:11px;height:11px}
+  .fchip{background:rgba(255,255,255,.92);color:var(--soft);font-size:9.5px;font-weight:700;padding:3px 6px;border-radius:7px;display:inline-flex;align-items:center;gap:4px}.fchip svg{width:11px;height:11px}
+  .dur{font-size:9.5px;font-weight:700;color:#fff;background:rgba(0,0,0,.6);padding:1px 6px;border-radius:4px;backdrop-filter:blur(3px)}
+  .res{font-size:9px;font-weight:800;color:#fff;background:rgba(10,10,10,.55);padding:1px 5px;border-radius:4px}
+  .verbadge{font-size:9.5px;font-weight:800;padding:1px 7px;border-radius:6px;background:var(--vimo-soft);color:#c8430a}
+
+  .seclbl{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;margin:4px 2px 12px}.seclbl .t{color:var(--vimo-ink)}.seclbl.box .t{color:var(--text)}.seclbl .sum{font-weight:500;font-size:11px;color:var(--faint)}.seclbl .more{margin-left:auto;font-size:11.5px;font-weight:600;color:var(--faint)}.seclbl .more:hover{color:var(--text)}.seclbl svg.hd{width:16px;height:16px;color:var(--mybox)}
+  .sec{margin-bottom:22px}
+
+  /* 히어로 */
+  .hero{display:grid;grid-template-columns:320px 1fr;border:1px solid var(--vimo-line);border-radius:16px;overflow:hidden;background:#fff;margin-bottom:20px;cursor:pointer;transition:box-shadow .15s}.hero:hover{box-shadow:var(--sh2)}
+  .hero .thumb{min-height:214px}
+  .hero .info{padding:16px 18px;display:flex;flex-direction:column}
+  .crumb{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--faint);flex-wrap:wrap}.crumb b{color:var(--text);font-weight:700}.crumb svg.sep{width:12px;height:12px;color:#c4c4c4}
+  .clink{cursor:pointer;border-radius:5px;padding:1px 5px}.clink:hover{background:var(--surf);color:var(--text)}
+  .hero h3{font-size:17px;font-weight:800;margin-top:8px;display:flex;align-items:center;gap:10px}
+  .catchips{display:flex;gap:11px;margin-top:9px}.catchip{font-size:10.5px;color:#737373;display:inline-flex;align-items:center;gap:4px;font-weight:600}.catchip svg{width:12px;height:12px}
+  .reqbox{font-size:12px;color:#6a4a35;background:var(--req);border-radius:10px;padding:10px 12px;margin-top:11px;line-height:1.5;display:flex;gap:9px}.reqbox .ava{width:21px;height:21px;border-radius:50%;background:linear-gradient(135deg,#8a6fb0,#6d5a9c);color:#fff;font-size:9px;font-weight:700;display:grid;place-items:center;flex:none}
+  .hmeta{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--faint);margin-top:10px;flex-wrap:wrap}.hmeta .sep{color:#d4d4d4}.hmeta svg{width:12px;height:12px}
+  .act{margin-top:auto;padding-top:15px;display:flex;align-items:center;gap:9px}
+  .btn{font-size:12.5px;font-weight:600;border-radius:10px;padding:9px 14px;display:inline-flex;align-items:center;gap:7px}.btn svg{width:15px;height:15px}
+  .btn.pv{background:var(--vimo);color:#fff}.btn.pv:hover{background:#d4490a}.btn.pb{background:var(--mybox);color:#fff}.btn.g{background:#fff;border:1px solid var(--line2);color:var(--text)}.btn.g:hover{background:var(--surf)}
+  .btn.ghost{color:var(--vimo);font-weight:600;padding:7px 10px}.btn.ghost:hover{background:var(--vimo-soft)}
+  .btn.link{color:var(--faint);font-weight:600;padding:9px 4px}.btn.link:hover{color:var(--text)}
+
+  /* 프로젝트 카드 */
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(264px,1fr));gap:15px}
+  .pcard{position:relative;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;transition:box-shadow .15s}.pcard:hover{box-shadow:var(--sh2)}
+  .pcover{aspect-ratio:16/9}
+  .pinbtn{position:absolute;right:9px;top:9px;z-index:3;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:rgba(255,255,255,.9);color:var(--faint);opacity:0;transition:opacity .15s;backdrop-filter:blur(3px)}.pcard:hover .pinbtn{opacity:1}.pinbtn svg{width:15px;height:15px}.pinbtn.on{opacity:1;color:var(--vimo)}.pinbtn.on svg{fill:var(--vimo)}
+  .ptitle{display:flex;align-items:center;gap:8px;padding:12px 15px 0;font-size:15px;font-weight:800}.ptitle .id{font-size:12px;color:var(--faint);font-weight:600}
+  .pmeta{display:flex;align-items:center;gap:6px;padding:7px 15px 0;font-size:11.5px;color:var(--faint);flex-wrap:wrap}.pmeta svg{width:12px;height:12px;color:#737373}.pmeta .it{display:inline-flex;align-items:center;gap:4px}.pmeta .sep{color:#d4d4d4}.pmeta .end{margin-left:auto}
+  .pfoot{display:flex;align-items:center;justify-content:space-between;padding:12px 15px 14px;margin-top:12px;border-top:1px solid var(--hair)}
+  .pcard.dim{opacity:.62}
+  .pdash{background:var(--surf);border:1px dashed var(--dash);border-radius:16px;display:grid;place-items:center;min-height:188px;color:var(--faint);text-align:center}.pdash svg{width:25px;height:25px}.pdash .l{font-size:12.5px;font-weight:600;margin-top:9px}
+
+  /* 폴더 헤더/트랙 */
+  .ddhead{background:#fff;border-bottom:1px solid var(--line);padding:15px 22px;flex:none}
+  .ddtop{display:flex;align-items:center;gap:11px}.ddtop .crumb{flex:1;font-size:12.5px}.ddtop .back{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--faint);padding:5px 8px;border-radius:8px}.ddtop .back:hover{background:var(--page);color:var(--text)}.ddtop .back svg{width:14px;height:14px}
+  .ddmeta{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--faint);margin-top:9px;flex-wrap:wrap}.ddmeta svg{width:12px;height:12px;color:#737373}.ddmeta .it{display:inline-flex;align-items:center;gap:4px}.ddmeta .sep{color:#d4d4d4}
+  .track{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-bottom:13px}.track.cur{border-color:var(--vimo-line)}
+  .trackhd{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:800}.trackhd .gi{width:16px;height:16px;color:#737373}.trackhd.cur .gi{color:var(--vimo)}.trackhd .latest{margin-left:auto;font-size:11.5px;color:var(--faint);font-weight:600}
+  .vtl{margin-top:11px}
+  .vtlrow{display:flex;align-items:center;gap:13px;padding:10px 10px;border-radius:10px}.vtlrow:hover{background:var(--surf)}.vtlrow.cur{background:var(--surf)}.vtlrow.old{opacity:.6}
+  .dotcol{display:flex;flex-direction:column;align-items:center;width:11px;flex:none;align-self:stretch}.dot{width:9px;height:9px;border-radius:50%;background:#d4d4d4;margin-top:6px}.dot.on{background:var(--vimo)}
+  .vtlrow .thumb{width:78px;height:46px;border-radius:8px;flex:none}.vtlrow .thumb .plc{width:26px;height:26px}.vtlrow .thumb .plc svg{width:12px;height:12px}
+  .vtlrow .vn{font-size:13px;font-weight:700}.vtlrow .vc{font-size:11.5px;color:var(--faint);margin-top:2px;max-width:380px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .vtlrow .rt{margin-left:auto;display:flex;align-items:center;gap:9px}.vtlrow .when{font-size:11px;color:var(--faint)}
+  .collap{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;color:var(--soft);background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin-bottom:10px}.collap:hover{background:var(--surf)}.collap svg.g{width:16px;height:16px;color:#737373}.collap .c{font-size:11.5px;color:var(--faint);font-weight:500}.collap .ch{margin-left:auto;color:#bbb}
+
+  /* 휴지통 */
+  .trow{display:flex;align-items:center;gap:13px;padding:11px 12px;border-radius:10px;background:#fff;border:1px solid var(--line);margin-bottom:8px}.trow:hover{background:var(--surf)}
+  .trow .thumb{width:64px;height:40px;border-radius:7px;flex:none;opacity:.55}.trow .nm{font-size:13px;font-weight:600}.trow .pa{font-size:11px;color:var(--faint);margin-top:2px}.trow .rt{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .keepbadge{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:6px;background:#ededed;color:#57524d}
+
+  /* 온보딩 */
+  .dropzone{border:2px dashed var(--line2);border-radius:16px;padding:42px;text-align:center;color:var(--faint);background:#fff}.dropzone.over{border-color:var(--vimo);background:#fbf6f1}.dropzone .ic{width:46px;height:46px;border-radius:14px;background:var(--vimo-soft);display:grid;place-items:center;margin:0 auto 12px}.dropzone .ic svg{width:24px;height:24px;color:var(--vimo)}.dropzone .t1{font-size:14px;font-weight:700;color:var(--text)}.dropzone .t2{font-size:12px;margin:5px 0 14px}
+  .owrap{max-width:620px;margin:10px auto}.owrap h2{font-size:20px;font-weight:800;text-align:center}.owrap .sub{font-size:13px;color:var(--muted);text-align:center;margin-top:8px}
+  .ostep{display:flex;gap:12px;justify-content:center;margin:24px 0}.ostepcard{flex:1;max-width:180px;border:1px solid var(--line2);border-radius:12px;padding:16px;text-align:center;background:#fff}.ostepcard .num{width:20px;height:20px;border-radius:50%;background:var(--page);color:var(--soft);font-size:10px;font-weight:800;display:grid;place-items:center;margin:0 auto 9px}.ostepcard svg{width:19px;height:19px;color:var(--soft)}.ostepcard .l{font-size:12px;font-weight:700;margin-top:8px}
+
+  .c1{background:linear-gradient(135deg,#7c3a1d,#c2683a)}.c2{background:linear-gradient(135deg,#243b57,#4a7ba6)}.c3{background:linear-gradient(135deg,#3d2d4f,#7d5a9c)}.c4{background:linear-gradient(135deg,#1a3a30,#357d63)}.c5{background:linear-gradient(135deg,#4a3b1c,#a98a3e)}.c6{background:linear-gradient(135deg,#2f3a44,#5a6b78)}
+
+  /* 검수 모달 */
+  .ov{position:fixed;inset:0;background:rgba(15,15,15,.62);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:100;padding:30px}
+  .ov.show{display:flex;animation:fade .18s ease}
+  .modal{width:min(1040px,96vw);max-height:90vh;background:#fff;border-radius:18px;overflow:hidden;display:grid;grid-template-columns:1fr 340px;box-shadow:var(--sh3)}
+  .player{background:#0c0c0c;display:flex;flex-direction:column;min-width:0}
+  .stage2{position:relative;flex:1;background:#000;min-height:340px}
+  .stage2 img{width:100%;height:100%;object-fit:cover;opacity:.92}
+  .stage2 .bigpl{position:absolute;inset:0;display:grid;place-items:center}.stage2 .bigpl button{width:62px;height:62px;border-radius:50%;background:rgba(255,255,255,.94);display:grid;place-items:center;color:#111;box-shadow:0 6px 20px rgba(0,0,0,.4)}.stage2 .bigpl svg{width:26px;height:26px;margin-left:3px}
+  .ctrl{background:#161616;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+  .seek{height:4px;border-radius:3px;background:#3a3a3a;position:relative;cursor:pointer}.seek i{position:absolute;left:0;top:0;bottom:0;width:38%;background:var(--vimo);border-radius:3px}.seek i::after{content:"";position:absolute;right:-5px;top:50%;transform:translateY(-50%);width:11px;height:11px;border-radius:50%;background:#fff}
+  .seek .mk{position:absolute;top:-3px;width:3px;height:10px;background:#ffd089;border-radius:2px;cursor:pointer}
+  .ctrlrow{display:flex;align-items:center;gap:14px;color:#ddd}.ctrlrow button{color:#eee;display:grid;place-items:center}.ctrlrow button:hover{color:#fff}.ctrlrow svg{width:17px;height:17px}.ctrlrow .t{font-size:11.5px;color:#bbb;font-variant-numeric:tabular-nums}.ctrlrow .sp{margin-left:auto}
+  .side{display:flex;flex-direction:column;min-width:0;border-left:1px solid var(--line)}
+  .side .sh{padding:15px 16px 12px;border-bottom:1px solid var(--line)}
+  .side .sh .crumb{font-size:11px;margin-bottom:6px}
+  .side .sh h4{font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .side .sh .subline{display:flex;align-items:center;justify-content:space-between;margin-top:9px}
+  .side .sh .sub{font-size:11px;color:var(--faint)}
+  .cfilter{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:7px;background:var(--page);color:var(--soft);cursor:pointer}.cfilter.on{background:var(--text);color:#fff}
+  .cmts{flex:1;overflow-y:auto;padding:13px 16px;min-height:200px}
+  .cmt{display:flex;gap:9px;margin-bottom:15px}.cmt .ava{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700;flex:none}
+  .cmt .bd{flex:1;min-width:0}.cmt .nm{font-size:12px;font-weight:700;display:flex;align-items:center;gap:5px}.cmt .nm span{font-weight:500;color:var(--faint);font-size:10.5px}
+  .cmt .nm .cresolve{margin-left:auto;font-size:10.5px;font-weight:600;color:var(--soft);display:inline-flex;align-items:center;gap:3px}.cmt .nm .cresolve:hover{color:var(--ok-fg)}.cmt .nm .cresolve svg{width:13px;height:13px}.cmt .nm .cresolve.done{color:var(--ok-fg)}
+  .cmt .tx{font-size:12.5px;color:#333;margin-top:3px;line-height:1.5}
+  .cmt.done{opacity:.5}.cmt.done .tx{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tcchip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:700;color:var(--vimo-ink);background:var(--vimo-soft);border-radius:6px;padding:1px 7px;margin-right:5px;cursor:pointer}.tcchip svg{width:10px;height:10px}
+  .cmtbox{border-top:1px solid var(--line);padding:11px 14px;display:flex;align-items:center;gap:9px}.cmtbox .ip{flex:1;background:var(--page);border-radius:9px;padding:9px 12px;font-size:12px;color:var(--faint)}.cmtbox .send{width:34px;height:34px;border-radius:9px;background:var(--vimo);color:#fff;display:grid;place-items:center}.cmtbox .send svg{width:16px;height:16px}
+  .mclose{position:absolute;right:16px;top:14px;z-index:3;width:32px;height:32px;border-radius:50%;background:rgba(20,20,20,.55);color:#fff;display:grid;place-items:center;backdrop-filter:blur(4px)}.mclose:hover{background:rgba(20,20,20,.8)}.mclose svg{width:17px;height:17px}
+
+  /* 알림 패널 */
+  #notifPanel{position:fixed;right:18px;top:56px;width:362px;max-height:74vh;background:#fff;border:1px solid var(--line2);border-radius:14px;box-shadow:var(--sh3);z-index:95;overflow:hidden;display:none;flex-direction:column}
+  #notifPanel.show{display:flex;animation:fade .15s ease}
+  .nhd{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid var(--line);font-weight:800;font-size:13.5px}.nhd .read{font-size:11px;font-weight:600;color:var(--faint)}.nhd .read:hover{color:var(--text)}
+  .nlist{overflow-y:auto}
+  .nrow{display:flex;gap:10px;padding:12px 15px;cursor:pointer;border-bottom:1px solid var(--line)}.nrow:hover{background:var(--surf)}.nrow.unread{background:#fbf6f1}.nrow .ni{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none}.nrow .ni svg{width:15px;height:15px}.nrow .ni.fix{background:#fff7ed;color:var(--warn)}.nrow .ni.rev{background:var(--rev-bg);color:var(--rev-fg)}.nrow .ni.ok{background:var(--ok-bg);color:var(--ok-fg)}.nrow .ni.cmt{background:var(--vimo-soft);color:var(--vimo)}
+  .nrow .nt{font-size:12.5px;font-weight:700}.nrow .nd{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4}.nrow .nw{font-size:10px;color:var(--faint);margin-top:3px}
+  .nfoot{padding:10px 15px;text-align:center;font-size:11.5px;font-weight:600;color:var(--faint);border-top:1px solid var(--line)}
+
+  /* 검색 팔레트 */
+  #palOv{position:fixed;inset:0;background:rgba(20,20,20,.35);display:none;z-index:130;align-items:flex-start;justify-content:center;padding-top:12vh}
+  #palOv.show{display:flex;animation:fade .14s ease}
+  .pal{width:580px;max-width:94vw;background:#fff;border-radius:16px;box-shadow:var(--sh3);overflow:hidden}
+  .palin{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);color:var(--faint)}.palin svg{width:18px;height:18px}.palin input{flex:1;border:none;outline:none;font-size:15px;font-family:inherit;color:var(--text)}
+  .palres{max-height:50vh;overflow-y:auto;padding:6px}
+  .palsec{font-size:9.5px;font-weight:700;color:var(--faint);padding:9px 10px 4px;letter-spacing:.04em}
+  .presult{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:9px;cursor:pointer}.presult.sel{background:var(--surf)}.presult .pi{width:30px;height:30px;border-radius:8px;background:var(--page);display:grid;place-items:center;color:var(--soft);flex:none}.presult .pi svg{width:15px;height:15px}.presult .pt{font-size:13px;font-weight:600}.presult .ps{font-size:11px;color:var(--faint);margin-top:1px}.presult .tag{margin-left:auto;font-size:9.5px;font-weight:700;color:var(--faint);background:var(--page);border-radius:5px;padding:2px 7px}
+  .palempty{text-align:center;color:var(--faint);padding:30px;font-size:12.5px}.palempty svg{width:26px;height:26px;display:block;margin:0 auto 9px;color:#c4c4c4}
+
+  /* 업로드 도크 */
+  #upDock{position:fixed;right:18px;bottom:18px;width:330px;background:#fff;border:1px solid var(--line2);border-radius:14px;box-shadow:var(--sh3);z-index:90;overflow:hidden;display:none}
+  #upDock.show{display:block;animation:fade .15s ease}
+  .udhd{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--line);font-size:12.5px;font-weight:800}.udhd .x{margin-left:auto;color:var(--faint);padding:3px}.udhd .x:hover{color:var(--text)}.udhd svg{width:15px;height:15px}
+  .uprow{padding:11px 14px;border-bottom:1px solid var(--line)}.uprow:last-child{border-bottom:none}.uprow .l{display:flex;align-items:center;gap:8px;font-size:12px}.uprow .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}.uprow .pct{font-size:11px;color:var(--faint);font-weight:600}
+  .upbar{height:5px;border-radius:3px;background:var(--page);margin-top:8px;overflow:hidden}.upbar i{display:block;height:100%;background:var(--vimo);border-radius:3px;transition:width .3s}.upbar.danger i{background:var(--danger)}
+  .upsub{font-size:10.5px;color:var(--faint);margin-top:6px;display:flex;align-items:center;gap:6px}.upsub.err{color:var(--danger)}.upsub.off{color:var(--soft)}.upsub svg{width:12px;height:12px}.upsub .retry{margin-left:auto;color:var(--vimo);font-weight:700}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:#fff;font-size:12.5px;font-weight:600;padding:11px 18px;border-radius:11px;display:flex;align-items:center;gap:9px;box-shadow:0 10px 30px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:all .25s;z-index:140}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.toast svg{width:16px;height:16px;color:#7ee0a1}
+
+  .demobar{position:fixed;right:16px;top:13px;z-index:60;display:flex;align-items:center;gap:7px}
+  .demobar .hint{background:#fff;border:1px solid var(--line2);border-radius:999px;padding:7px 13px;font-size:11px;font-weight:600;color:var(--muted);box-shadow:var(--sh);display:flex;align-items:center;gap:6px}.demobar .hint svg{width:13px;height:13px;color:var(--vimo)}
+  .demobar .db{background:#fff;border:1px solid var(--line2);border-radius:999px;padding:7px 12px;font-size:11px;font-weight:600;color:var(--soft);box-shadow:var(--sh);display:flex;align-items:center;gap:6px}.demobar .db:hover{background:var(--surf);color:var(--text)}.demobar .db svg{width:13px;height:13px}
+</style>
+</head>
+<body>
+
+<div class="demobar">
+  <span class="hint"><svg data-lucide="mouse-pointer-click"></svg> 클릭해서 둘러보세요</span>
+  <button class="db" onclick="toggleEmpty()"><svg data-lucide="eye"></svg> 빈 상태</button>
+  <button class="db" onclick="demoUpload('ok')"><svg data-lucide="upload"></svg> 업로드 시연</button>
+  <button class="db" onclick="demoUpload('fail')"><svg data-lucide="alert-triangle"></svg> 실패 시연</button>
+</div>
+
+<div class="app">
+  <aside class="sb" id="sb"></aside>
+  <aside class="panel" id="panel"></aside>
+  <main class="main">
+    <div class="tbar">
+      <div class="hi">안녕하세요, 서준님</div>
+      <div class="sr" onclick="openPalette()"><svg data-lucide="search"></svg> 프로젝트·영상·코멘트 검색 <span class="kbd">⌘K</span></div>
+      <button class="icobtn" id="bell" onclick="toggleNotif(event)"><svg data-lucide="bell"></svg><span class="badge" id="bellDot"></span></button>
+      <button class="up v" onclick="demoUpload('ok')"><svg data-lucide="upload"></svg> 업로드</button>
+    </div>
+    <div class="scroll"><div class="body" id="main"></div></div>
+  </main>
+</div>
+
+<!-- 알림 패널 -->
+<div id="notifPanel"></div>
+<!-- 검색 팔레트 -->
+<div id="palOv" onclick="if(event.target===this)closePalette()"><div class="pal" id="pal"></div></div>
+<!-- 검수 모달 -->
+<div class="ov" id="ov" onclick="if(event.target===this)closeModal()"><div class="modal" id="modal"></div></div>
+<!-- 업로드 도크 -->
+<div id="upDock"></div>
+
+<div class="toast" id="toast"><svg data-lucide="check"></svg><span id="toastmsg"></span></div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+const IMG = (s)=>`https://picsum.photos/seed/${s}/720/405`;
+const cls = {fix:'fix',rev:'rev',ok:'ok',prog:'prog'};
+const SIC = {fix:'alert-circle',rev:'clock',ok:'check-circle-2',prog:'loader'};
+
+const PROJECTS = {
+  sujeong:{ id:'#1042', name:'성수 카페', deadline:'D-2 · 6/16', dday:'D-2', due:true, pinned:true, status:'fix', statusLabel:'수정 요청 2',
+    summary:'영상 3 · 원본 2 · 레퍼런스 4', metaFull:'완성본 3 · 원본 12 · 최신 v3 · 24개 항목', items:'24개 항목', latest:'v3', vcount:4, cover:'vibox-cafe-pour', grad:'c1',
+    videos:[
+      {name:'브랜드필름', latest:'v3', status:'fix', statusLabel:'수정 요청 2', thumb:'vibox-cafe-pour', grad:'c1', cmt:{open:2,total:5}, cats:[{i:'type',t:'자막 1'},{i:'palette',t:'색보정 1'}],
+        versions:[
+          {v:'v3',dur:'1:48',size:'284MB',when:'12분 전',note:"0:42 자막 오타 '브랜대'→'브랜드', 1:15 컷 전환 다듬기",cur:true},
+          {v:'v2',dur:'1:50',size:'279MB',when:'어제',note:'BGM 변경 요청 — 반려',tag:'반려'},
+          {v:'v1',dur:'1:52',size:'276MB',when:'3일 전',note:'초안 확인'} ]},
+      {name:'광고_30s', latest:'v2', status:'rev', statusLabel:'검수 중', thumb:'vibox-cafe-latte', grad:'c4', cmt:{open:0,total:3},
+        versions:[
+          {v:'v2',dur:'0:30',size:'92MB',when:'어제',note:'매니저 검수 대기 중',cur:true,processing:true},
+          {v:'v1',dur:'0:30',size:'90MB',when:'2일 전',note:'로고 노출 시간 조정 요청'} ]},
+      {name:'티저_15s', latest:'v1', status:'ok', statusLabel:'승인됨', single:true, thumb:'vibox-cafe-bean', grad:'c2', cmt:{open:0,total:0},
+        versions:[ {v:'v1',dur:'0:15',size:'41MB',when:'3일 전',note:'승인 완료',cur:true} ]},
+    ],
+    assets:{footage:'2개 · 8.0GB', ref:'무드보드 · 참고 링크 4개', proj:'prproj 1개 · 38MB'} },
+
+  granola:{ id:'#1039', name:'그래놀라', deadline:'D-5', dday:'D-5', due:false, pinned:false, status:'rev', statusLabel:'검수 중',
+    summary:'영상 2 · 원본 1 · 자막 1', metaFull:'완성본 2 · 원본 6 · 최신 v2 · 11개 항목', items:'11개 항목', latest:'v2', vcount:2, cover:'vibox-granola-bowl', grad:'c4',
+    videos:[
+      {name:'광고_30s', latest:'v2', status:'rev', statusLabel:'검수 중', thumb:'vibox-granola-bowl', grad:'c4', cmt:{open:0,total:3},
+        versions:[ {v:'v2',dur:'0:30',size:'88MB',when:'어제',note:'매니저 검수 대기 중',cur:true},{v:'v1',dur:'0:30',size:'86MB',when:'3일 전',note:'1차 납품'} ]},
+      {name:'상세컷_15s', latest:'v1', status:'prog', statusLabel:'진행 중', single:true, thumb:'vibox-granola-detail', grad:'c5', cmt:{open:0,total:0},
+        versions:[ {v:'v1',dur:'0:15',size:'38MB',when:'오늘',note:'작업 중',cur:true} ]},
+    ],
+    assets:{footage:'1개 · 3.1GB', ref:'레퍼런스 3개', proj:'자막 1개'} },
+
+  car:{ id:'#1011', name:'자동차 OO', deadline:'납품 완료 5/28', dday:'완료', due:false, pinned:false, status:'ok', statusLabel:'승인됨', dim:true,
+    summary:'영상 4 · 원본 3 · 프로젝트파일 1', metaFull:'완성본 3 · 원본 8 · 최신 v4 · 19개 항목', items:'19개 항목', latest:'v4', vcount:3, cover:'vibox-car-road', grad:'c6',
+    videos:[
+      {name:'티저_15s', latest:'v4', status:'ok', statusLabel:'승인됨', thumb:'vibox-car-road', grad:'c6', cmt:{open:0,total:6},
+        versions:[ {v:'v4',dur:'0:15',size:'44MB',when:'3일 전',note:'최종 승인',cur:true},{v:'v3',dur:'0:15',size:'43MB',when:'5일 전',note:'자막 수정'},{v:'v2',dur:'0:15',size:'43MB',when:'6일 전',note:'컬러 조정'},{v:'v1',dur:'0:15',size:'42MB',when:'8일 전',note:'초안'} ]},
+    ],
+    assets:{footage:'3개 · 14GB', ref:'레퍼런스 2개', proj:'prproj 1개'} },
+};
+const ORDER = ['sujeong','granola','car'];
+const HERO = { pkey:'sujeong', vIdx:0 };
+
+let COMMENTS = [
+  {who:'박매니저',av:'박',c:'#6d5a9c',when:'3시간 전',tcs:['0:42','1:15'],tx:"0:42 자막 오타 '브랜대'→'브랜드' 수정해 주세요. 1:15 컷 전환이 살짝 튀어요.",resolved:false},
+  {who:'박매니저',av:'박',c:'#6d5a9c',when:'3시간 전',tcs:['0:08'],tx:'인트로 색감이 조금 차가워요. 따뜻하게 색보정 부탁드려요.',resolved:false},
+  {who:'서준',av:'서',c:'#c8430a',when:'방금',tcs:[],tx:'확인했습니다. 자막·색보정 반영해서 v4로 올리겠습니다.',own:true},
+];
+let cmtFilter = false;
+
+const NOTIFS = [
+  {ic:'fix',t:'박매니저님이 수정 요청',d:'성수 카페 · 브랜드필름 v3 — 자막·색보정 2건',w:'3시간 전',unread:true,act:()=>openModal('sujeong',0,0)},
+  {ic:'rev',t:'광고_30s 검수 중',d:'그래놀라 · v2 매니저 확인 대기',w:'어제',unread:true,act:()=>go('folder','granola')},
+  {ic:'fix',t:'마감 임박 D-2',d:'성수 카페 6/16 마감',w:'어제',unread:true,act:()=>go('folder','sujeong')},
+  {ic:'cmt',t:'새 코멘트 1건',d:'성수 카페 · 0:08 색감',w:'2일 전',unread:false,act:()=>openModal('sujeong',0,0)},
+  {ic:'ok',t:'티저_15s 승인됨',d:'성수 카페',w:'3일 전',unread:false,act:()=>go('folder','sujeong')},
+];
+
+const SEARCH_IDX = [
+  {type:'프로젝트',ic:'folder',t:'성수 카페',sub:'#1042 · D-2 · 수정 요청',act:()=>go('folder','sujeong')},
+  {type:'영상',ic:'git-branch',t:'브랜드필름 v3',sub:'성수 카페 · 수정 요청 2',act:()=>openModal('sujeong',0,0)},
+  {type:'코멘트',ic:'message-square',t:"0:42 자막 오타 '브랜대'→'브랜드'",sub:'브랜드필름 · 박매니저',act:()=>openModal('sujeong',0,0)},
+  {type:'영상',ic:'git-branch',t:'광고_30s v2',sub:'그래놀라 · 검수 중',act:()=>go('folder','granola')},
+  {type:'프로젝트',ic:'folder',t:'그래놀라',sub:'#1039 · D-5',act:()=>go('folder','granola')},
+  {type:'프로젝트',ic:'folder',t:'자동차 OO',sub:'#1011 · 승인됨',act:()=>go('folder','car')},
+  {type:'폴더',ic:'hard-drive',t:'포트폴리오',sub:'My box · 8개 · 공유 중',act:()=>toast('My box 포트폴리오')},
+];
+const RECENT_Q = ['성수 카페','브랜드필름','0:42'];
+
+const TRASH = [
+  {nm:'브랜드필름_v2.mp4',pa:'성수 카페 › 완성본',keep:'D-23 후 삭제',grad:'c1',seed:'vibox-cafe-pour-v2'},
+  {nm:'무드보드_초안.jpg',pa:'성수 카페 › 레퍼런스',keep:'D-12 후 삭제',grad:'c3',seed:'vibox-ref-mood'},
+  {nm:'광고_초안.mp4',pa:'그래놀라 › 완성본',keep:'D-29 후 삭제',grad:'c4',seed:'vibox-granola-draft'},
+];
+
+let hasWork = true;
+
+/* ---------- 렌더 ---------- */
+const $main=document.getElementById('main'), $panel=document.getElementById('panel'), $sb=document.getElementById('sb');
+let view='home', curKey=null;
+
+function go(v, key){ view=v; curKey=key||null; closeNotif(); render(); document.querySelector('.scroll').scrollTop=0; }
+function setNav(n){ document.querySelectorAll('.nav[data-nav]').forEach(e=>e.classList.toggle('on', e.dataset.nav===n)); }
+
+function sidebarHTML(){
+  const pins = ORDER.filter(k=>PROJECTS[k].pinned);
+  const pinSec = pins.length ? `<div class="lbl"><svg data-lucide="star"></svg> 즐겨찾기</div>` +
+    pins.map(k=>`<div class="nav" data-nav="" onclick="go('folder','${k}')"><svg data-lucide="folder"></svg> ${PROJECTS[k].name}<span class="star"><svg data-lucide="star"></svg></span></div>`).join('') : '';
+  return `
+    <div class="me"><span class="av">서</span><div><div class="n">서준</div><div class="r">외부 편집 · 파트너</div></div><button class="x" title="로그아웃" onclick="toast('로그아웃')"><svg data-lucide="log-out"></svg></button></div>
+    <div class="store" onclick="toast('저장 공간 41% · 49GB / 120GB 사용 중')"><div class="l"><b>저장 공간</b><span>41%</span></div><div class="b"><i style="width:41%"></i></div></div>
+    <div class="dv"></div>
+    <div class="nav home" data-nav="home" onclick="go('home')"><svg data-lucide="house"></svg> 홈</div>
+    ${pinSec}
+    <div class="lbl">클라우드</div>
+    <div class="nav" data-nav="team" onclick="go('folder','sujeong')"><svg data-lucide="handshake"></svg> 비모와의 작업</div>
+    <div class="nav" data-nav="mybox" onclick="toast('My box (데모 생략)')"><svg data-lucide="hard-drive"></svg> My box</div>
+    <div class="lbl">라이브러리</div>
+    <div class="nav" data-nav="shares" onclick="toast('공유 링크 관리 (로드맵 Phase 2)')"><svg data-lucide="share-2"></svg> 공유</div>
+    <div class="nav" data-nav="trash" onclick="go('trash')"><svg data-lucide="trash-2"></svg> 휴지통</div>
+    <div class="sb-foot"><div class="m">V</div><div class="w">비박스</div></div>`;
+}
+
+function render(){
+  $sb.innerHTML = sidebarHTML();
+  if(view==='trash'){ $main.innerHTML=trashHTML(); $panel.innerHTML=trashPanel(); setNav('trash'); }
+  else if(view==='home'){ $main.innerHTML = hasWork ? homeHTML() : onboardHTML(); $panel.innerHTML = homePanel(); setNav('home'); }
+  else { $main.innerHTML = folderHTML(curKey); $panel.innerHTML = folderPanel(curKey); setNav('team'); }
+  if(window.lucide) lucide.createIcons();
+}
+
+function thumbHTML(seed, grad, opts={}){
+  const o = opts;
+  const proc = o.processing ? `<div class="proc"><svg data-lucide="loader"></svg>인코딩 중</div>` : '';
+  return `<div class="thumb ${grad} ${o.cls||''}">
+    <img src="${IMG(seed)}" onerror="this.style.display='none'" alt="">
+    <div class="shade"></div>
+    ${o.tl?`<div class="tl">${o.tl}</div>`:''}
+    ${o.tr?`<div class="tr">${o.tr}</div>`:''}
+    ${(o.play!==false&&!o.processing)?`<div class="pl"><span class="plc"><svg data-lucide="play"></svg></span></div>`:''}
+    ${proc}
+    ${o.bl?`<div class="bl">${o.bl}</div>`:''}
+    ${o.br?`<div class="br">${o.br}</div>`:''}
+  </div>`;
+}
+function statusChip(s,label){ return `<span class="st ${cls[s]}"><svg data-lucide="${SIC[s]}"></svg>${label}</span>`; }
+function cmtBadge(o,t){ if(!t) return ''; const c=o>0?'on':'done'; return `<span class="cbadge ${c}"><svg data-lucide="message-square"></svg>미해결 ${o}<span class="sl">/${t}</span></span>`; }
+function togglePin(k){ PROJECTS[k].pinned=!PROJECTS[k].pinned; const on=PROJECTS[k].pinned; render(); toast(on?PROJECTS[k].name+' 즐겨찾기에 고정':'고정 해제'); }
+
+/* ---- 홈 ---- */
+function homeHTML(){
+  const h=PROJECTS[HERO.pkey], hv=h.videos[HERO.vIdx], ver=hv.versions[0];
+  const pins=ORDER.filter(k=>PROJECTS[k].pinned), rest=ORDER.filter(k=>!PROJECTS[k].pinned);
+  const pinBlock = pins.length ? `<div class="ghead pin"><svg data-lucide="star"></svg> 고정</div><div class="pgrid" style="margin-bottom:16px">${pins.map(projectCard).join('')}</div>` : '';
+  const restBlock = `<div class="ghead"><svg data-lucide="folders"></svg> 진행 중</div><div class="pgrid">${rest.map(projectCard).join('')}<div class="pdash" onclick="toast('새 작업은 비모가 열어줘요')"><div><svg data-lucide="inbox"></svg><div class="l">새 작업은 비모가<br>열어줍니다</div></div></div></div>`;
+  return `
+  <div class="todohead"><svg data-lucide="target"></svg> 지금 할 일 <span class="wait" onclick="toast('검수 대기 큐 (로드맵 Phase 1)')">처리 대기 2건</span></div>
+  <div class="hero" onclick="go('folder','${HERO.pkey}')">
+    ${thumbHTML(hv.thumb, hv.grad, { tr:`<span class="cchip"><svg data-lucide="layers"></svg>이 프로젝트 영상 ${h.vcount}</span>`, bl:`<span class="verbadge">${ver.v}</span><span class="dur">${ver.dur}</span>`, br:`<span class="res">4K</span>` })}
+    <div class="info">
+      <div class="crumb"><span class="vmk sm">V</span> <span class="clink" onclick="event.stopPropagation();go('folder','${HERO.pkey}')">${h.name} <span class="mono">${h.id}</span></span> <svg data-lucide="chevron-right" class="sep"></svg> 완성본 <svg data-lucide="chevron-right" class="sep"></svg> <b>${hv.name}</b></div>
+      <h3>${hv.name} ${ver.v} ${statusChip(hv.status,hv.statusLabel)}</h3>
+      <div class="catchips">${hv.cats.map(c=>`<span class="catchip"><svg data-lucide="${c.i}"></svg>${c.t}</span>`).join('')}</div>
+      <div class="reqbox"><span class="ava">박</span><span>${ver.note} — 박매니저</span></div>
+      <div class="hmeta"><span class="dl due"><svg data-lucide="clock"></svg>${h.deadline} 마감</span><span class="sep">·</span>${cmtBadge(hv.cmt.open,hv.cmt.total)}<span class="sep">·</span>${ver.v} 업로드 ${ver.when}</div>
+      <div class="act">
+        <button class="btn pv" onclick="event.stopPropagation();demoUpload('ok')"><svg data-lucide="upload"></svg>새 버전(v4) 올리기</button>
+        <button class="btn g" onclick="event.stopPropagation();openModal('${HERO.pkey}',0,0)"><svg data-lucide="message-square"></svg>코멘트 보기</button>
+        <button class="btn link" onclick="event.stopPropagation();go('folder','${HERO.pkey}')">프로젝트 열기 →</button>
+      </div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="seclbl"><span class="vmk sm">V</span><span class="t">비모와의 작업</span><span class="sum">진행 중 프로젝트 ${ORDER.length}</span></div>
+    ${pinBlock}${restBlock}
+  </div>
+  <div class="sec">
+    <div class="seclbl box"><svg data-lucide="hard-drive" class="hd"></svg><span class="t">My box</span><span class="sum">내 폴더 · 공유 중 4</span></div>
+    <div class="pgrid">
+      <div class="pcard" onclick="toast('포트폴리오 폴더')">
+        ${thumbHTML('vibox-portfolio-reel','c3',{cls:'pcover',tl:`<span class="fchip"><svg data-lucide="folder"></svg></span>`,bl:`<span class="cchip"><svg data-lucide="film"></svg>영상 5</span>`})}
+        <div class="ptitle"><svg data-lucide="hard-drive" style="width:16px;height:16px;color:var(--mybox)"></svg>포트폴리오</div>
+        <div class="pmeta"><span class="it"><svg data-lucide="film"></svg>영상 5</span><span class="sep">·</span><span class="it"><svg data-lucide="image"></svg>이미지 3</span><span class="end mono">8개 항목</span></div>
+        <div class="pfoot"><span class="st share"><svg data-lucide="share-2"></svg>공유 중</span><span class="dl">3시간 전 코멘트</span></div>
+      </div>
+      <div class="pcard" onclick="toast('촬영본 모음 폴더')">
+        ${thumbHTML('vibox-bts-shoot','c5',{cls:'pcover',tl:`<span class="fchip"><svg data-lucide="folder"></svg></span>`,bl:`<span class="cchip"><svg data-lucide="film"></svg>원본 18</span>`,play:false})}
+        <div class="ptitle"><svg data-lucide="hard-drive" style="width:16px;height:16px;color:var(--mybox)"></svg>촬영본 모음</div>
+        <div class="pmeta"><span class="it"><svg data-lucide="film"></svg>원본 18</span><span class="sep">·</span>112GB<span class="end mono">23개 항목</span></div>
+        <div class="pfoot"><span class="st prog"><svg data-lucide="folder"></svg>보관</span><span class="dl">어제</span></div>
+      </div>
+      <div class="pdash" onclick="toast('새 폴더 / 업로드')"><div><svg data-lucide="folder-plus" style="color:var(--mybox)"></svg><div class="l">새 폴더 / 업로드</div></div></div>
+    </div>
+  </div>`;
+}
+
+function projectCard(k){
+  const p=PROJECTS[k];
+  return `<div class="pcard ${p.dim?'dim':''}" onclick="go('folder','${k}')">
+    <button class="pinbtn ${p.pinned?'on':''}" title="즐겨찾기" onclick="event.stopPropagation();togglePin('${k}')"><svg data-lucide="star"></svg></button>
+    ${thumbHTML(p.cover, p.grad, { cls:'pcover', tl:`<span class="fchip"><svg data-lucide="folder"></svg></span>`, bl:`<span class="cchip"><svg data-lucide="film"></svg>영상 ${p.vcount}</span>` })}
+    <div class="ptitle"><span class="vmk sm">V</span>${p.name} <span class="id mono">${p.id}</span></div>
+    <div class="pmeta">${p.metaFull.split(' · ').slice(0,3).map((m,i)=>`${i?'<span class="sep">·</span>':''}<span class="it"><svg data-lucide="${['check-circle-2','film','git-branch'][i]}"></svg>${m}</span>`).join('')}<span class="end mono">${p.items}</span></div>
+    <div class="pfoot">${statusChip(p.status,p.statusLabel)}<span class="dl ${p.due?'due':''}">${p.due?'<svg data-lucide=\'clock\'></svg>':''}${p.deadline}</span></div>
+  </div>`;
+}
+
+function homePanel(){
+  const up = ORDER.filter(k=>PROJECTS[k].dday!=='완료');
+  return `<div class="panel-h"><svg data-lucide="house" style="color:var(--vimo)"></svg> 바로가기</div>
+  <div class="psec"><svg data-lucide="calendar-clock"></svg> 다가오는 마감</div>
+  ${up.map(k=>{const p=PROJECTS[k];return `<div class="dlrow" onclick="go('folder','${k}')"><svg data-lucide="clock"></svg><span class="nm">${p.name}</span><span class="dday ${p.due?'urgent':''}">${p.dday}</span></div>`}).join('')}
+  <div class="psec"><svg data-lucide="folder"></svg> 비모 프로젝트</div>
+  ${ORDER.map(k=>{const p=PROJECTS[k];return `<div class="pf ${p.pinned?'star':'v'}" onclick="go('folder','${k}')"><svg data-lucide="${p.pinned?'star':'folder'}"></svg><span class="nm">${p.name}</span><span class="c mono">${p.latest}</span></div>`}).join('')}
+  <div class="psec"><svg data-lucide="hard-drive"></svg> My box 폴더</div>
+  <div class="pf b" onclick="toast('포트폴리오')"><svg data-lucide="folder"></svg><span class="nm">포트폴리오</span><span class="c">8</span></div>
+  <div class="pf b" onclick="toast('촬영본 모음')"><svg data-lucide="folder"></svg><span class="nm">촬영본 모음</span><span class="c">23</span></div>`;
+}
+
+/* ---- 온보딩(빈 상태) ---- */
+function onboardHTML(){
+  return `<div class="owrap">
+    <h2>비박스에 오신 걸 환영해요, 서준님</h2>
+    <p class="sub">비모가 작업을 열면 여기 맨 위에 나타나요. 그동안 내 작업물을 정리해 두세요.</p>
+    <div class="ostep">
+      <div class="ostepcard"><div class="num">1</div><svg data-lucide="upload"></svg><div class="l">작업물 업로드</div></div>
+      <div class="ostepcard"><div class="num">2</div><svg data-lucide="share-2"></svg><div class="l">폴더로 공유</div></div>
+      <div class="ostepcard"><div class="num">3</div><svg data-lucide="message-square"></svg><div class="l">피드백 받기</div></div>
+    </div>
+    <div class="dropzone" id="dz" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over');demoUpload('ok')">
+      <div class="ic"><svg data-lucide="upload-cloud"></svg></div>
+      <div class="t1">여기로 파일을 끌어다 놓으세요</div>
+      <div class="t2">촬영본·편집본·레퍼런스를 올려 시작하세요</div>
+      <button class="btn pv" style="margin:0 auto" onclick="demoUpload('ok')"><svg data-lucide="file-up"></svg>파일 선택</button>
+    </div>
+  </div>`;
+}
+
+/* ---- 폴더 드릴다운 ---- */
+function folderHTML(k){
+  const p=PROJECTS[k];
+  return `
+  <div style="margin:-18px -22px 0;"><div class="ddhead">
+    <div class="ddtop">
+      <button class="back" onclick="go('home')"><svg data-lucide="arrow-left"></svg>홈</button>
+      <div class="crumb"><span class="vmk sm">V</span> <span class="clink" onclick="go('home')">비모와의 작업</span> <svg data-lucide="chevron-right" class="sep"></svg> <b>${p.name}</b> <span class="mono" style="color:var(--faint)">${p.id}</span>
+        <button class="pinbtn ${p.pinned?'on':''}" style="position:static;opacity:1;width:24px;height:24px;background:transparent" onclick="togglePin('${k}')"><svg data-lucide="star"></svg></button></div>
+      <span class="dl ${p.due?'due':''}">${p.due?'<svg data-lucide=\'clock\'></svg>':''}${p.deadline}</span>
+      <button class="btn pv" style="padding:8px 13px" onclick="demoUpload('ok')"><svg data-lucide="upload"></svg>새 버전 업로드</button>
+    </div>
+    <div class="ddmeta">${p.summary.split(' · ').map((m,i)=>`${i?'<span class="sep">·</span>':''}<span class="it"><svg data-lucide="${['git-branch','film','image','file-cog'][i]||'file'}"></svg>${m}</span>`).join('')}<span class="sep">·</span>담당 박매니저</div>
+  </div></div>
+  <div style="padding-top:18px">
+    ${p.videos.map((v,vi)=>trackHTML(k,v,vi)).join('')}
+    <div style="margin-top:6px">
+      <div class="collap" onclick="toast('촬영 원본 펼치기')"><svg data-lucide="film" class="g"></svg> 촬영 원본<span class="c">· ${p.assets.footage}</span><span class="ch"><svg data-lucide="chevron-down"></svg></span></div>
+      <div class="collap" onclick="toast('레퍼런스 펼치기')"><svg data-lucide="image" class="g"></svg> 레퍼런스<span class="c">· ${p.assets.ref}</span><span class="ch"><svg data-lucide="chevron-down"></svg></span></div>
+      <div class="collap" onclick="toast('프로젝트파일 펼치기')"><svg data-lucide="file-cog" class="g"></svg> 프로젝트파일<span class="c">· ${p.assets.proj}</span><span class="ch"><svg data-lucide="chevron-down"></svg></span></div>
+    </div>
+  </div>`;
+}
+function trackHTML(k,v,vi){
+  const isCur = v.status==='fix'||v.status==='rev'||v.status==='prog';
+  const rows = v.versions.map((ver,ri)=>{
+    const latest=ri===0;
+    const tag = ver.tag?`<span class="st prog"><svg data-lucide="corner-up-left"></svg>${ver.tag}</span>`:'';
+    const cta = (latest&&v.status==='fix')?`<button class="btn pv" style="padding:6px 11px" onclick="event.stopPropagation();demoUpload('ok')"><svg data-lucide="upload"></svg>새 버전</button>`:'';
+    return `<div class="vtlrow ${latest?'cur':'old'}" onclick="openModal('${k}',${vi},${ri})">
+      <div class="dotcol"><span class="dot ${latest?'on':''}"></span></div>
+      ${thumbHTML(v.thumb+'-'+ver.v, v.grad, {processing:latest&&ver.processing})}
+      <div><div class="vn">${ver.v} · ${ver.dur}</div><div class="vc">${ver.note}</div></div>
+      <div class="rt"><span class="when">${ver.when}</span>${tag}${cta}</div>
+    </div>`;
+  }).join('');
+  return `<div class="track ${isCur?'cur':''}">
+    <div class="trackhd ${isCur?'cur':''}"><svg data-lucide="git-branch" class="gi"></svg>${v.name} ${statusChip(v.status,v.statusLabel)} ${cmtBadge(v.cmt.open,v.cmt.total)}<span class="latest">${v.single?v.latest+' 단일':'최신 '+v.latest}</span></div>
+    ${v.single?'':`<div class="vtl">${rows}</div>`}
+  </div>`;
+}
+function folderPanel(k){
+  const p=PROJECTS[k];
+  const vids=p.videos.map((v,vi)=>`<div class="pchild ${vi===0?'cur':''}" onclick="openModal('${k}',${vi},0)"><svg data-lucide="git-branch"></svg> ${v.name}<span class="c mono">${v.latest}</span></div>`).join('');
+  const others=ORDER.filter(o=>o!==k).map(o=>`<div class="pf v" onclick="go('folder','${o}')"><svg data-lucide="folder"></svg><span class="nm">${PROJECTS[o].name}</span><span class="c mono">${PROJECTS[o].latest}</span></div>`).join('');
+  return `<div class="panel-h"><span class="vmk">V</span> ${p.name}</div>
+    <div class="pf v cur"><svg data-lucide="folder-open" style="color:var(--vimo)"></svg><span class="nm">${p.name}</span><span class="c mono">${p.id}</span></div>
+    ${vids}
+    <div class="psec">자료</div>
+    <div class="pchild" onclick="toast('촬영원본')"><svg data-lucide="film"></svg> 촬영원본</div>
+    <div class="pchild" onclick="toast('레퍼런스')"><svg data-lucide="image"></svg> 레퍼런스</div>
+    <div class="pchild" onclick="toast('프로젝트파일')"><svg data-lucide="file-cog"></svg> 프로젝트파일</div>
+    <div class="psec">다른 프로젝트</div>${others}`;
+}
+
+/* ---- 휴지통 ---- */
+function trashHTML(){
+  return `<div style="margin:-18px -22px 0;"><div class="ddhead"><div class="ddtop"><div class="crumb"><svg data-lucide="trash-2" style="width:16px;height:16px;color:var(--soft)"></svg> <b>휴지통</b></div></div><div class="ddmeta">삭제 후 30일간 보관되며, 이후 자동으로 영구 삭제됩니다 · 복원 가능 ${TRASH.length}건</div></div></div>
+  <div style="padding-top:18px">
+    ${TRASH.map(t=>`<div class="trow">${thumbHTML(t.seed,t.grad,{play:false})}<div><div class="nm">${t.nm}</div><div class="pa">${t.pa}</div></div><div class="rt"><span class="keepbadge">${t.keep}</span><button class="btn ghost" onclick="toast('${t.nm} 복원했습니다')"><svg data-lucide="rotate-ccw"></svg>복원</button></div></div>`).join('')}
+  </div>`;
+}
+function trashPanel(){
+  return `<div class="panel-h"><svg data-lucide="trash-2" style="color:var(--soft)"></svg> 휴지통</div>
+  <div class="pquiet" style="font-size:11.5px;color:var(--faint);padding:8px 9px;line-height:1.5">복원 가능 ${TRASH.length}건. 30일 후 자동 삭제됩니다.</div>
+  <div class="psec">바로가기</div>
+  <div class="pf v" onclick="go('home')"><svg data-lucide="house"></svg><span class="nm">홈으로</span></div>`;
+}
+
+/* ---- 검수 모달 ---- */
+function openModal(k,vi,ri){
+  closeNotif();
+  const p=PROJECTS[k], v=p.videos[vi], ver=v.versions[ri];
+  const visible = COMMENTS.filter(c=>!(cmtFilter&&c.resolved));
+  const cmtsHTML = visible.map((c)=>{ const idx=COMMENTS.indexOf(c);
+    const resolveBtn = c.own?'':`<button class="cresolve ${c.resolved?'done':''}" onclick="toggleResolve(${idx})"><svg data-lucide="${c.resolved?'check-circle-2':'circle'}"></svg>${c.resolved?'해결됨':'해결'}</button>`;
+    return `<div class="cmt ${c.resolved?'done':''}"><span class="ava" style="background:linear-gradient(135deg,${c.c},#3d3d5c)">${c.av}</span><div class="bd"><div class="nm">${c.who}<span>${c.when}</span>${resolveBtn}</div><div class="tx">${c.tcs.map(t=>`<span class="tcchip" onclick="toast('${t} 지점으로 이동')"><svg data-lucide="play"></svg>${t}</span>`).join('')}${c.tx}</div></div></div>`;
+  }).join('');
+  document.getElementById('modal').innerHTML = `
+    <div class="player">
+      <div class="stage2"><button class="mclose" onclick="closeModal()"><svg data-lucide="x"></svg></button>
+        <img src="${IMG(v.thumb+'-'+ver.v)}" onerror="this.style.display='none'" alt="">
+        <div class="bigpl"><button onclick="toast('재생 (데모)')"><svg data-lucide="play"></svg></button></div>
+      </div>
+      <div class="ctrl">
+        <div class="seek"><i></i><span class="mk" style="left:24%" title="0:42" onclick="toast('0:42로 이동')"></span><span class="mk" style="left:62%" title="1:15" onclick="toast('1:15로 이동')"></span></div>
+        <div class="ctrlrow"><button onclick="toast('재생 (데모)')"><svg data-lucide="play"></svg></button><button title="이전 프레임"><svg data-lucide="chevron-left"></svg></button><button title="다음 프레임"><svg data-lucide="chevron-right"></svg></button><span class="t">0:42 / ${ver.dur}</span><button class="sp"><svg data-lucide="volume-2"></svg></button><button><svg data-lucide="settings"></svg></button><button><svg data-lucide="maximize"></svg></button></div>
+      </div>
+    </div>
+    <div class="side">
+      <div class="sh">
+        <div class="crumb"><span class="vmk sm">V</span> <span class="clink" onclick="closeModal();go('folder','${k}')">${p.name} <span class="mono">${p.id}</span></span> <svg data-lucide="chevron-right" class="sep"></svg> ${v.name}</div>
+        <h4>${v.name} · ${ver.v} ${statusChip(v.status,v.statusLabel)} ${cmtBadge(v.cmt.open,v.cmt.total)}</h4>
+        <div class="subline"><span class="sub">${ver.dur} · ${ver.size} · 업로드 ${ver.when}</span><span class="cfilter ${cmtFilter?'on':''}" onclick="toggleCmtFilter('${k}',${vi},${ri})">미해결만</span></div>
+      </div>
+      <div class="cmts">${cmtsHTML || '<div class="palempty"><svg data-lucide="check-circle-2"></svg>모든 코멘트를 해결했어요</div>'}</div>
+      <div class="cmtbox"><div class="ip">코멘트 남기기…</div><button class="send" onclick="toast('코멘트 전송 (데모)')"><svg data-lucide="send"></svg></button></div>
+    </div>`;
+  modalCtx={k,vi,ri};
+  document.getElementById('ov').classList.add('show');
+  if(window.lucide) lucide.createIcons();
+}
+let modalCtx=null;
+function closeModal(){ document.getElementById('ov').classList.remove('show'); }
+function toggleResolve(i){ COMMENTS[i].resolved=!COMMENTS[i].resolved;
+  // 미해결 카운트 갱신: 브랜드필름(sujeong v0) 기준
+  const open=COMMENTS.filter(c=>!c.own&&!c.resolved).length;
+  PROJECTS.sujeong.videos[0].cmt.open=open;
+  if(modalCtx) openModal(modalCtx.k,modalCtx.vi,modalCtx.ri);
+  toast(COMMENTS[i].resolved?'코멘트 해결 처리':'해결 취소');
+}
+function toggleCmtFilter(k,vi,ri){ cmtFilter=!cmtFilter; openModal(k,vi,ri); }
+
+/* ---- 알림 ---- */
+function notifHTML(){
+  const unread=NOTIFS.filter(n=>n.unread).length;
+  return `<div class="nhd">알림 ${unread?`<span style="color:var(--vimo)">${unread}</span>`:''}<button class="read" onclick="markAllRead()">모두 읽음</button></div>
+  <div class="nlist">${NOTIFS.map((n,i)=>`<div class="nrow ${n.unread?'unread':''}" onclick="hitNotif(${i})"><span class="ni ${n.ic}"><svg data-lucide="${SIC[n.ic]||'message-square'}"></svg></span><div><div class="nt">${n.t}</div><div class="nd">${n.d}</div><div class="nw">${n.w}</div></div></div>`).join('')}</div>
+  <div class="nfoot">지난 알림 모두 보기</div>`;
+}
+function toggleNotif(e){ e&&e.stopPropagation(); const p=document.getElementById('notifPanel'); if(p.classList.contains('show')){closeNotif();return;} p.innerHTML=notifHTML(); p.classList.add('show'); if(window.lucide)lucide.createIcons(); }
+function closeNotif(){ document.getElementById('notifPanel').classList.remove('show'); }
+function markAllRead(){ NOTIFS.forEach(n=>n.unread=false); document.getElementById('bellDot').style.display='none'; toggleNotif(); toggleNotif(); closeNotif(); toast('모든 알림을 읽음 처리'); }
+function hitNotif(i){ NOTIFS[i].unread=false; if(!NOTIFS.some(n=>n.unread))document.getElementById('bellDot').style.display='none'; closeNotif(); NOTIFS[i].act(); }
+document.addEventListener('mousedown',e=>{ const p=document.getElementById('notifPanel'); if(p.classList.contains('show')&&!p.contains(e.target)&&e.target.closest('#bell')===null) closeNotif(); });
+
+/* ---- 검색 팔레트 ---- */
+let palSel=0, palItems=[];
+function openPalette(){ document.getElementById('palOv').classList.add('show'); renderPal(''); setTimeout(()=>{const i=document.getElementById('palInput'); i&&i.focus();},30); }
+function closePalette(){ document.getElementById('palOv').classList.remove('show'); }
+function renderPal(q){
+  q=(q||'').trim();
+  if(!q){ palItems=SEARCH_IDX.slice(0,4);
+    document.getElementById('pal').innerHTML = palInputHTML(q) + `<div class="palres">
+      <div class="palsec">최근 검색</div>${RECENT_Q.map(r=>`<div class="presult" onclick="document.getElementById('palInput').value='${r}';renderPal('${r}')"><span class="pi"><svg data-lucide="history"></svg></span><div><div class="pt">${r}</div></div></div>`).join('')}
+      <div class="palsec">추천</div>${palItems.map((it,i)=>presultHTML(it,i)).join('')}</div>`;
+  } else {
+    palItems=SEARCH_IDX.filter(it=>(it.t+it.sub+it.type).toLowerCase().includes(q.toLowerCase()));
+    const body = palItems.length ? `<div class="palres">${palItems.map((it,i)=>presultHTML(it,i)).join('')}</div>` : `<div class="palempty"><svg data-lucide="search-x"></svg>'${q}' 검색 결과가 없어요</div>`;
+    document.getElementById('pal').innerHTML = palInputHTML(q) + body;
+  }
+  palSel=0; updateSel();
+  if(window.lucide) lucide.createIcons();
+}
+function palInputHTML(q){ return `<div class="palin"><svg data-lucide="search"></svg><input id="palInput" placeholder="프로젝트·영상·코멘트 검색" value="${q.replace(/"/g,'&quot;')}" oninput="renderPal(this.value)" onkeydown="palKey(event)"><span class="kbd">esc</span></div>`; }
+function presultHTML(it,i){ return `<div class="presult" data-i="${i}" onclick="hitPal(${i})"><span class="pi"><svg data-lucide="${it.ic}"></svg></span><div><div class="pt">${it.t}</div><div class="ps">${it.sub}</div></div><span class="tag">${it.type}</span></div>`; }
+function updateSel(){ document.querySelectorAll('#pal .presult[data-i]').forEach(e=>e.classList.toggle('sel', +e.dataset.i===palSel)); }
+function hitPal(i){ const it=palItems[i]; closePalette(); if(it) it.act(); }
+function palKey(e){ if(e.key==='ArrowDown'){e.preventDefault();palSel=Math.min(palSel+1,palItems.length-1);updateSel();} else if(e.key==='ArrowUp'){e.preventDefault();palSel=Math.max(palSel-1,0);updateSel();} else if(e.key==='Enter'){e.preventDefault();hitPal(palSel);} }
+document.addEventListener('keydown',e=>{ if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();openPalette();} if(e.key==='Escape'){closePalette();closeModal();closeNotif();} });
+
+/* ---- 업로드 도크 ---- */
+let upTimer=null;
+function demoUpload(mode){
+  const dock=document.getElementById('upDock');
+  dock.classList.add('show');
+  const fail = mode==='fail';
+  dock.innerHTML = `<div class="udhd"><svg data-lucide="upload"></svg> 업로드 1건<button class="x" onclick="document.getElementById('upDock').classList.remove('show')"><svg data-lucide="x"></svg></button></div>
+    <div class="uprow"><div class="l"><svg data-lucide="film" style="width:15px;height:15px;color:#737373"></svg><span class="nm">브랜드필름_최종_v4.mp4</span><span class="pct" id="upPct">0%</span></div>
+      <div class="upbar"><i id="upBar" style="width:0%"></i></div>
+      <div class="upsub" id="upSub"><svg data-lucide="loader"></svg><span>284MB / 1.2GB · 잠시만요…</span></div></div>`;
+  if(window.lucide) lucide.createIcons();
+  clearInterval(upTimer);
+  let pct=0;
+  upTimer=setInterval(()=>{
+    pct+=Math.round(6+Math.random()*9);
+    if(fail && pct>=58){ clearInterval(upTimer);
+      document.getElementById('upBar').parentElement.classList.add('danger');
+      document.getElementById('upBar').style.width='58%';
+      document.getElementById('upPct').textContent='멈춤';
+      document.getElementById('upSub').className='upsub err';
+      document.getElementById('upSub').innerHTML=`<svg data-lucide="wifi-off"></svg><span>네트워크가 끊겨 멈췄어요</span><span class="retry" onclick="demoUpload('ok')">다시 시도</span>`;
+      if(window.lucide)lucide.createIcons(); return; }
+    if(pct>=100){ pct=100; clearInterval(upTimer);
+      document.getElementById('upBar').style.width='100%';
+      document.getElementById('upPct').textContent='완료';
+      document.getElementById('upSub').innerHTML=`<svg data-lucide="check-circle-2" style="color:var(--ok-fg)"></svg><span>업로드 완료 · 검수 대기로 전환</span>`;
+      if(window.lucide)lucide.createIcons();
+      toast('새 버전 업로드 완료');
+      setTimeout(()=>document.getElementById('upDock').classList.remove('show'),3200); return; }
+    document.getElementById('upBar').style.width=pct+'%';
+    document.getElementById('upPct').textContent=pct+'%';
+    document.getElementById('upSub').querySelector('span').textContent=`${Math.round(pct*12.8)}MB / 1.2GB · ${Math.max(1,Math.round((100-pct)/12))}초 남음`;
+  },420);
+}
+
+/* ---- 빈 상태 토글 ---- */
+function toggleEmpty(){ hasWork=!hasWork; if(view!=='home') view='home'; render(); toast(hasWork?'정상 상태':'빈 상태(신규 파트너) 미리보기'); }
+
+/* ---- 토스트 ---- */
+let tt;
+function toast(msg){ const t=document.getElementById('toast'); document.getElementById('toastmsg').textContent=msg; t.classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),2200); }
+
+/* ---- 초기 라우팅 ---- */
+const _h=location.hash;
+if(_h.startsWith('#folder')){ go('folder',(_h.split(':')[1])||'sujeong'); }
+else if(_h==='#trash'){ go('trash'); }
+else if(_h==='#empty'){ hasWork=false; render(); }
+else { render(); }
+if(_h.startsWith('#modal')){ const k=(_h.split(':')[1])||'sujeong'; go('folder',k); openModal(k,0,0); }
+if(_h==='#notif'){ toggleNotif(); }
+if(_h==='#search'){ openPalette(); }
+if(_h==='#upload'){ demoUpload('fail'); }
+</script>
+</body>
+</html>

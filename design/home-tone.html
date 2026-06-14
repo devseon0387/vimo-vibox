@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 · 페이지 톤 조정 (베이지→중성) 4안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    /* 오렌지 액센트 — 그대로 (앱 accent와 일치) */
+    --vimo:#F94000; --vimo-deep:#e85008; --vimo-soft:#fef0e8; --vimo-line:#fbd9c4; --vimo-ink:#c2410c;
+    --mybox:#f97316; --mybox-deep:#ea580c; --mybox-soft:#fff2e8; --mybox-line:#fed7aa;
+    /* 중성 회색 — 비박스 앱 토큰(#111/#fafafa/#ececec/#f7f7f7) */
+    --text:#111111; --muted:#5f5f5f; --faint:#9a9a9a;
+    --gallery:#ececec; --line:#ececec; --line2:#e5e5e5; --surf:#fafafa; --surf2:#f7f7f7; --page:#f7f7f7;
+    --ok:#16a34a; --warn:#c2700a; --danger:#dc2b02;
+    --sh:0 1px 2px rgba(0,0,0,.04); --sh2:0 5px 16px rgba(0,0,0,.05); --sh3:0 22px 56px rgba(0,0,0,.13);
+    --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:var(--font);background:var(--gallery);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h2,h3,h4,p{margin:0} a{color:inherit;text-decoration:none}
+  .mono{font-variant-numeric:tabular-nums}
+
+  .topnav{position:sticky;top:0;z-index:50;background:rgba(248,248,248,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--line2)}
+  .topnav__in{max-width:1320px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:13px;flex-wrap:wrap}
+  .brandmark{width:30px;height:30px;border-radius:9px;flex:none;display:grid;place-items:center;background:linear-gradient(90deg,var(--vimo-deep) 0 50%,#f9a87a 50% 100%);color:#fff;font-weight:800;font-size:16px;box-shadow:var(--sh)}
+  .topnav h1{font-size:14.5px;font-weight:800;letter-spacing:-.01em}.topnav h1 span{color:var(--muted);font-weight:600}
+  .tabs{display:flex;gap:5px;margin-left:auto;flex-wrap:wrap}
+  .tab{display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;font-size:12px;font-weight:600;color:var(--muted)}
+  .tab b{display:grid;place-items:center;width:18px;height:18px;border-radius:6px;background:#e3e3e3;color:#666;font-size:10.5px;font-weight:800}
+  .tab:hover{background:#fff;color:var(--text);box-shadow:var(--sh)}
+  .tab.is-active{background:var(--text);color:#fff}.tab.is-active b{background:rgba(255,255,255,.22);color:#fff}
+
+  .intro{padding:36px 24px 6px;max-width:1320px;margin:0 auto}
+  .intro h2{font-size:25px;font-weight:800;letter-spacing:-.02em}
+  .intro p{color:var(--muted);font-size:14px;margin-top:9px;max-width:840px;line-height:1.68}
+  .swatches{margin-top:14px;display:flex;gap:18px;flex-wrap:wrap}
+  .sw{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+  .sw .b{width:26px;height:18px;border-radius:5px;border:1px solid var(--line2)}
+
+  .variant{padding:32px 0 4px}
+  .vhead{max-width:1320px;margin:0 auto;padding:0 24px 16px;display:flex;align-items:flex-end;gap:15px;flex-wrap:wrap}
+  .vhead .num{font-size:13px;font-weight:800;color:#fff;background:var(--text);width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none}
+  .vhead .ttl{font-size:19px;font-weight:800;letter-spacing:-.02em}.vhead .ttl em{font-style:normal;color:var(--vimo)}
+  .vhead .lede{color:var(--muted);font-size:12.5px;margin-top:4px;max-width:660px}
+
+  .frame{max-width:1300px;margin:0 auto;background:#fff;border:1px solid var(--line2);border-radius:20px;overflow:hidden;box-shadow:var(--sh3)}
+  .frame__bar{height:42px;display:flex;align-items:center;gap:8px;padding:0 16px;background:var(--surf);border-bottom:1px solid var(--line)}
+  .dots{display:flex;gap:6px}.dots i{width:11px;height:11px;border-radius:50%;background:#dadada;display:inline-block}
+  .url{margin-left:8px;font-size:12.5px;color:#999;background:#fff;border:1px solid var(--line);border-radius:8px;padding:5px 14px;display:flex;align-items:center;gap:7px}
+  .url svg{width:12px;height:12px;color:#16a34a}.url .tag{margin-left:6px;font-size:10px;font-weight:700;color:var(--vimo-deep);background:var(--vimo-soft);border-radius:5px;padding:1px 6px}
+  .screen{height:608px;overflow:hidden;background:#fff;display:grid;grid-template-columns:222px 1fr}
+
+  /* 톤 스코프 (페이지 배경만 다르게) */
+  .frame.t1{--page:#f7f7f7}
+  .frame.t2{--page:#ffffff;--surf:#fbfbfb}
+  .frame.t3{--page:#f2f2f3;--surf:#f8f8f9}
+  .frame.t4{--page:#eef1f5;--surf:#f6f8fb;--line:#e7eaee;--line2:#e1e5ea}
+
+  /* 사이드바 (확정: 2번 그룹라벨 + 클라우드, 저장공간 프로필 아래) */
+  .sb{border-right:1px solid var(--line);background:var(--surf);display:flex;flex-direction:column;padding:15px 12px}
+  .logo{display:flex;align-items:center;gap:9px;padding:4px 8px 12px;font-weight:800;font-size:14.5px}
+  .logo .m{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;background:linear-gradient(90deg,var(--vimo-deep) 0 50%,#f9a87a 50%)}
+  .me{display:flex;align-items:center;gap:9px;padding:6px 8px}
+  .me .av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff;flex:none;background:#1f1f1f}
+  .me .n{font-weight:700;font-size:12.5px}.me .r{font-size:10.5px;color:var(--faint)}
+  .me .gear{margin-left:auto;color:var(--faint)}.me .gear svg{width:15px;height:15px}
+  .store{padding:6px 8px 10px;font-size:10.5px;color:var(--faint)}
+  .store .lbl{display:flex;justify-content:space-between;margin-bottom:6px}.store .lbl b{color:var(--muted);font-weight:600}
+  .store .bar{height:6px;background:#e6e6e6;border-radius:99px;overflow:hidden}.store .bar i{display:block;height:100%;width:32%;background:var(--mybox);border-radius:99px}
+  .divide{height:1px;background:var(--line);margin:11px 4px}
+  .seclbl{font-size:10.5px;font-weight:700;color:var(--faint);letter-spacing:.05em;padding:13px 11px 5px}
+  .nav{display:flex;align-items:center;gap:11px;padding:8px 11px;border-radius:10px;color:#444;font-weight:500;font-size:13px;cursor:pointer}
+  .nav svg{width:17px;height:17px;color:#9a9a9a}.nav:hover{background:var(--surf2)}
+  .nav.on{background:var(--surf2);color:var(--text);font-weight:600}.nav.on svg{color:var(--vimo)}
+  .nav.box svg{color:var(--mybox-deep)}
+  .nav .ct{margin-left:auto;font-size:10.5px;font-weight:800;color:#fff;background:var(--vimo);border-radius:999px;padding:1px 7px}
+
+  .main{overflow:hidden;display:flex;flex-direction:column}
+  .toolbar{display:flex;align-items:center;gap:10px;padding:13px 22px;border-bottom:1px solid var(--line)}
+  .toolbar .title{font-size:15.5px;font-weight:800}
+  .toolbar .right{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .tsearch{display:flex;align-items:center;gap:8px;background:var(--surf2);border-radius:10px;padding:7px 12px;color:var(--faint);font-size:12.5px;width:160px}.tsearch svg{width:15px;height:15px}
+  .vt{display:flex;background:var(--surf2);border-radius:9px;padding:3px}.vt span{width:28px;height:25px;display:grid;place-items:center;border-radius:7px;color:#a0a0a0;cursor:pointer}.vt span.on{background:#fff;color:var(--text);box-shadow:var(--sh)}.vt span svg{width:15px;height:15px}
+  .btn{font-family:inherit;font-size:12.5px;font-weight:600;border:1px solid var(--line2);background:#fff;color:var(--text);padding:8px 13px;border-radius:10px;display:inline-flex;align-items:center;gap:7px;cursor:pointer}.btn svg{width:15px;height:15px}.btn:hover{box-shadow:var(--sh)}
+  .btn--vimo{background:var(--vimo);border-color:var(--vimo);color:#fff}.btn--sm{padding:6px 11px;font-size:12px}
+  .mini{border-radius:6px;flex:none;overflow:hidden}
+  .c1{background:linear-gradient(135deg,#7c3a1d,#c2683a)} .c2{background:linear-gradient(135deg,#243b57,#4a7ba6)} .c4{background:linear-gradient(135deg,#1a3a30,#357d63)} .c5{background:linear-gradient(135deg,#4a3b1c,#a98a3e)} .c6{background:linear-gradient(135deg,#3a2b2b,#7d5a4a)}
+  .fico{display:grid;place-items:center;background:var(--surf2);color:#888;border-radius:8px;flex:none}.fico.box{background:var(--mybox-soft);color:var(--mybox-deep)}.fico svg{width:16px;height:16px}
+  .cards{background:var(--page);padding:15px 20px;flex:1;overflow:hidden;display:flex;flex-direction:column;gap:13px}
+  .scard{background:#fff;border:1px solid var(--line2);border-radius:14px;overflow:hidden}
+  .scard.vc-wash{border-color:var(--vimo-line)}
+  .scard .rows{padding:5px 9px 9px}
+  .hd{display:flex;align-items:center;gap:9px;padding:11px 14px;font-size:13px;font-weight:800;border-bottom:1px solid var(--line)}
+  .hd svg{width:15px;height:15px}.hd.box svg{color:var(--mybox-deep)}.hd.done{color:var(--faint)}.hd.done svg{color:var(--faint)}
+  .hd.wash{background:var(--vimo-soft);border-bottom-color:var(--vimo-line)}
+  .hd .sum{font-weight:500;font-size:11px;color:var(--faint)}
+  .vmk{width:23px;height:23px;border-radius:6px;display:grid;place-items:center;font-weight:800;font-size:11px;color:#fff;background:linear-gradient(90deg,var(--vimo-deep) 0 50%,#f9a87a 50%)}
+  .vtitle{color:var(--vimo-deep);font-weight:800}
+  .live{margin-left:auto;font-size:10px;font-weight:700;border-radius:999px;padding:3px 10px;display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--vimo-line);color:var(--vimo-deep)}.live .dot{width:6px;height:6px;border-radius:50%;background:var(--vimo)}
+  .lrow{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:9px}
+  .lrow .t{font-size:13px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lrow .mini{width:38px;height:24px}.lrow .fico{width:28px;height:28px}
+  .lrow .cell{font-size:11.5px;color:var(--faint);white-space:nowrap}.lrow .loc{font-size:11px;color:var(--vimo-ink);font-weight:600}
+  .chip{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:7px;flex:none;display:inline-flex;align-items:center;gap:4px}.chip svg{width:11px;height:11px}
+  .chip.fix{background:#ffe7df;color:var(--danger)} .chip.rev{background:#fff1de;color:var(--warn)}
+
+  .foot{max-width:1320px;margin:0 auto;padding:36px 24px 80px}
+  .foot__card{background:#fff;border:1px solid var(--line2);border-radius:18px;padding:22px 26px;box-shadow:var(--sh)}
+  .foot__card h3{font-size:15px;font-weight:800}.foot__card p{color:var(--muted);font-size:13.5px;margin-top:8px;line-height:1.62}
+  .foot__card .next{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}
+  .pill{font-size:12.5px;font-weight:600;color:#555;background:var(--surf2);border:1px solid var(--line2);border-radius:999px;padding:8px 14px}
+
+  svg.lucide{width:1em;height:1em;stroke-width:1.85;flex:none;vertical-align:-.15em}.nav svg{width:17px;height:17px}
+  @media(max-width:1340px){.frame,.vhead,.topnav__in,.intro,.foot{max-width:1140px}.screen{height:592px}}
+</style>
+</head>
+<body>
+
+<nav class="topnav"><div class="topnav__in">
+  <div class="brandmark">V</div>
+  <h1>비박스 · 페이지 톤 <span>베이지 → 비박스 중성 톤 4안</span></h1>
+  <div class="tabs">
+    <a class="tab" href="#a"><b>1</b> 정석(#f7f7f7)</a>
+    <a class="tab" href="#b"><b>2</b> 올 화이트</a>
+    <a class="tab" href="#c"><b>3</b> 소프트 그레이</a>
+    <a class="tab" href="#d"><b>4</b> 쿨 그레이</a>
+  </div>
+</div></nav>
+
+<div class="intro">
+  <h2>베이지 빼고, 비박스 중성 톤으로</h2>
+  <p>지난 시안들은 배경·회색에 따뜻한 기(베이지)가 있었습니다. 비박스 앱은 <b>#fff · #fafafa · #f7f7f7 · #ececec</b>의 중성/쿨 라이트(Linear·Vercel풍)예요. 오렌지·레이아웃·구성은 확정안 그대로 두고, <b>회색과 페이지 배경만</b> 비박스 톤으로 맞췄습니다. 페이지 배경 밝기를 4가지로 — 어느 정도가 좋은지 골라주세요.</p>
+  <div class="swatches">
+    <div class="sw"><span class="b" style="background:#f7f7f7"></span>1 정석 #f7f7f7</div>
+    <div class="sw"><span class="b" style="background:#fff"></span>2 올 화이트</div>
+    <div class="sw"><span class="b" style="background:#f2f2f3"></span>3 소프트 그레이</div>
+    <div class="sw"><span class="b" style="background:#eef1f5"></span>4 쿨 그레이</div>
+  </div>
+</div>
+
+<!-- 1 정석 -->
+<section class="variant" id="a">
+  <div class="vhead"><div class="num">1</div><div><div class="ttl">정석 <em>· #f7f7f7</em></div><div class="lede">비박스 앱 그대로의 중성 회색. 카드(흰색)와 배경이 자연스럽게 분리. 가장 무난.</div></div></div>
+  <div class="frame t1"><div class="frame__bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="tag">파트너</span></div></div>
+  <div class="screen">
+    <aside class="sb">
+      <div class="logo"><div class="m">V</div> 비박스</div>
+      <div class="me"><div class="av">서</div><div><div class="n">서준</div><div class="r">파트너 · 외부 편집</div></div><span class="gear"><svg data-lucide="settings"></svg></span></div>
+      <div class="store"><div class="lbl"><b>저장 공간</b><span>32%</span></div><div class="bar"><i></i></div></div>
+      <div class="divide"></div>
+      <div class="nav on"><svg data-lucide="house"></svg> 홈</div>
+      <div class="seclbl">클라우드</div>
+      <div class="nav"><svg data-lucide="handshake"></svg> 비모와의 작업 <span class="ct">2</span></div>
+      <div class="nav box"><svg data-lucide="hard-drive"></svg> My box</div>
+      <div class="seclbl">라이브러리</div>
+      <div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+      <div class="nav"><svg data-lucide="clock"></svg> 최근</div>
+      <div class="nav"><svg data-lucide="trash-2"></svg> 휴지통</div>
+    </aside>
+    <main class="main">
+      <div class="toolbar"><div class="title">홈</div><div class="right"><span class="tsearch"><svg data-lucide="search"></svg> 검색</span><span class="vt"><span class="on"><svg data-lucide="list"></svg></span><span><svg data-lucide="layout-grid"></svg></span></span><button class="btn btn--vimo btn--sm"><svg data-lucide="upload"></svg>업로드</button></div></div>
+      <div class="cards">
+        <div class="scard vc-wash"><div class="hd wash"><div class="vmk">V</div><span class="vtitle">비모와의 작업</span><span class="sum">진행 중 2 · 마감 임박 1</span><span class="live"><span class="dot"></span>지금 작업 중</span></div>
+          <div class="rows"><div class="lrow"><div class="mini c1"></div><div class="t">브랜드필름_최종_v3.mp4</div><span class="chip fix"><svg data-lucide="alert-triangle"></svg>수정 요청</span><span class="loc">#1042 · D-2</span></div>
+            <div class="lrow"><div class="mini c4"></div><div class="t">광고_30s_v2.mp4</div><span class="chip rev"><svg data-lucide="eye"></svg>검수중</span><span class="loc">#1039</span></div></div></div>
+        <div class="scard"><div class="hd box"><svg data-lucide="hard-drive"></svg>My box <span class="sum">· 내 보관함 23</span></div>
+          <div class="rows"><div class="lrow"><div class="mini c1"></div><div class="t">성수카페_편집중.prproj</div><span class="cell">방금 · 38MB</span></div>
+            <div class="lrow"><div class="fico box"><svg data-lucide="folder"></svg></div><div class="t">레퍼런스</div><span class="cell">14개</span></div>
+            <div class="lrow"><div class="mini c5"></div><div class="t">촬영본_A_0312.mov</div><span class="cell">3일 전 · 8.4GB</span></div></div></div>
+        <div class="scard"><div class="hd done"><svg data-lucide="check-circle-2"></svg>지난 비모 작업 · 승인 <span class="sum">· 2 ▸</span></div></div>
+      </div>
+    </main>
+  </div></div>
+</section>
+
+<!-- 2 올 화이트 -->
+<section class="variant" id="b">
+  <div class="vhead"><div class="num">2</div><div><div class="ttl">올 화이트 <em>· 배경도 흰색</em></div><div class="lede">배경까지 흰색. 카드는 테두리로만 구분돼 가장 깨끗하고 밝음. 미니멀 선호 시.</div></div></div>
+  <div class="frame t2"><div class="frame__bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="tag">파트너</span></div></div>
+  <div class="screen">
+    <aside class="sb">
+      <div class="logo"><div class="m">V</div> 비박스</div>
+      <div class="me"><div class="av">서</div><div><div class="n">서준</div><div class="r">파트너 · 외부 편집</div></div><span class="gear"><svg data-lucide="settings"></svg></span></div>
+      <div class="store"><div class="lbl"><b>저장 공간</b><span>32%</span></div><div class="bar"><i></i></div></div>
+      <div class="divide"></div>
+      <div class="nav on"><svg data-lucide="house"></svg> 홈</div>
+      <div class="seclbl">클라우드</div>
+      <div class="nav"><svg data-lucide="handshake"></svg> 비모와의 작업 <span class="ct">2</span></div>
+      <div class="nav box"><svg data-lucide="hard-drive"></svg> My box</div>
+      <div class="seclbl">라이브러리</div>
+      <div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+      <div class="nav"><svg data-lucide="clock"></svg> 최근</div>
+      <div class="nav"><svg data-lucide="trash-2"></svg> 휴지통</div>
+    </aside>
+    <main class="main">
+      <div class="toolbar"><div class="title">홈</div><div class="right"><span class="tsearch"><svg data-lucide="search"></svg> 검색</span><span class="vt"><span class="on"><svg data-lucide="list"></svg></span><span><svg data-lucide="layout-grid"></svg></span></span><button class="btn btn--vimo btn--sm"><svg data-lucide="upload"></svg>업로드</button></div></div>
+      <div class="cards">
+        <div class="scard vc-wash"><div class="hd wash"><div class="vmk">V</div><span class="vtitle">비모와의 작업</span><span class="sum">진행 중 2 · 마감 임박 1</span><span class="live"><span class="dot"></span>지금 작업 중</span></div>
+          <div class="rows"><div class="lrow"><div class="mini c1"></div><div class="t">브랜드필름_최종_v3.mp4</div><span class="chip fix"><svg data-lucide="alert-triangle"></svg>수정 요청</span><span class="loc">#1042 · D-2</span></div>
+            <div class="lrow"><div class="mini c4"></div><div class="t">광고_30s_v2.mp4</div><span class="chip rev"><svg data-lucide="eye"></svg>검수중</span><span class="loc">#1039</span></div></div></div>
+        <div class="scard"><div class="hd box"><svg data-lucide="hard-drive"></svg>My box <span class="sum">· 내 보관함 23</span></div>
+          <div class="rows"><div class="lrow"><div class="mini c1"></div><div class="t">성수카페_편집중.prproj</div><span class="cell">방금 · 38MB</span></div>
+            <div class="lrow"><div class="fico box"><svg data-lucide="folder"></svg></div><div class="t">레퍼런스</div><span class="cell">14개</span></div>
+            <div class="lrow"><div class="mini c5"></div><div class="t">촬영본_A_0312.mov</div><span class="cell">3일 전 · 8.4GB</span></div></div></div>
+        <div class="scard"><div class="hd done"><svg data-lucide="check-circle-2"></svg>지난 비모 작업 · 승인 <span class="sum">· 2 ▸</span></div></div>
+      </div>
+    </main>
+  </div></div>
+</section>
+
+<!-- 3 소프트 그레이 -->
+<section class="variant" id="c">
+  <div class="vhead"><div class="num">3</div><div><div class="ttl">소프트 그레이 <em>· #f2f2f3</em></div><div class="lede">중성 회색을 살짝 더 진하게. 흰 카드가 더 또렷이 떠 보임. 구분감을 원할 때.</div></div></div>
+  <div class="frame t3"><div class="frame__bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="tag">파트너</span></div></div>
+  <div class="screen">
+    <aside class="sb">
+      <div class="logo"><div class="m">V</div> 비박스</div>
+      <div class="me"><div class="av">서</div><div><div class="n">서준</div><div class="r">파트너 · 외부 편집</div></div><span class="gear"><svg data-lucide="settings"></svg></span></div>
+      <div class="store"><div class="lbl"><b>저장 공간</b><span>32%</span></div><div class="bar"><i></i></div></div>
+      <div class="divide"></div>
+      <div class="nav on"><svg data-lucide="house"></svg> 홈</div>
+      <div class="seclbl">클라우드</div>
+      <div class="nav"><svg data-lucide="handshake"></svg> 비모와의 작업 <span class="ct">2</span></div>
+      <div class="nav box"><svg data-lucide="hard-drive"></svg> My box</div>
+      <div class="seclbl">라이브러리</div>
+      <div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+      <div class="nav"><svg data-lucide="clock"></svg> 최근</div>
+      <div class="nav"><svg data-lucide="trash-2"></svg> 휴지통</div>
+    </aside>
+    <main class="main">
+      <div class="toolbar"><div class="title">홈</div><div class="right"><span class="tsearch"><svg data-lucide="search"></svg> 검색</span><span class="vt"><span class="on"><svg data-lucide="list"></svg></span><span><svg data-lucide="layout-grid"></svg></span></span><button class="btn btn--vimo btn--sm"><svg data-lucide="upload"></svg>업로드</button></div></div>
+      <div class="cards">
+        <div class="scard vc-wash"><div class="hd wash"><div class="vmk">V</div><span class="vtitle">비모와의 작업</span><span class="sum">진행 중 2 · 마감 임박 1</span><span class="live"><span class="dot"></span>지금 작업 중</span></div>
+          <div class="rows"><div class="lrow"><div class="mini c1"></div><div class="t">브랜드필름_최종_v3.mp4</div><span class="chip fix"><svg data-lucide="alert-triangle"></svg>수정 요청</span><span class="loc">#1042 · D-2</span></div>
+            <div class="lrow"><div class="mini c4"></div><div class="t">광고_30s_v2.mp4</div><span class="chip rev"><svg data-lucide="eye"></svg>검수중</span><span class="loc">#1039</span></div></div></div>
+        <div class="scard"><div class="hd box"><svg data-lucide="hard-drive"></svg>My box <span class="sum">· 내 보관함 23</span></div>
+          <div class="rows"><div class="lrow"><div class="mini c1"></div><div class="t">성수카페_편집중.prproj</div><span class="cell">방금 · 38MB</span></div>
+            <div class="lrow"><div class="fico box"><svg data-lucide="folder"></svg></div><div class="t">레퍼런스</div><span class="cell">14개</span></div>
+            <div class="lrow"><div class="mini c5"></div><div class="t">촬영본_A_0312.mov</div><span class="cell">3일 전 · 8.4GB</span></div></div></div>
+        <div class="scard"><div class="hd done"><svg data-lucide="check-circle-2"></svg>지난 비모 작업 · 승인 <span class="sum">· 2 ▸</span></div></div>
+      </div>
+    </main>
+  </div></div>
+</section>
+
+<!-- 4 쿨 그레이 -->
+<section class="variant" id="d">
+  <div class="vhead"><div class="num">4</div><div><div class="ttl">쿨 그레이 <em>· #eef1f5</em></div><div class="lede">아주 살짝 차가운(블루기) 회색. 베이지의 정반대 — Linear/Vercel 같은 시원한 인상.</div></div></div>
+  <div class="frame t4"><div class="frame__bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="tag">파트너</span></div></div>
+  <div class="screen">
+    <aside class="sb">
+      <div class="logo"><div class="m">V</div> 비박스</div>
+      <div class="me"><div class="av">서</div><div><div class="n">서준</div><div class="r">파트너 · 외부 편집</div></div><span class="gear"><svg data-lucide="settings"></svg></span></div>
+      <div class="store"><div class="lbl"><b>저장 공간</b><span>32%</span></div><div class="bar"><i></i></div></div>
+      <div class="divide"></div>
+      <div class="nav on"><svg data-lucide="house"></svg> 홈</div>
+      <div class="seclbl">클라우드</div>
+      <div class="nav"><svg data-lucide="handshake"></svg> 비모와의 작업 <span class="ct">2</span></div>
+      <div class="nav box"><svg data-lucide="hard-drive"></svg> My box</div>
+      <div class="seclbl">라이브러리</div>
+      <div class="nav"><svg data-lucide="share-2"></svg> 공유</div>
+      <div class="nav"><svg data-lucide="clock"></svg> 최근</div>
+      <div class="nav"><svg data-lucide="trash-2"></svg> 휴지통</div>
+    </aside>
+    <main class="main">
+      <div class="toolbar"><div class="title">홈</div><div class="right"><span class="tsearch"><svg data-lucide="search"></svg> 검색</span><span class="vt"><span class="on"><svg data-lucide="list"></svg></span><span><svg data-lucide="layout-grid"></svg></span></span><button class="btn btn--vimo btn--sm"><svg data-lucide="upload"></svg>업로드</button></div></div>
+      <div class="cards">
+        <div class="scard vc-wash"><div class="hd wash"><div class="vmk">V</div><span class="vtitle">비모와의 작업</span><span class="sum">진행 중 2 · 마감 임박 1</span><span class="live"><span class="dot"></span>지금 작업 중</span></div>
+          <div class="rows"><div class="lrow"><div class="mini c1"></div><div class="t">브랜드필름_최종_v3.mp4</div><span class="chip fix"><svg data-lucide="alert-triangle"></svg>수정 요청</span><span class="loc">#1042 · D-2</span></div>
+            <div class="lrow"><div class="mini c4"></div><div class="t">광고_30s_v2.mp4</div><span class="chip rev"><svg data-lucide="eye"></svg>검수중</span><span class="loc">#1039</span></div></div></div>
+        <div class="scard"><div class="hd box"><svg data-lucide="hard-drive"></svg>My box <span class="sum">· 내 보관함 23</span></div>
+          <div class="rows"><div class="lrow"><div class="mini c1"></div><div class="t">성수카페_편집중.prproj</div><span class="cell">방금 · 38MB</span></div>
+            <div class="lrow"><div class="fico box"><svg data-lucide="folder"></svg></div><div class="t">레퍼런스</div><span class="cell">14개</span></div>
+            <div class="lrow"><div class="mini c5"></div><div class="t">촬영본_A_0312.mov</div><span class="cell">3일 전 · 8.4GB</span></div></div></div>
+        <div class="scard"><div class="hd done"><svg data-lucide="check-circle-2"></svg>지난 비모 작업 · 승인 <span class="sum">· 2 ▸</span></div></div>
+      </div>
+    </main>
+  </div></div>
+</section>
+
+<footer class="foot">
+  <div class="foot__card">
+    <h3>어느 톤이 비박스에 맞나요?</h3>
+    <p>1(정석)이 비박스 앱과 가장 똑같습니다. 2(올 화이트)는 더 밝고 깨끗, 3(소프트 그레이)은 카드가 더 또렷, 4(쿨 그레이)는 베이지의 정반대로 시원한 인상이에요. 오렌지·레이아웃·구성·적응은 전부 확정안 그대로입니다. 톤을 고르면 확정해서 전 화면에 적용합니다.</p>
+    <div class="next"><span class="pill">① 톤 선택 (1~4)</span><span class="pill">② 전 화면 적용</span><span class="pill">③ 그리드·미리보기 뷰</span><span class="pill">④ 비모 ERP 연동</span></div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  if(window.lucide) lucide.createIcons();
+  var tabs=[].slice.call(document.querySelectorAll('.tab'));
+  var secs=['a','b','c','d'].map(function(id){return document.getElementById(id)});
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){var id=e.target.id;tabs.forEach(function(t){t.classList.toggle('is-active',t.getAttribute('href')==='#'+id)})}})},{rootMargin:'-45% 0px -50% 0px'});
+  secs.forEach(function(s){io.observe(s)});
+</script>
+</body>
+</html>

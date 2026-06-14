@@ -9,7 +9,7 @@ import {
   shareLinks,
   shareViews,
 } from "@/lib/db/schema";
-import { getZoneRoot } from "@/lib/fs/storage";
+import { getZoneRoot, listDirectory, ensureDir } from "@/lib/fs/storage";
 
 /** 파일 경로에서 공간 판별 — /personal/{userId}/...면 personal, 그 외 team */
 export type FileSpace = "personal" | "team";
@@ -344,4 +344,65 @@ export async function getPersonalSummary(userId: string): Promise<PersonalSummar
     fileCount,
     lastUploadAt,
   };
+}
+
+// ───── 파트너 컨텍스트 패널 데이터 (사이드바 오른쪽 관련 메뉴) ─────
+export type PanelFolder = { name: string; children: string[] };
+export type PartnerPanelData = {
+  folders: PanelFolder[]; // My box 폴더 트리 (상위 + 1단계 하위)
+  projects: string[]; // 비모와의 작업 — 내 업로드가 들어있는 프로젝트 폴더
+  shares: { name: string; token: string }[]; // 내 공유 링크 (활성)
+};
+
+/** 파트너 컨텍스트 패널 데이터. 모든 소스를 try/catch로 감싸 부분 실패해도 빈 배열로. */
+export async function getPartnerPanelData(userId: string): Promise<PartnerPanelData> {
+  const out: PartnerPanelData = { folders: [], projects: [], shares: [] };
+
+  // My box 폴더 (상위 + 1단계 하위)
+  try {
+    await ensureDir(`/personal/${userId}`);
+    const top = await listDirectory(`/personal/${userId}`);
+    const topFolders = top.filter((e) => e.isFolder).slice(0, 16);
+    out.folders = await Promise.all(
+      topFolders.map(async (f) => {
+        let children: string[] = [];
+        try {
+          const sub = await listDirectory(`/personal/${userId}/${f.name}`);
+          children = sub.filter((e) => e.isFolder).map((e) => e.name).slice(0, 10);
+        } catch {}
+        return { name: f.name, children };
+      })
+    );
+  } catch {}
+
+  // 비모 프로젝트 — 내 팀 업로드 파일의 부모 폴더 모음
+  try {
+    const rows = await db
+      .select({ p: fileUploads.path })
+      .from(fileUploads)
+      .where(eq(fileUploads.uploadedBy, userId));
+    const set = new Set<string>();
+    for (const r of rows) {
+      if (r.p.startsWith("/personal/")) continue;
+      const parts = r.p.split("/").filter(Boolean);
+      if (parts.length >= 2) set.add(parts[parts.length - 2]);
+      else if (parts.length === 1) set.add(parts[0]);
+    }
+    out.projects = [...set].slice(0, 16);
+  } catch {}
+
+  // 공유 링크 (활성)
+  try {
+    const rows = await db
+      .select({ filePath: shareLinks.filePath, title: shareLinks.title, token: shareLinks.token })
+      .from(shareLinks)
+      .where(and(eq(shareLinks.createdBy, userId), isNull(shareLinks.revokedAt)))
+      .limit(24);
+    out.shares = rows.map((r) => ({
+      name: r.title || (r.filePath.split("/").pop() ?? r.filePath),
+      token: r.token,
+    }));
+  } catch {}
+
+  return out;
 }

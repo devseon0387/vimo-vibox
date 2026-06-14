@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 · 파트너 홈 — 6가지 다른 정보구조 (v2)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --brand:#F94000; --brand-deep:#e85008; --brand-light:#f9a87a;
+    --mybox:#0ea5e9; --mybox-deep:#0284c7; --mybox-bg:#eff8ff;
+    --ink:#1c1917; --text:#111; --muted:#6b6b6b; --faint:#9a9a9a;
+    --bg:#fafafa; --gallery:#e8e7e4; --border:#ececec; --border2:#e2e1de; --surf2:#f6f5f3;
+    --ok:#16a34a; --warn:#d97706; --danger:#dc2626; --info:#0ea5e9;
+    --okbg:#ecfdf3; --warnbg:#fffbeb; --dangerbg:#fef2f2; --infobg:#eff6ff;
+    --sh:0 1px 3px rgba(0,0,0,.05); --sh2:0 4px 16px rgba(0,0,0,.06); --sh3:0 18px 48px rgba(0,0,0,.14);
+    --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:var(--font);background:var(--gallery);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.45}
+  h1,h2,h3,h4,p{margin:0} a{color:inherit;text-decoration:none}
+  .mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+  .topnav{position:sticky;top:0;z-index:50;background:rgba(248,247,245,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--border2)}
+  .topnav__in{max-width:1380px;margin:0 auto;padding:11px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .brandmark{width:30px;height:30px;border-radius:9px;flex:none;display:grid;place-items:center;background:linear-gradient(90deg,var(--brand-deep) 0 50%,var(--brand-light) 50% 100%);color:#fff;font-weight:800;font-size:16px;box-shadow:var(--sh)}
+  .topnav h1{font-size:14.5px;font-weight:800;letter-spacing:-.01em}.topnav h1 span{color:var(--muted);font-weight:600}
+  .stateseg{display:flex;background:#ecebe8;border-radius:999px;padding:3px;margin-left:6px}
+  .stateseg span{font-size:12px;font-weight:700;color:var(--muted);padding:7px 13px;border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .stateseg span .pip{width:8px;height:8px;border-radius:50%;background:#c5c4c0}
+  .stateseg span.on{background:#fff;color:var(--text);box-shadow:var(--sh)}
+  .stateseg span[data-state="active"].on .pip{background:var(--brand-deep)}
+  .stateseg span[data-state="empty"].on .pip{background:var(--mybox)}
+  .tabs{display:flex;gap:5px;margin-left:auto;flex-wrap:wrap}
+  .tab{display:flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--muted)}
+  .tab b{display:grid;place-items:center;width:17px;height:17px;border-radius:6px;background:#e7e6e3;color:#555;font-size:10.5px;font-weight:800}
+  .tab:hover{background:#fff;color:var(--text);box-shadow:var(--sh)}
+  .tab.is-active{background:#1c1917;color:#fff}.tab.is-active b{background:rgba(255,255,255,.22);color:#fff}
+
+  .intro{padding:34px 22px 4px;max-width:1380px;margin:0 auto}
+  .intro h2{font-size:25px;font-weight:800;letter-spacing:-.02em}
+  .intro p{color:var(--muted);font-size:14px;margin-top:9px;max-width:880px;line-height:1.65}
+  .intro .note{margin-top:13px;display:flex;gap:8px;flex-wrap:wrap}
+  .nchip{font-size:12px;font-weight:600;color:#444;background:#fff;border:1px solid var(--border2);border-radius:999px;padding:7px 12px;display:flex;align-items:center;gap:7px}
+  .nchip svg{width:14px;height:14px;color:var(--brand-deep)}
+  .statehint{margin:13px auto 0;max-width:1380px;padding:0 22px}
+  .statehint .box{background:#fff7f2;border:1px solid #fbd9c4;border-radius:12px;padding:11px 15px;font-size:13px;color:#9a4a23;display:flex;align-items:center;gap:10px}
+  body.state-empty .statehint .box{background:var(--mybox-bg);border-color:#bae6fd;color:#0c5a82}
+  .statehint svg{width:16px;height:16px;flex:none}
+  .ar{display:none} body.state-active .ar--a{display:inline} body.state-empty .ar--e{display:inline}
+
+  .variant{padding:28px 0 2px}
+  .vhead{max-width:1380px;margin:0 auto;padding:0 22px 14px;display:flex;align-items:flex-end;gap:15px;flex-wrap:wrap}
+  .vhead .num{font-size:13px;font-weight:800;color:#fff;background:var(--ink);width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none}
+  .vhead .ttl{font-size:19px;font-weight:800;letter-spacing:-.02em}.vhead .ttl em{font-style:normal;color:var(--brand)}
+  .vhead .lede{color:var(--muted);font-size:12.5px;margin-top:3px;max-width:680px}
+  .chips{display:flex;gap:6px;margin-left:auto;align-items:center;flex-wrap:wrap}
+  .chip{font-size:11px;font-weight:600;padding:5px 10px;border-radius:999px;border:1px solid var(--border2);background:#fff;color:#555;display:flex;gap:6px;align-items:center;white-space:nowrap}
+  .chip svg{width:13px;height:13px}
+  .chip.good{color:#15803d;border-color:#bbf7d0;background:var(--okbg)} .chip.warn{color:#a16207;border-color:#fde68a;background:var(--warnbg)}
+  .chip.act{cursor:pointer} .chip.act.on{background:#1c1917;color:#fff;border-color:#1c1917}
+
+  .frame{max-width:1340px;margin:0 auto;background:#fff;border:1px solid var(--border2);border-radius:16px;overflow:hidden;box-shadow:var(--sh3)}
+  .frame__bar{height:40px;display:flex;align-items:center;gap:8px;padding:0 14px;background:var(--surf2);border-bottom:1px solid var(--border)}
+  .dots{display:flex;gap:6px}.dots i{width:11px;height:11px;border-radius:50%;background:#dededa;display:inline-block}
+  .url{margin-left:8px;font-size:12px;color:#8a8a8a;background:#fff;border:1px solid var(--border);border-radius:7px;padding:4px 12px;display:flex;align-items:center;gap:7px}
+  .url svg{width:12px;height:12px;color:#16a34a}
+  .url .tag{margin-left:6px;font-size:10px;font-weight:700;color:var(--brand-deep);background:#fff1e8;border-radius:5px;padding:1px 6px}
+  .screen{height:752px;overflow:hidden;position:relative}
+  .statelabel{position:absolute;top:11px;right:11px;z-index:8;font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;display:flex;align-items:center;gap:6px;box-shadow:var(--sh)}
+  .statelabel .d{width:7px;height:7px;border-radius:50%}
+  body.state-active .statelabel{background:#fff1e8;color:#b4480f} body.state-active .statelabel .d{background:var(--brand-deep)}
+  body.state-empty .statelabel{background:var(--mybox-bg);color:#0c5a82} body.state-empty .statelabel .d{background:var(--mybox)}
+  body.state-active .statelabel .t-empty{display:none} body.state-empty .statelabel .t-active{display:none}
+  body.state-active .st--empty{display:none} body.state-empty .st--active{display:none} .st{height:100%}
+
+  /* atoms */
+  .badge{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  .badge svg{width:12px;height:12px}
+  .b-wait{background:var(--warnbg);color:#b45309} .b-review{background:var(--infobg);color:#0369a1}
+  .b-fix{background:var(--dangerbg);color:#b91c1c} .b-ok{background:var(--okbg);color:#15803d}
+  .av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;flex:none}
+  .btn{font-family:inherit;font-size:12.5px;font-weight:600;border:1px solid var(--border2);background:#fff;color:var(--text);padding:8px 13px;border-radius:9px;display:inline-flex;align-items:center;gap:7px;cursor:pointer;transition:.12s}
+  .btn svg{width:15px;height:15px}.btn:hover{box-shadow:var(--sh)}
+  .btn--p{background:var(--brand-deep);border-color:var(--brand-deep);color:#fff}
+  .btn--blue{background:var(--mybox-deep);border-color:var(--mybox-deep);color:#fff}
+  .btn--ghost{background:transparent}
+  .btn--sm{padding:6px 11px;font-size:12px}
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+  .erp{font-size:10px;font-weight:700;color:#9a5a3a;background:#fdf0e8;border:1px solid #f6d9c8;border-radius:5px;padding:1px 6px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+  .erp svg{width:10px;height:10px}
+  .thumb{position:relative;border-radius:8px;overflow:hidden;background:#5b5048;aspect-ratio:16/9;flex:none}
+  .thumb .play{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.92)}
+  .thumb .play svg{width:22px;height:22px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))}
+  .thumb .dur{position:absolute;right:6px;bottom:6px;font-size:9.5px;font-weight:700;color:#fff;background:rgba(0,0,0,.6);padding:1px 5px;border-radius:4px}
+  .thumb.t1{background:linear-gradient(135deg,#7c3a1d,#c2683a)} .thumb.t2{background:linear-gradient(135deg,#1e3a5f,#3f7cad)}
+  .thumb.t3{background:linear-gradient(135deg,#3d2d4f,#7d5a9c)} .thumb.t4{background:linear-gradient(135deg,#14342b,#2f7d63)}
+  .thumb.t5{background:linear-gradient(135deg,#4a3b1c,#a98a3e)}
+  .req{font-size:12px;color:#7a4a30;background:#fff5ee;border-left:3px solid var(--brand-deep);border-radius:0 8px 8px 0;padding:9px 12px;display:flex;align-items:flex-start;gap:7px;line-height:1.5}
+  .req svg{width:13px;height:13px;color:var(--brand-deep);flex:none;margin-top:2px}
+
+  /* 셸 (좌레일) */
+  .pshell{display:grid;grid-template-columns:208px 1fr;height:100%;background:#fff;font-size:13px}
+  .prail{border-right:1px solid var(--border);padding:16px 13px;display:flex;flex-direction:column;gap:2px;background:#fcfcfb}
+  .prail .me{display:flex;align-items:center;gap:9px;padding:6px 8px 14px}
+  .prail .me .n{font-weight:700;font-size:13px}.prail .me .r{font-size:11px;color:var(--faint)}
+  .nav-i{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#444;font-weight:500;cursor:pointer}
+  .nav-i svg{width:16px;height:16px;color:#8a8a8a}.nav-i:hover{background:#f3f2f0}
+  .nav-i.on{background:#f0eeec;color:var(--text);font-weight:600}.nav-i.on svg{color:var(--brand-deep)}
+  .nav-i .ct{margin-left:auto;font-size:11px;font-weight:700;color:#fff;background:var(--brand-deep);border-radius:999px;padding:1px 7px}
+  .nav-i .ct.zero{background:#dcdbd7}
+  .railfoot{margin-top:auto;font-size:10.5px;color:var(--faint);padding:8px;display:flex;align-items:center;gap:6px}
+  .railfoot svg{width:13px;height:13px}
+  .pmain{padding:24px 30px;overflow:hidden}
+  .pmain .hi{font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .sec-h{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:800;margin:20px 0 11px}
+  .sec-h.first{margin-top:0}
+  .sec-h .mybox-i{color:var(--mybox-deep)} .sec-h .vimo-i{color:var(--brand-deep)}
+  .sec-h .more{margin-left:auto;font-size:11.5px;font-weight:600;color:var(--faint);display:flex;align-items:center;gap:3px}
+  .sec-h svg{width:15px;height:15px}
+  .mb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+  .mb-grid.six{grid-template-columns:repeat(6,1fr)}
+  .mbcard{border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff}
+  .mbcard .pv{height:64px;display:grid;place-items:center;background:#f4f7fa;color:var(--mybox-deep)}
+  .mbcard .pv svg{width:24px;height:24px}
+  .mbcard .lb{padding:8px 9px}.mbcard .nm{font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mbcard .mt{font-size:10px;color:var(--faint);margin-top:2px}
+  .empty-strip{display:flex;align-items:center;gap:11px;padding:12px 15px;border:1px dashed var(--border2);border-radius:11px;background:#fbfbfa;color:var(--muted);font-size:12.5px}
+  .empty-strip svg{width:16px;height:16px;color:var(--faint)}
+
+  /* ===== 1. queue ===== */
+  .queue{max-width:740px}
+  .qstrip{font-size:12.5px;color:var(--muted);margin:4px 0 6px}.qstrip b{color:var(--text);font-weight:700}
+  .qdiv{display:flex;align-items:center;gap:11px;font-size:11px;font-weight:800;letter-spacing:.03em;margin:18px 0 2px}
+  .qdiv .ln{flex:1;height:1px;background:var(--border)}
+  .qdiv.t-mine{color:var(--brand-deep)} .qdiv.t-vimo{color:var(--faint)} .qdiv.t-box{color:var(--mybox-deep)} .qdiv.t-done{color:#a3a3a3}
+  .qrow{display:flex;align-items:flex-start;gap:11px;padding:10px 8px;border-radius:9px}
+  .qrow:hover{background:#fafafa}
+  .qpip{width:8px;height:8px;border-radius:50%;flex:none;margin-top:5px}
+  .qp-mine{background:var(--brand-deep)} .qp-vimo{background:#c5c4c0} .qp-box{background:var(--mybox)} .qp-done{background:var(--ok)}
+  .qrow .b{flex:1;min-width:0}
+  .qrow .top{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .qrow .t{font-weight:600;font-size:13.5px}
+  .qrow .dday{font-weight:700;font-size:11.5px;color:var(--danger)}
+  .qrow .chev{color:#cfcdc8;margin-top:3px}.qrow .chev svg{width:16px;height:16px}
+  .qrow.exp{background:#fffaf6;border:1px solid #fbe3d2;align-items:flex-start}
+  .qopen{margin-top:9px;display:flex;align-items:center;gap:10px}.qopen .req{flex:1}
+  .qmuted{color:var(--faint);font-size:13px;padding:9px 8px}
+  .qdone{display:flex;align-items:center;gap:9px;padding:5px 8px;color:#9a9a9a;font-size:12.5px}
+
+  /* ===== 2. split ===== */
+  .wsplit{display:grid;grid-template-columns:296px 1fr;height:100%;background:#fff;font-size:13px}
+  .splrail{border-right:1px solid var(--border);background:#fcfcfb;overflow:hidden;display:flex;flex-direction:column}
+  .splsearch{margin:13px 13px 6px;font-size:12px;color:var(--faint);background:#f1f0ee;border-radius:8px;padding:8px 11px;display:flex;align-items:center;gap:8px}
+  .splsearch svg{width:14px;height:14px}
+  .splgrp{padding:6px 10px 2px;font-size:10.5px;font-weight:800;color:var(--faint);letter-spacing:.04em;display:flex;align-items:center;gap:7px;margin-top:8px}
+  .splgrp .ct{margin-left:auto;font-weight:700;color:#999}
+  .splrow{display:flex;align-items:center;gap:9px;padding:8px 12px;cursor:pointer;border-left:3px solid transparent}
+  .splrow:hover{background:#f6f5f3}
+  .splrow.sel{background:#f3f1ee;border-left-color:var(--brand-deep)}
+  .splrow.sel.box{border-left-color:var(--mybox)}
+  .splrow .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .splrow .nm{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+  .splrow .mt{font-size:10.5px;color:var(--faint)}
+  .spldetail{padding:22px 26px;overflow:hidden}
+  .spldetail .dh{display:flex;align-items:center;gap:9px;margin-bottom:14px;flex-wrap:wrap}
+  .spldetail .dt{font-size:17px;font-weight:800;letter-spacing:-.01em;width:100%;margin-bottom:4px}
+  .own{font-size:10.5px;font-weight:700;border-radius:5px;padding:2px 7px}
+  .own.box{color:#0c5a82;background:#eaf6fd;border:1px solid #bfe6fa}
+  .stepper{display:flex;align-items:center;gap:0;margin:14px 0;font-size:11.5px;color:var(--faint)}
+  .stepper .v{display:flex;align-items:center;gap:6px}
+  .stepper .v .c{width:9px;height:9px;border-radius:50%;border:1.5px solid #cfcdc8;background:#fff}
+  .stepper .v.cur .c{border-color:var(--brand-deep);background:var(--brand-deep)} .stepper .v.cur{color:var(--text);font-weight:700}
+  .stepper .bar{width:30px;height:1.5px;background:#e0dfdb;margin:0 4px}
+  .cmt{display:flex;gap:9px;padding:9px 0}
+  .cmt .bub{background:#f6f5f3;border-radius:10px;padding:8px 11px;font-size:12px;min-width:0}
+  .cmt .who{font-size:10.5px;color:var(--faint);margin-bottom:2px}
+
+  /* ===== 3. timeline ===== */
+  .tlshell{height:100%;background:#fff;display:flex;flex-direction:column;font-size:13px}
+  .tltop{padding:13px 26px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+  .tltop .bm{font-weight:800;font-size:14px;display:flex;align-items:center;gap:9px}
+  .tltop .me{margin-left:auto;display:flex;align-items:center;gap:9px}
+  .tlwrap{overflow:hidden;padding:18px 26px;display:flex;flex-direction:column;align-items:center}
+  .tlcol{width:100%;max-width:780px}
+  .tlstatus{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;margin-bottom:6px}
+  .tlstatus .d{width:8px;height:8px;border-radius:50%}
+  .tlfilters{display:flex;gap:6px;margin:8px 0 16px}
+  .tl-day{font-size:11px;font-weight:800;color:var(--faint);letter-spacing:.04em;margin:16px 0 8px;display:flex;align-items:center;gap:8px}
+  .tl-day .ln{flex:1;height:1px;background:var(--border)}
+  .tl-ev{max-width:64%;margin-bottom:11px;border:1px solid var(--border2);border-radius:12px;padding:11px 13px;background:#fff}
+  .tl-ev.vimo{border-left:3px solid var(--brand-deep)}
+  .tl-ev.mine{margin-left:auto;border-left:3px solid #cfd4d8;background:#fbfcfd}
+  .tl-ev .vb{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;color:var(--muted)}
+  .tl-ev.vimo .vb{color:var(--brand-deep)} .tl-ev .vb svg{width:13px;height:13px}
+  .tl-ev .tt{font-size:13.5px;font-weight:700;margin-top:5px}
+  .tl-ev .meta{font-size:11px;color:var(--faint);margin-top:4px;display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+  .tl-ev .att{font-size:10.5px;font-weight:600;color:#555;background:#f3f2f0;border-radius:6px;padding:2px 7px;display:inline-flex;gap:5px;align-items:center}
+  .tl-ev .row{display:flex;align-items:center;gap:10px;margin-top:9px}
+  .tl-ev.appr{opacity:.78;border-left-color:#cfe6d6}.tl-ev.appr .vb{color:var(--ok)}
+  .tl-rest{display:flex;align-items:center;gap:11px;font-size:11px;font-weight:700;color:var(--faint);margin:18px 0}
+  .tl-rest .ln{flex:1;height:1px;border-top:1px dashed #d6d4d0}
+  .tl-band{border:1px solid #bfe6fa;background:var(--mybox-bg);border-radius:12px;padding:12px 14px;margin-bottom:6px}
+  .tl-band .h{font-size:11.5px;font-weight:700;color:#0c5a82;display:flex;align-items:center;gap:7px}
+  .tl-band .items{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
+  .tl-band .it{font-size:11.5px;font-weight:600;color:#0c5a82;background:#fff;border:1px solid #bfe6fa;border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:6px}
+  .tl-band .it svg{width:13px;height:13px}
+
+  /* ===== 4. table (ledger) ===== */
+  .ledgerwrap{height:100%;background:#fff;display:flex;flex-direction:column;font-size:13px}
+  .cmdbar{display:flex;align-items:center;gap:9px;padding:12px 22px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+  .cmdbar .srt{font-size:12px;font-weight:600;color:#555;display:flex;align-items:center;gap:5px;cursor:pointer}
+  .cmdbar .srt svg{width:14px;height:14px}
+  .cmdbar .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .cmdbar .search{font-size:12px;color:var(--faint);background:#f1f0ee;border-radius:8px;padding:7px 11px;display:flex;align-items:center;gap:7px;width:180px}
+  .cmdbar .search svg{width:14px;height:14px}
+  .ledger{width:100%;border-collapse:collapse;font-size:12.5px}
+  .ledger th{text-align:left;font-size:10.5px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;padding:9px 14px;border-bottom:1px solid var(--border)}
+  .ledger td{padding:0 14px;border-bottom:1px solid var(--border);height:40px;vertical-align:middle}
+  .ledger tr:hover td{background:var(--surf2)}
+  .ledger .grp td{background:var(--surf2);height:30px;font-size:10.5px;font-weight:800;color:#666;letter-spacing:.03em;border-bottom:1px solid var(--border)}
+  .ledger .fix td:first-child{box-shadow:inset 2px 0 0 var(--danger)}
+  .lname{font-weight:600;display:flex;align-items:center;gap:8px}
+  .lname .erp{font-size:9.5px}
+  .lstat{display:flex;align-items:center;gap:7px;font-weight:600}
+  .lstat .d{width:8px;height:8px;border-radius:50%;flex:none}
+  .lreq{color:var(--muted);max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lact{color:var(--brand-deep);font-weight:600;font-size:12px;display:inline-flex;align-items:center;gap:4px;cursor:pointer}
+  .lact.box{color:var(--mybox-deep)} .lact svg{width:13px;height:13px}
+  .ddred{color:var(--danger);font-weight:700}
+
+  /* ===== 5. board (kanban) ===== */
+  .kanban{display:flex;gap:13px;height:100%;padding:18px 20px;overflow:hidden;background:#fbfbfa}
+  .klane{flex:1;min-width:0;background:#f7f6f4;border:1px solid var(--border);border-radius:12px;padding:11px;display:flex;flex-direction:column}
+  .klane-h{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+  .klane-h .d{width:8px;height:8px;border-radius:50%;flex:none}
+  .klane-h .l{font-size:12.5px;font-weight:800}
+  .klane-h .ct{margin-left:auto;font-size:10.5px;font-weight:800;color:#777;background:#e9e8e5;border-radius:999px;padding:1px 7px}
+  .klane-sub{font-size:10px;color:var(--faint);margin:-6px 0 9px}
+  .kcard{background:#fff;border:1px solid var(--border2);border-radius:10px;padding:9px;margin-bottom:8px;box-shadow:var(--sh)}
+  .kcard .km{display:flex;gap:8px}
+  .kcard .thumb{width:54px;height:34px}
+  .kcard .nm{font-size:12px;font-weight:700;line-height:1.3}
+  .kcard .pins{display:flex;align-items:center;gap:6px;margin-top:7px;flex-wrap:wrap}
+  .kcard .pin{font-size:10px;font-weight:700;color:#666;background:#f3f2f0;border-radius:5px;padding:1px 6px;display:inline-flex;gap:4px;align-items:center}
+  .kcard.fix{box-shadow:inset 2px 0 0 var(--danger),var(--sh)}
+  .kcard .src{font-size:10px;color:var(--mybox-deep);background:var(--mybox-bg);border:1px solid #cdeafb;border-radius:6px;padding:3px 7px;margin-top:7px;display:flex;align-items:center;gap:5px}
+  .kcard .src svg{width:11px;height:11px}
+  .kreflux{font-size:10px;color:var(--danger);margin-top:6px;display:flex;align-items:center;gap:4px}.kreflux svg{width:11px;height:11px}
+  .klane-empty{flex:1;border:1.5px dashed #dcdad6;border-radius:9px;display:grid;place-items:center;text-align:center;color:var(--faint);font-size:11px;padding:14px}
+  .minimap{display:flex;align-items:center;gap:7px;padding:12px 16px;border:1px solid var(--border2);border-radius:12px;background:#fff;margin-bottom:14px}
+  .minimap .seg{flex:1;height:30px;border-radius:6px;background:#f0efec;display:grid;place-items:center;font-size:10px;font-weight:700;color:#aaa;position:relative}
+  .minimap .seg.fill{background:var(--okbg);color:#15803d}
+  .minimap .lab{font-size:11.5px;font-weight:700;color:var(--muted);white-space:nowrap}
+
+  /* ===== 6. focus (one desk) ===== */
+  .onewrap{height:100%;background:#fbfaf8;display:flex;flex-direction:column;font-size:13px}
+  .onetop{padding:12px 26px;border-bottom:1px solid var(--border);background:#fff;display:flex;align-items:center;gap:10px}
+  .onetop .bm{font-weight:800;font-size:14px;display:flex;align-items:center;gap:9px}
+  .onebody{flex:1;padding:24px 30px;overflow:hidden;display:flex;flex-direction:column}
+  .desk{flex:1;background:#fff;border:1px solid var(--border2);border-radius:16px;padding:26px 28px 22px;position:relative;overflow:hidden;display:flex;flex-direction:column}
+  .desk-rail{position:absolute;left:0;top:0;bottom:0;width:6px}
+  .desk.fix .desk-rail{background:var(--danger)} .desk.box .desk-rail{background:var(--mybox)}
+  .desk .why{font-size:11px;font-weight:600;color:var(--faint);display:flex;align-items:center;gap:6px}
+  .desk .why svg{width:13px;height:13px}
+  .desk .top{display:flex;align-items:flex-start;gap:18px;margin-top:8px}
+  .desk .dt{font-size:25px;font-weight:800;letter-spacing:-.02em;line-height:1.2;flex:1}
+  .desk .dt .sub{font-size:13px;font-weight:600;color:var(--muted);margin-top:6px}
+  .desk .dday{text-align:right;flex:none}
+  .desk .dday .n{font-size:34px;font-weight:800;letter-spacing:-.03em;color:var(--danger);line-height:1}
+  .desk .dday .l{font-size:11px;color:var(--faint);font-weight:600;margin-top:3px}
+  .checkline{margin:20px 0 0;display:flex;flex-direction:column;gap:9px}
+  .checkline .ci{display:flex;align-items:center;gap:10px;font-size:13.5px;color:#7a4a30}
+  .checkline .box{width:17px;height:17px;border:1.5px solid #e0a079;border-radius:5px;flex:none}
+  .checkline .lab{font-size:10.5px;font-weight:700;color:var(--brand-deep);background:#fff1e8;border-radius:5px;padding:1px 7px}
+  .desk .acts{margin-top:auto;padding-top:18px;display:flex;align-items:center;gap:10px}
+  .desk .acts .adv{margin-left:auto;color:var(--muted)}
+  .drawer{margin-top:14px;display:flex;align-items:center;gap:9px;padding:10px 14px;border:1px solid var(--border);border-radius:11px;background:#fff;flex-wrap:wrap}
+  .drawer .dl{font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em}
+  .dchip{font-size:11.5px;font-weight:600;color:#444;background:#f5f4f2;border:1px solid var(--border);border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:7px}
+  .dchip .d{width:7px;height:7px;border-radius:50%}
+  .shelf{margin-top:10px;display:flex;align-items:center;gap:9px;font-size:11.5px;color:var(--faint)}
+  .shelf .sc{font-weight:600;color:#557a63;background:var(--okbg);border:1px solid #bbf7d0;border-radius:8px;padding:5px 10px;display:flex;align-items:center;gap:6px}
+  .shelf .sc svg{width:12px;height:12px}
+
+  .foot{max-width:1380px;margin:0 auto;padding:34px 22px 70px}
+  .foot__card{background:#fff;border:1px solid var(--border2);border-radius:16px;padding:24px 26px;box-shadow:var(--sh)}
+  .foot__card h3{font-size:15px;font-weight:800}.foot__card p{color:var(--muted);font-size:13px;margin-top:8px;line-height:1.6}
+  .foot__card .next{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}
+  .pill{font-size:12px;font-weight:600;color:#444;background:#f5f4f2;border:1px solid var(--border);border-radius:999px;padding:7px 13px}
+
+  /* lucide svg 사이징 */
+  svg.lucide{width:1em;height:1em;stroke-width:2;flex:none;vertical-align:-.15em}
+  .nav-i svg{width:16px;height:16px} .mbcard .pv svg{width:24px;height:24px} .thumb .play svg{width:22px;height:22px}
+  @media(max-width:1400px){.frame,.vhead,.topnav__in,.intro,.foot,.statehint{max-width:1180px}.screen{height:720px}}
+</style>
+</head>
+<body class="state-active">
+
+<nav class="topnav">
+  <div class="topnav__in">
+    <div class="brandmark">V</div>
+    <h1>파트너 홈 <span>· 6가지 다른 정보구조 (v2)</span></h1>
+    <div class="stateseg" id="seg">
+      <span data-state="active" class="on"><span class="pip"></span>비모 작업 있음</span>
+      <span data-state="empty"><span class="pip"></span>없음</span>
+    </div>
+    <div class="tabs">
+      <a class="tab" href="#d1"><b>1</b> 큐</a>
+      <a class="tab" href="#d2"><b>2</b> 작업대</a>
+      <a class="tab" href="#d3"><b>3</b> 타임라인</a>
+      <a class="tab" href="#d4"><b>4</b> 원장</a>
+      <a class="tab" href="#d5"><b>5</b> 보드</a>
+      <a class="tab" href="#d6"><b>6</b> 원데스크</a>
+    </div>
+  </div>
+</nav>
+
+<div class="intro">
+  <h2>같은 데이터, 근본적으로 다른 6가지 홈</h2>
+  <p>직전 3안이 사실상 같은 정보구조의 변주라 "다양하다"는 느낌이 약했습니다. 이번엔 <b>정렬 기준·구조·상호작용·방향</b>이 서로 겹치지 않는 6개를 만들었습니다 — 장식적 포털/그라데이션 히어로는 완전히 배제. 모두 납품형 파트너(서준)이고, 위 <b>상태 토글</b>로 비모 작업 있음↔없음을 비교할 수 있습니다.</p>
+  <div class="note">
+    <span class="nchip"><svg data-lucide="database"></svg>비모 ERP → "비모와의 작업"</span>
+    <span class="nchip"><svg data-lucide="upload"></svg>납품형 (전달 중심)</span>
+    <span class="nchip"><svg data-lucide="layout-dashboard"></svg>상태 토글로 적응 비교</span>
+  </div>
+</div>
+<div class="statehint"><div class="box"><svg data-lucide="info"></svg>
+  <span class="ar ar--a"><b>비모 작업 있음</b> — 비모 ERP에서 진행 중 작업이 내려온 상태. 비모 작업이 1순위.</span>
+  <span class="ar ar--e"><b>비모 작업 없음</b> — 진행 중 작업 없음. My box가 1순위, 지난 승인 작업은 구조적으로 항상 잔류.</span>
+</div></div>
+
+<!-- ===================== 1. 큐 ===================== -->
+<section class="variant" id="d1">
+  <div class="vhead"><div class="num">1</div>
+    <div><div class="ttl">단일 작업 큐 <em>· 내 차례 / 비모 차례</em></div>
+      <div class="lede">공간이 아니라 "지금 누구 차례냐(소유권)"로 한 컬럼에 흐르는 우선순위 스트림. 위에서부터 쳐내는 인박스 비우기.</div></div>
+    <div class="chips"><span class="chip good"><svg data-lucide="check"></svg>소거(triage)</span><span class="chip warn"><svg data-lucide="minus"></svg>전체 조망 약함</span></div>
+  </div>
+  <div class="frame"><div class="frame__bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="tag">파트너</span></div></div>
+  <div class="screen"><div class="statelabel"><span class="d"></span><span class="t-active">비모 작업 있음</span><span class="t-empty">비모 작업 없음</span></div>
+    <!-- active -->
+    <div class="st st--active"><div class="pshell">
+      <aside class="prail">
+        <div class="me"><div class="av" style="background:#0d9488">서</div><div><div class="n">서준</div><div class="r">파트너 · 외부 편집</div></div></div>
+        <div class="nav-i on"><svg data-lucide="inbox"></svg> 홈 (큐)</div>
+        <div class="nav-i"><svg data-lucide="handshake"></svg> 비모와의 작업 <span class="ct">1</span></div>
+        <div class="nav-i"><svg data-lucide="hard-drive"></svg> My box</div>
+        <div class="nav-i"><svg data-lucide="share-2"></svg> 공유</div>
+        <div class="railfoot"><svg data-lucide="database"></svg> 작업 데이터: 비모 ERP</div>
+      </aside>
+      <main class="pmain"><div class="queue">
+        <div class="qstrip"><b>내 차례 1</b> · 비모 차례 1 · 마감 임박 1 — 위에서부터 처리하세요</div>
+        <div class="qdiv t-mine">내 차례<span class="ln"></span></div>
+        <div class="qrow exp"><span class="qpip qp-mine"></span>
+          <div class="b"><div class="top"><span class="t">성수 카페 브랜드필름</span><span class="erp"><svg data-lucide="database"></svg>비모 ERP #1042</span><span class="dday">마감 D-2</span><span class="badge b-fix"><svg data-lucide="alert-triangle"></svg>수정 요청</span></div>
+            <div class="qopen"><div class="req"><svg data-lucide="message-square-text"></svg>비모 요청: "0:42 자막 오타 '브랜대'→'브랜드', 1:15 컷 전환 다듬기"</div><button class="btn btn--p"><svg data-lucide="upload-cloud"></svg>수정본 전달</button></div>
+          </div></div>
+        <div class="qdiv t-vimo">비모 차례<span class="ln"></span></div>
+        <div class="qrow"><span class="qpip qp-vimo"></span>
+          <div class="b"><div class="top"><span class="t">그래놀라 30초 광고</span><span class="erp"><svg data-lucide="database"></svg>#1039</span><span class="badge b-review"><svg data-lucide="eye"></svg>비모 검수중</span><span style="font-size:11px;color:var(--faint)">어제 전달함 · 응답 대기</span></div></div>
+          <span class="chev"><svg data-lucide="chevron-right"></svg></span></div>
+        <div class="qdiv t-box">My box<span class="ln"></span></div>
+        <div class="qrow"><span class="qpip qp-box"></span><div class="b"><div class="top"><span class="t">성수카페_편집중.prproj</span><span style="font-size:11px;color:var(--faint)">작업 중 · 방금</span></div></div><span class="chev"><svg data-lucide="chevron-right"></svg></span></div>
+        <div class="qdiv t-done">정리됨 · 2건 모두 승인<span class="ln"></span></div>
+        <div class="qdone"><span class="qpip qp-done"></span>성수카페 티저 · #1011 · 승인 완료</div>
+        <div class="qdone"><span class="qpip qp-done"></span>자동차 OO 런칭 · #0987 · 승인 완료</div>
+      </div></main>
+    </div></div>
+    <!-- empty -->
+    <div class="st st--empty"><div class="pshell">
+      <aside class="prail">
+        <div class="me"><div class="av" style="background:#0d9488">서</div><div><div class="n">서준</div><div class="r">파트너 · 외부 편집</div></div></div>
+        <div class="nav-i on"><svg data-lucide="inbox"></svg> 홈 (큐)</div>
+        <div class="nav-i"><svg data-lucide="handshake"></svg> 비모와의 작업 <span class="ct zero">0</span></div>
+        <div class="nav-i"><svg data-lucide="hard-drive"></svg> My box</div>
+        <div class="nav-i"><svg data-lucide="share-2"></svg> 공유</div>
+        <div class="railfoot"><svg data-lucide="database"></svg> 작업 데이터: 비모 ERP</div>
+      </aside>
+      <main class="pmain"><div class="queue">
+        <div class="qstrip">내 차례 0 · 비모 차례 0 — <b>My box가 큐 위로 올라옵니다</b></div>
+        <div class="qdiv t-mine">내 차례<span class="ln"></span></div>
+        <div class="qmuted">내 차례인 일 없음 — 비모 검수가 끝나면 여기로 올라옵니다.</div>
+        <div class="qdiv t-box">My box<span class="ln"></span></div>
+        <div class="qrow"><span class="qpip qp-box"></span><div class="b"><div class="top"><span class="t">성수카페_편집중.prproj</span><span style="font-size:11px;color:var(--faint)">작업 중 · 방금</span></div></div><span class="chev"><svg data-lucide="chevron-right"></svg></span></div>
+        <div class="qrow"><span class="qpip qp-box"></span><div class="b"><div class="top"><span class="t">촬영본_A_0312.mov</span><span style="font-size:11px;color:var(--faint)">8.4GB · 3일 전</span></div></div><span class="chev"><svg data-lucide="chevron-right"></svg></span></div>
+        <div class="qrow"><span class="qpip qp-box"></span><div class="b"><div class="top"><span class="t">기획안_v3.key</span><span style="font-size:11px;color:var(--faint)">어제</span></div></div><span class="chev"><svg data-lucide="chevron-right"></svg></span></div>
+        <div class="qrow"><span class="qpip qp-box"></span><div class="b"><div class="top"><span class="t">레퍼런스 / 견적서_v2.pdf</span><span style="font-size:11px;color:var(--faint)">폴더 14 · 문서</span></div></div><span class="chev"><svg data-lucide="chevron-right"></svg></span></div>
+        <div class="qdiv t-done">정리됨 · 비모 작업 2건 · 모두 승인<span class="ln"></span></div>
+        <div class="qdone"><span class="qpip qp-done"></span>성수카페 티저 · #1011 · 승인 완료</div>
+        <div class="qdone"><span class="qpip qp-done"></span>자동차 OO 런칭 · #0987 · 승인 완료</div>
+      </div></main>
+    </div></div>
+  </div></div>
+</section>
+
+<!-- ===================== 2. 작업대 (split) ===================== -->
+<section class="variant" id="d2">
+  <div class="vhead"><div class="num">2</div>
+    <div><div class="ttl">작업대 <em>· 좌 인덱스 / 우 상세</em></div>
+      <div class="lede">왼쪽은 모든 작업을 한 줄로 인덱싱, 오른쪽은 선택 1건을 펼치는 메일/IDE식 영구 2분할. 페이지 전환 없이 우측만 교체.</div></div>
+    <div class="chips"><span class="chip good"><svg data-lucide="check"></svg>맥락 유지·빠른 전환</span><span class="chip warn"><svg data-lucide="minus"></svg>한 번에 1건</span></div>
+  </div>
+  <div class="frame"><div class="frame__bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="tag">파트너</span></div></div>
+  <div class="screen"><div class="statelabel"><span class="d"></span><span class="t-active">비모 작업 있음</span><span class="t-empty">비모 작업 없음</span></div>
+    <!-- active -->
+    <div class="st st--active"><div class="wsplit">
+      <aside class="splrail">
+        <div class="splsearch"><svg data-lucide="search"></svg> 작업·파일 검색</div>
+        <div class="splgrp"><svg data-lucide="handshake" style="width:13px;height:13px;color:var(--brand-deep)"></svg> 비모 작업 <span class="ct">2</span></div>
+        <div class="splrow sel"><span class="dot" style="background:var(--danger)"></span><span class="nm">성수 카페 브랜드필름</span><span class="badge b-fix" style="font-size:10px;padding:2px 6px">D-2</span></div>
+        <div class="splrow"><span class="dot" style="background:var(--info)"></span><span class="nm">그래놀라 30초 광고</span><span class="mt">검수중</span></div>
+        <div class="splgrp"><svg data-lucide="hard-drive" style="width:13px;height:13px;color:var(--mybox-deep)"></svg> My box <span class="ct">6</span></div>
+        <div class="splrow box"><span class="dot" style="background:var(--mybox)"></span><span class="nm">성수카페_편집중.prproj</span><span class="mt">방금</span></div>
+        <div class="splrow box"><span class="dot" style="background:var(--mybox)"></span><span class="nm">촬영본_A_0312.mov</span><span class="mt">8.4GB</span></div>
+        <div class="splgrp"><svg data-lucide="check-circle-2" style="width:13px;height:13px;color:var(--ok)"></svg> 지난 비모 작업 · 승인 <span class="ct">2 ▸</span></div>
+      </aside>
+      <section class="spldetail">
+        <div class="dh"><div class="dt">성수 카페 브랜드필름</div>
+          <span class="erp"><svg data-lucide="database"></svg>비모 ERP #1042</span><span class="badge b-fix"><svg data-lucide="alert-triangle"></svg>수정 요청</span><span class="ddred mono" style="font-size:12px;font-weight:700">마감 D-2</span></div>
+        <div class="thumb t1" style="height:178px"><div class="play"><svg data-lucide="play"></svg></div><span class="dur">1:48</span></div>
+        <div class="req" style="margin-top:14px"><svg data-lucide="message-square-text"></svg>비모 요청: "0:42 자막 오타 '브랜대'→'브랜드', 1:15 컷 전환 다듬기"</div>
+        <div class="stepper"><span class="v">v1<span class="c"></span></span><span class="bar"></span><span class="v">v2<span class="c"></span></span><span class="bar"></span><span class="v cur"><span class="c"></span>현재 v2 검수</span><span class="bar"></span><span class="v">v3 전달 예정</span></div>
+        <div style="display:flex;gap:10px;margin:6px 0 4px"><button class="btn btn--p"><svg data-lucide="upload-cloud"></svg>수정본(v3) 전달</button><button class="btn"><svg data-lucide="play"></svg>원본 열기</button></div>
+        <div class="sec-h" style="margin:18px 0 6px"><svg data-lucide="message-square"></svg>코멘트</div>
+        <div class="cmt"><div class="av" style="background:#0369a1;width:26px;height:26px">진</div><div class="bub"><div class="who">진우 · 비모 PD · 2시간 전</div>0:42 자막 오타 보이고, 1:15 컷이 살짝 끊겨요. 그 부분만 다듬어 주세요.</div></div>
+        <div class="cmt"><div class="av" style="background:#0d9488;width:26px;height:26px">서</div><div class="bub"><div class="who">서준 · 나 · 1시간 전</div>확인했습니다. 내일 오전까지 v3 전달드릴게요.</div></div>
+      </section>
+    </div></div>
+    <!-- empty -->
+    <div class="st st--empty"><div class="wsplit">
+      <aside class="splrail">
+        <div class="splsearch"><svg data-lucide="search"></svg> 작업·파일 검색</div>
+        <div class="splgrp"><svg data-lucide="hard-drive" style="width:13px;height:13px;color:var(--mybox-deep)"></svg> My box <span class="ct">23</span></div>
+        <div class="splrow sel box"><span class="dot" style="background:var(--mybox)"></span><span class="nm">성수카페_편집중.prproj</span><span class="mt">방금</span></div>
+        <div class="splrow box"><span class="dot" style="background:var(--mybox)"></span><span class="nm">촬영본_A_0312.mov</span><span class="mt">8.4GB</span></div>
+        <div class="splrow box"><span class="dot" style="background:var(--mybox)"></span><span class="nm">기획안_v3.key</span><span class="mt">어제</span></div>
+        <div class="splrow box"><span class="dot" style="background:var(--mybox)"></span><span class="nm">레퍼런스 (폴더)</span><span class="mt">14</span></div>
+        <div class="splgrp"><svg data-lucide="handshake" style="width:13px;height:13px;color:var(--faint)"></svg> 비모 작업 <span class="ct">0</span></div>
+        <div class="splrow" style="cursor:default"><span class="nm" style="color:var(--faint);font-weight:500">진행 중 없음 · 비모가 열면 표시</span></div>
+        <div class="splgrp"><svg data-lucide="check-circle-2" style="width:13px;height:13px;color:var(--ok)"></svg> 지난 비모 작업 · 승인 <span class="ct">2 ▸</span></div>
+        <div class="splrow"><span class="dot" style="background:var(--ok)"></span><span class="nm">성수카페 티저</span><span class="mt">#1011</span></div>
+        <div class="splrow"><span class="dot" style="background:var(--ok)"></span><span class="nm">자동차 OO 런칭</span><span class="mt">#0987</span></div>
+      </aside>
+      <section class="spldetail">
+        <div class="dh"><div class="dt">성수카페_편집중.prproj</div><span class="own box">내 보관함 · 나만 봄</span><span class="mt" style="color:var(--faint)">Premiere 프로젝트 · 38MB</span></div>
+        <div class="thumb t1" style="height:178px"><div class="play"><svg data-lucide="play"></svg></div></div>
+        <div class="empty-strip" style="margin-top:14px"><svg data-lucide="info"></svg><div>진행 중인 비모 작업이 없어요. 이 파일은 내 보관용이며, 비모가 작업을 열면 그 작업으로 전달할 수 있습니다.</div></div>
+        <div style="display:flex;gap:10px;margin-top:14px"><button class="btn btn--blue"><svg data-lucide="play"></svg>이어서 편집</button><button class="btn"><svg data-lucide="upload-cloud"></svg>업로드</button></div>
+      </section>
+    </div></div>
+  </div></div>
+</section>
+
+<!-- ===================== 3. 타임라인 ===================== -->
+<section class="variant" id="d3">
+  <div class="vhead"><div class="num">3</div>
+    <div><div class="ttl">왕복 타임라인 <em>· 비모와의 주고받음</em></div>
+      <div class="lede">파일 목록이 아니라 사건(요청·전달·피드백·승인)의 역순 피드. 좌=비모, 우=나. 파일은 사건의 첨부로만 등장.</div></div>
+    <div class="chips"><span class="chip good"><svg data-lucide="check"></svg>맥락·이력 한눈에</span><span class="chip warn"><svg data-lucide="minus"></svg>파일 탐색은 부차</span></div>
+  </div>
+  <div class="frame"><div class="frame__bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="tag">파트너</span></div></div>
+  <div class="screen"><div class="statelabel"><span class="d"></span><span class="t-active">비모 작업 있음</span><span class="t-empty">비모 작업 없음</span></div>
+    <!-- active -->
+    <div class="st st--active"><div class="tlshell">
+      <div class="tltop"><div class="bm"><div class="brandmark" style="width:26px;height:26px;font-size:13px">V</div> 비박스</div>
+        <div class="me"><div class="av" style="background:#0d9488;width:30px;height:30px">서</div></div></div>
+      <div class="tlwrap"><div class="tlcol">
+        <div class="tlstatus"><span class="d" style="background:var(--brand-deep)"></span>공은 당신에게 — 응답 대기 1건</div>
+        <div class="tlfilters"><span class="chip act on">전체</span><span class="chip act">내 차례</span><span class="chip act">비모</span><span class="chip act">My box</span></div>
+        <div class="tl-day">오늘<span class="ln"></span></div>
+        <div class="tl-ev vimo"><div class="vb"><svg data-lucide="alert-circle"></svg>비모 수정요청</div>
+          <div class="tt">성수 카페 브랜드필름 — 수정 요청</div>
+          <div class="meta"><span class="erp"><svg data-lucide="database"></svg>#1042</span><span>마감 D-2</span></div>
+          <div class="req" style="margin-top:8px"><svg data-lucide="message-square-text"></svg>"0:42 자막 오타 '브랜대'→'브랜드', 1:15 컷 전환 다듬기"</div>
+          <div class="row"><button class="btn btn--p btn--sm"><svg data-lucide="upload-cloud"></svg>수정본 전달로 응답</button></div></div>
+        <div class="tl-ev mine"><div class="vb"><svg data-lucide="upload"></svg>내가 전달함</div>
+          <div class="tt">그래놀라 30초 광고 — 1차 전달</div>
+          <div class="meta"><span class="erp"><svg data-lucide="database"></svg>#1039</span><span class="att"><svg data-lucide="film"></svg>광고_30s_v2.mp4 · 420MB</span><span class="badge b-review" style="font-size:10px;padding:2px 6px">검수중</span></div></div>
+        <div class="tl-day">어제<span class="ln"></span></div>
+        <div class="tl-ev vimo"><div class="vb"><svg data-lucide="message-square"></svg>비모 코멘트</div>
+          <div class="tt">진우 PD: "전반적으로 좋아요. 톤만 살짝 따뜻하게"</div>
+          <div class="meta"><span class="erp"><svg data-lucide="database"></svg>#1039</span></div></div>
+        <div class="tl-ev appr"><div class="vb"><svg data-lucide="check-circle-2"></svg>비모 승인</div>
+          <div class="tt">성수카페 티저 — 승인 완료</div><div class="meta"><span class="erp"><svg data-lucide="database"></svg>#1011</span><span>최종본 게시</span></div></div>
+      </div></div>
+    </div></div>
+    <!-- empty -->
+    <div class="st st--empty"><div class="tlshell">
+      <div class="tltop"><div class="bm"><div class="brandmark" style="width:26px;height:26px;font-size:13px">V</div> 비박스</div>
+        <div class="me"><div class="av" style="background:#0d9488;width:30px;height:30px">서</div></div></div>
+      <div class="tlwrap"><div class="tlcol">
+        <div class="tlstatus"><span class="d" style="background:#cfd4d8"></span>조용함 · 마지막 왕복 4월 28일</div>
+        <div class="tl-band"><div class="h"><svg data-lucide="hard-drive"></svg>아직 사건이 되지 않은 내 작업 (My box)</div>
+          <div class="items"><span class="it"><svg data-lucide="play"></svg>성수카페_편집중.prproj</span><span class="it"><svg data-lucide="film"></svg>촬영본_A_0312.mov · 8.4GB</span><span class="it"><svg data-lucide="presentation"></svg>기획안_v3.key</span></div></div>
+        <div class="tl-rest"><span class="ln"></span>활성 왕복 여기까지<span class="ln"></span></div>
+        <div class="tl-ev appr"><div class="vb"><svg data-lucide="check-circle-2"></svg>비모 승인</div>
+          <div class="tt">성수카페 티저 — 승인 완료</div><div class="meta"><span class="erp"><svg data-lucide="database"></svg>#1011</span><span>4월 28일</span></div></div>
+        <div class="tl-ev appr"><div class="vb"><svg data-lucide="check-circle-2"></svg>비모 승인</div>
+          <div class="tt">자동차 OO 런칭 — 승인 완료</div><div class="meta"><span class="erp"><svg data-lucide="database"></svg>#0987</span><span>3월 12일</span></div></div>
+      </div></div>
+    </div></div>
+  </div></div>
+</section>
+
+<!-- ===================== 4. 원장 (table) ===================== -->
+<section class="variant" id="d4">
+  <div class="vhead"><div class="num">4</div>
+    <div><div class="ttl">납품 원장 <em>· The Ledger</em></div>
+      <div class="lede">홈을 한 장짜리 원장(스프레드시트)으로. 프로젝트·마감·상태·비모 요청·액션을 행/열로. 정렬·키보드로 훑는 최고 밀도.</div></div>
+    <div class="chips"><span class="chip good"><svg data-lucide="check"></svg>최고 밀도·실무형</span><span class="chip warn"><svg data-lucide="minus"></svg>차갑고 건조함</span></div>
+  </div>
+  <div class="frame"><div class="frame__bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="tag">파트너</span></div></div>
+  <div class="screen"><div class="statelabel"><span class="d"></span><span class="t-active">비모 작업 있음</span><span class="t-empty">비모 작업 없음</span></div>
+    <!-- active -->
+    <div class="st st--active"><div class="ledgerwrap">
+      <div class="cmdbar"><span class="chip warn">수정요청 1</span><span class="chip"><span style="width:7px;height:7px;border-radius:50%;background:var(--info);display:inline-block"></span> 검수중 1</span><span class="chip good">승인 2</span>
+        <span class="srt"><svg data-lucide="arrow-down-up"></svg>마감순</span>
+        <div class="right"><span class="search"><svg data-lucide="search"></svg>검색</span><button class="btn btn--sm"><svg data-lucide="plus"></svg>새 납품</button></div></div>
+      <table class="ledger">
+        <thead><tr><th style="width:32%">프로젝트</th><th style="width:10%">마감</th><th style="width:13%">상태</th><th>비모 요청</th><th style="width:13%">액션</th></tr></thead>
+        <tbody>
+          <tr class="grp"><td colspan="5">진행 중 · 2</td></tr>
+          <tr class="fix"><td><span class="lname">성수 카페 브랜드필름 <span class="erp">#1042</span></span></td><td><span class="ddred mono">D-2</span></td><td><span class="lstat"><span class="d" style="background:var(--danger)"></span>수정요청</span></td><td><span class="lreq">0:42 자막 오타 '브랜대'→'브랜드', 1:15 컷 전환 다듬기</span></td><td><span class="lact">새 버전 전달 <svg data-lucide="arrow-right"></svg></span></td></tr>
+          <tr><td><span class="lname">그래놀라 30초 광고 <span class="erp">#1039</span></span></td><td><span class="mono" style="color:var(--faint)">—</span></td><td><span class="lstat"><span class="d" style="background:var(--info)"></span>검수중</span></td><td><span class="lreq" style="color:var(--faint)">전달함 · 비모 응답 대기</span></td><td><span class="lact">전달물 보기 <svg data-lucide="arrow-right"></svg></span></td></tr>
+          <tr class="grp"><td colspan="5">지난 비모 작업 · 승인 완료 · 2</td></tr>
+          <tr><td><span class="lname">성수카페 티저 <span class="erp">#1011</span></span></td><td><span class="mono" style="color:var(--faint)">4/28</span></td><td><span class="lstat"><span class="d" style="background:var(--ok)"></span>승인</span></td><td><span class="lreq" style="color:var(--faint)">—</span></td><td><span class="lact">다시 열기 <svg data-lucide="arrow-right"></svg></span></td></tr>
+          <tr><td><span class="lname">자동차 OO 런칭 <span class="erp">#0987</span></span></td><td><span class="mono" style="color:var(--faint)">3/12</span></td><td><span class="lstat"><span class="d" style="background:var(--ok)"></span>승인</span></td><td><span class="lreq" style="color:var(--faint)">—</span></td><td><span class="lact">다시 열기 <svg data-lucide="arrow-right"></svg></span></td></tr>
+          <tr class="grp"><td colspan="5">My box · 내 보관함</td></tr>
+          <tr><td><span class="lname"><svg data-lucide="play" style="width:14px;height:14px;color:var(--mybox-deep)"></svg> 성수카페_편집중.prproj</span></td><td><span class="mono" style="color:var(--faint)">방금</span></td><td><span class="lstat"><span class="d" style="background:var(--mybox)"></span>작업 중</span></td><td><span class="lreq" style="color:var(--faint)">38MB · Premiere</span></td><td><span class="lact box">열기 <svg data-lucide="arrow-right"></svg></span></td></tr>
+          <tr><td><span class="lname"><svg data-lucide="film" style="width:14px;height:14px;color:var(--mybox-deep)"></svg> 촬영본_A_0312.mov</span></td><td><span class="mono" style="color:var(--faint)">3일 전</span></td><td><span class="lstat"><span class="d" style="background:var(--mybox)"></span>보관</span></td><td><span class="lreq" style="color:var(--faint)">8.4GB</span></td><td><span class="lact box">열기 <svg data-lucide="arrow-right"></svg></span></td></tr>
+        </tbody>
+      </table>
+    </div></div>
+    <!-- empty -->
+    <div class="st st--empty"><div class="ledgerwrap">
+      <div class="cmdbar"><span class="chip"><span style="width:7px;height:7px;border-radius:50%;background:var(--mybox);display:inline-block"></span> My box 우선</span><span class="chip good">지난 승인 2</span>
+        <span class="srt"><svg data-lucide="arrow-down-up"></svg>공간순</span>
+        <div class="right"><span class="search"><svg data-lucide="search"></svg>검색</span><button class="btn btn--sm"><svg data-lucide="upload-cloud"></svg>업로드</button></div></div>
+      <table class="ledger">
+        <thead><tr><th style="width:32%">파일 / 작업</th><th style="width:10%">날짜</th><th style="width:13%">상태</th><th>메모</th><th style="width:13%">액션</th></tr></thead>
+        <tbody>
+          <tr class="grp"><td colspan="5">My box · 내 보관함 (진행 중 비모 작업 없음 → 1순위)</td></tr>
+          <tr><td><span class="lname"><svg data-lucide="play" style="width:14px;height:14px;color:var(--mybox-deep)"></svg> 성수카페_편집중.prproj</span></td><td><span class="mono" style="color:var(--faint)">방금</span></td><td><span class="lstat"><span class="d" style="background:var(--mybox)"></span>작업 중</span></td><td><span class="lreq" style="color:var(--faint)">38MB</span></td><td><span class="lact box">열기 <svg data-lucide="arrow-right"></svg></span></td></tr>
+          <tr><td><span class="lname"><svg data-lucide="film" style="width:14px;height:14px;color:var(--mybox-deep)"></svg> 촬영본_A_0312.mov</span></td><td><span class="mono" style="color:var(--faint)">3일 전</span></td><td><span class="lstat"><span class="d" style="background:var(--mybox)"></span>보관</span></td><td><span class="lreq" style="color:var(--faint)">8.4GB</span></td><td><span class="lact box">열기 <svg data-lucide="arrow-right"></svg></span></td></tr>
+          <tr><td><span class="lname"><svg data-lucide="presentation" style="width:14px;height:14px;color:var(--mybox-deep)"></svg> 기획안_v3.key</span></td><td><span class="mono" style="color:var(--faint)">어제</span></td><td><span class="lstat"><span class="d" style="background:var(--mybox)"></span>보관</span></td><td><span class="lreq" style="color:var(--faint)">—</span></td><td><span class="lact box">열기 <svg data-lucide="arrow-right"></svg></span></td></tr>
+          <tr class="grp"><td colspan="5">지난 비모 작업 · 승인 완료 (항상 조회 가능)</td></tr>
+          <tr><td><span class="lname">성수카페 티저 <span class="erp">#1011</span></span></td><td><span class="mono" style="color:var(--faint)">4/28</span></td><td><span class="lstat"><span class="d" style="background:var(--ok)"></span>승인</span></td><td><span class="lreq" style="color:var(--faint)">—</span></td><td><span class="lact">다시 열기 <svg data-lucide="arrow-right"></svg></span></td></tr>
+          <tr><td><span class="lname">자동차 OO 런칭 <span class="erp">#0987</span></span></td><td><span class="mono" style="color:var(--faint)">3/12</span></td><td><span class="lstat"><span class="d" style="background:var(--ok)"></span>승인</span></td><td><span class="lreq" style="color:var(--faint)">—</span></td><td><span class="lact">다시 열기 <svg data-lucide="arrow-right"></svg></span></td></tr>
+        </tbody>
+      </table>
+    </div></div>
+  </div></div>
+</section>
+
+<!-- ===================== 5. 보드 (kanban) ===================== -->
+<section class="variant" id="d5">
+  <div class="vhead"><div class="num">5</div>
+    <div><div class="ttl">파이프라인 보드 <em>· 내 납품물의 상태 레인</em></div>
+      <div class="lede">각 납품물이 요청됨→작업중→전달함→검수중→승인 중 어디 있는지를 위치로 소유. 카드를 다음 단계로 밀어 전진.</div></div>
+    <div class="chips"><span class="chip good"><svg data-lucide="check"></svg>진행 상황 직관</span><span class="chip warn"><svg data-lucide="minus"></svg>건수 적으면 과함</span></div>
+  </div>
+  <div class="frame"><div class="frame__bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="tag">파트너</span></div></div>
+  <div class="screen"><div class="statelabel"><span class="d"></span><span class="t-active">비모 작업 있음</span><span class="t-empty">비모 작업 없음</span></div>
+    <!-- active -->
+    <div class="st st--active"><div class="kanban">
+      <div class="klane"><div class="klane-h"><span class="d" style="background:#c5c4c0"></span><span class="l">요청됨</span><span class="ct">0</span></div><div class="klane-sub">비모가 새로 연 작업</div><div class="klane-empty">대기 없음</div></div>
+      <div class="klane"><div class="klane-h"><span class="d" style="background:var(--danger)"></span><span class="l">작업중</span><span class="ct">1</span></div><div class="klane-sub">내가 편집 중</div>
+        <div class="kcard fix"><div class="km"><div class="thumb t1"><div class="play"><svg data-lucide="play"></svg></div></div><div><div class="nm">성수 카페 브랜드필름</div></div></div>
+          <div class="pins"><span class="pin"><svg data-lucide="database" style="width:10px;height:10px"></svg>#1042</span><span class="pin ddred" style="color:var(--danger)">D-2</span><span class="badge b-fix" style="font-size:9.5px;padding:2px 6px">수정</span></div>
+          <div class="kreflux"><svg data-lucide="corner-down-left"></svg>비모 검수중 → 수정요청으로 되돌아옴</div>
+          <div class="src"><svg data-lucide="link"></svg>소스: 성수카페_편집중.prproj</div></div></div>
+      <div class="klane"><div class="klane-h"><span class="d" style="background:var(--warn)"></span><span class="l">전달함</span><span class="ct">0</span></div><div class="klane-sub">내가 올림</div><div class="klane-empty">없음</div></div>
+      <div class="klane"><div class="klane-h"><span class="d" style="background:var(--info)"></span><span class="l">검수중</span><span class="ct">1</span></div><div class="klane-sub">비모가 보는 중</div>
+        <div class="kcard"><div class="km"><div class="thumb t4"><div class="play"><svg data-lucide="play"></svg></div></div><div><div class="nm">그래놀라 30초 광고</div></div></div>
+          <div class="pins"><span class="pin"><svg data-lucide="database" style="width:10px;height:10px"></svg>#1039</span><span class="badge b-review" style="font-size:9.5px;padding:2px 6px">검수중</span></div></div></div>
+      <div class="klane"><div class="klane-h"><span class="d" style="background:var(--ok)"></span><span class="l">승인</span><span class="ct">2</span></div><div class="klane-sub">완료된 이력</div>
+        <div class="kcard"><div class="km"><div class="thumb t2"></div><div><div class="nm">성수카페 티저</div></div></div><div class="pins"><span class="pin">#1011</span><span class="badge b-ok" style="font-size:9.5px;padding:2px 6px"><svg data-lucide="check"></svg>승인</span></div></div>
+        <div class="kcard"><div class="km"><div class="thumb t5"></div><div><div class="nm">자동차 OO 런칭</div></div></div><div class="pins"><span class="pin">#0987</span><span class="badge b-ok" style="font-size:9.5px;padding:2px 6px"><svg data-lucide="check"></svg>승인</span></div></div></div>
+    </div></div>
+    <!-- empty -->
+    <div class="st st--empty"><div class="kanban" style="flex-direction:column;overflow:hidden">
+      <div class="minimap"><span class="lab">파이프라인</span><span class="seg">요청됨</span><span class="seg">작업중</span><span class="seg">전달함</span><span class="seg">검수중</span><span class="seg fill">승인 2</span><span class="lab" style="color:var(--faint)">비모가 작업을 열면 좌측부터 채워집니다</span></div>
+      <div style="display:flex;gap:13px;flex:1;overflow:hidden">
+        <div style="flex:1;display:flex;flex-direction:column">
+          <div class="sec-h first"><svg data-lucide="hard-drive" class="mybox-i"></svg>My box <span class="more">전체 <svg data-lucide="chevron-right"></svg></span></div>
+          <div class="mb-grid" style="grid-template-columns:repeat(3,1fr)">
+            <div class="mbcard"><div class="pv" style="padding:0;background:none"><div class="thumb t1" style="width:100%;height:64px;border-radius:0"><div class="play"><svg data-lucide="play"></svg></div></div></div><div class="lb"><div class="nm">성수카페_편집중.prproj</div><div class="mt">방금</div></div></div>
+            <div class="mbcard"><div class="pv"><svg data-lucide="folder"></svg></div><div class="lb"><div class="nm">레퍼런스</div><div class="mt">14</div></div></div>
+            <div class="mbcard"><div class="pv"><svg data-lucide="folder"></svg></div><div class="lb"><div class="nm">촬영본</div><div class="mt">32</div></div></div>
+            <div class="mbcard"><div class="pv"><svg data-lucide="presentation"></svg></div><div class="lb"><div class="nm">기획안_v3.key</div><div class="mt">어제</div></div></div>
+            <div class="mbcard"><div class="pv"><svg data-lucide="file-text"></svg></div><div class="lb"><div class="nm">견적서_v2.pdf</div><div class="mt">3일 전</div></div></div>
+            <div class="mbcard"><div class="pv" style="padding:0;background:none"><div class="thumb t5" style="width:100%;height:64px;border-radius:0"></div></div><div class="lb"><div class="nm">촬영본_A_0312.mov</div><div class="mt">8.4GB</div></div></div>
+          </div>
+        </div>
+        <div style="width:240px;flex:none">
+          <div class="sec-h first"><svg data-lucide="check-circle-2" style="color:var(--ok)"></svg>승인 레인 (이력)</div>
+          <div class="kcard"><div class="km"><div class="thumb t2"></div><div><div class="nm">성수카페 티저</div></div></div><div class="pins"><span class="pin">#1011</span><span class="badge b-ok" style="font-size:9.5px;padding:2px 6px"><svg data-lucide="check"></svg>승인</span></div></div>
+          <div class="kcard"><div class="km"><div class="thumb t5"></div><div><div class="nm">자동차 OO 런칭</div></div></div><div class="pins"><span class="pin">#0987</span><span class="badge b-ok" style="font-size:9.5px;padding:2px 6px"><svg data-lucide="check"></svg>승인</span></div></div>
+        </div>
+      </div>
+    </div></div>
+  </div></div>
+</section>
+
+<!-- ===================== 6. 원데스크 (focus) ===================== -->
+<section class="variant" id="d6">
+  <div class="vhead"><div class="num">6</div>
+    <div><div class="ttl">단 하나의 작업대 <em>· The One Desk</em></div>
+      <div class="lede">화면 전체가 "지금 손댈 단 1건"의 풀블리드 작업대. 나머지는 하단 서랍 한 줄로 접힘. 끝내고 "다음 1건"으로.</div></div>
+    <div class="chips"><span class="chip good"><svg data-lucide="check"></svg>초집중·무압박</span><span class="chip warn"><svg data-lucide="minus"></svg>전체 파악 어려움</span></div>
+  </div>
+  <div class="frame"><div class="frame__bar"><div class="dots"><i></i><i></i><i></i></div><div class="url"><svg data-lucide="lock"></svg>vibox.cloud<span class="tag">파트너</span></div></div>
+  <div class="screen"><div class="statelabel"><span class="d"></span><span class="t-active">비모 작업 있음</span><span class="t-empty">비모 작업 없음</span></div>
+    <!-- active -->
+    <div class="st st--active"><div class="onewrap">
+      <div class="onetop"><div class="bm"><div class="brandmark" style="width:26px;height:26px;font-size:13px">V</div> 비박스</div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:10px"><span style="font-size:12px;color:var(--faint)">남은 작업 1 · 비모 검수 1</span><div class="av" style="background:#0d9488;width:30px;height:30px">서</div></div></div>
+      <div class="onebody">
+        <div class="desk fix"><div class="desk-rail"></div>
+          <div class="why"><svg data-lucide="flag"></svg>수정 요청이라 지금 1순위입니다</div>
+          <div class="top"><div class="dt">성수 카페 브랜드필름 — 수정본 전달<div class="sub"><span class="erp"><svg data-lucide="database"></svg>비모 ERP #1042</span> · 비모 진우 PD</div></div>
+            <div class="dday"><div class="n mono">D-2</div><div class="l">마감 6/16</div></div></div>
+          <div class="checkline">
+            <div class="ci"><span class="box"></span><span>0:42 자막 오타 '브랜대' → '브랜드'</span><span class="lab">비모 요청</span></div>
+            <div class="ci"><span class="box"></span><span>1:15 컷 전환 다듬기</span><span class="lab">비모 요청</span></div>
+          </div>
+          <div class="acts"><button class="btn btn--p"><svg data-lucide="upload-cloud"></svg>수정본 전달</button><button class="btn"><svg data-lucide="play"></svg>원본 열기</button><button class="btn btn--ghost adv">다음 1건 <svg data-lucide="arrow-right"></svg></button></div>
+        </div>
+        <div class="drawer"><span class="dl">다음 작업</span>
+          <span class="dchip"><span class="d" style="background:var(--info)"></span>그래놀라 30s · 비모 검수중</span>
+          <span class="dchip"><span class="d" style="background:var(--mybox)"></span>성수카페_편집중.prproj</span>
+          <span class="dchip"><span class="d" style="background:var(--mybox)"></span>촬영본_A_0312.mov</span></div>
+        <div class="shelf"><span style="font-weight:700">지난 납품 선반</span><span class="sc"><svg data-lucide="check"></svg>성수카페 티저 #1011</span><span class="sc"><svg data-lucide="check"></svg>자동차 OO #0987</span></div>
+      </div>
+    </div></div>
+    <!-- empty -->
+    <div class="st st--empty"><div class="onewrap">
+      <div class="onetop"><div class="bm"><div class="brandmark" style="width:26px;height:26px;font-size:13px">V</div> 비박스</div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:10px"><span style="font-size:12px;color:var(--faint)">진행 중 비모 작업 없음</span><div class="av" style="background:#0d9488;width:30px;height:30px">서</div></div></div>
+      <div class="onebody">
+        <div class="desk box"><div class="desk-rail"></div>
+          <div class="why"><svg data-lucide="hard-drive"></svg>진행 중 비모 작업이 없어 내 최근 작업을 올렸습니다</div>
+          <div class="top"><div class="dt">성수카페_편집중.prproj — 이어서 편집<div class="sub"><span class="own box">내 보관함 · 나만 봄</span> · Premiere · 38MB</div></div>
+            <div class="dday"><div class="n mono" style="color:var(--mybox-deep);font-size:26px">방금</div><div class="l">마지막 작업</div></div></div>
+          <div class="empty-strip" style="margin-top:20px"><svg data-lucide="info"></svg><div>비모가 작업을 열면 이 작업대에 "전달할 것"이 자동으로 올라옵니다. 그때까지는 내 작업을 다듬어 두세요.</div></div>
+          <div class="acts"><button class="btn btn--blue"><svg data-lucide="play"></svg>이어서 편집</button><button class="btn"><svg data-lucide="upload-cloud"></svg>업로드</button></div>
+        </div>
+        <div class="drawer"><span class="dl">내 작업</span>
+          <span class="dchip"><span class="d" style="background:var(--mybox)"></span>촬영본_A_0312.mov · 8.4GB</span>
+          <span class="dchip"><span class="d" style="background:var(--mybox)"></span>기획안_v3.key</span>
+          <span class="dchip"><span class="d" style="background:var(--mybox)"></span>레퍼런스 (14)</span></div>
+        <div class="shelf"><span style="font-weight:700">지난 납품 선반</span><span class="sc"><svg data-lucide="check"></svg>성수카페 티저 #1011</span><span class="sc"><svg data-lucide="check"></svg>자동차 OO #0987</span></div>
+      </div>
+    </div></div>
+  </div></div>
+</section>
+
+<footer class="foot">
+  <div class="foot__card">
+    <h3>고르거나 섞으세요</h3>
+    <p>6개는 정렬·구조·상호작용·방향이 서로 겹치지 않게 설계했습니다. 끌리는 1~2개(또는 "큐의 소유권 + 원장의 밀도" 같은 혼합)를 알려주시면 그 방향으로 좁혀 발전시킵니다. 업로드/전달 동선과 <b>비모 ERP↔비박스 데이터 계약</b>(프로젝트·배정·마감·요청·상태 필드)은 방향이 정해지면 같이 설계합니다.</p>
+    <div class="next"><span class="pill">① 방향 1~2 선택/혼합</span><span class="pill">② 업로드·전달 동선</span><span class="pill">③ 비모 ERP↔비박스 데이터 계약</span><span class="pill">④ 선택안 Hi-fi·반응형</span><span class="pill">⑤ PartnerHome 구현</span></div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  if(window.lucide) lucide.createIcons();
+  var seg=document.getElementById('seg');
+  function setState(s){document.body.className='state-'+s;
+    seg.querySelectorAll('span[data-state]').forEach(function(el){el.classList.toggle('on',el.getAttribute('data-state')===s)});
+    if(history.replaceState) history.replaceState(null,'',s==='empty'?'#empty':'#active');}
+  seg.querySelectorAll('span[data-state]').forEach(function(el){el.addEventListener('click',function(){setState(el.getAttribute('data-state'))})});
+  if(location.hash==='#empty') setState('empty');
+  var tabs=[].slice.call(document.querySelectorAll('.tab'));
+  var secs=['d1','d2','d3','d4','d5','d6'].map(function(id){return document.getElementById(id)});
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){var id=e.target.id;tabs.forEach(function(t){t.classList.toggle('is-active',t.getAttribute('href')==='#'+id)})}})},{rootMargin:'-45% 0px -50% 0px'});
+  secs.forEach(function(s){io.observe(s)});
+</script>
+</body>
+</html>
