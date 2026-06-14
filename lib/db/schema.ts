@@ -1,4 +1,4 @@
-import { pgTable, text, integer, bigint, boolean, real, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, bigint, boolean, real, timestamp, index, uniqueIndex } from "drizzle-orm/pg-core";
 
 // 타임스탬프: SQLite integer(ms) → PG timestamptz(mode:date). JS 타입은 Date 그대로라 앱 코드 무변경.
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
@@ -36,7 +36,9 @@ export const shareLinks = pgTable("share_links", {
   passwordHash: text("password_hash"),
   downloadCount: integer("download_count").notNull().default(0),
   createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
-});
+}, (t) => [
+  index("idx_share_links_created_by").on(t.createdBy),
+]);
 
 export const fileUploads = pgTable("file_uploads", {
   path: text("path").primaryKey(),
@@ -46,7 +48,9 @@ export const fileUploads = pgTable("file_uploads", {
   episodeId: text("episode_id"),
   projectId: text("project_id"),
   partnerId: text("partner_id"),
-});
+}, (t) => [
+  index("idx_file_uploads_uploader").on(t.uploadedBy),
+]);
 
 export const comments = pgTable("comments", {
   id: text("id").primaryKey(),
@@ -71,7 +75,13 @@ export const comments = pgTable("comments", {
   approvedAt: ts("approved_at"),
   approvedBy: text("approved_by"),
   createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
-});
+}, (t) => [
+  index("idx_comments_path").on(t.filePath),
+  index("idx_comments_video_time").on(t.videoTimeMs),
+  index("idx_comments_kind").on(t.kind),
+  index("idx_comments_status").on(t.status),
+  index("idx_comments_visibility").on(t.visibility),
+]);
 
 export const commentModerations = pgTable("comment_moderations", {
   id: text("id").primaryKey(),
@@ -81,7 +91,9 @@ export const commentModerations = pgTable("comment_moderations", {
   editedBy: text("edited_by").notNull().references(() => users.id, { onDelete: "cascade" }),
   editedByName: text("edited_by_name").notNull(),
   editedAt: ts("edited_at").notNull().$defaultFn(() => new Date()),
-});
+}, (t) => [
+  index("idx_moderations_comment").on(t.commentId),
+]);
 
 export type Comment = typeof comments.$inferSelect;
 export type NewComment = typeof comments.$inferInsert;
@@ -99,7 +111,9 @@ export const trashItems = pgTable("trash_items", {
   deletedBy: text("deleted_by").notNull().references(() => users.id, { onDelete: "cascade" }),
   deletedByName: text("deleted_by_name").notNull(),
   deletedAt: ts("deleted_at").notNull().$defaultFn(() => new Date()),
-});
+}, (t) => [
+  index("idx_trash_deleted_at").on(t.deletedAt),
+]);
 
 export const scanHistory = pgTable("scan_history", {
   id: text("id").primaryKey(),
@@ -111,7 +125,10 @@ export const scanHistory = pgTable("scan_history", {
   status: text("status", { enum: ["running", "done", "failed", "cancelled"] }).notNull().default("running"),
   issuesFound: integer("issues_found"),
   error: text("error"),
-});
+}, (t) => [
+  index("idx_scan_history_path").on(t.filePath),
+  index("idx_scan_history_started").on(t.startedAt),
+]);
 
 export const trafficLog = pgTable("traffic_log", {
   id: text("id").primaryKey(),
@@ -121,7 +138,12 @@ export const trafficLog = pgTable("traffic_log", {
   shareToken: text("share_token"),
   userId: text("user_id"),
   at: ts("at").notNull().$defaultFn(() => new Date()),
-});
+}, (t) => [
+  index("idx_traffic_at").on(t.at),
+  index("idx_traffic_source").on(t.source),
+  index("idx_traffic_path").on(t.path),
+  index("idx_traffic_share").on(t.shareToken),
+]);
 
 export type TrafficLog = typeof trafficLog.$inferSelect;
 export type NewTrafficLog = typeof trafficLog.$inferInsert;
@@ -138,7 +160,10 @@ export const encodingJobs = pgTable("encoding_jobs", {
   error: text("error"),
   durationSec: integer("duration_sec"),
   attempts: integer("attempts").notNull().default(0),
-});
+}, (t) => [
+  index("idx_encoding_status").on(t.status),
+  index("idx_encoding_file").on(t.filePath),
+]);
 
 export const hlsAssets = pgTable("hls_assets", {
   fingerprint: text("fingerprint").primaryKey(),
@@ -164,7 +189,10 @@ export const clients = pgTable("clients", {
   erpClientId: text("erp_client_id"),
   createdBy: text("created_by").notNull().references(() => users.id, { onDelete: "cascade" }),
   createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
-});
+}, (t) => [
+  index("idx_clients_active").on(t.active),
+  index("idx_clients_erp_id").on(t.erpClientId),
+]);
 
 export const clientVideos = pgTable("client_videos", {
   id: text("id").primaryKey(),
@@ -174,7 +202,11 @@ export const clientVideos = pgTable("client_videos", {
   addedBy: text("added_by").notNull().references(() => users.id, { onDelete: "cascade" }),
   status: text("status", { enum: ["draft", "sent", "approved", "archived"] }).notNull().default("draft"),
   displayOrder: integer("display_order").notNull().default(0),
-});
+}, (t) => [
+  index("idx_client_videos_client").on(t.clientId),
+  index("idx_client_videos_path").on(t.filePath),
+  uniqueIndex("idx_client_videos_unique").on(t.clientId, t.filePath),
+]);
 
 export const clientShareTokens = pgTable("client_share_tokens", {
   id: text("id").primaryKey(),
@@ -186,7 +218,9 @@ export const clientShareTokens = pgTable("client_share_tokens", {
   revokedAt: ts("revoked_at"),
   createdBy: text("created_by").notNull().references(() => users.id, { onDelete: "cascade" }),
   createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
-});
+}, (t) => [
+  index("idx_client_share_tokens_client").on(t.clientId),
+]);
 
 export type Client = typeof clients.$inferSelect;
 export type NewClient = typeof clients.$inferInsert;
@@ -205,7 +239,9 @@ export const apiTokens = pgTable("api_tokens", {
   createdAt: ts("created_at").notNull(),
   lastUsedAt: ts("last_used_at"),
   revokedAt: ts("revoked_at"),
-});
+}, (t) => [
+  index("idx_api_tokens_created_by").on(t.createdBy),
+]);
 export type ApiToken = typeof apiTokens.$inferSelect;
 export type NewApiToken = typeof apiTokens.$inferInsert;
 
@@ -234,6 +270,8 @@ export const shareViews = pgTable(
       t.visitorId,
       t.filePath,
     ),
+    index("idx_share_views_token_path").on(t.shareToken, t.filePath),
+    index("idx_share_views_last_event").on(t.lastEventAt),
   ],
 );
 export type ShareView = typeof shareViews.$inferSelect;
@@ -259,7 +297,10 @@ export const noteIndex = pgTable("note_index", {
   modifiedAt: big("modified_at").notNull(),
   indexedAt: big("indexed_at").notNull(),
   starred: boolean("starred").notNull().default(false),
-});
+}, (t) => [
+  index("idx_note_index_modified").on(t.modifiedAt.desc()),
+  index("idx_note_index_folder").on(t.folder),
+]);
 export type NoteIndex = typeof noteIndex.$inferSelect;
 export type NewNoteIndex = typeof noteIndex.$inferInsert;
 
@@ -271,7 +312,9 @@ export const noteVersions = pgTable("note_versions", {
   savedBy: text("saved_by"),
   reason: text("reason"),
   bytes: big("bytes"),
-});
+}, (t) => [
+  index("idx_note_versions_path_saved").on(t.path, t.savedAt.desc()),
+]);
 export type NoteVersion = typeof noteVersions.$inferSelect;
 export type NewNoteVersion = typeof noteVersions.$inferInsert;
 
@@ -292,7 +335,9 @@ export const aiReviewFeedback = pgTable("ai_review_feedback", {
   aiOcrWrong: text("ai_ocr_wrong"),
   videoTimeMs: integer("video_time_ms"),
   createdAt: ts("created_at").notNull().$defaultFn(() => new Date()),
-});
+}, (t) => [
+  index("idx_ai_feedback_comment").on(t.commentId),
+]);
 export type AiReviewFeedback = typeof aiReviewFeedback.$inferSelect;
 export type NewAiReviewFeedback = typeof aiReviewFeedback.$inferInsert;
 
