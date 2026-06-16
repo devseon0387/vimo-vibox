@@ -84,14 +84,22 @@ export async function POST(
 
   let added = 0;
   for (const p of toAdd) {
-    await db.insert(clientVideos).values({
-      id: randomUUID(),
-      clientId: id,
-      filePath: p,
-      addedBy: session.sub,
-      status: status as "draft" | "sent" | "approved" | "archived",
-      displayOrder: 0,
-    });
+    // Phase 1: UNIQUE(client_id, file_path) 도입 → 동시요청 race 시 위 존재검사를 둘 다 통과해
+    // 한쪽이 unique 위반으로 throw 할 수 있다. onConflictDoNothing 으로 멱등하게 흡수(추가형·안전).
+    // 마이그 미적용 상태(유니크 인덱스 없음)에서도 onConflict 는 no-op 으로 동작해 기존 흐름 보존.
+    await db
+      .insert(clientVideos)
+      .values({
+        id: randomUUID(),
+        clientId: id,
+        filePath: p,
+        addedBy: session.sub,
+        status: status as "draft" | "sent" | "approved" | "archived",
+        displayOrder: 0,
+      })
+      .onConflictDoNothing({
+        target: [clientVideos.clientId, clientVideos.filePath],
+      });
     added++;
   }
   return NextResponse.json({

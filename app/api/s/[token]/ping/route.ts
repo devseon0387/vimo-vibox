@@ -3,7 +3,7 @@ import { eq, and, sql } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db/client";
-import { shareLinks, shareViews } from "@/lib/db/schema";
+import { clientVideos, shareLinks, shareViews } from "@/lib/db/schema";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -109,6 +109,24 @@ export async function POST(
     return NextResponse.json({ ok: true, throttled: true });
   }
 
+  // Phase 1 per-client 컨텍스트 (best-effort, nullable). 파일이 정확히 한 클라에만
+  // 등록돼 있으면 그 클라로 귀속. 시청기록 격리는 이미 share_token 단위라 NULL 이어도 안전.
+  let ctxClientId: string | null = null;
+  let ctxShareClientId: string | null = null;
+  try {
+    const cvs = await db
+      .select({ id: clientVideos.id, clientId: clientVideos.clientId })
+      .from(clientVideos)
+      .where(eq(clientVideos.filePath, filePath))
+      .limit(2);
+    if (cvs.length === 1) {
+      ctxClientId = cvs[0].clientId;
+      ctxShareClientId = cvs[0].id;
+    }
+  } catch {
+    /* NULL 유지 */
+  }
+
   // Atomic upsert via UNIQUE INDEX (token, visitor, file_path) — race-safe
   await db
     .insert(shareViews)
@@ -125,6 +143,8 @@ export async function POST(
       totalWatchSec: watchedDeltaSec,
       durationSec,
       completed: durationSec ? positionSec >= durationSec * 0.95 : false,
+      clientId: ctxClientId,
+      shareClientId: ctxShareClientId,
     })
     .onConflictDoUpdate({
       target: [shareViews.shareToken, shareViews.visitorId, shareViews.filePath],

@@ -69,6 +69,12 @@ export const comments = pgTable("comments", {
   resolvedBy: text("resolved_by"),
   guestName: text("guest_name"),
   shareToken: text("share_token"),
+  // Phase 1 per-client 격리 키 (nullable·추가형). 한 파일을 여러 클라(공유 링크)에 공유해도
+  // A는 B의 코멘트를 못 보게 하는 스코프. NULL = 레거시/내부 코멘트(기존 file_path 단독 동작 보존).
+  //   clientId      : 이 코멘트가 속한 클라(있으면). share_links→client 매핑은 Phase 1.5에서 채움.
+  //   shareClientId : client_videos.id (특정 클라+파일 조합). 가장 정밀한 격리 키.
+  clientId: text("client_id"),
+  shareClientId: text("share_client_id"),
   visibility: text("visibility", { enum: ["internal", "client"] }).notNull().default("internal"),
   moderatedBody: text("moderated_body"),
   status: text("status", { enum: ["approved", "pending"] }).notNull().default("approved"),
@@ -81,6 +87,9 @@ export const comments = pgTable("comments", {
   index("idx_comments_kind").on(t.kind),
   index("idx_comments_status").on(t.status),
   index("idx_comments_visibility").on(t.visibility),
+  // Phase 1: per-client 코멘트 조회용 (file_path + client 컨텍스트). NULL 많은 컬럼이라 부분 인덱스 아님.
+  index("idx_comments_client").on(t.clientId),
+  index("idx_comments_share_client").on(t.shareClientId),
 ]);
 
 export const commentModerations = pgTable("comment_moderations", {
@@ -260,6 +269,11 @@ export const shareViews = pgTable(
     totalWatchSec: real("total_watch_sec").notNull().default(0),
     durationSec: real("duration_sec"),
     completed: boolean("completed").notNull().default(false),
+    // Phase 1 per-client 격리 키 (nullable·추가형). 시청기록도 클라별로 분리하기 위한 컨텍스트.
+    // 기존 격리는 share_token 단위(이미 링크별 분리)지만, 한 클라에 여러 링크가 묶일 때를 대비해
+    // client 컨텍스트를 명시 저장. NULL = 레거시(기존 token+visitor+path 동작 그대로).
+    clientId: text("client_id"),
+    shareClientId: text("share_client_id"),
   },
   // ping/route.ts 의 onConflictDoUpdate(target = token+visitor+path)가 의존하는 유니크 인덱스.
   // SQLite 시절 migrate.sql 에만 있고 PG schema 엔 누락 → PG 이전 후 share_view 업서트가
@@ -272,6 +286,7 @@ export const shareViews = pgTable(
     ),
     index("idx_share_views_token_path").on(t.shareToken, t.filePath),
     index("idx_share_views_last_event").on(t.lastEventAt),
+    index("idx_share_views_client").on(t.clientId),
   ],
 );
 export type ShareView = typeof shareViews.$inferSelect;

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { and, asc, eq, ne, or } from "drizzle-orm";
+import { and, asc, eq, isNull, ne, or } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db/client";
-import { comments, shareLinks } from "@/lib/db/schema";
+import { comments, clientVideos, shareLinks } from "@/lib/db/schema";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { resolveAllowedPaths } from "@/lib/share/paths";
 
@@ -59,6 +59,21 @@ export async function GET(
   //  - link.includeFeedback 이면: 팀(게스트 아닌) 피드백도 함께 — 코멘트 visibility는 안 바꾸고
   //    이 링크에서만 드러냄(비파괴적·되돌릴 수 있음). "내가 남긴 피드백도 함께 보이기" 옵션의 핵심.
   // 순화본 대신 원문 body 사용 — 클라이언트는 본인이 쓴 글 그대로 보여야 함
+  //
+  // ── Phase 1 per-client 격리 ──
+  // 같은 파일을 클라 A·B 두 공유 링크로 보냈을 때, A는 B 게스트의 코멘트를 못 봐야 한다.
+  // 게스트 코멘트는 이미 shareToken 으로 분리되어 안전(아래 guest 조건).
+  // 누출 지점은 visibility='client' 코멘트: file_path 단독이면 두 링크 모두에서 보임.
+  // → 이 토큰을 통해 들어온(=share_token 일치) 'client' 코멘트 + 컨텍스트 없는 레거시('client'이면서
+  //   share_token NULL = 마이그 이전 데이터·내부에서 수동 공개 전환)만 노출하도록 좁힌다.
+  //   includeFeedback 의 팀 코멘트는 작성자가 매니저(특정 클라 소속 아님)라 file_path 로 유지.
+  const clientVisible = and(
+    eq(comments.visibility, "client"),
+    or(
+      eq(comments.shareToken, token),
+      isNull(comments.shareToken), // 레거시/내부 공개 전환분 — 기존 동작 보존
+    ),
+  );
   const rows = await db
     .select()
     .from(comments)
@@ -66,7 +81,7 @@ export async function GET(
       and(
         eq(comments.filePath, filePath),
         or(
-          eq(comments.visibility, "client"),
+          clientVisible,
           and(
             eq(comments.authorId, "guest"),
             eq(comments.shareToken, token),
@@ -160,6 +175,28 @@ export async function POST(
     return NextResponse.json({ error: "invalid" }, { status: 400 });
   }
 
+  // Phase 1 per-client 컨텍스트 채우기 (best-effort, nullable).
+  // share_links 에는 client_id 가 없으므로(현재 클라 포털=토큰 단독), 파일이 client_videos 에
+  // "정확히 한 클라"에만 등록돼 있으면 그 클라로 귀속한다. 여러 클라에 공유된 파일이면
+  // 토큰만으로 클라를 단정할 수 없어 NULL 로 둔다(게스트 코멘트는 share_token 으로 이미 격리됨).
+  // TODO(Phase 1.5): share_links 에 client_id(또는 client_video_id) 컬럼을 추가하고
+  //   POST /api/shares 에서 채운 뒤, 여기서 link.clientId 를 우선 사용하도록 교체.
+  let ctxClientId: string | null = null;
+  let ctxShareClientId: string | null = null;
+  try {
+    const cvs = await db
+      .select({ id: clientVideos.id, clientId: clientVideos.clientId })
+      .from(clientVideos)
+      .where(eq(clientVideos.filePath, filePath))
+      .limit(2);
+    if (cvs.length === 1) {
+      ctxClientId = cvs[0].clientId;
+      ctxShareClientId = cvs[0].id;
+    }
+  } catch {
+    /* client_videos 컨텍스트 조회 실패 시 NULL 유지 (격리는 share_token 으로 보장) */
+  }
+
   await db.insert(comments).values({
     id: randomUUID(),
     filePath,
@@ -167,6 +204,8 @@ export async function POST(
     authorName: guestName,
     guestName,
     shareToken: token,
+    clientId: ctxClientId,
+    shareClientId: ctxShareClientId,
     videoTimeMs,
     category: "etc",
     autoCategory: "etc",
