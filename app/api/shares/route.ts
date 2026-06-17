@@ -6,15 +6,20 @@ import { shareLinks } from "@/lib/db/schema";
 import { getCurrentSession } from "@/lib/auth/session";
 import { canAccessFile } from "@/lib/auth/access";
 import { statPath } from "@/lib/fs/storage";
+import { isPathInShare } from "@/lib/share/paths";
 
 function generateToken() {
   return randomBytes(16).toString("base64url");
 }
 
 // GET /api/shares → 내가 만든 공유 링크 목록
-export async function GET() {
+// GET /api/shares?path=/foo.mp4 → 그 파일을 포함하는 내 링크만 (프론트 picker 용).
+//   folder 공유는 filePath 가 폴더 루트라 단순 paths.includes 로는 못 잡으므로 isPathInShare 로 필터.
+export async function GET(req: NextRequest) {
   const session = await getCurrentSession();
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const pathFilter = new URL(req.url).searchParams.get("path");
 
   const rows = await db
     .select()
@@ -22,8 +27,12 @@ export async function GET() {
     .where(eq(shareLinks.createdBy, session.sub))
     .orderBy(desc(shareLinks.createdAt));
 
+  const filtered = pathFilter
+    ? rows.filter((r) => isPathInShare(r, pathFilter))
+    : rows;
+
   return NextResponse.json({
-    shares: rows.map((r) => ({
+    shares: filtered.map((r) => ({
       id: r.id,
       token: r.token,
       filePath: r.filePath,

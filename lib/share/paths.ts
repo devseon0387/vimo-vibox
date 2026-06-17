@@ -27,14 +27,17 @@ export function resolveAllowedPaths(link: ShareLink): string[] {
  * - file 공유: 정적 paths 목록에 정확히 포함돼야.
  */
 export function isPathInShare(link: ShareLink, requestedPath: string): boolean {
+  // 경로 비교는 유니코드 정규화(NFC) 후 수행. macOS 파일명은 NFD 인데 일부 저장 경로는
+  // NFC(예: comments.filePath 는 POST 시 NFC 정규화)라, 정규화 없이 비교하면 한글 파일명에서
+  // 동일 파일인데도 불일치(거짓 거부)가 난다. 양쪽을 NFC 로 맞추면 동치 경로만 같아져 경계가
+  // 약해지지 않는다.
+  const req = requestedPath.normalize("NFC");
   if (link.kind === "folder") {
-    const root = link.filePath.replace(/\/+$/, "");
-    const norm = path.posix.normalize(
-      requestedPath.startsWith("/") ? requestedPath : "/" + requestedPath,
-    );
+    const root = link.filePath.replace(/\/+$/, "").normalize("NFC");
+    const norm = path.posix.normalize(req.startsWith("/") ? req : "/" + req);
     return norm === root || norm.startsWith(root + "/");
   }
-  return resolveAllowedPaths(link).includes(requestedPath);
+  return resolveAllowedPaths(link).some((p) => p.normalize("NFC") === req);
 }
 
 /** folder 공유의 루트 경로 (trailing slash 제거). file 공유면 null. */

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronUp, ChevronDown } from "lucide-react";
 import { useConfirm } from "./ConfirmDialog";
 import { useToast } from "./Toast";
+import { ShareDialog } from "./ShareDialog";
 import {
   ensureDirectProbe,
   directMediaUrl,
@@ -62,6 +63,7 @@ import {
   User,
   Eye,
   AlertCircle,
+  Link as LinkIcon,
 } from "lucide-react";
 
 type CommentRow = {
@@ -274,6 +276,18 @@ export function FeedbackModal({
 
   const filePath = entry?.path ?? null;
   const router = useRouter();
+
+  // Phase 1.5 (Option A) — client 공개 시 "어떤 공유 링크에 게시할지" 선택.
+  // shareDialogOpen: 후보 링크가 0개일 때 ShareDialog 를 띄워 새 링크를 만들게 함.
+  // sharePicker: 후보 링크가 2개 이상일 때 작은 선택 팝오버.
+  type ShareOption = { token: string; title: string | null; filePath: string };
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [sharePicker, setSharePicker] = useState<{
+    options: ShareOption[];
+    onPick: (token: string) => void;
+  } | null>(null);
+  // ShareDialog 로 새 링크를 만든 뒤(=후보 0개 흐름) 그 토큰으로 이어서 처리할 콜백.
+  const pendingShareActionRef = useRef<((token: string) => void) | null>(null);
 
   // 형제 영상 키 단축키: J/↓ 다음, K/↑ 이전 (입력 필드 외에서)
   useEffect(() => {
@@ -757,11 +771,87 @@ export function FeedbackModal({
     }
   };
 
+  // 이 파일을 포함하는 "내가 만든" 공유 링크를 가져온다 (백엔드 ?path= 필터 = isPathInShare).
+  const fetchShareOptions = useCallback(async (): Promise<ShareOption[]> => {
+    if (!filePath) return [];
+    const res = await fetch(`/api/shares?path=${encodeURIComponent(filePath)}`);
+    if (!res.ok) return [];
+    const data = await res.json().catch(() => null);
+    const shares = Array.isArray(data?.shares) ? data.shares : [];
+    return shares.map(
+      (s: { token: string; title: string | null; filePath: string }) => ({
+        token: s.token,
+        title: s.title ?? null,
+        filePath: s.filePath,
+      }),
+    );
+  }, [filePath]);
+
+  // client 공개 시 게시할 공유 링크 토큰을 결정한다.
+  //  0개 → ShareDialog 열어 새 링크 생성(생성 후 그 토큰으로 콜백 실행), null 반환(흐름 중단)
+  //  1개 → 자동 선택
+  //  2개+ → 선택 팝오버, null 반환(선택 시 onPicked 콜백 실행)
+  // 결정된 토큰이 즉시 있으면 그 토큰을 반환, 비동기(대화상자/팝오버) 흐름이면 null 반환.
+  const resolveShareToken = useCallback(
+    async (onPicked: (token: string) => void): Promise<void> => {
+      const options = await fetchShareOptions();
+      if (options.length === 0) {
+        // 후보 없음 → 새 링크를 만들도록 안내. 생성 완료 시 그 토큰으로 이어서 처리.
+        pendingShareActionRef.current = onPicked;
+        setShareDialogOpen(true);
+        toastError("이 파일의 공유 링크가 없어요. 먼저 링크를 만들어 주세요.");
+        return;
+      }
+      if (options.length === 1) {
+        onPicked(options[0].token);
+        return;
+      }
+      // 2개+ → 선택 팝오버
+      setSharePicker({
+        options,
+        onPick: (token) => {
+          setSharePicker(null);
+          onPicked(token);
+        },
+      });
+    },
+    [fetchShareOptions, toastError],
+  );
+
+  // 단건 client 공개 PATCH 실행 (토큰 동봉).
+  const patchVisibilityClient = useCallback(
+    async (id: string, shareToken: string) => {
+      const res = await fetch(`/api/comments/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ visibility: "client", shareToken }),
+      });
+      if (res.ok) {
+        await fetchComments();
+      } else {
+        const body = await res.json().catch(() => ({}));
+        toastError("변경 실패: " + (body.error ?? res.statusText));
+      }
+    },
+    // fetchComments 는 아래에서 선언되지만 useCallback deps 에 넣지 않아도 클로저로 최신 참조됨.
+    // (기존 핸들러들도 동일 패턴 — fetchComments 를 deps 없이 호출)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [toastError],
+  );
+
   const handleToggleVisibility = async (
     id: string,
     current: "internal" | "client",
   ) => {
     const next = current === "client" ? "internal" : "client";
+    if (next === "client") {
+      // 어떤 공유 링크에 게시할지 결정 후 그 토큰으로 PATCH.
+      await resolveShareToken((token) => {
+        void patchVisibilityClient(id, token);
+      });
+      return;
+    }
+    // 'internal' 로 되돌리기 — 기존 동작 그대로 (shareToken 미전달, 무회귀).
     const res = await fetch(`/api/comments/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -774,6 +864,31 @@ export function FeedbackModal({
       toastError("변경 실패: " + (body.error ?? res.statusText));
     }
   };
+
+  // 일괄 client 공개 — 대상 링크 1개를 먼저 정한 뒤 모든 댓글을 그 토큰으로 공개.
+  const handleBulkPublishClient = useCallback(
+    async (ids: string[]) => {
+      if (ids.length === 0) return;
+      await resolveShareToken(async (token) => {
+        const results = await Promise.all(
+          ids.map((cid) =>
+            fetch(`/api/comments/${cid}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ visibility: "client", shareToken: token }),
+            }),
+          ),
+        );
+        const okCount = results.filter((r) => r.ok).length;
+        if (okCount > 0) success(`${okCount}건 클라에게 공개`);
+        if (okCount < ids.length)
+          toastError(`${ids.length - okCount}건 공개 실패`);
+        await fetchComments();
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [resolveShareToken, success, toastError],
+  );
 
   // 순화 편집 대상 (모달 열림)
   const [moderateTarget, setModerateTarget] = useState<CommentRow | null>(null);
@@ -1596,24 +1711,16 @@ export function FeedbackModal({
                             이 아직 클라에게 비공개
                           </span>
                           <button
-                            onClick={async () => {
+                            onClick={() => {
                               const targets = items.filter(
                                 (c) =>
                                   c.parentId === null &&
                                   c.authorId !== "guest" &&
                                   (c.visibility ?? "internal") === "internal",
                               );
-                              await Promise.all(
-                                targets.map((c) =>
-                                  fetch(`/api/comments/${c.id}`, {
-                                    method: "PATCH",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ visibility: "client" }),
-                                  }),
-                                ),
+                              void handleBulkPublishClient(
+                                targets.map((c) => c.id),
                               );
-                              success(`${targets.length}건 클라에게 공개`);
-                              await fetchComments();
                             }}
                             className="inline-flex items-center gap-1 text-[11px] font-bold bg-sky-600 text-white hover:bg-sky-700 px-2 py-0.5 rounded"
                           >
@@ -1682,6 +1789,65 @@ export function FeedbackModal({
           onClose={() => setModerateTarget(null)}
           onSave={(body) => handleSaveModeration(moderateTarget.id, body)}
         />
+      )}
+
+      {/* Phase 1.5 — 후보 링크 0개일 때: 새 공유 링크를 만들고, 생성 토큰으로 이어서 client 공개 */}
+      <ShareDialog
+        entry={shareDialogOpen ? entry : null}
+        open={shareDialogOpen}
+        onClose={() => {
+          setShareDialogOpen(false);
+          pendingShareActionRef.current = null;
+        }}
+        onCreated={(token) => {
+          const action = pendingShareActionRef.current;
+          pendingShareActionRef.current = null;
+          setShareDialogOpen(false);
+          action?.(token);
+        }}
+      />
+
+      {/* Phase 1.5 — 후보 링크 2개 이상일 때: 게시할 링크 선택 팝오버 */}
+      {sharePicker && (
+        <div
+          className="fixed inset-0 z-[60] grid place-items-center bg-black/40 p-4"
+          onClick={() => setSharePicker(null)}
+        >
+          <div
+            className="bg-white rounded-lg w-full max-w-sm overflow-hidden shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+              <h3 className="text-[13px] font-bold text-slate-900">
+                어떤 공유 링크에 공개할까요?
+              </h3>
+              <button
+                onClick={() => setSharePicker(null)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X size={16} strokeWidth={2.2} />
+              </button>
+            </div>
+            <div className="p-2 max-h-72 overflow-y-auto">
+              {sharePicker.options.map((o) => (
+                <button
+                  key={o.token}
+                  onClick={() => sharePicker.onPick(o.token)}
+                  className="w-full flex items-center gap-2 text-left px-3 py-2.5 rounded-md hover:bg-surface transition-colors"
+                >
+                  <LinkIcon
+                    size={14}
+                    strokeWidth={2}
+                    className="shrink-0 text-text-muted"
+                  />
+                  <span className="text-[13px] text-text truncate">
+                    {o.title ?? o.filePath.split("/").pop() ?? o.filePath}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
 
       {confirmDialog}

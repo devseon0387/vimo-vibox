@@ -12,10 +12,13 @@ export function ShareDialog({
   entry,
   open,
   onClose,
+  onCreated,
 }: {
   entry: FileEntry | null;
   open: boolean;
   onClose: () => void;
+  /** 링크 생성 직후 토큰 회수용 (선택). 기존 호출자는 미전달 → 무회귀. */
+  onCreated?: (token: string) => void;
 }) {
   const [step, setStep] = useState<Step>("configure");
   const [mode, setMode] = useState<Mode>("preview");
@@ -60,6 +63,7 @@ export function ShareDialog({
       }
       setToken(body.token);
       setStep("ready");
+      if (typeof body.token === "string") onCreated?.(body.token);
     } finally {
       setCreating(false);
     }
