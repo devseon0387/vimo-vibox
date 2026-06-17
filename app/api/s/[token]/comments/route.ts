@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { and, asc, eq, isNull, ne, or } from "drizzle-orm";
+import { and, asc, eq, ne, or } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db/client";
 import { comments, clientVideos, shareLinks } from "@/lib/db/schema";
@@ -54,25 +54,35 @@ export async function GET(
   const filePath = p && allowedPaths.includes(p) ? p : link.filePath;
 
   // 클라이언트 뷰에 보일 댓글:
-  //  - visibility='client' (스태프가 공개로 전환한 것)
+  //  - visibility='client' 이면서 "이 공유 링크(토큰)에 속한" 것만 (share_token = 현재 token)
   //  - 이 공유 링크로 남긴 게스트 댓글 (shareToken 매칭)
   //  - link.includeFeedback 이면: 팀(게스트 아닌) 피드백도 함께 — 코멘트 visibility는 안 바꾸고
   //    이 링크에서만 드러냄(비파괴적·되돌릴 수 있음). "내가 남긴 피드백도 함께 보이기" 옵션의 핵심.
   // 순화본 대신 원문 body 사용 — 클라이언트는 본인이 쓴 글 그대로 보여야 함
   //
-  // ── Phase 1 per-client 격리 ──
-  // 같은 파일을 클라 A·B 두 공유 링크로 보냈을 때, A는 B 게스트의 코멘트를 못 봐야 한다.
+  // ── Phase 1 per-link 격리 (결정#1: "가린다") ──
+  // 격리 단위 = 공유 링크(토큰). 같은 파일을 클라 A·B 두 공유 링크로 보냈을 때,
+  // A 링크 뷰에는 A 토큰에 속한 코멘트만 보여야 한다.
   // 게스트 코멘트는 이미 shareToken 으로 분리되어 안전(아래 guest 조건).
-  // 누출 지점은 visibility='client' 코멘트: file_path 단독이면 두 링크 모두에서 보임.
-  // → 이 토큰을 통해 들어온(=share_token 일치) 'client' 코멘트 + 컨텍스트 없는 레거시('client'이면서
-  //   share_token NULL = 마이그 이전 데이터·내부에서 수동 공개 전환)만 노출하도록 좁힌다.
-  //   includeFeedback 의 팀 코멘트는 작성자가 매니저(특정 클라 소속 아님)라 file_path 로 유지.
+  // 누출 지점은 visibility='client' 코멘트였다: 기존엔 file_path 단독 + share_token NULL 브로드캐스트
+  // 분기가 있어, 토큰 없는(또는 다른 토큰의) client 코멘트가 file_path 만으로 모든 링크에 노출됐다.
+  // → 그 브로드캐스트 분기(isNull(shareToken) / file_path 단독)를 제거하고,
+  //   client 코멘트는 share_token = 현재 token 일치만 노출하도록 좁혀 누수를 닫는다.
+  //
+  // ⚠️ FLAG (manager-reply): 현재 코드에 "매니저가 특정 공유 링크 맥락에서 client 코멘트를 다는"
+  //   경로가 없다. visibility='client' 로 만드는 유일한 경로는 PATCH /api/comments/[id] 인데,
+  //   거기서는 visibility 만 바꾸고 share_token 을 붙이지 않는다(스태프 작성 코멘트의 share_token 은
+  //   POST /api/comments 에서 설정되지 않아 NULL 로 남는다). 따라서 이 스코핑 적용 후,
+  //   매니저가 공개로 전환한(=토큰 없는) client 코멘트는 어느 링크 뷰에도 보이지 않게 된다.
+  //   → 별도 보완 필요: 매니저가 "링크 맥락"에서 코멘트를 달거나 공개 전환 시 share_token 을
+  //     채울 수 있는 UI/흐름. 자세한 TODO 는 아래 참고. (게스트→client 승격분은 원래 토큰이
+  //     붙어 있어 정상 노출되며, 내부/팀 뷰 /api/comments 는 영향 없음.)
+  // TODO(Phase 1.5): visibility='client' 전환 경로(PATCH /api/comments/[id])나
+  //   매니저 공유링크 코멘트 작성 흐름에서 대상 share_token(또는 client 컨텍스트)을 받아
+  //   comments.share_token 을 채운다. 그 전까지 매니저 client 코멘트는 클라에게 노출되지 않음.
   const clientVisible = and(
     eq(comments.visibility, "client"),
-    or(
-      eq(comments.shareToken, token),
-      isNull(comments.shareToken), // 레거시/내부 공개 전환분 — 기존 동작 보존
-    ),
+    eq(comments.shareToken, token), // 누수 차단: 이 토큰에 속한 client 코멘트만
   );
   const rows = await db
     .select()
