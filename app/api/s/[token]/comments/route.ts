@@ -96,7 +96,22 @@ export async function GET(
             eq(comments.authorId, "guest"),
             eq(comments.shareToken, token),
           ),
-          ...(link.includeFeedback ? [ne(comments.authorId, "guest")] : []),
+          // includeFeedback: 클라에게 팀 피드백도 보여주는 옵션. 단, visibility='internal'
+          // 스태프 노트가 새지 않도록 visibility='client'(클라 공개)인 팀 코멘트만 노출한다.
+          // (게스트 아님 AND 클라 공개) — includeFeedback 의 의도는 visibility='client' 로 보존.
+          // TODO(Phase 1.5): 토큰 단위 격리 일관성상 이 분기도 share_token=token 으로 좁혀야 하나,
+          //   스태프 작성 팀 코멘트에는 아직 share_token 이 채워지지 않는다(매니저-코멘트-토큰 갭,
+          //   POST /api/comments 가 share_token 미설정). 지금 token 까지 강제하면 includeFeedback 이
+          //   아무것도 못 보여주므로, 이번엔 internal 누수 차단(visibility=client)만 적용한다.
+          //   share_token 채우기 흐름이 생기면 여기에 eq(comments.shareToken, token) 을 AND 로 추가.
+          ...(link.includeFeedback
+            ? [
+                and(
+                  ne(comments.authorId, "guest"),
+                  eq(comments.visibility, "client"),
+                ),
+              ]
+            : []),
         ),
       ),
     )
