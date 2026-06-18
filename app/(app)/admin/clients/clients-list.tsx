@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Users, Mail, ChevronRight, Loader2, Building2 } from "lucide-react";
+import { Plus, Users, Mail, ChevronRight, Loader2 } from "lucide-react";
 import { useToast } from "@/components/Toast";
-import { ErpImportDialog } from "./erp-import-dialog";
 
 type ClientRow = {
   id: string;
@@ -23,7 +22,6 @@ export function ClientsList() {
   const toast = useToast();
   const [items, setItems] = useState<ClientRow[] | null>(null);
   const [showAdd, setShowAdd] = useState(false);
-  const [showErpImport, setShowErpImport] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [creating, setCreating] = useState(false);
@@ -87,13 +85,6 @@ export function ClientsList() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => setShowErpImport(true)}
-            className="bg-white border border-border hover:border-border-hover text-text-muted hover:text-text px-3 py-2 rounded-md text-[13px] font-medium inline-flex items-center gap-1.5"
-          >
-            <Building2 size={13} strokeWidth={2.2} />
-            비모 ERP 에서 가져오기
-          </button>
-          <button
             onClick={() => setShowAdd((v) => !v)}
             className="bg-text text-white hover:bg-[#333] px-3.5 py-2 rounded-md text-[13px] font-semibold inline-flex items-center gap-1.5"
           >
@@ -101,12 +92,6 @@ export function ClientsList() {
           </button>
         </div>
       </div>
-
-      <ErpImportDialog
-        open={showErpImport}
-        onClose={() => setShowErpImport(false)}
-        onImported={() => load()}
-      />
 
       {showAdd && (
         <div className="bg-white border border-border rounded-lg p-4 mb-5 space-y-3">
