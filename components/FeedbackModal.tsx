@@ -1150,7 +1150,7 @@ export function FeedbackModal({
         <div className="flex flex-col md:flex-row flex-1 min-h-0">
           {/* 좌: 비디오 + 타임라인 (모바일에선 상단 고정, 나머지 공간은 댓글) */}
           <div className="shrink-0 md:shrink md:flex-1 min-w-0 flex flex-col bg-slate-100">
-            <div className="flex-1 md:flex-[5] min-h-0 flex items-start justify-center bg-slate-100 overflow-hidden">
+            <div className="flex-1 min-h-0 flex items-center justify-center bg-slate-100 overflow-hidden">
               <div
                 ref={videoWrapRef}
                 className={`relative overflow-hidden bg-black max-w-full max-h-full ${
@@ -1432,12 +1432,10 @@ export function FeedbackModal({
                 }}
               />
             </div>
-            {/* 하단 여백 (데스크톱에서 영상+플레이바를 위로 올림) */}
-            <div className="hidden md:block md:flex-[2] md:min-h-0" />
           </div>
 
           {/* 우: 댓글 패널 (B안 카드 스타일) */}
-          <div className="flex-1 md:flex-none w-full md:w-[380px] border-t md:border-t-0 md:border-l border-slate-200 flex flex-col bg-slate-50 min-h-0">
+          <div className="flex-1 md:flex-none w-full md:w-[360px] border-t md:border-t-0 md:border-l border-slate-200 flex flex-col bg-slate-50 min-h-0">
             <div className="px-4 pt-4 pb-3 bg-white border-b border-slate-200">
               <div className="flex items-center gap-2 mb-2.5">
                 <h3 className="text-[14px] font-semibold tracking-tight">댓글</h3>

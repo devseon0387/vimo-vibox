@@ -2,8 +2,7 @@ import { getCurrentSession } from "@/lib/auth/session";
 import { Sidebar } from "@/components/Sidebar";
 import { AppShell } from "@/components/AppShell";
 import { PartnerSidebar } from "@/components/PartnerSidebar";
-import { PartnerContextPanel } from "@/components/PartnerContextPanel";
-import { getPersonalSummary, getPartnerPanelData } from "@/lib/dashboard/queries";
+import { getPersonalSummary } from "@/lib/dashboard/queries";
 import { UploadProvider } from "@/lib/upload-store";
 import { GlobalUploadDock } from "@/components/GlobalUploadDock";
 
@@ -20,25 +19,20 @@ export default async function AppLayout({
   // - 매니저(admin/member)·일반: 좌측 사이드바(Rail + 컨텍스트 메뉴) 유지.
   const session = await getCurrentSession();
   const isPartner = session?.role === "partner";
-  const [partnerStorage, partnerPanel] =
-    isPartner && session
-      ? await Promise.all([getPersonalSummary(session.sub), getPartnerPanelData(session.sub)])
-      : [null, null];
+  const partnerStorage =
+    isPartner && session ? await getPersonalSummary(session.sub) : null;
 
   return (
     <UploadProvider>
       {isPartner ? (
         <AppShell
           sidebar={
-            <div className="flex h-screen">
-              <PartnerSidebar
-                userName={session?.name ?? session?.username ?? ""}
-                initials={(session?.name ?? session?.username ?? "?").slice(0, 2).toUpperCase()}
-                usedBytes={partnerStorage?.usedBytes ?? 0}
-                quotaBytes={partnerStorage?.quotaBytes ?? 0}
-              />
-              {partnerPanel && <PartnerContextPanel data={partnerPanel} />}
-            </div>
+            <PartnerSidebar
+              userName={session?.name ?? session?.username ?? ""}
+              initials={(session?.name ?? session?.username ?? "?").slice(0, 2).toUpperCase()}
+              usedBytes={partnerStorage?.usedBytes ?? 0}
+              quotaBytes={partnerStorage?.quotaBytes ?? 0}
+            />
           }
         >
           {children}
