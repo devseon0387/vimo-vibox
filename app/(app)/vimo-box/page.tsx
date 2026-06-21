@@ -8,6 +8,7 @@ import {
   type FileEntry,
 } from "@/lib/fs/storage";
 import { getCurrentSession } from "@/lib/auth/session";
+import { canAccessFile } from "@/lib/auth/access";
 import { FeedbackModal } from "@/components/FeedbackModal";
 import { db } from "@/lib/db/client";
 import { fileUploads } from "@/lib/db/schema";
@@ -61,10 +62,16 @@ export default async function FeedbackPage({
 
   const session = await getCurrentSession();
   if (!session) notFound();
+  // 권한: 개인 경로(/personal/{uid})는 소유자/admin만 — RSC 레벨에서도 막아야 URL 직접조작 차단
+  if (!(await canAccessFile(session, filePath))) notFound();
 
   const parentPath = path.posix.dirname(filePath);
-  const backHref =
-    parentPath === "/" ? "/" : `/?path=${encodeURIComponent(parentPath)}`;
+  // 개인 영상은 My Box로 돌아가기 (홈은 path 파라미터를 안 받음)
+  const backHref = filePath.startsWith("/personal/")
+    ? "/my/box"
+    : parentPath === "/"
+      ? "/"
+      : `/?path=${encodeURIComponent(parentPath)}`;
 
   // 형제 영상 prev/next — J/K 키 단축키 네비용
   let prevHref: string | undefined;

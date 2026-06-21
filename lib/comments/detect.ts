@@ -1,5 +1,5 @@
 export type Category = "txt" | "cut" | "col" | "aud" | "mtn" | "etc";
-export type Kind = "feedback" | "praise";
+export type Kind = "feedback" | "praise" | "approve";
 
 const KEYWORDS: Record<Exclude<Category, "etc">, string[]> = {
   txt: ["자막", "오타", "텍스트", "철자", "줄바꿈", "글자", "타이포", "맞춤법", "문구"],

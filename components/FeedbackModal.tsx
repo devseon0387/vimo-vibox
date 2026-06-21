@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronUp, ChevronDown, ChevronRight } from "lucide-react";
 import { useConfirm } from "./ConfirmDialog";
 import { useToast } from "./Toast";
 import { ShareDialog } from "./ShareDialog";
@@ -64,6 +64,12 @@ import {
   Eye,
   AlertCircle,
   Link as LinkIcon,
+  CheckCircle2,
+  MessageCircle,
+  Upload,
+  Settings2,
+  PanelRightClose,
+  PanelRightOpen,
 } from "lucide-react";
 
 type CommentRow = {
@@ -249,6 +255,8 @@ export function FeedbackModal({
   const [currentTime, setCurrentTime] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
+  // 댓글 패널 접기/펼치기 (영상만 크게 보기)
+  const [panelVisible, setPanelVisible] = useState(true);
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [viewFilter, setViewFilter] = useState<ViewFilter>("all");
@@ -259,6 +267,8 @@ export function FeedbackModal({
     { left: string; top: string; flipUp?: boolean } | null
   >(null);
   const videoWrapRef = useRef<HTMLDivElement>(null);
+  // 영상 원본 비율 — Frame.io식: 16:9 고정 틀 없이 영상 비율 그대로 무대에 contain
+  const [videoAspect, setVideoAspect] = useState("16 / 9");
   const [seekingNow, setSeekingNow] = useState(false);
   const [hlsManifestUrl, setHlsManifestUrl] = useState<string | null>(null);
   const [hlsStatus, setHlsStatus] = useState<
@@ -271,6 +281,13 @@ export function FeedbackModal({
   const encodingFirstSampleRef = useRef<{ at: number; pct: number } | null>(
     null,
   );
+  // 화질: 저화질(HLS 변환본) ↔ 원본(원본 파일 직접 재생)
+  // (attachHls effect보다 앞에 선언해야 TDZ 없이 effect deps에서 참조 가능)
+  const [qualityMode, setQualityMode] = useState<"proxy" | "original">("proxy");
+  // 화질 전환 시 src/HLS가 바뀌어 video가 재로드되므로, 직전 위치·속도·재생상태를 보관했다 복원
+  const pendingRestoreRef = useRef<
+    { t: number; playing: boolean; rate: number } | null
+  >(null);
   const { confirm, dialog: confirmDialog } = useConfirm();
   const { success, error: toastError } = useToast();
 
@@ -413,9 +430,10 @@ export function FeedbackModal({
     };
   }, [filePath, shareContext]);
 
-  // hls.js 어태치 — manifestUrl 준비되면 vidRef에 붙임
+  // hls.js 어태치 — manifestUrl 준비되면 vidRef에 붙임 (원본 화질 모드면 미사용)
   useEffect(() => {
     if (!hlsManifestUrl) return;
+    if (qualityMode === "original") return; // 원본 모드: cleanup이 hls destroy → 원본 src 재생
     const v = vidRef.current;
     if (!v) return;
     let handle: { destroy: () => void } | null = null;
@@ -426,13 +444,54 @@ export function FeedbackModal({
     void (async () => {
       const { attachHls } = await import("@/lib/hls-client");
       if (cancelled) return;
-      handle = await attachHls(v, hlsManifestUrl, directManifest);
+      const h = await attachHls(v, hlsManifestUrl, directManifest);
+      // attach 진행 중 cleanup이 일어났으면(handle 미할당) 완성된 인스턴스를 즉시 파괴 — 누수 방지
+      if (cancelled) {
+        h?.destroy();
+        return;
+      }
+      handle = h;
     })();
     return () => {
       cancelled = true;
       handle?.destroy();
     };
-  }, [hlsManifestUrl]);
+  }, [hlsManifestUrl, qualityMode, shareContext, filePath]);
+
+  // 화질 전환 후 복원 — 새 소스가 재생 가능해지면(canplay/loadeddata) 위치·속도·재생상태 복원.
+  // onLoadedMetadata는 seekable 준비 전에 올 수 있어 여기서 처리하고, 이벤트가 끝내 안 오면
+  // watchdog으로 잔류 ref를 정리해 다음 전환이 오염되지 않게 한다.
+  useEffect(() => {
+    const restore = pendingRestoreRef.current;
+    if (!restore) return;
+    const v = vidRef.current;
+    if (!v) return;
+    let done = false;
+    const cleanup = () => {
+      v.removeEventListener("loadeddata", apply);
+      v.removeEventListener("canplay", apply);
+      clearTimeout(watchdog);
+    };
+    const apply = () => {
+      if (done) return;
+      done = true;
+      cleanup();
+      try {
+        if (v.duration > 0) v.currentTime = Math.min(restore.t, v.duration);
+        v.playbackRate = restore.rate;
+        if (restore.playing) v.play().catch(() => {});
+      } finally {
+        pendingRestoreRef.current = null;
+      }
+    };
+    const watchdog = setTimeout(() => {
+      cleanup();
+      pendingRestoreRef.current = null;
+    }, 8000);
+    v.addEventListener("loadeddata", apply);
+    v.addEventListener("canplay", apply);
+    return cleanup;
+  }, [qualityMode]);
 
   // 키보드 단축키: Space(재생), ←/→(±3s), Shift+←/→(±10s), J/L(-/+10s)
   useEffect(() => {
@@ -553,6 +612,21 @@ export function FeedbackModal({
     setPlaybackRate(rate);
   }, []);
 
+  // 화질 전환: 직전 위치·속도·재생상태를 pendingRestoreRef에 저장 후 모드 변경
+  const changeQuality = useCallback(
+    (mode: "proxy" | "original") => {
+      const v = vidRef.current;
+      if (!v || mode === qualityMode) return;
+      pendingRestoreRef.current = {
+        t: v.currentTime,
+        playing: !v.paused,
+        rate: v.playbackRate,
+      };
+      setQualityMode(mode);
+    },
+    [qualityMode],
+  );
+
   const topLevelItems = useMemo(
     () => items.filter((c) => !c.parentId),
     [items],
@@ -587,7 +661,8 @@ export function FeedbackModal({
   };
 
   const visibleItems = useMemo(() => {
-    let arr = topLevelItems;
+    // 승인(approve) 코멘트는 버전 상태 마커일 뿐 — 댓글 목록엔 표시하지 않음
+    let arr = topLevelItems.filter((c) => c.kind !== "approve");
     if (viewFilter !== "all") {
       arr = arr.filter((c) => c.kind === viewFilter);
     }
@@ -702,6 +777,36 @@ export function FeedbackModal({
   ).length;
   const praiseCount = topLevelItems.filter((c) => c.kind === "praise").length;
 
+  // ── 헤더(검수 결정) 파생값 ──
+  // 영상(버전) 승인 여부: 매니저가 kind="approve" 코멘트를 남기면 승인으로 간주
+  // (lib/dashboard/queries.ts 의 approved 판정과 동일한 신호)
+  const versionApproved = useMemo(
+    () => topLevelItems.some((c) => c.kind === "approve"),
+    [topLevelItems],
+  );
+  // 파일명에서 버전 핀(v3) 추출
+  const versionTag = useMemo(() => {
+    const m = entry?.name.match(/[_-]v(\d+)/i);
+    return m ? `v${m[1]}` : null;
+  }, [entry?.name]);
+  // 브레드크럼 표시명: 확장자·버전 꼬리 제거
+  const displayTitle = useMemo(() => {
+    if (!entry) return "";
+    return (
+      entry.name
+        .replace(/\.[^.]+$/, "")
+        .replace(/[_-]v\d+.*$/i, "")
+        .trim() || entry.name
+    );
+  }, [entry]);
+  // 브레드크럼 상위 폴더명 (클릭 시 파일 목록으로)
+  const parentName = useMemo(() => {
+    if (!entry) return "";
+    const parts = entry.path.split("/").filter(Boolean);
+    parts.pop();
+    return parts.length ? parts[parts.length - 1] : "내 파일";
+  }, [entry]);
+
   const categoryCounts = useMemo(() => {
     const counts: Record<Category, number> = {
       txt: 0,
@@ -768,6 +873,81 @@ export function FeedbackModal({
     } else {
       const body = await res.json().catch(() => ({}));
       toastError("확인 실패: " + (body.error ?? res.statusText));
+    }
+  };
+
+  // ── 영상(버전) 단위 검수 결정 — 매니저 전용 ──
+  const [decisionPending, setDecisionPending] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // 승인: kind="approve" 코멘트 1건을 남겨 이 버전을 승인 처리
+  const handleApproveVersion = async () => {
+    if (decisionPending || versionApproved || !entry) return;
+    const ok = await confirm({
+      title: "이 버전을 승인할까요?",
+      message:
+        "승인하면 파트너에게 ‘승인됨’으로 표시됩니다. 더 고칠 게 있으면 대신 수정 요청을 남기세요.",
+      confirmLabel: "승인",
+    });
+    if (!ok) return;
+    setDecisionPending(true);
+    try {
+      const res = await fetch("/api/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          path: entry.path,
+          videoTimeMs: 0,
+          body: "이 버전을 승인합니다.",
+          kind: "approve",
+          category: "etc",
+        }),
+      });
+      if (res.ok) {
+        success("이 버전을 승인했습니다");
+        await fetchComments();
+      } else {
+        const b = await res.json().catch(() => ({}));
+        toastError("승인 실패: " + (b.error ?? res.statusText));
+      }
+    } finally {
+      setDecisionPending(false);
+    }
+  };
+
+  // 수정 요청: 구체 피드백을 적도록 코멘트 입력창으로 포커스 유도
+  const handleRequestRevision = () => {
+    setPanelVisible(true); // 패널이 접혀 있으면 펼쳐서 입력창이 보이게
+    const el = document.getElementById(
+      "vbox-compose",
+    ) as HTMLTextAreaElement | null;
+    if (el) {
+      el.focus();
+      el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  };
+
+  // 승인 취소: 이 버전의 approve 코멘트를 제거해 다시 검수 중 상태로
+  const handleUnapproveVersion = async () => {
+    if (decisionPending || !entry) return;
+    const approveComments = topLevelItems.filter((c) => c.kind === "approve");
+    if (!approveComments.length) return;
+    const ok = await confirm({
+      title: "승인을 취소할까요?",
+      message: "이 버전의 승인을 해제하고 다시 검수 중 상태로 되돌립니다.",
+      confirmLabel: "승인 취소",
+      variant: "danger",
+    });
+    if (!ok) return;
+    setDecisionPending(true);
+    try {
+      for (const c of approveComments) {
+        await fetch(`/api/comments/${c.id}`, { method: "DELETE" });
+      }
+      success("승인을 취소했습니다");
+      await fetchComments();
+    } finally {
+      setDecisionPending(false);
     }
   };
 
@@ -1090,59 +1270,161 @@ export function FeedbackModal({
 
   return (
     <>
-      <div className="flex flex-col h-full bg-slate-100">
-        {/* 상단 바: 뒤로가기 + 파일명 (게스트는 vi.box 로고) */}
-        <div className="shrink-0 bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3">
+      <div className="fixed inset-0 z-50 flex flex-col bg-slate-900">
+        {/* 상단 바: 비모 브랜드 + 브레드크럼 + 버전핀 + 검수 결정 */}
+        <div className="shrink-0 bg-white border-b border-slate-200 px-4 py-2.5 flex items-center gap-3">
           {isGuest ? (
-            <span className="shrink-0 text-[13px] font-extrabold tracking-tight text-slate-900">
-              vi<span className="text-accent">.</span>box
-            </span>
+            <>
+              <span className="shrink-0 text-[13px] font-extrabold tracking-tight text-slate-900">
+                vi<span className="text-accent">.</span>box
+              </span>
+              <div className="w-px h-5 bg-slate-200" />
+              <h1 className="text-[14px] font-semibold text-slate-900 truncate min-w-0">
+                {entry.name}
+              </h1>
+            </>
           ) : (
-            <Link
-              href={backHref}
-              className="inline-flex items-center gap-1 text-[13px] font-medium text-slate-600 hover:text-slate-900 px-2 py-1 rounded hover:bg-slate-100 transition-colors"
-            >
-              <ChevronLeft size={16} strokeWidth={2} />
-              파일 목록
-            </Link>
+            <>
+              {/* 비모 마크 */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/vimo-mark.svg"
+                alt=""
+                width={19}
+                height={15}
+                className="shrink-0"
+              />
+              {/* 브레드크럼: 상위 폴더(클릭=목록) › 영상 */}
+              <nav className="flex items-center gap-1.5 min-w-0 text-[12.5px]">
+                <Link
+                  href={backHref}
+                  title="파일 목록으로"
+                  className="text-slate-500 hover:text-slate-900 truncate max-w-[160px] shrink-0 transition-colors"
+                >
+                  {parentName}
+                </Link>
+                <ChevronRight
+                  size={13}
+                  strokeWidth={2.2}
+                  className="text-slate-300 shrink-0"
+                />
+                <span className="font-semibold text-slate-900 truncate">
+                  {displayTitle}
+                </span>
+              </nav>
+            </>
           )}
-          <div className="w-px h-5 bg-slate-200" />
-          <h1 className="text-[14px] font-semibold text-slate-900 truncate min-w-0">
-            {entry.name}
-          </h1>
+          {/* 버전 핀 */}
+          {versionTag && (
+            <span className="shrink-0 inline-flex items-center text-[11px] font-bold text-accent bg-accent-soft px-2 py-0.5 rounded-md tabular-nums">
+              {versionTag}
+            </span>
+          )}
           {uploaderName && (
-            <span className="hidden md:inline shrink-0 text-[11.5px] text-slate-500">
-              올린 사람:{" "}
+            <span className="hidden lg:inline shrink-0 text-[11.5px] text-slate-500">
+              올린 사람{" "}
               <span className="font-semibold text-slate-700">{uploaderName}</span>
             </span>
           )}
           <div className="flex-1" />
-          {!isGuest && (prevHref || nextHref) && (
-            <div className="hidden md:flex items-center gap-0.5 shrink-0">
-              <Link
-                href={prevHref ?? "#"}
-                aria-disabled={!prevHref}
-                className={`p-1.5 rounded inline-flex items-center gap-1 text-[12px] ${
-                  prevHref
-                    ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                    : "text-slate-300 pointer-events-none"
-                }`}
-                title="이전 영상 (K 또는 ↑)"
-              >
-                <ChevronUp size={15} strokeWidth={2.2} />
-              </Link>
-              <Link
-                href={nextHref ?? "#"}
-                aria-disabled={!nextHref}
-                className={`p-1.5 rounded inline-flex items-center gap-1 text-[12px] ${
-                  nextHref
-                    ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                    : "text-slate-300 pointer-events-none"
-                }`}
-                title="다음 영상 (J 또는 ↓)"
-              >
-                <ChevronDown size={15} strokeWidth={2.2} />
-              </Link>
+          {/* 댓글 패널 접기/펼치기 (게스트 포함 모두) */}
+          <button
+            onClick={() => setPanelVisible((v) => !v)}
+            title={panelVisible ? "댓글 패널 접기 (영상 크게)" : "댓글 패널 펼치기"}
+            className={`shrink-0 w-8 h-8 rounded-md grid place-items-center transition-colors ${
+              panelVisible
+                ? "text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                : "text-accent bg-accent-soft"
+            }`}
+          >
+            {panelVisible ? (
+              <PanelRightClose size={16} strokeWidth={2} />
+            ) : (
+              <PanelRightOpen size={16} strokeWidth={2} />
+            )}
+          </button>
+          {/* 검수 결정 (게스트 제외) */}
+          {!isGuest && (
+            <div className="flex items-center gap-2 shrink-0">
+              {isStaff ? (
+                versionApproved ? (
+                  <div className="flex items-center gap-1">
+                    <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1.5 rounded-md">
+                      <CheckCircle2 size={14} strokeWidth={2.2} />
+                      승인됨
+                    </span>
+                    <button
+                      onClick={handleUnapproveVersion}
+                      disabled={decisionPending}
+                      title="승인 취소"
+                      className="w-7 h-7 rounded-md grid place-items-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 disabled:opacity-50 transition-colors"
+                    >
+                      <X size={14} strokeWidth={2.2} />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {feedbackCount > 0 && (
+                      <span className="hidden md:inline-flex items-center gap-1 text-[11.5px] font-bold text-accent bg-accent-soft px-2 py-1.5 rounded-md">
+                        <MessageCircle size={13} strokeWidth={2.2} />
+                        미해결 {feedbackCount}
+                      </span>
+                    )}
+                    <button
+                      onClick={handleRequestRevision}
+                      className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 px-2.5 py-1.5 rounded-md transition-colors"
+                    >
+                      <PencilLine size={13} strokeWidth={2.2} />
+                      수정 요청
+                    </button>
+                    <button
+                      onClick={handleApproveVersion}
+                      disabled={decisionPending}
+                      className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 px-2.5 py-1.5 rounded-md transition-colors"
+                    >
+                      <Check size={14} strokeWidth={2.6} />
+                      승인
+                    </button>
+                  </>
+                )
+              ) : (
+                /* 편집자(파트너): 같은 폴더에 새 버전 올리기 */
+                <Link
+                  href={backHref}
+                  className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-white bg-accent hover:opacity-90 px-2.5 py-1.5 rounded-md transition-opacity"
+                >
+                  <Upload size={13} strokeWidth={2.2} />
+                  새 버전 올리기
+                </Link>
+              )}
+              {(prevHref || nextHref) && (
+                <div className="hidden md:flex items-center gap-0.5 border-l border-slate-200 pl-2">
+                  <Link
+                    href={prevHref ?? "#"}
+                    aria-disabled={!prevHref}
+                    className={`p-1.5 rounded inline-flex items-center gap-1 text-[12px] ${
+                      prevHref
+                        ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                        : "text-slate-300 pointer-events-none"
+                    }`}
+                    title="이전 영상 (K 또는 ↑)"
+                  >
+                    <ChevronUp size={15} strokeWidth={2.2} />
+                  </Link>
+                  <Link
+                    href={nextHref ?? "#"}
+                    aria-disabled={!nextHref}
+                    className={`p-1.5 rounded inline-flex items-center gap-1 text-[12px] ${
+                      nextHref
+                        ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                        : "text-slate-300 pointer-events-none"
+                    }`}
+                    title="다음 영상 (J 또는 ↓)"
+                  >
+                    <ChevronDown size={15} strokeWidth={2.2} />
+                  </Link>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1150,13 +1432,13 @@ export function FeedbackModal({
         <div className="flex flex-col md:flex-row flex-1 min-h-0">
           {/* 좌: 비디오 + 타임라인 (모바일에선 상단 고정, 나머지 공간은 댓글) */}
           <div className="shrink-0 md:shrink md:flex-1 min-w-0 flex flex-col bg-slate-100">
-            <div className="flex-1 min-h-0 flex items-center justify-center bg-slate-100 overflow-hidden">
+            <div className="relative flex-1 min-h-0 flex items-center justify-center bg-black overflow-hidden">
               <div
                 ref={videoWrapRef}
                 className={`relative overflow-hidden bg-black max-w-full max-h-full ${
                   annotationMode ? "cursor-crosshair" : "cursor-pointer"
                 }`}
-                style={{ aspectRatio: "16 / 9", width: "100%" }}
+                style={{ aspectRatio: videoAspect, height: "100%", maxWidth: "100%" }}
                 onClick={(e) => {
                   // 주석 모드 아니면 재생/일시정지
                   if (!annotationMode && e.target === e.currentTarget) {
@@ -1166,20 +1448,30 @@ export function FeedbackModal({
               >
               <video
                 ref={vidRef}
-                // HLS 준비됐으면 hls.js 가 src 덮어씀, 아니면 원본 (fallback)
-                src={hlsStatus.kind === "ready" ? undefined : src}
+                // 저화질=HLS(hls.js가 src 덮어씀) · 원본 모드/HLS 미준비 시 원본 파일 직접
+                src={
+                  hlsStatus.kind === "ready" && qualityMode === "proxy"
+                    ? undefined
+                    : src
+                }
                 poster={poster}
                 preload="metadata"
                 className="w-full h-full object-contain pointer-events-none"
                 onLoadedMetadata={(e) => {
-                  setDuration(e.currentTarget.duration * 1000);
-                  setMuted(e.currentTarget.muted);
+                  const vd = e.currentTarget;
+                  setDuration(vd.duration * 1000);
+                  setMuted(vd.muted);
+                  const vw = vd.videoWidth;
+                  const vh = vd.videoHeight;
+                  if (vw > 0 && vh > 0) setVideoAspect(`${vw} / ${vh}`);
+                  // 화질 전환 복원은 별도 effect(canplay/loadeddata)가 담당 → 여기선 최초 오픈 시크만
                   if (
+                    !pendingRestoreRef.current &&
                     initialSeekMs &&
                     initialSeekMs > 0 &&
-                    e.currentTarget.duration > 0
+                    vd.duration > 0
                   ) {
-                    e.currentTarget.currentTime = initialSeekMs / 1000;
+                    vd.currentTime = initialSeekMs / 1000;
                   }
                 }}
                 onTimeUpdate={(e) =>
@@ -1407,82 +1699,113 @@ export function FeedbackModal({
                 </div>
               )}
               </div>
-            </div>
-            <div className="shrink-0 px-4 pt-3">
-              <TimelineStrip
-                items={topLevelItems}
-                duration={duration}
-                currentTime={currentTime}
-                playing={playing}
-                muted={muted}
-                playbackRate={playbackRate}
-                filePath={entry.path}
-                disableThumbs={isGuest}
-                onSeek={seek}
-                onTogglePlay={togglePlay}
-                onToggleMute={toggleMute}
-                onToggleFullscreen={toggleFullscreen}
-                onChangePlaybackRate={changePlaybackRate}
-                onSelect={(id) => {
-                  const c = items.find((x) => x.id === id);
-                  if (c) {
-                    seek(c.videoTimeMs, c.annotation);
-                    setSelectedId(id);
-                  }
-                }}
-              />
+              {/* 컨트롤: 영상 위 하단 오버레이 (영상 영역을 더 크게) */}
+              <div className="absolute left-0 right-0 bottom-0 px-4 pb-3 z-30">
+                <TimelineStrip
+                  items={topLevelItems.filter((c) => c.kind !== "approve")}
+                  duration={duration}
+                  currentTime={currentTime}
+                  playing={playing}
+                  muted={muted}
+                  playbackRate={playbackRate}
+                  qualityMode={qualityMode}
+                  hlsReady={hlsStatus.kind === "ready"}
+                  filePath={entry.path}
+                  disableThumbs={isGuest}
+                  onSeek={seek}
+                  onTogglePlay={togglePlay}
+                  onToggleMute={toggleMute}
+                  onToggleFullscreen={toggleFullscreen}
+                  onChangePlaybackRate={changePlaybackRate}
+                  onChangeQuality={changeQuality}
+                  onSelect={(id) => {
+                    const c = items.find((x) => x.id === id);
+                    if (c) {
+                      seek(c.videoTimeMs, c.annotation);
+                      setSelectedId(id);
+                    }
+                  }}
+                />
+              </div>
             </div>
           </div>
 
-          {/* 우: 댓글 패널 (B안 카드 스타일) */}
-          <div className="flex-1 md:flex-none w-full md:w-[360px] border-t md:border-t-0 md:border-l border-slate-200 flex flex-col bg-slate-50 min-h-0">
+          {/* 우: 댓글 패널 (B안 카드 스타일) — panelVisible로 접기/펼치기 */}
+          <div
+            className={`${panelVisible ? "flex" : "hidden"} flex-1 md:flex-none w-full md:w-[360px] border-t md:border-t-0 md:border-l border-slate-200 flex-col bg-slate-50 min-h-0`}
+          >
             <div className="px-4 pt-4 pb-3 bg-white border-b border-slate-200">
               <div className="flex items-center gap-2 mb-2.5">
                 <h3 className="text-[14px] font-semibold tracking-tight">댓글</h3>
-                <span className="text-[12.5px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                  {items.length}
-                </span>
-                <div className="ml-auto flex items-center gap-1">
-                  {!isGuest && entry.kind === "video" && !scanJob && (
-                    <button
-                      onClick={handleScan}
-                      title={
-                        lastScan
-                          ? `마지막 검수: ${formatRelative(lastScan.finishedAt)} · ${lastScan.issuesFound ?? 0}건 · ${lastScan.startedByName}`
-                          : "자막 오타를 자동 검수합니다"
-                      }
-                      className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded transition-colors text-violet-600 hover:bg-violet-50"
-                    >
-                      <Sparkles size={11} strokeWidth={2.3} />
-                      {lastScan ? "재검수" : "AI 검수"}
-                      {lastScan && (
-                        <span className="text-[10px] text-violet-400 font-normal">
-                          · {formatRelative(lastScan.finishedAt)}
-                        </span>
-                      )}
-                    </button>
+                <span className="text-[12.5px] font-medium text-slate-400">
+                  {items.filter((c) => c.kind !== "approve").length}
+                  {feedbackCount > 0 && (
+                    <span className="text-accent font-semibold">
+                      {" · "}미해결 {feedbackCount}
+                    </span>
                   )}
-                  <label
-                    title="댓글 클릭 시 해당 시점으로 이동 후 자동으로 재생할지, 일시정지 상태로 둘지"
-                    className="inline-flex items-center gap-1.5 text-[11px] cursor-pointer select-none px-1 py-1 rounded hover:bg-hover transition-colors"
+                </span>
+                {/* 설정: AI 검수 · 클릭 시 재생 (헤더 시각소음 정리) */}
+                <div className="ml-auto relative">
+                  <button
+                    onClick={() => setSettingsOpen((v) => !v)}
+                    title="AI 검수 · 클릭 시 재생"
+                    className={`w-7 h-7 rounded grid place-items-center transition-colors ${
+                      settingsOpen
+                        ? "bg-slate-100 text-slate-900"
+                        : "text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                    }`}
                   >
-                    <span className="text-text-soft">클릭 시 재생</span>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={autoPlayOnSeek}
-                      onClick={() => setAutoPlayOnSeek((v) => !v)}
-                      className={`relative inline-flex h-[14px] w-[24px] items-center rounded-full transition-colors ${
-                        autoPlayOnSeek ? "bg-emerald-500" : "bg-border"
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-[10px] w-[10px] rounded-full bg-white shadow transition-transform ${
-                          autoPlayOnSeek ? "translate-x-[12px]" : "translate-x-[2px]"
-                        }`}
+                    <Settings2 size={16} strokeWidth={2} />
+                  </button>
+                  {settingsOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setSettingsOpen(false)}
                       />
-                    </button>
-                  </label>
+                      <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg py-1.5 w-[212px] z-20">
+                        {!isGuest && entry.kind === "video" && !scanJob && (
+                          <button
+                            onClick={() => {
+                              setSettingsOpen(false);
+                              handleScan();
+                            }}
+                            className="w-full px-3 py-2 text-left inline-flex items-center gap-2 text-[12px] text-violet-700 hover:bg-violet-50 transition-colors"
+                          >
+                            <Sparkles size={13} strokeWidth={2.3} />
+                            <span className="flex-1">
+                              {lastScan ? "AI 자막 재검수" : "AI 자막 검수"}
+                            </span>
+                            {lastScan && (
+                              <span className="text-[10px] text-slate-400">
+                                {formatRelative(lastScan.finishedAt)}
+                              </span>
+                            )}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setAutoPlayOnSeek((v) => !v)}
+                          className="w-full px-3 py-2 text-left inline-flex items-center gap-2 text-[12px] text-slate-700 hover:bg-slate-50 transition-colors"
+                        >
+                          <span className="flex-1">댓글 클릭 시 재생</span>
+                          <span
+                            className={`relative inline-flex h-[16px] w-[28px] items-center rounded-full transition-colors ${
+                              autoPlayOnSeek ? "bg-emerald-500" : "bg-slate-300"
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-[12px] w-[12px] rounded-full bg-white shadow transition-transform ${
+                                autoPlayOnSeek
+                                  ? "translate-x-[14px]"
+                                  : "translate-x-[2px]"
+                              }`}
+                            />
+                          </span>
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -1697,6 +2020,7 @@ export function FeedbackModal({
                         (c) =>
                           c.parentId === null &&
                           c.authorId !== "guest" &&
+                          c.kind !== "approve" &&
                           (c.visibility ?? "internal") === "internal",
                       ).length;
                       if (internalCount === 0) return null;
@@ -1714,6 +2038,7 @@ export function FeedbackModal({
                                 (c) =>
                                   c.parentId === null &&
                                   c.authorId !== "guest" &&
+                                  c.kind !== "approve" &&
                                   (c.visibility ?? "internal") === "internal",
                               );
                               void handleBulkPublishClient(
@@ -2080,12 +2405,15 @@ function TimelineStrip({
   playing,
   muted,
   playbackRate,
+  qualityMode,
+  hlsReady,
   filePath,
   onSeek,
   onTogglePlay,
   onToggleMute,
   onToggleFullscreen,
   onChangePlaybackRate,
+  onChangeQuality,
   onSelect,
   disableThumbs = false,
 }: {
@@ -2095,17 +2423,22 @@ function TimelineStrip({
   playing: boolean;
   muted: boolean;
   playbackRate: number;
+  qualityMode: "proxy" | "original";
+  hlsReady: boolean;
   filePath: string;
   onSeek: (ms: number) => void;
   onTogglePlay: () => void;
   onToggleMute: () => void;
   onToggleFullscreen: () => void;
   onChangePlaybackRate: (rate: number) => void;
+  onChangeQuality: (mode: "proxy" | "original") => void;
   onSelect: (id: string) => void;
   disableThumbs?: boolean;
 }) {
-  const [speedMenuOpen, setSpeedMenuOpen] = useState(false);
+  const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
   const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+  // 실제 원본 재생 중인지 (원본 모드이거나, 저화질 변환본이 아직 없을 때)
+  const effectiveOriginal = qualityMode === "original" || !hlsReady;
   const barRef = useRef<HTMLDivElement>(null);
 
   // 타임라인 호버 썸네일
@@ -2357,49 +2690,6 @@ function TimelineStrip({
         </button>
 
         <div className="ml-auto flex items-center gap-0.5">
-          {/* 재생 속도 */}
-          <div className="relative">
-            <button
-              onClick={() => setSpeedMenuOpen((v) => !v)}
-              className={`h-8 px-2 rounded-md text-[11px] font-bold font-mono tabular-nums transition-colors ${
-                playbackRate !== 1
-                  ? "text-slate-900 bg-slate-100"
-                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-              }`}
-              title="재생 속도 (&lt; / &gt; 키)"
-            >
-              {playbackRate}x
-            </button>
-            {speedMenuOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-10"
-                  onClick={() => setSpeedMenuOpen(false)}
-                />
-                <div className="absolute bottom-full right-0 mb-1 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-20 min-w-[90px]">
-                  {SPEED_OPTIONS.map((rate) => (
-                    <button
-                      key={rate}
-                      onClick={() => {
-                        onChangePlaybackRate(rate);
-                        setSpeedMenuOpen(false);
-                      }}
-                      className={`w-full px-3 py-1.5 text-left text-[11.5px] font-mono font-semibold tabular-nums hover:bg-slate-50 flex items-center justify-between ${
-                        playbackRate === rate
-                          ? "text-slate-900"
-                          : "text-slate-600"
-                      }`}
-                    >
-                      <span>{rate}x</span>
-                      {playbackRate === rate && (
-                        <Check size={11} strokeWidth={2.5} className="text-emerald-500" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
           <button
             onClick={onToggleMute}
             className="w-8 h-8 rounded-md grid place-items-center text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors"
@@ -2411,6 +2701,118 @@ function TimelineStrip({
               <Volume2 size={15} strokeWidth={2} />
             )}
           </button>
+          {/* 설정: 재생 속도 + 화질 (톱니 · 유튜브식, 우상단 화질 배지) */}
+          <div className="relative">
+            <button
+              onClick={() => setSettingsMenuOpen((v) => !v)}
+              className={`relative w-8 h-8 rounded-md grid place-items-center transition-colors ${
+                settingsMenuOpen
+                  ? "text-slate-900 bg-slate-100"
+                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+              }`}
+              title="설정 (재생 속도 · 화질)"
+            >
+              <Settings2 size={15} strokeWidth={2} />
+              <span
+                className={`absolute -top-1 -right-1.5 px-1 py-px rounded text-[8px] font-bold leading-none ring-[1.5px] ring-white ${
+                  effectiveOriginal
+                    ? "bg-accent text-white"
+                    : "bg-slate-500 text-white"
+                }`}
+              >
+                {effectiveOriginal ? "원본" : "저화질"}
+              </span>
+            </button>
+            {settingsMenuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setSettingsMenuOpen(false)}
+                />
+                <div className="absolute bottom-full right-0 mb-2 bg-white border border-slate-200 rounded-xl shadow-lg p-1.5 z-20 w-[240px]">
+                  <div className="px-2 pt-1 pb-1.5 text-[9.5px] font-bold text-slate-400 tracking-wide">
+                    재생 속도
+                  </div>
+                  <div className="flex flex-nowrap gap-1 px-1 pb-2">
+                    {SPEED_OPTIONS.map((rate) => (
+                      <button
+                        key={rate}
+                        onClick={() => onChangePlaybackRate(rate)}
+                        className={`flex-1 h-7 rounded-md text-[10px] font-bold font-mono tabular-nums grid place-items-center transition-colors ${
+                          playbackRate === rate
+                            ? "bg-accent text-white shadow-sm"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        }`}
+                      >
+                        {rate}×
+                      </button>
+                    ))}
+                  </div>
+                  {hlsReady ? (
+                    <>
+                      <div className="h-px bg-slate-100 mx-1 my-0.5" />
+                      <div className="px-2 pt-1.5 pb-1 text-[9.5px] font-bold text-slate-400 tracking-wide">
+                        화질
+                      </div>
+                      {(
+                        [
+                          {
+                            mode: "proxy" as const,
+                            label: "저화질",
+                            desc: "빠른 재생 · 가벼운 스트리밍",
+                          },
+                          {
+                            mode: "original" as const,
+                            label: "원본",
+                            desc: "풀 화질 · 정밀 검수",
+                          },
+                        ]
+                      ).map((q) => (
+                        <button
+                          key={q.mode}
+                          onClick={() => {
+                            onChangeQuality(q.mode);
+                            setSettingsMenuOpen(false);
+                          }}
+                          className="w-full px-2 py-1.5 rounded-lg hover:bg-slate-50 flex items-center gap-2.5 text-left transition-colors"
+                        >
+                          <Check
+                            size={14}
+                            strokeWidth={2.5}
+                            className={`text-accent shrink-0 ${
+                              qualityMode === q.mode ? "opacity-100" : "opacity-0"
+                            }`}
+                          />
+                          <span className="flex-1 min-w-0">
+                            <span
+                              className={`block text-[12px] font-bold ${
+                                qualityMode === q.mode
+                                  ? "text-accent"
+                                  : "text-slate-700"
+                              }`}
+                            >
+                              {q.label}
+                            </span>
+                            <span className="block text-[10px] text-slate-400">
+                              {q.desc}
+                            </span>
+                          </span>
+                        </button>
+                      ))}
+                    </>
+                  ) : (
+                    <>
+                      <div className="h-px bg-slate-100 mx-1 my-0.5" />
+                      <div className="px-2 py-1.5 text-[10px] text-slate-400 leading-relaxed">
+                        지금은 원본으로 재생 중입니다. 저화질(스트리밍 변환)은
+                        준비되면 켜집니다.
+                      </div>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
           <button
             onClick={onToggleFullscreen}
             className="w-8 h-8 rounded-md grid place-items-center text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors"
@@ -2492,7 +2894,9 @@ function CommentItem({
           ? "border-2 border-slate-900"
           : isPending
             ? "border border-amber-400 bg-amber-50/30"
-            : "border border-slate-200 hover:border-slate-300"
+            : isResolved
+              ? "border border-slate-200 bg-slate-50/60"
+              : "border border-slate-200 hover:border-slate-300"
       }`}
     >
       {/* 상단 상태 줄: 게스트/대기/클라공개 배지 + 스태프 액션 */}
@@ -2663,7 +3067,13 @@ function CommentItem({
               </span>
             </div>
           ) : (
-            <div className="text-[13px] text-slate-700 whitespace-pre-wrap break-words">
+            <div
+              className={`text-[13px] whitespace-pre-wrap break-words ${
+                isResolved
+                  ? "text-slate-400 line-through decoration-slate-300"
+                  : "text-slate-700"
+              }`}
+            >
               {displayBody}
             </div>
           )}
@@ -3172,6 +3582,7 @@ function ComposeBar({
         {/* 입력 + 전송 */}
         <div className="flex items-end gap-2 px-3 pb-2.5 pt-0.5">
           <textarea
+            id="vbox-compose"
             value={text}
             onChange={(e) => {
               setText(e.target.value);

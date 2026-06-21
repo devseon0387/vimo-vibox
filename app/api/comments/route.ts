@@ -17,7 +17,7 @@ import {
 } from "@/lib/comments/annotation";
 
 const VALID_CATEGORIES: Category[] = ["txt", "cut", "col", "aud", "mtn", "etc"];
-const VALID_KINDS: Kind[] = ["feedback", "praise"];
+const VALID_KINDS: Kind[] = ["feedback", "praise", "approve"];
 
 // GET /api/comments?path=/foo.mp4 → 해당 파일의 댓글 (역할별 필터)
 // admin/member: 전부 (모든 status + 원문 + 순화본 둘 다)

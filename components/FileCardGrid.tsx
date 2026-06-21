@@ -485,7 +485,8 @@ export function FileCardGrid({
       // 현재 라우트(/team·/my/box 등) 유지하며 폴더 진입. 개인 드라이브는 prefix 가림.
       const target = stripDisplayPrefix(entry.path, displayPrefix);
       router.push(`${pathname}?path=${encodeURIComponent(target)}`);
-    } else if (isVideo(entry) && !displayPrefix) {
+    } else if (isVideo(entry)) {
+      // 팀·개인 영상 모두 검수 워크스페이스(/vimo-box)로 — 권한은 canAccessFile이 담당
       router.push(`/vimo-box?path=${encodeURIComponent(entry.path)}`);
     } else if (isPreviewable(entry)) {
       setPreviewEntry(entry);

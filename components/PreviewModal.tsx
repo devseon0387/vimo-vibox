@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { Modal } from "./Modal";
 import type { FileEntry } from "@/lib/fs/storage";
-import { Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Download, ChevronLeft, ChevronRight, MessageSquare } from "lucide-react";
 import {
   ensureDirectProbe,
   directMediaUrl,
@@ -44,6 +45,7 @@ export function PreviewModal({
   entries?: FileEntry[];
   onNavigate?: (direction: -1 | 1) => void;
 }) {
+  const router = useRouter();
   // 미디어 직결(u1:8443) 실패 시 CF 폴백 플래그
   const [srcFailed, setSrcFailed] = useState(false);
   useEffect(() => {
@@ -175,9 +177,25 @@ export function PreviewModal({
       maxWidth="max-w-5xl"
     >
       {body}
-      {/* footer: navigation hint + counter */}
-      {(counter || onNavigate) && (
+      {/* footer: 검수 확장 + navigation hint + counter */}
+      {(counter || onNavigate || isVideo(entry.kind)) && (
         <div className="flex items-center gap-3 px-5 py-2.5 border-t border-border bg-surface text-[11.5px] text-text-faint">
+          {isVideo(entry.kind) && (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                router.push(
+                  `/vimo-box?path=${encodeURIComponent(entry.path)}`,
+                );
+              }}
+              title="이 영상을 검수 화면으로 (댓글 패널과 함께)"
+              className="inline-flex items-center gap-1.5 bg-accent text-white px-3 py-1.5 rounded-md text-[12px] font-semibold hover:bg-accent-hover"
+            >
+              <MessageSquare size={13} strokeWidth={2.4} />
+              검수로 확장
+            </button>
+          )}
           {onNavigate && (
             <>
               <button

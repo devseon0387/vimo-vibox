@@ -135,8 +135,8 @@ export function FileTable({
       // 개인 드라이브는 URL에서 /personal/{userId} prefix를 가린다.
       const target = stripDisplayPrefix(entry.path, displayPrefix);
       router.push(`${pathname}?path=${encodeURIComponent(target)}`);
-    } else if (isVideo(entry) && !displayPrefix) {
-      // 비모 박스 비디오는 피드백 워크스페이스(vimo-box)로. 개인 드라이브는 인플레이스 미리보기.
+    } else if (isVideo(entry)) {
+      // 팀·개인 영상 모두 피드백 워크스페이스(vimo-box)로 — 권한은 canAccessFile이 담당.
       router.push(`/vimo-box?path=${encodeURIComponent(entry.path)}`);
     } else if (isPreviewable(entry)) {
       setPreviewEntry(entry);
