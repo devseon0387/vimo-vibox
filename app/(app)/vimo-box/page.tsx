@@ -66,12 +66,14 @@ export default async function FeedbackPage({
   if (!(await canAccessFile(session, filePath))) notFound();
 
   const parentPath = path.posix.dirname(filePath);
-  // 개인 영상은 My Box로 돌아가기 (홈은 path 파라미터를 안 받음)
+  // 뒤로 가기 = 영상이 있던 파일 목록으로.
+  // 개인 영상 → My Box(/my/box). 팀/공용 영상 → 파일 브라우저(/team, ?path 지원).
+  // ※ 홈 '/'는 이제 대시보드라 ?path 를 안 받음 → 파일 목록은 반드시 /team 으로 가야 함.
   const backHref = filePath.startsWith("/personal/")
     ? "/my/box"
     : parentPath === "/"
-      ? "/"
-      : `/?path=${encodeURIComponent(parentPath)}`;
+      ? "/team"
+      : `/team?path=${encodeURIComponent(parentPath)}`;
 
   // 형제 영상 prev/next — J/K 키 단축키 네비용
   let prevHref: string | undefined;

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronUp, ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronUp, ChevronDown, ChevronRight, ArrowLeft } from "lucide-react";
 import { useConfirm } from "./ConfirmDialog";
 import { useToast } from "./Toast";
 import { ShareDialog } from "./ShareDialog";
@@ -1537,6 +1537,15 @@ export function FeedbackModal({
             </>
           ) : (
             <>
+              {/* 뒤로 가기 — 영상이 있던 파일 목록으로 (명확한 버튼) */}
+              <Link
+                href={backHref}
+                title="뒤로 가기 (파일 목록)"
+                aria-label="뒤로 가기 — 파일 목록으로"
+                className="shrink-0 -ml-1 w-8 h-8 rounded-lg grid place-items-center text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+              >
+                <ArrowLeft size={19} strokeWidth={2.2} />
+              </Link>
               {/* 비모 마크 */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
