@@ -54,18 +54,19 @@ import {
   Square,
   Sparkles,
   Loader2,
-  SkipBack,
-  SkipForward,
+  StepBack,
+  StepForward,
+  MessageSquare,
   MoreHorizontal,
   ArrowUpNarrowWide,
   ArrowDownNarrowWide,
   X,
   User,
   Eye,
+  EyeOff,
   AlertCircle,
   Link as LinkIcon,
   CheckCircle2,
-  MessageCircle,
   Upload,
   Settings2,
   PanelRightClose,
@@ -156,7 +157,29 @@ async function runOcr(
   }
 }
 
-type ViewFilter = "all" | "feedback" | "praise";
+// ── 상태색: 시크바 마커 ↔ 카드 타임코드 칩을 같은 색으로 결속 ──
+// 미해결=주황(accent) · AI=보라 · 좋아요=녹색 · 해결=회색(우선)
+const ACCENT_COLOR = "#e85008";
+const AI_MARK_COLOR = "#7c3aed";
+const RESOLVED_MARK_COLOR = "#94a3b8";
+function statusOf(c: CommentRow): {
+  color: string;
+  soft: string;
+  isPraise: boolean;
+  isAI: boolean;
+  resolved: boolean;
+} {
+  const isAI = c.authorId === "ai-reviewer";
+  const isPraise = c.kind === "praise";
+  const resolved = !!c.resolvedAt;
+  if (resolved)
+    return { color: RESOLVED_MARK_COLOR, soft: "#f1f5f9", isPraise, isAI, resolved };
+  if (isPraise)
+    return { color: PRAISE_COLOR, soft: "#f0fdf4", isPraise, isAI, resolved };
+  if (isAI)
+    return { color: AI_MARK_COLOR, soft: "#f3edff", isPraise, isAI, resolved };
+  return { color: ACCENT_COLOR, soft: "#fef0e8", isPraise, isAI, resolved };
+}
 
 function RoleBadge({
   role,
@@ -259,7 +282,7 @@ export function FeedbackModal({
   const [panelVisible, setPanelVisible] = useState(true);
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [viewFilter, setViewFilter] = useState<ViewFilter>("all");
+  const [hideResolved, setHideResolved] = useState<boolean>(false);
   const [annotationMode, setAnnotationMode] = useState(false);
   const [annotationTool, setAnnotationTool] = useState<AnnotationTool>("box");
   const [pendingAnno, setPendingAnno] = useState<PendingAnno | null>(null);
@@ -267,9 +290,22 @@ export function FeedbackModal({
     { left: string; top: string; flipUp?: boolean } | null
   >(null);
   const videoWrapRef = useRef<HTMLDivElement>(null);
+  // 전체화면 대상 = 영상+컨트롤 바를 묶은 셸 (bare video가 아니라 셸을 풀스크린해야
+  // 확대해도 검수 컨트롤 바·마커·프레임스텝이 그대로 유지됨)
+  const playerShellRef = useRef<HTMLDivElement>(null);
+  // 전체화면 몰입: 컨트롤 자동 숨김 (재생 중 무동작 2.5초 → 페이드아웃)
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 컨트롤 바의 속도/화질 메뉴가 열려 있는 동안엔 자동 숨김 정지 (메뉴가 사라지지 않게)
+  const menuOpenRef = useRef(false);
   // 영상 원본 비율 — Frame.io식: 16:9 고정 틀 없이 영상 비율 그대로 무대에 contain
   const [videoAspect, setVideoAspect] = useState("16 / 9");
   const [seekingNow, setSeekingNow] = useState(false);
+  // 영상 로드 실패 — 무한 버퍼링 스피너 대신 에러 카드 + 재시도
+  const [loadError, setLoadError] = useState(false);
+  const [reloadNonce, setReloadNonce] = useState(0); // 재시도 시 src 캐시버스트
+  const didInitialSeekRef = useRef(false); // 딥링크 최초 시크 1회 가드
   const [hlsManifestUrl, setHlsManifestUrl] = useState<string | null>(null);
   const [hlsStatus, setHlsStatus] = useState<
     | { kind: "checking" }
@@ -493,6 +529,59 @@ export function FeedbackModal({
     return cleanup;
   }, [qualityMode]);
 
+  // 영상 길이/비율 견고 동기화 — React onLoadedMetadata 프롭은 메타데이터가
+  // 리스너 부착보다 먼저 로드되면(빠른 로컬·캐시 영상) 이벤트를 놓쳐 duration이
+  // 0으로 남는다(→ 길이 00:00·시크 막힘·마커/플레이헤드 미표시). effect 실행 시점에
+  // 이미 알려진 값을 즉시 읽고, 네이티브 loadedmetadata/durationchange도 구독한다.
+  useEffect(() => {
+    const v = vidRef.current;
+    if (!v) return;
+    setLoadError(false); // 새 소스 로드 시작 → 이전 에러 해제
+    const syncMeta = () => {
+      if (Number.isFinite(v.duration) && v.duration > 0) {
+        setDuration(v.duration * 1000);
+        // 딥링크 최초 시크 — 메타데이터가 준비된 첫 시점에 1회만 (이벤트 누락에도 견고)
+        if (
+          !didInitialSeekRef.current &&
+          !pendingRestoreRef.current &&
+          initialSeekMs &&
+          initialSeekMs > 0
+        ) {
+          v.currentTime = initialSeekMs / 1000;
+          didInitialSeekRef.current = true;
+        }
+      }
+      if (v.videoWidth > 0 && v.videoHeight > 0) {
+        setVideoAspect(`${v.videoWidth} / ${v.videoHeight}`);
+      }
+      setMuted(v.muted);
+    };
+    syncMeta(); // 이미 로드돼 있으면 즉시 반영 (이벤트 누락 대비)
+    v.addEventListener("loadedmetadata", syncMeta);
+    v.addEventListener("durationchange", syncMeta);
+    return () => {
+      v.removeEventListener("loadedmetadata", syncMeta);
+      v.removeEventListener("durationchange", syncMeta);
+    };
+    // 소스 전환(화질/HLS) 시 재구독 + 즉시 동기화. 네이티브 리스너가 그 외 변화도 포착.
+  }, [hlsManifestUrl, qualityMode, initialSeekMs]);
+
+  // 로드 실패 재시도 — src 캐시버스트 후 재로드
+  const retryLoad = useCallback(() => {
+    setLoadError(false);
+    setSeekingNow(true);
+    setReloadNonce((n) => n + 1);
+  }, []);
+
+  // 마커·셰브론·[ ] 로 코멘트 선택 시 패널의 해당 카드로 스크롤 (타임라인↔코멘트 양방향 동기)
+  useEffect(() => {
+    if (!selectedId || typeof document === "undefined") return;
+    const el = document.querySelector(
+      `[data-cid="${CSS.escape(selectedId)}"]`,
+    );
+    el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [selectedId]);
+
   // 키보드 단축키: Space(재생), ←/→(±3s), Shift+←/→(±10s), J/L(-/+10s)
   useEffect(() => {
     if (!open) return;
@@ -586,6 +675,16 @@ export function FeedbackModal({
     else v.pause();
   }, []);
 
+  // 프레임 단위 이동 (정밀 검수) — 항상 일시정지 상태에서 한 프레임씩
+  const stepFrame = useCallback((dir: -1 | 1) => {
+    const v = vidRef.current;
+    if (!v) return;
+    v.pause();
+    const FRAME = 1 / 30; // fps 메타데이터 없이 30fps 가정 (≈33ms)
+    const max = Number.isFinite(v.duration) ? v.duration : Infinity;
+    v.currentTime = Math.max(0, Math.min(max, v.currentTime + dir * FRAME));
+  }, []);
+
   const toggleMute = useCallback(() => {
     const v = vidRef.current;
     if (!v) return;
@@ -594,14 +693,97 @@ export function FeedbackModal({
   }, []);
 
   const toggleFullscreen = useCallback(() => {
-    const v = vidRef.current;
-    if (!v) return;
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
-    } else {
-      v.requestFullscreen().catch(() => {});
+    const doc = document as Document & {
+      webkitFullscreenElement?: Element;
+      webkitExitFullscreen?: () => void;
+    };
+    const fsEl = document.fullscreenElement ?? doc.webkitFullscreenElement;
+    if (fsEl) {
+      if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+      else doc.webkitExitFullscreen?.();
+      return;
+    }
+    const shell = playerShellRef.current;
+    const v = vidRef.current as
+      | (HTMLVideoElement & { webkitEnterFullscreen?: () => void })
+      | null;
+    // 데스크톱·안드로이드: 셸(영상+컨트롤 바)을 풀스크린 → 우리 검수 UI 유지
+    if (shell && typeof shell.requestFullscreen === "function") {
+      shell.requestFullscreen().catch(() => {});
+    } else if (v && typeof v.webkitEnterFullscreen === "function") {
+      // iOS Safari: div 풀스크린 미지원 → 비디오 네이티브 풀스크린(커스텀 UI는 못 띄움)
+      v.webkitEnterFullscreen();
     }
   }, []);
+
+  // 자동 숨김 예약 — 전체화면 + 재생 중 + 설정 메뉴 안 열림일 때만 (단일 출처)
+  const armHideControls = useCallback(() => {
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    if (
+      document.fullscreenElement &&
+      vidRef.current &&
+      !vidRef.current.paused &&
+      !menuOpenRef.current
+    ) {
+      hideTimerRef.current = setTimeout(() => setControlsVisible(false), 2500);
+    }
+  }, []);
+
+  // 마우스·터치 활동 → 컨트롤 노출 후 다시 자동 숨김 예약
+  const revealControls = useCallback(() => {
+    setControlsVisible(true);
+    armHideControls();
+  }, [armHideControls]);
+
+  // 설정 메뉴(속도/화질) 열림 동안엔 자동 숨김 정지, 닫히면 재예약
+  const handleControlsMenuChange = useCallback(
+    (open: boolean) => {
+      menuOpenRef.current = open;
+      if (open) {
+        if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+        setControlsVisible(true);
+      } else {
+        revealControls();
+      }
+    },
+    [revealControls],
+  );
+
+  // 전체화면 진입/이탈 추적(webkit 프리픽스 포함). 타이머는 아래 effect가 단일 관리.
+  useEffect(() => {
+    const doc = document as Document & { webkitFullscreenElement?: Element };
+    const onFsChange = () => {
+      setIsFullscreen(
+        !!(document.fullscreenElement ?? doc.webkitFullscreenElement),
+      );
+      setControlsVisible(true);
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
+    document.addEventListener("webkitfullscreenchange", onFsChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFsChange);
+      document.removeEventListener("webkitfullscreenchange", onFsChange);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    };
+  }, []);
+
+  // 재생/일시정지·전체화면 변화 → 자동 숨김 단일 관리
+  useEffect(() => {
+    if (!isFullscreen) {
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+      setControlsVisible(true);
+      return;
+    }
+    if (playing) {
+      armHideControls();
+    } else {
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+      setControlsVisible(true);
+    }
+    return () => {
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    };
+  }, [playing, isFullscreen, armHideControls]);
 
   // 재생 속도
   const [playbackRate, setPlaybackRate] = useState(1);
@@ -660,21 +842,34 @@ export function FeedbackModal({
     });
   };
 
+  // 해결 숨기기 (패널 C: 필터 세그먼트 대신 이진 토글)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const v = window.localStorage.getItem("vibox.hideResolved");
+    if (v !== null) setHideResolved(v === "1");
+  }, []);
+  const toggleHideResolved = () => {
+    setHideResolved((prev) => {
+      const next = !prev;
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("vibox.hideResolved", next ? "1" : "0");
+      }
+      return next;
+    });
+  };
+
   const visibleItems = useMemo(() => {
     // 승인(approve) 코멘트는 버전 상태 마커일 뿐 — 댓글 목록엔 표시하지 않음
     let arr = topLevelItems.filter((c) => c.kind !== "approve");
-    if (viewFilter !== "all") {
-      arr = arr.filter((c) => c.kind === viewFilter);
-    }
-    // 수정 탭: 체크 완료 항목 제외 (전체 탭에선 보임)
-    if (viewFilter === "feedback") {
+    if (hideResolved) {
       arr = arr.filter((c) => !c.resolvedAt);
     }
-    if (sortDesc) {
-      arr = [...arr].sort((a, b) => b.videoTimeMs - a.videoTimeMs);
-    }
+    // 항상 영상 시간순 정렬 (마커 순서와 일치) · desc면 역순
+    arr = [...arr].sort((a, b) =>
+      sortDesc ? b.videoTimeMs - a.videoTimeMs : a.videoTimeMs - b.videoTimeMs,
+    );
     return arr;
-  }, [topLevelItems, viewFilter, sortDesc]);
+  }, [topLevelItems, hideResolved, sortDesc]);
 
   // 이전/다음 피드백 단축키 ([/])
   useEffect(() => {
@@ -772,10 +967,10 @@ export function FeedbackModal({
     return shown;
   }, [topLevelItems, currentTime, duration]);
 
-  const feedbackCount = topLevelItems.filter(
+  // 미해결 = 아직 확인 안 된 수정 요청 (헤더·바 배지·패널 카운트의 단일 출처)
+  const unresolvedCount = topLevelItems.filter(
     (c) => c.kind === "feedback" && !c.resolvedAt,
   ).length;
-  const praiseCount = topLevelItems.filter((c) => c.kind === "praise").length;
 
   // ── 헤더(검수 결정) 파생값 ──
   // 영상(버전) 승인 여부: 매니저가 kind="approve" 코멘트를 남기면 승인으로 간주
@@ -1258,9 +1453,10 @@ export function FeedbackModal({
   }, [scanJob, fetchLastScan]);
 
   if (!entry) return null;
+  const reloadParam = reloadNonce ? `&_r=${reloadNonce}` : "";
   const src = shareContext
-    ? `/api/s/${shareContext.token}?p=${encodeURIComponent(entry.path)}`
-    : `/api/download?path=${encodeURIComponent(entry.path)}&inline=1`;
+    ? `/api/s/${shareContext.token}?p=${encodeURIComponent(entry.path)}${reloadParam}`
+    : `/api/download?path=${encodeURIComponent(entry.path)}&inline=1${reloadParam}`;
   const poster = shareContext
     ? undefined
     : directMediaUrl(
@@ -1364,12 +1560,6 @@ export function FeedbackModal({
                   </div>
                 ) : (
                   <>
-                    {feedbackCount > 0 && (
-                      <span className="hidden md:inline-flex items-center gap-1 text-[11.5px] font-bold text-accent bg-accent-soft px-2 py-1.5 rounded-md">
-                        <MessageCircle size={13} strokeWidth={2.2} />
-                        미해결 {feedbackCount}
-                      </span>
-                    )}
                     <button
                       onClick={handleRequestRevision}
                       className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 px-2.5 py-1.5 rounded-md transition-colors"
@@ -1431,12 +1621,21 @@ export function FeedbackModal({
 
         <div className="flex flex-col md:flex-row flex-1 min-h-0">
           {/* 좌: 비디오 + 타임라인 (모바일에선 상단 고정, 나머지 공간은 댓글) */}
-          <div className="shrink-0 md:shrink md:flex-1 min-w-0 flex flex-col bg-slate-100">
+          <div
+            ref={playerShellRef}
+            className="shrink-0 md:shrink md:flex-1 min-w-0 flex flex-col bg-black"
+            onPointerMove={isFullscreen ? revealControls : undefined}
+            onTouchStart={isFullscreen ? revealControls : undefined}
+          >
             <div className="relative flex-1 min-h-0 flex items-center justify-center bg-black overflow-hidden">
               <div
                 ref={videoWrapRef}
                 className={`relative overflow-hidden bg-black max-w-full max-h-full ${
-                  annotationMode ? "cursor-crosshair" : "cursor-pointer"
+                  isFullscreen && !controlsVisible
+                    ? "cursor-none"
+                    : annotationMode
+                      ? "cursor-crosshair"
+                      : "cursor-pointer"
                 }`}
                 style={{ aspectRatio: videoAspect, height: "100%", maxWidth: "100%" }}
                 onClick={(e) => {
@@ -1457,23 +1656,7 @@ export function FeedbackModal({
                 poster={poster}
                 preload="metadata"
                 className="w-full h-full object-contain pointer-events-none"
-                onLoadedMetadata={(e) => {
-                  const vd = e.currentTarget;
-                  setDuration(vd.duration * 1000);
-                  setMuted(vd.muted);
-                  const vw = vd.videoWidth;
-                  const vh = vd.videoHeight;
-                  if (vw > 0 && vh > 0) setVideoAspect(`${vw} / ${vh}`);
-                  // 화질 전환 복원은 별도 effect(canplay/loadeddata)가 담당 → 여기선 최초 오픈 시크만
-                  if (
-                    !pendingRestoreRef.current &&
-                    initialSeekMs &&
-                    initialSeekMs > 0 &&
-                    vd.duration > 0
-                  ) {
-                    vd.currentTime = initialSeekMs / 1000;
-                  }
-                }}
+                // 메타데이터(길이·비율·muted)·딥링크 시크는 견고 동기화 effect가 단일 담당
                 onTimeUpdate={(e) =>
                   setCurrentTime(e.currentTarget.currentTime * 1000)
                 }
@@ -1482,8 +1665,19 @@ export function FeedbackModal({
                 onSeeking={() => setSeekingNow(true)}
                 onSeeked={() => setSeekingNow(false)}
                 onWaiting={() => setSeekingNow(true)}
-                onPlaying={() => setSeekingNow(false)}
-                onCanPlay={() => setSeekingNow(false)}
+                onPlaying={() => {
+                  setSeekingNow(false);
+                  setLoadError(false);
+                }}
+                onCanPlay={() => {
+                  setSeekingNow(false);
+                  setLoadError(false);
+                }}
+                onError={() => {
+                  // 무한 버퍼링 스피너 대신 에러 상태로 전환 (파일 이동·코덱·네트워크·만료 토큰)
+                  setSeekingNow(false);
+                  setLoadError(true);
+                }}
               />
               {/* 시킹·버퍼링 스피너 — HLS 세그먼트 fetch 동안 시각적 피드백 */}
               {seekingNow && (
@@ -1510,6 +1704,31 @@ export function FeedbackModal({
                       />
                     </svg>
                     버퍼링 중…
+                  </div>
+                </div>
+              )}
+              {/* 로드 실패 — 무한 스피너 대신 에러 카드 + 재시도 */}
+              {loadError && (
+                <div className="absolute inset-0 z-20 grid place-items-center bg-black/85 backdrop-blur-sm px-6">
+                  <div className="text-center max-w-[320px]">
+                    <div className="w-12 h-12 rounded-full bg-white/10 grid place-items-center mx-auto mb-3">
+                      <AlertCircle size={24} className="text-white/80" strokeWidth={2} />
+                    </div>
+                    <div className="text-[14px] font-semibold text-white">
+                      영상을 불러올 수 없어요
+                    </div>
+                    <div className="text-[12px] text-white/60 mt-1 leading-relaxed">
+                      파일이 이동·교체됐거나 네트워크 문제일 수 있어요.
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        retryLoad();
+                      }}
+                      className="mt-4 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-white bg-white/15 hover:bg-white/25 px-3.5 py-1.5 rounded-md transition-colors"
+                    >
+                      다시 시도
+                    </button>
                   </div>
                 </div>
               )}
@@ -1549,7 +1768,11 @@ export function FeedbackModal({
                   setAnnotationMode((v) => !v);
                   if (!annotationMode && vidRef.current) vidRef.current.pause();
                 }}
-                className={`absolute top-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11.5px] font-semibold border backdrop-blur transition-colors z-20 ${
+                className={`absolute top-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11.5px] font-semibold border backdrop-blur transition-all z-20 ${
+                  isFullscreen && !controlsVisible
+                    ? "opacity-0 pointer-events-none"
+                    : "opacity-100"
+                } ${
                   annotationMode
                     ? "bg-amber-400 text-black border-amber-400"
                     : "bg-black/55 text-white border-white/15 hover:bg-black/70"
@@ -1699,58 +1922,110 @@ export function FeedbackModal({
                 </div>
               )}
               </div>
-              {/* 컨트롤: 영상 위 하단 오버레이 (영상 영역을 더 크게) */}
-              <div className="absolute left-0 right-0 bottom-0 px-4 pb-3 z-30">
-                <TimelineStrip
-                  items={topLevelItems.filter((c) => c.kind !== "approve")}
-                  duration={duration}
-                  currentTime={currentTime}
-                  playing={playing}
-                  muted={muted}
-                  playbackRate={playbackRate}
-                  qualityMode={qualityMode}
-                  hlsReady={hlsStatus.kind === "ready"}
-                  filePath={entry.path}
-                  disableThumbs={isGuest}
-                  onSeek={seek}
-                  onTogglePlay={togglePlay}
-                  onToggleMute={toggleMute}
-                  onToggleFullscreen={toggleFullscreen}
-                  onChangePlaybackRate={changePlaybackRate}
-                  onChangeQuality={changeQuality}
-                  onSelect={(id) => {
-                    const c = items.find((x) => x.id === id);
-                    if (c) {
-                      seek(c.videoTimeMs, c.annotation);
-                      setSelectedId(id);
-                    }
-                  }}
-                />
+            </div>
+            {/* 컨트롤 바 (1번): 창=영상 아래(흐름·안 가림) · 전체화면=영상 위 오버레이+스크림+자동 숨김 */}
+            <div
+              className={
+                isFullscreen
+                  ? `absolute inset-x-0 bottom-0 z-30 transition-opacity duration-300 ${
+                      controlsVisible
+                        ? "opacity-100"
+                        : "opacity-0 pointer-events-none"
+                    }`
+                  : "shrink-0"
+              }
+            >
+              {isFullscreen && (
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/80 to-transparent" />
+              )}
+              {/* relative: 불투명 바가 스크림 '위'에 그려지도록 (positioned > static 페인트 순서) → 시크바 가독성 유지 */}
+              <div className="relative">
+              <TimelineStrip
+                items={visibleItems}
+                duration={duration}
+                currentTime={currentTime}
+                playing={playing}
+                muted={muted}
+                playbackRate={playbackRate}
+                qualityMode={qualityMode}
+                hlsReady={hlsStatus.kind === "ready"}
+                filePath={entry.path}
+                disableThumbs={isGuest}
+                unresolvedCount={unresolvedCount}
+                panelVisible={panelVisible}
+                onTogglePanel={() => setPanelVisible((v) => !v)}
+                onSeek={seek}
+                onStepFrame={stepFrame}
+                onTogglePlay={togglePlay}
+                onToggleMute={toggleMute}
+                onToggleFullscreen={toggleFullscreen}
+                onSettingsMenuChange={handleControlsMenuChange}
+                onChangePlaybackRate={changePlaybackRate}
+                onChangeQuality={changeQuality}
+                onSelect={(id) => {
+                  const c = items.find((x) => x.id === id);
+                  if (c) {
+                    seek(c.videoTimeMs, c.annotation);
+                    setSelectedId(id);
+                  }
+                }}
+              />
               </div>
             </div>
           </div>
 
-          {/* 우: 댓글 패널 (B안 카드 스타일) — panelVisible로 접기/펼치기 */}
+          {/* 우: 댓글 패널 (C안 본문 우선) — panelVisible로 접기/펼치기 */}
           <div
-            className={`${panelVisible ? "flex" : "hidden"} flex-1 md:flex-none w-full md:w-[360px] border-t md:border-t-0 md:border-l border-slate-200 flex-col bg-slate-50 min-h-0`}
+            className={`${panelVisible ? "flex" : "hidden"} flex-1 md:flex-none w-full md:w-[372px] border-t md:border-t-0 md:border-l border-slate-200 flex-col bg-white min-h-0`}
           >
-            <div className="px-4 pt-4 pb-3 bg-white border-b border-slate-200">
-              <div className="flex items-center gap-2 mb-2.5">
-                <h3 className="text-[14px] font-semibold tracking-tight">댓글</h3>
-                <span className="text-[12.5px] font-medium text-slate-400">
-                  {items.filter((c) => c.kind !== "approve").length}
-                  {feedbackCount > 0 && (
-                    <span className="text-accent font-semibold">
-                      {" · "}미해결 {feedbackCount}
-                    </span>
+            <div className="px-4 py-3 bg-white border-b border-slate-100">
+              <div className="flex items-center gap-1.5">
+                {/* 미해결 카운트 — 헤더·시크바 배지와 단일 출처 */}
+                {unresolvedCount > 0 ? (
+                  <span className="text-[12.5px] font-semibold text-slate-600">
+                    미해결{" "}
+                    <span className="text-accent font-bold">{unresolvedCount}</span>
+                  </span>
+                ) : (
+                  <span className="text-[12.5px] font-medium text-slate-400">
+                    댓글 {topLevelItems.filter((c) => c.kind !== "approve").length}
+                  </span>
+                )}
+                <div className="flex-1" />
+                {/* 정렬: 영상 시간순 ↔ 최신순 */}
+                <button
+                  onClick={toggleSort}
+                  title={sortDesc ? "최신 순 (나중 시점 먼저)" : "영상 순 (이른 시점 먼저)"}
+                  className="shrink-0 w-7 h-7 rounded-lg grid place-items-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                >
+                  {sortDesc ? (
+                    <ArrowDownNarrowWide size={15} strokeWidth={2} />
+                  ) : (
+                    <ArrowUpNarrowWide size={15} strokeWidth={2} />
                   )}
-                </span>
-                {/* 설정: AI 검수 · 클릭 시 재생 (헤더 시각소음 정리) */}
-                <div className="ml-auto relative">
+                </button>
+                {/* 해결 숨기기 (필터 세그먼트 대체) */}
+                <button
+                  onClick={toggleHideResolved}
+                  title={hideResolved ? "해결 항목 보기" : "해결 항목 숨기기"}
+                  className={`shrink-0 w-7 h-7 rounded-lg grid place-items-center transition-colors ${
+                    hideResolved
+                      ? "bg-slate-900 text-white"
+                      : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                  }`}
+                >
+                  {hideResolved ? (
+                    <EyeOff size={15} strokeWidth={2} />
+                  ) : (
+                    <Eye size={15} strokeWidth={2} />
+                  )}
+                </button>
+                {/* 설정: AI 검수 · 클릭 시 재생 */}
+                <div className="shrink-0 relative">
                   <button
                     onClick={() => setSettingsOpen((v) => !v)}
                     title="AI 검수 · 클릭 시 재생"
-                    className={`w-7 h-7 rounded grid place-items-center transition-colors ${
+                    className={`w-7 h-7 rounded-lg grid place-items-center transition-colors ${
                       settingsOpen
                         ? "bg-slate-100 text-slate-900"
                         : "text-slate-400 hover:bg-slate-100 hover:text-slate-700"
@@ -1807,46 +2082,6 @@ export function FeedbackModal({
                     </>
                   )}
                 </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="flex-1 flex items-center gap-1 bg-surface p-0.5 rounded-md">
-                  <FilterTab
-                    active={viewFilter === "all"}
-                    onClick={() => setViewFilter("all")}
-                    label="전체"
-                  />
-                  <FilterTab
-                    active={viewFilter === "feedback"}
-                    onClick={() => setViewFilter("feedback")}
-                    label="수정"
-                    count={feedbackCount}
-                    color="#111"
-                    icon={<PencilLine size={11} strokeWidth={2.2} />}
-                  />
-                  <FilterTab
-                    active={viewFilter === "praise"}
-                    onClick={() => setViewFilter("praise")}
-                    label="좋아요"
-                    count={praiseCount}
-                    color={PRAISE_COLOR}
-                    icon={<Heart size={11} strokeWidth={2.2} />}
-                  />
-                </div>
-                <button
-                  onClick={toggleSort}
-                  title={sortDesc ? "최신 순 (나중 시점 먼저)" : "영상 순 (이른 시점 먼저)"}
-                  className={`shrink-0 w-7 h-7 rounded grid place-items-center transition-colors ${
-                    sortDesc
-                      ? "bg-slate-900 text-white"
-                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                  }`}
-                >
-                  {sortDesc ? (
-                    <ArrowDownNarrowWide size={13} strokeWidth={2.2} />
-                  ) : (
-                    <ArrowUpNarrowWide size={13} strokeWidth={2.2} />
-                  )}
-                </button>
               </div>
             </div>
 
@@ -1918,58 +2153,23 @@ export function FeedbackModal({
                 </div>
               ) : visibleItems.length === 0 ? (
                 <div className="p-10 text-center">
-                  {viewFilter === "feedback" ? (() => {
-                    const totalFeedback = topLevelItems.filter(
-                      (c) => c.kind === "feedback",
-                    ).length;
-                    const hasResolvedFeedback = totalFeedback > 0;
-                    return hasResolvedFeedback ? (
-                      <>
-                        <div className="w-12 h-12 rounded-full bg-emerald-50 grid place-items-center mx-auto mb-3">
-                          <Check
-                            size={22}
-                            className="text-emerald-500"
-                            strokeWidth={2.4}
-                          />
-                        </div>
-                        <div className="text-[13px] font-semibold text-slate-700">
-                          모든 수정 사항 확인 완료!
-                        </div>
-                        <div className="text-[11.5px] text-slate-400 mt-1">
-                          전체 탭에서 지난 내역을 볼 수 있어요
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-12 h-12 rounded-full bg-slate-100 grid place-items-center mx-auto mb-3">
-                          <PencilLine
-                            size={22}
-                            className="text-slate-400"
-                            strokeWidth={2}
-                          />
-                        </div>
-                        <div className="text-[13px] font-semibold text-slate-700">
-                          수정 요청이 없어요
-                        </div>
-                        <div className="text-[11.5px] text-slate-400 mt-1">
-                          아직 피드백이 없습니다
-                        </div>
-                      </>
-                    );
-                  })() : viewFilter === "praise" ? (
+                  {hideResolved &&
+                  topLevelItems.some(
+                    (c) => c.kind !== "approve" && c.resolvedAt,
+                  ) ? (
                     <>
-                      <div className="w-12 h-12 rounded-full bg-pink-50 grid place-items-center mx-auto mb-3">
-                        <Heart
+                      <div className="w-12 h-12 rounded-full bg-emerald-50 grid place-items-center mx-auto mb-3">
+                        <Check
                           size={22}
-                          className="text-pink-500"
-                          strokeWidth={2.2}
+                          className="text-emerald-500"
+                          strokeWidth={2.4}
                         />
                       </div>
                       <div className="text-[13px] font-semibold text-slate-700">
-                        아직 좋아요가 없어요
+                        모든 항목 확인 완료!
                       </div>
                       <div className="text-[11.5px] text-slate-400 mt-1">
-                        인상적인 부분에 좋아요를 남겨보세요
+                        해결 숨기기를 끄면 지난 내역을 볼 수 있어요
                       </div>
                     </>
                   ) : (
@@ -2000,10 +2200,10 @@ export function FeedbackModal({
                   )}
                 </div>
               ) : (
-                <div className="p-3 space-y-2">
+                <div>
                   {/* 파트너: 매니저 확인 대기중인 게스트 피드백 안내 */}
                   {!isStaff && pendingCount > 0 && (
-                    <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 text-[12px] text-amber-800">
+                    <div className="mx-3 mt-3 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 text-[12px] text-amber-800">
                       <AlertCircle size={13} strokeWidth={2.2} />
                       <span>
                         클라이언트 피드백{" "}
@@ -2025,7 +2225,7 @@ export function FeedbackModal({
                       ).length;
                       if (internalCount === 0) return null;
                       return (
-                        <div className="flex items-center gap-2 bg-sky-50 border border-sky-200 rounded-md px-3 py-2 text-[12px] text-sky-900">
+                        <div className="mx-3 mt-3 flex items-center gap-2 bg-sky-50 border border-sky-200 rounded-md px-3 py-2 text-[12px] text-sky-900">
                           <Eye size={13} strokeWidth={2.2} />
                           <span className="flex-1">
                             내부 댓글{" "}
@@ -2331,70 +2531,31 @@ function ModerateModal({
   );
 }
 
-function Marker({
-  category,
-  kind,
-  resolved,
-}: {
-  category: Category;
-  kind: Kind;
-  resolved: boolean;
-}) {
-  const meta = getCategoryMeta(category);
-  const color = kind === "praise" ? PRAISE_COLOR : meta.color;
-  if (kind === "praise") {
-    // 좋아요: 채워진 하트
+// 시크바 마커 — 상태색(미해결 주황·AI 보라·해결 회색)으로 카드 타임코드 칩과 결속.
+// 어두운 바(#0b0f17) 위라 링은 바 색으로.
+function Marker({ comment }: { comment: CommentRow }) {
+  const { color, isPraise, resolved } = statusOf(comment);
+  if (isPraise) {
+    // 좋아요: 채워진 하트 (해결 시 비움)
     return (
       <Heart
-        size={14}
-        strokeWidth={1.5}
+        size={13}
+        strokeWidth={2}
         fill={resolved ? "transparent" : color}
         color={color}
-        style={{ filter: `drop-shadow(0 0 0 2px #0f0f0f)` }}
+        style={{ filter: "drop-shadow(0 0 1.5px rgba(0,0,0,.8))" }}
       />
     );
   }
-  // 수정: 원
+  // 수정/AI: 원
   return (
     <span
-      className="block w-[10px] h-[10px] rounded-full border-2 border-[#0f0f0f]"
+      className="block w-[11px] h-[11px] rounded-full"
       style={{
-        background: resolved ? "transparent" : color,
-        boxShadow: `0 0 0 1.5px ${color}`,
+        background: color,
+        boxShadow: "0 0 0 2.5px #0b0f17, 0 1px 3px rgba(0,0,0,.6)",
       }}
     />
-  );
-}
-
-function FilterTab({
-  active,
-  onClick,
-  label,
-  count,
-  color,
-  icon,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-  count?: number;
-  color?: string;
-  icon?: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded text-[11.5px] font-medium transition-colors ${
-        active ? "bg-white shadow-sm font-semibold" : "text-text-faint hover:text-text"
-      }`}
-      style={active && color ? { color } : undefined}
-    >
-      {icon}
-      {label}
-      {typeof count === "number" && count > 0 && (
-        <span className="text-[10.5px] opacity-70">{count}</span>
-      )}
-    </button>
   );
 }
 
@@ -2408,10 +2569,15 @@ function TimelineStrip({
   qualityMode,
   hlsReady,
   filePath,
+  unresolvedCount,
+  panelVisible,
   onSeek,
+  onStepFrame,
   onTogglePlay,
+  onTogglePanel,
   onToggleMute,
   onToggleFullscreen,
+  onSettingsMenuChange,
   onChangePlaybackRate,
   onChangeQuality,
   onSelect,
@@ -2426,10 +2592,15 @@ function TimelineStrip({
   qualityMode: "proxy" | "original";
   hlsReady: boolean;
   filePath: string;
+  unresolvedCount: number;
+  panelVisible: boolean;
   onSeek: (ms: number) => void;
+  onStepFrame: (dir: -1 | 1) => void;
   onTogglePlay: () => void;
+  onTogglePanel: () => void;
   onToggleMute: () => void;
   onToggleFullscreen: () => void;
+  onSettingsMenuChange?: (open: boolean) => void;
   onChangePlaybackRate: (rate: number) => void;
   onChangeQuality: (mode: "proxy" | "original") => void;
   onSelect: (id: string) => void;
@@ -2437,6 +2608,10 @@ function TimelineStrip({
 }) {
   const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
   const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+  // 부모(전체화면 자동 숨김)에게 설정 메뉴 열림 상태 알림 → 메뉴 열린 동안 숨김 정지
+  useEffect(() => {
+    onSettingsMenuChange?.(settingsMenuOpen);
+  }, [settingsMenuOpen, onSettingsMenuChange]);
   // 실제 원본 재생 중인지 (원본 모드이거나, 저화질 변환본이 아직 없을 때)
   const effectiveOriginal = qualityMode === "original" || !hlsReady;
   const barRef = useRef<HTMLDivElement>(null);
@@ -2496,11 +2671,6 @@ function TimelineStrip({
     }
   }, [filePath, duration, disableThumbs]);
 
-  const jump = (deltaSec: number) => {
-    const next = Math.max(0, Math.min(duration, currentTime + deltaSec * 1000));
-    onSeek(next);
-  };
-
   // 이전/다음 피드백으로 이동 (현재 시간 기준 인접 댓글 탐색)
   const gotoFeedback = (direction: "prev" | "next") => {
     const sorted = [...items].sort((a, b) => a.videoTimeMs - b.videoTimeMs);
@@ -2516,10 +2686,10 @@ function TimelineStrip({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-3">
-      {/* Row 1: 진행바 (위) */}
-      <div className="flex items-center gap-3 mb-2.5">
-        <span className="shrink-0 text-[11px] font-mono font-semibold text-slate-900 tabular-nums min-w-[52px]">
+    <div className="flex-none bg-[#0b0f17] border-t border-[#1e293b] px-4 pt-2.5 pb-3 select-none">
+      {/* Row 1: 시크바 */}
+      <div className="flex items-center gap-3">
+        <span className="shrink-0 text-[12px] font-mono font-semibold text-slate-300 tabular-nums">
           {formatTc(currentTime)}
         </span>
         <div
@@ -2527,7 +2697,7 @@ function TimelineStrip({
           onClick={onBarClick}
           onMouseMove={onBarMouseMove}
           onMouseLeave={onBarMouseLeave}
-          className="relative h-5 cursor-pointer flex-1"
+          className="relative h-[18px] cursor-pointer flex-1"
         >
           {/* 호버 썸네일 프리뷰 — 양 끝에서 overflow 안 되도록 clamp */}
           {!disableThumbs && hoverState && duration > 0 && filePath && hoverState.barWidth > 0 && (() => {
@@ -2576,17 +2746,16 @@ function TimelineStrip({
               </div>
             );
           })()}
-          <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1.5 bg-slate-100 rounded-full" />
+          <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-slate-700" />
           {duration > 0 && (
             <div
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 bg-slate-900 rounded-full"
+              className="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-accent"
               style={{ width: `${(currentTime / duration) * 100}%` }}
             />
           )}
           {duration > 0 &&
             items.map((c) => {
-              const meta = getCategoryMeta(c.category);
-              const pct = (c.videoTimeMs / duration) * 100;
+              const left = (c.videoTimeMs / duration) * 100;
               const kindLabel = c.kind === "praise" ? "좋아요" : "수정";
               return (
                 <button
@@ -2595,126 +2764,129 @@ function TimelineStrip({
                     e.stopPropagation();
                     onSelect(c.id);
                   }}
-                  title={`${kindLabel} · ${meta.label} · ${formatTc(c.videoTimeMs)}`}
-                  className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 transition-transform hover:scale-125"
-                  style={{ left: `${pct}%` }}
+                  title={`${kindLabel} · ${formatTc(c.videoTimeMs)}`}
+                  className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 z-[2] transition-transform hover:scale-125"
+                  style={{ left: `${left}%` }}
                 >
-                  <Marker
-                    category={c.category}
-                    kind={c.kind}
-                    resolved={!!c.resolvedAt}
-                  />
+                  <Marker comment={c} />
                 </button>
               );
             })}
           {duration > 0 && (
             <div
-              className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+              className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 z-[3] pointer-events-none"
               style={{ left: `${(currentTime / duration) * 100}%` }}
             >
-              <span className="block w-[12px] h-[12px] rounded-full bg-white border-2 border-slate-900 shadow" />
+              <span
+                className="block w-[15px] h-[15px] rounded-full bg-white"
+                style={{
+                  boxShadow:
+                    "0 0 0 2px #e85008, 0 1px 5px rgba(0,0,0,.6)",
+                }}
+              />
             </div>
           )}
         </div>
-        <span className="shrink-0 text-[11px] font-mono text-slate-400 tabular-nums min-w-[52px] text-right">
+        <span className="shrink-0 text-[12px] font-mono text-slate-500 tabular-nums text-right">
           {formatTc(duration)}
         </span>
       </div>
 
-      {/* Row 2: 컨트롤 */}
-      <div className="flex items-center gap-1">
-        {/* V5 클러스터 (라이트 테마) */}
-        <div className="shrink-0 flex items-center bg-slate-50 border border-slate-200 rounded-full p-0.5">
+      {/* Row 2: 컨트롤 — 프레임 스텝·재생 | 코멘트 네비 | 유틸 */}
+      <div className="flex items-center gap-2.5 mt-2.5">
+        {/* 프레임 스텝 + 재생 */}
+        <div className="flex items-center gap-1">
           <button
-            onClick={() => jump(-10)}
-            className="h-7 px-2.5 rounded-full text-slate-500 hover:bg-white hover:shadow-sm hover:text-slate-900 text-[10.5px] font-bold font-mono tabular-nums transition-all"
-            title="10초 뒤로 (Shift+←)"
+            onClick={() => onStepFrame(-1)}
+            title="이전 프레임"
+            className="w-9 h-9 rounded-[9px] grid place-items-center text-slate-300 hover:bg-white/10 transition-colors"
           >
-            10초
-          </button>
-          <button
-            onClick={() => jump(-3)}
-            className="h-7 px-2.5 rounded-full text-slate-500 hover:bg-white hover:shadow-sm hover:text-slate-900 text-[10.5px] font-bold font-mono tabular-nums transition-all"
-            title="3초 뒤로 (←)"
-          >
-            3초
+            <StepBack size={18} strokeWidth={2} fill="currentColor" />
           </button>
           <button
             onClick={onTogglePlay}
-            className="h-8 w-8 rounded-full bg-slate-900 text-white grid place-items-center mx-0.5 shadow hover:bg-slate-700 transition-colors"
             title={playing ? "일시정지 (Space/K)" : "재생 (Space/K)"}
+            className="w-11 h-11 rounded-full bg-accent text-white grid place-items-center shadow-[0_4px_14px_rgba(232,80,8,0.4)] hover:opacity-90 transition-opacity"
           >
             {playing ? (
-              <Pause size={12} strokeWidth={2.2} fill="currentColor" />
+              <Pause size={20} strokeWidth={2.4} fill="currentColor" />
             ) : (
-              <Play size={12} strokeWidth={2.2} fill="currentColor" />
+              <Play size={20} strokeWidth={2.4} fill="currentColor" />
             )}
           </button>
           <button
-            onClick={() => jump(3)}
-            className="h-7 px-2.5 rounded-full text-slate-500 hover:bg-white hover:shadow-sm hover:text-slate-900 text-[10.5px] font-bold font-mono tabular-nums transition-all"
-            title="3초 앞으로 (→)"
+            onClick={() => onStepFrame(1)}
+            title="다음 프레임"
+            className="w-9 h-9 rounded-[9px] grid place-items-center text-slate-300 hover:bg-white/10 transition-colors"
           >
-            3초
-          </button>
-          <button
-            onClick={() => jump(10)}
-            className="h-7 px-2.5 rounded-full text-slate-500 hover:bg-white hover:shadow-sm hover:text-slate-900 text-[10.5px] font-bold font-mono tabular-nums transition-all"
-            title="10초 앞으로 (Shift+→)"
-          >
-            10초
+            <StepForward size={18} strokeWidth={2} fill="currentColor" />
           </button>
         </div>
 
         {/* 구분선 */}
-        <div className="w-px h-6 bg-slate-200 mx-2" />
+        <div className="w-px h-6 bg-[#1e293b] mx-1" />
 
-        {/* 이전/다음 피드백 */}
-        <button
-          onClick={() => gotoFeedback("prev")}
-          disabled={items.length === 0}
-          className="h-8 px-2.5 rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900 text-[11px] font-semibold inline-flex items-center gap-1.5 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-          title="이전 피드백 ([ 키)"
-        >
-          <SkipBack size={13} strokeWidth={2.2} fill="currentColor" />
-          이전 피드백
-        </button>
-        <button
-          onClick={() => gotoFeedback("next")}
-          disabled={items.length === 0}
-          className="h-8 px-2.5 rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900 text-[11px] font-semibold inline-flex items-center gap-1.5 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-          title="다음 피드백 (] 키)"
-        >
-          다음 피드백
-          <SkipForward size={13} strokeWidth={2.2} fill="currentColor" />
-        </button>
-
-        <div className="ml-auto flex items-center gap-0.5">
+        {/* 코멘트 네비: 이전 · 패널토글(미해결 배지) · 다음 */}
+        <div className="flex items-center">
           <button
-            onClick={onToggleMute}
-            className="w-8 h-8 rounded-md grid place-items-center text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors"
-            title={muted ? "음소거 해제" : "음소거"}
+            onClick={() => gotoFeedback("prev")}
+            disabled={items.length === 0}
+            title="이전 코멘트 ([ 키)"
+            className="w-[34px] h-[34px] rounded-[9px] grid place-items-center text-slate-300 hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
           >
-            {muted ? (
-              <VolumeX size={15} strokeWidth={2} />
-            ) : (
-              <Volume2 size={15} strokeWidth={2} />
+            <ChevronLeft size={18} strokeWidth={2.2} />
+          </button>
+          <button
+            onClick={onTogglePanel}
+            title={panelVisible ? "댓글 패널 접기" : "댓글 패널 펼치기"}
+            className="relative w-[34px] h-[34px] rounded-[9px] grid place-items-center text-slate-300 hover:bg-white/10 transition-colors"
+          >
+            <MessageSquare size={18} strokeWidth={2} />
+            {unresolvedCount > 0 && (
+              <span className="absolute top-0.5 right-0 min-w-[14px] h-[14px] px-1 rounded-full bg-accent text-white text-[8.5px] font-bold grid place-items-center leading-none">
+                {unresolvedCount}
+              </span>
             )}
           </button>
-          {/* 설정: 재생 속도 + 화질 (톱니 · 유튜브식, 우상단 화질 배지) */}
+          <button
+            onClick={() => gotoFeedback("next")}
+            disabled={items.length === 0}
+            title="다음 코멘트 (] 키)"
+            className="w-[34px] h-[34px] rounded-[9px] grid place-items-center text-slate-300 hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+          >
+            <ChevronRight size={18} strokeWidth={2.2} />
+          </button>
+        </div>
+
+        <div className="flex-1" />
+
+        {/* 유틸: 음소거 · 속도/화질 · 전체화면 */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onToggleMute}
+            title={muted ? "음소거 해제" : "음소거"}
+            className="w-9 h-9 rounded-[9px] grid place-items-center text-slate-400 hover:bg-white/10 hover:text-slate-200 transition-colors"
+          >
+            {muted ? (
+              <VolumeX size={17} strokeWidth={2} />
+            ) : (
+              <Volume2 size={17} strokeWidth={2} />
+            )}
+          </button>
+          {/* 설정: 재생 속도 + 화질 (톱니 · 우상단 화질 배지) */}
           <div className="relative">
             <button
               onClick={() => setSettingsMenuOpen((v) => !v)}
-              className={`relative w-8 h-8 rounded-md grid place-items-center transition-colors ${
-                settingsMenuOpen
-                  ? "text-slate-900 bg-slate-100"
-                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-              }`}
               title="설정 (재생 속도 · 화질)"
+              className={`relative w-9 h-9 rounded-[9px] grid place-items-center transition-colors ${
+                settingsMenuOpen
+                  ? "text-white bg-white/10"
+                  : "text-slate-400 hover:bg-white/10 hover:text-slate-200"
+              }`}
             >
-              <Settings2 size={15} strokeWidth={2} />
+              <Settings2 size={17} strokeWidth={2} />
               <span
-                className={`absolute -top-1 -right-1.5 px-1 py-px rounded text-[8px] font-bold leading-none ring-[1.5px] ring-white ${
+                className={`absolute -top-0.5 -right-1 px-1 py-px rounded text-[8px] font-bold leading-none ring-[1.5px] ring-[#0b0f17] ${
                   effectiveOriginal
                     ? "bg-accent text-white"
                     : "bg-slate-500 text-white"
@@ -2815,15 +2987,31 @@ function TimelineStrip({
           </div>
           <button
             onClick={onToggleFullscreen}
-            className="w-8 h-8 rounded-md grid place-items-center text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors"
             title="전체화면"
+            className="w-9 h-9 rounded-[9px] grid place-items-center text-slate-400 hover:bg-white/10 hover:text-slate-200 transition-colors"
           >
-            <Maximize size={14} strokeWidth={2} />
+            <Maximize size={16} strokeWidth={2} />
           </button>
         </div>
       </div>
     </div>
   );
+}
+
+// 작성자 아바타 색 — 이름/ID 해시로 안정적 배정 (Math.random 미사용)
+const AVATAR_COLORS = [
+  "#8a6fb0",
+  "#5b8def",
+  "#e0794b",
+  "#3aa675",
+  "#c2548a",
+  "#5c7a99",
+  "#b08a3a",
+];
+function avatarColor(seed: string): string {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
 }
 
 function CommentItem({
@@ -2876,7 +3064,7 @@ function CommentItem({
   const isPending = comment.status === "pending";
   const hasModerated = !!comment.moderatedBody;
   const isClientVisible = comment.visibility === "client";
-  const meta = getCategoryMeta(comment.category);
+  const status = statusOf(comment);
 
   const annotation = comment.annotation;
   const hasKeywordFormat =
@@ -2889,14 +3077,15 @@ function CommentItem({
 
   return (
     <div
-      className={`bg-white rounded-lg p-3 transition-colors ${
+      data-cid={comment.id}
+      className={`group relative border-t border-slate-100 first:border-t-0 px-4 py-3.5 transition-colors ${
         selected
-          ? "border-2 border-slate-900"
+          ? "bg-accent-soft"
           : isPending
-            ? "border border-amber-400 bg-amber-50/30"
+            ? "bg-amber-50/40"
             : isResolved
-              ? "border border-slate-200 bg-slate-50/60"
-              : "border border-slate-200 hover:border-slate-300"
+              ? "bg-slate-50"
+              : "hover:bg-slate-50"
       }`}
     >
       {/* 상단 상태 줄: 게스트/대기/클라공개 배지 + 스태프 액션 */}
@@ -2983,15 +3172,14 @@ function CommentItem({
         </div>
       )}
 
-      <div className="flex gap-2.5">
-        {/* 좌측: 해결 체크박스 (클릭 전파 차단) */}
+      <div className="flex gap-3">
+        {/* 좌측: 원형 해결 체크박스 (유지) */}
         <button
           onClick={(e) => {
             e.stopPropagation();
             if (resolvePending) return; // 이중 클릭 방지
             setResolvePending(true);
             onResolve();
-            // 애니메이션 + API round-trip 여유 (600ms)
             setTimeout(() => setResolvePending(false), 700);
           }}
           disabled={resolvePending}
@@ -3014,23 +3202,17 @@ function CommentItem({
           </svg>
         </button>
 
-        {/* 중앙 본문: 클릭 시 해당 시각으로 이동 */}
-        <button
-          onClick={onSelect}
-          className="flex-1 min-w-0 text-left block"
-        >
-          {/* 메타 행 */}
-          <div className="flex items-center gap-2 mb-1">
-            <span className="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded tabular-nums">
-              {formatTc(comment.videoTimeMs)}
-            </span>
+        <div className="flex-1 min-w-0">
+          {/* 메타: 타임코드 칩(상태색) · 작은 아바타 · 작은 회색 이름 — 클릭=시각 이동 */}
+          <button
+            onClick={onSelect}
+            className="flex items-center gap-1.5 mb-1.5 max-w-full text-left"
+          >
             <span
-              className="text-[10px] font-bold px-1.5 py-0.5 rounded inline-flex items-center gap-1"
-              style={{ color: meta.color, background: meta.bgSoft }}
-              title={meta.label}
+              className="font-mono text-[10px] font-extrabold px-1.5 py-0.5 rounded tabular-nums shrink-0"
+              style={{ color: status.color, background: status.soft }}
             >
-              <CategoryIcon category={comment.category} size={9} stroke={2.4} />
-              {meta.label}
+              {formatTc(comment.videoTimeMs)}
             </span>
             {isPraise && (
               <Heart
@@ -3038,173 +3220,184 @@ function CommentItem({
                 strokeWidth={2.2}
                 fill={PRAISE_COLOR}
                 color={PRAISE_COLOR}
+                className="shrink-0"
               />
             )}
-            <span className="text-[10.5px] text-slate-400 ml-auto inline-flex items-center gap-1 shrink-0">
-              {isAI ? (
-                <>
-                  <span className="w-3 h-3 rounded-full bg-gradient-to-br from-violet-500 to-blue-500 inline-flex items-center justify-center">
-                    <Sparkles size={7} className="text-white" strokeWidth={2.5} />
-                  </span>
-                  AI
-                </>
-              ) : (
-                <>
-                  {comment.authorName}
-                  <RoleBadge role={comment.authorRole ?? null} />
-                </>
-              )}
-            </span>
-          </div>
-
-          {/* 본문 */}
-          {hasKeywordFormat ? (
-            <div className="text-[13px] font-medium text-slate-900 mb-0.5">
-              &quot;{annotation?.original ?? ""}&quot;{" "}
-              <span className="text-slate-300 mx-0.5">→</span>{" "}
-              <span className="text-orange-600">
-                &quot;{annotation?.suggestion ?? ""}&quot;
-              </span>
-            </div>
-          ) : (
-            <div
-              className={`text-[13px] whitespace-pre-wrap break-words ${
-                isResolved
-                  ? "text-slate-400 line-through decoration-slate-300"
-                  : "text-slate-700"
-              }`}
-            >
-              {displayBody}
-            </div>
-          )}
-
-          {/* 서브 정보 */}
-          <div className="flex items-center mt-1">
-            {hasKeywordFormat && annotation.note ? (
-              <span className="text-[11px] text-slate-500 truncate">
-                {annotation.note}
+            {isAI ? (
+              <span
+                className="w-[18px] h-[18px] rounded-full grid place-items-center shrink-0"
+                style={{ background: AI_MARK_COLOR }}
+              >
+                <Sparkles size={9} className="text-white" strokeWidth={2.5} />
               </span>
             ) : (
-              <span className="text-[11px] text-slate-400">
-                {formatRelative(comment.createdAt)}
+              <span
+                className="w-[18px] h-[18px] rounded-full grid place-items-center text-[8.5px] font-bold text-white shrink-0"
+                style={{
+                  background: avatarColor(
+                    comment.authorId || comment.authorName || "?",
+                  ),
+                }}
+              >
+                {(comment.authorName || "?").slice(0, 1)}
               </span>
             )}
-          </div>
-        </button>
-
-        {/* 우측: 답글 + 더보기 */}
-        <div className="shrink-0 flex items-start gap-0.5 mt-0.5">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setReplyOpen((v) => !v);
-            }}
-            className={`w-6 h-6 rounded grid place-items-center transition-colors relative ${
-              replyOpen
-                ? "bg-slate-900 text-white"
-                : "text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-            }`}
-            title="답글"
-          >
-            <CornerDownRight size={12} strokeWidth={2.2} />
-            {replies.length > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-1 rounded-full bg-slate-900 text-white text-[9px] font-bold grid place-items-center">
-                {replies.length}
+            <span className="text-[11px] font-semibold text-slate-500 inline-flex items-center gap-1 min-w-0">
+              <span className="truncate">
+                {isAI ? "AI 검수" : comment.authorName}
               </span>
+              {!isAI && <RoleBadge role={comment.authorRole ?? null} />}
+            </span>
+          </button>
+
+          {/* 본문 크게 — 클릭=시각 이동 (해결 시 디밍, 취소선 없음) */}
+          <button onClick={onSelect} className="block w-full text-left">
+            {hasKeywordFormat ? (
+              <div
+                className={`text-[14px] leading-relaxed ${
+                  isResolved ? "text-slate-400" : "text-slate-900"
+                }`}
+              >
+                &quot;{annotation?.original ?? ""}&quot;{" "}
+                <span className="text-slate-300 mx-0.5">→</span>{" "}
+                <span
+                  className={
+                    isResolved ? "text-slate-400" : "text-accent font-semibold"
+                  }
+                >
+                  &quot;{annotation?.suggestion ?? ""}&quot;
+                </span>
+              </div>
+            ) : (
+              <div
+                className={`text-[14px] leading-relaxed whitespace-pre-wrap break-words ${
+                  isResolved ? "text-slate-400" : "text-slate-900"
+                }`}
+              >
+                {displayBody}
+              </div>
+            )}
+            {hasKeywordFormat && annotation?.note && (
+              <div className="text-[11px] text-slate-400 mt-1 truncate">
+                {annotation.note}
+              </div>
             )}
           </button>
-          <div className="relative">
+
+          {/* 액션: 답글 · 더보기 — 마우스는 hover/focus 노출, 터치(hover 없음)는 항상 노출 */}
+          <div className="flex items-center gap-3 mt-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100 transition-opacity">
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setMenuOpen((v) => !v);
+                setReplyOpen((v) => !v);
               }}
-              className="w-6 h-6 rounded grid place-items-center text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
-              title="더보기"
+              className={`text-[11px] font-semibold inline-flex items-center gap-1 transition-colors ${
+                replyOpen
+                  ? "text-slate-900"
+                  : "text-slate-400 hover:text-slate-700"
+              }`}
             >
-              <MoreHorizontal size={13} strokeWidth={2.2} />
+              <CornerDownRight size={13} strokeWidth={2.2} />
+              답글{replies.length > 0 ? ` ${replies.length}` : ""}
             </button>
-            {menuOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-10"
-                  onClick={() => setMenuOpen(false)}
-                />
-                <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[140px] z-20">
-                  <button
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onChangeKind(isPraise ? "feedback" : "praise");
-                    }}
-                    className="w-full px-3 py-1.5 text-left text-[11.5px] text-slate-700 hover:bg-slate-50 inline-flex items-center gap-2"
-                  >
-                    {isPraise ? (
-                      <>
-                        <PencilLine size={11} strokeWidth={2.2} />
-                        수정으로 변경
-                      </>
-                    ) : (
-                      <>
-                        <Heart size={11} strokeWidth={2.2} />
-                        좋아요로 변경
-                      </>
-                    )}
-                  </button>
-                  <div className="border-t border-slate-100 my-0.5" />
-                  <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase">
-                    카테고리
-                  </div>
-                  {CATEGORIES.map((cat) => (
+            <div className="relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMenuOpen((v) => !v);
+                }}
+                className="text-[11px] font-semibold text-slate-400 hover:text-slate-700 inline-flex items-center gap-1 transition-colors"
+              >
+                <MoreHorizontal size={13} strokeWidth={2.2} />
+                더보기
+              </button>
+              {menuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setMenuOpen(false)}
+                  />
+                  <div className="absolute left-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[150px] z-20">
                     <button
-                      key={cat.key}
                       onClick={() => {
                         setMenuOpen(false);
-                        if (cat.key !== comment.category) onChangeCategory(cat.key);
+                        onChangeKind(isPraise ? "feedback" : "praise");
                       }}
-                      className={`w-full px-3 py-1.5 text-left text-[11.5px] inline-flex items-center gap-2 hover:bg-slate-50 ${
-                        cat.key === comment.category ? "font-bold" : ""
-                      }`}
-                      style={{ color: cat.color }}
+                      className="w-full px-3 py-1.5 text-left text-[11.5px] text-slate-700 hover:bg-slate-50 inline-flex items-center gap-2"
                     >
-                      <CategoryIcon category={cat.key} size={11} stroke={2.2} />
-                      {cat.label}
-                      {cat.key === comment.category && (
-                        <Check size={10} strokeWidth={2.5} className="ml-auto text-emerald-500" />
+                      {isPraise ? (
+                        <>
+                          <PencilLine size={11} strokeWidth={2.2} />
+                          수정으로 변경
+                        </>
+                      ) : (
+                        <>
+                          <Heart size={11} strokeWidth={2.2} />
+                          좋아요로 변경
+                        </>
                       )}
                     </button>
-                  ))}
-                  {canEdit && (
-                    <>
-                      <div className="border-t border-slate-100 my-0.5" />
+                    <div className="border-t border-slate-100 my-0.5" />
+                    <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase">
+                      카테고리
+                    </div>
+                    {CATEGORIES.map((cat) => (
                       <button
+                        key={cat.key}
                         onClick={() => {
                           setMenuOpen(false);
-                          onDelete();
+                          if (cat.key !== comment.category)
+                            onChangeCategory(cat.key);
                         }}
-                        className="w-full px-3 py-1.5 text-left text-[11.5px] text-red-600 hover:bg-red-50 inline-flex items-center gap-2"
+                        className={`w-full px-3 py-1.5 text-left text-[11.5px] inline-flex items-center gap-2 hover:bg-slate-50 ${
+                          cat.key === comment.category ? "font-bold" : ""
+                        }`}
+                        style={{ color: cat.color }}
                       >
-                        <Trash2 size={11} strokeWidth={2.2} />
-                        삭제
+                        <CategoryIcon category={cat.key} size={11} stroke={2.2} />
+                        {cat.label}
+                        {cat.key === comment.category && (
+                          <Check
+                            size={10}
+                            strokeWidth={2.5}
+                            className="ml-auto text-emerald-500"
+                          />
+                        )}
                       </button>
-                    </>
-                  )}
-                </div>
-              </>
-            )}
+                    ))}
+                    {canEdit && (
+                      <>
+                        <div className="border-t border-slate-100 my-0.5" />
+                        <button
+                          onClick={() => {
+                            setMenuOpen(false);
+                            onDelete();
+                          }}
+                          className="w-full px-3 py-1.5 text-left text-[11.5px] text-red-600 hover:bg-red-50 inline-flex items-center gap-2"
+                        >
+                          <Trash2 size={11} strokeWidth={2.2} />
+                          삭제
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* AI 댓글 평가 — 사용자가 정확/부정확 + 사유 남기는 인라인 UI */}
       {isAI && (
-        <div className="ml-7 mt-0.5">
+        <div className="ml-8 mt-1">
           <AiFeedbackRow commentId={comment.id} />
         </div>
       )}
 
       {/* 답글 인라인 표시 (항상) */}
       {replies.length > 0 && (
-        <div className="mt-2.5 ml-7 pl-3 border-l-2 border-slate-100 space-y-1.5">
+        <div className="mt-2.5 ml-8 pl-3 border-l-2 border-slate-100 space-y-1.5">
           {replies.map((r) => {
             const rCanEdit = r.authorId === currentUserId || isAdmin;
             return (
@@ -3228,7 +3421,7 @@ function CommentItem({
                 {rCanEdit && (
                   <button
                     onClick={() => onDeleteReply(r.id, r.authorName)}
-                    className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5"
+                    className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 transition-opacity shrink-0 mt-0.5"
                     title="답글 삭제"
                   >
                     <Trash2 size={10} strokeWidth={2.2} />
@@ -3242,7 +3435,7 @@ function CommentItem({
 
       {/* 답글 입력창 (토글) */}
       {replyOpen && (
-        <div className="mt-2.5 ml-7 pl-3 border-l-2 border-slate-200">
+        <div className="mt-2.5 ml-8 pl-3 border-l-2 border-slate-200">
           <ReplyCompose
             filePath={filePath}
             parentId={comment.id}
