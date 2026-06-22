@@ -5,7 +5,9 @@ import { ChevronRight, Package } from "lucide-react";
 import { getCurrentSession } from "@/lib/auth/session";
 import { listDirectory, ensureDir, type FileEntry } from "@/lib/fs/storage";
 import { getPersonalUsage } from "@/lib/fs/usage";
+import { getPartnerPanelData } from "@/lib/dashboard/queries";
 import { FilesPane } from "@/components/FilesPane";
+import { PartnerContextPanel } from "@/components/PartnerContextPanel";
 import { QuotaBar } from "@/components/QuotaBar";
 
 // My Box — 개인 드라이브 (드롭박스 스타일, 피드백·주석 없음).
@@ -56,9 +58,14 @@ export default async function MyBoxPage({
     canSeeHealth: false,
   };
   const userName = session.name ?? session.username;
+  // 폴더 내비 패널용 데이터 (My box 폴더 트리)
+  const panelData = await getPartnerPanelData(session.sub);
 
   return (
-    <div className="px-4 md:px-8 py-4 md:py-6 max-w-[1400px]">
+    <div className="md:flex md:items-start">
+      {/* 드롭박스식 폴더 사이드메뉴 (즐겨찾기 + 트리) — My box 전용 두 번째 패널 */}
+      <PartnerContextPanel data={panelData} />
+      <div className="flex-1 min-w-0 px-4 md:px-8 py-4 md:py-6 max-w-[1400px]">
       {/* 브레드크럼 — 상대경로(prefix 가림), 루트 = My Box */}
       <div className="flex items-center gap-1.5 text-[12.5px] text-slate-500 mb-3 overflow-x-auto">
         <Package size={14} className="text-slate-400 shrink-0" strokeWidth={2} />
@@ -115,6 +122,7 @@ export default async function MyBoxPage({
         displayPrefix={prefix}
         session={sessionInfo}
       />
+      </div>
     </div>
   );
 }
