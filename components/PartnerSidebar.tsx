@@ -225,14 +225,14 @@ export function PartnerSidebar({
         {item(active === "trash", "/trash", "휴지통", { icon: Trash2 })}
       </nav>
 
-      {/* 비박스 로고 — 하단 푸터 */}
+      {/* 비박스 로고 — 하단 푸터 (vi.box 워드마크, 검수 뷰어 헤더와 통일) */}
       <Link
         href="/"
         className="mt-auto border-t border-border px-[9px] py-[13px] flex items-center gap-2.5 sticky bottom-0 bg-surface hover:opacity-80 transition-opacity"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/vimo-mark.svg" alt="" style={{ width: 22, height: "auto" }} />
-        <span className="text-[14.5px] font-extrabold tracking-tight text-text">비박스</span>
+        <span className="text-[15px] font-extrabold tracking-tight text-text">
+          vi<span className="text-accent">.</span>box
+        </span>
       </Link>
     </div>
   );

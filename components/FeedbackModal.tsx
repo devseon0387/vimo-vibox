@@ -1546,15 +1546,10 @@ export function FeedbackModal({
               >
                 <ArrowLeft size={19} strokeWidth={2.2} />
               </Link>
-              {/* 비모 마크 */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/vimo-mark.svg"
-                alt=""
-                width={19}
-                height={15}
-                className="shrink-0"
-              />
+              {/* 비박스 워드마크 (게스트 헤더와 동일 브랜딩) */}
+              <span className="shrink-0 text-[13px] font-extrabold tracking-tight text-slate-900">
+                vi<span className="text-accent">.</span>box
+              </span>
               {/* 브레드크럼: 상위 폴더(클릭=목록) › 영상 */}
               <nav className="flex items-center gap-1.5 min-w-0 text-[12.5px]">
                 <Link
