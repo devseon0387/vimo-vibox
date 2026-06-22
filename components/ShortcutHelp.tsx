@@ -55,10 +55,12 @@ const SECTIONS: ShortcutSection[] = [
   {
     title: "영상 검수 (/vimo-box)",
     shortcuts: [
-      { keys: ["J"], desc: "다음 영상" },
-      { keys: ["K"], desc: "이전 영상" },
-      { keys: ["↓"], desc: "다음 영상 (J 와 동일)" },
-      { keys: ["↑"], desc: "이전 영상 (K 와 동일)" },
+      { keys: ["Space"], desc: "재생 · 일시정지" },
+      { keys: ["←", "→"], desc: "3초 뒤로 · 앞으로 (Shift = 10초)" },
+      { keys: ["[", "]"], desc: "이전 · 다음 코멘트" },
+      { keys: [",", "."], desc: "재생 속도 내림 · 올림" },
+      { keys: ["J", "↓"], desc: "같은 폴더 다음 영상" },
+      { keys: ["K", "↑"], desc: "같은 폴더 이전 영상" },
     ],
   },
 ];

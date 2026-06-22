@@ -71,6 +71,7 @@ import {
   Settings2,
   PanelRightClose,
   PanelRightOpen,
+  Keyboard,
 } from "lucide-react";
 
 type CommentRow = {
@@ -351,7 +352,9 @@ export function FeedbackModal({
         target &&
         (target.tagName === "INPUT" ||
           target.tagName === "TEXTAREA" ||
-          target.isContentEditable)
+          target.isContentEditable ||
+          // 시크바(role=slider) 포커스 시 ↑/↓는 슬라이더가 처리 → 영상 이탈 방지
+          target.getAttribute("role") === "slider")
       ) {
         return;
       }
@@ -590,16 +593,20 @@ export function FeedbackModal({
       if (t && t.matches("textarea, input, [contenteditable]")) return;
       const v = vidRef.current;
       if (!v) return;
+      // 시크바(role=slider)에 포커스면 방향키는 슬라이더가 처리 → 이중 시킹 방지
+      const sliderFocused = t?.getAttribute("role") === "slider";
 
       if (e.key === " ") {
         e.preventDefault();
         if (v.paused) v.play().catch(() => {});
         else v.pause();
       } else if (e.key === "ArrowLeft") {
+        if (sliderFocused) return;
         e.preventDefault();
         const delta = e.shiftKey ? 10 : 3;
         v.currentTime = Math.max(0, v.currentTime - delta);
       } else if (e.key === "ArrowRight") {
+        if (sliderFocused) return;
         e.preventDefault();
         const delta = e.shiftKey ? 10 : 3;
         v.currentTime = Math.min(v.duration || Infinity, v.currentTime + delta);
@@ -675,15 +682,61 @@ export function FeedbackModal({
     else v.pause();
   }, []);
 
-  // 프레임 단위 이동 (정밀 검수) — 항상 일시정지 상태에서 한 프레임씩
+  // 프레임 단위 이동 (정밀 검수) — 항상 일시정지 상태에서 한 프레임씩.
+  // 프레임 길이는 requestVideoFrameCallback 으로 실측(현재 재생 중인 스트림 기준,
+  // 프록시/원본 둘 다 자동 보정). 측정 전이면 1/30 폴백.
+  const frameDurRef = useRef(1 / 30);
   const stepFrame = useCallback((dir: -1 | 1) => {
     const v = vidRef.current;
     if (!v) return;
     v.pause();
-    const FRAME = 1 / 30; // fps 메타데이터 없이 30fps 가정 (≈33ms)
+    const FRAME = frameDurRef.current;
     const max = Number.isFinite(v.duration) ? v.duration : Infinity;
     v.currentTime = Math.max(0, Math.min(max, v.currentTime + dir * FRAME));
   }, []);
+
+  // 실제 프레임 길이 측정 — requestVideoFrameCallback(지원 시). mediaTime 델타의
+  // 최소값(프레임 드롭은 델타를 키우기만 함)을 채택, 12~120fps로 클램프.
+  useEffect(() => {
+    if (!open) return;
+    type RVFCVideo = HTMLVideoElement & {
+      requestVideoFrameCallback?: (
+        cb: (now: number, meta: { mediaTime: number }) => void,
+      ) => number;
+      cancelVideoFrameCallback?: (h: number) => void;
+    };
+    const v = vidRef.current as RVFCVideo | null;
+    if (!v || typeof v.requestVideoFrameCallback !== "function") return;
+    frameDurRef.current = 1 / 30; // 소스 변경 시 폴백으로 리셋
+    let handle = 0;
+    let last = -1;
+    let best = Infinity;
+    let samples = 0;
+    let cancelled = false;
+    const cb = (_now: number, meta: { mediaTime: number }) => {
+      if (cancelled) return;
+      const mt = meta.mediaTime;
+      if (last >= 0) {
+        const d = mt - last;
+        // 5~500fps 범위만 유효 샘플로 (탐색/루프 점프 제외)
+        if (d > 0.002 && d < 0.2) {
+          if (d < best) best = d;
+          samples++;
+          if (samples >= 4 && best >= 1 / 120 && best <= 1 / 12) {
+            frameDurRef.current = best;
+          }
+        }
+      }
+      last = mt;
+      handle = v.requestVideoFrameCallback!(cb);
+    };
+    handle = v.requestVideoFrameCallback(cb);
+    return () => {
+      cancelled = true;
+      v.cancelVideoFrameCallback?.(handle);
+    };
+    // filePath 포함: 형제 영상 전환(둘 다 fallback이면 hlsManifestUrl 불변) 시에도 재측정·리셋
+  }, [open, filePath, hlsManifestUrl, qualityMode]);
 
   const toggleMute = useCallback(() => {
     const v = vidRef.current;
@@ -1454,13 +1507,16 @@ export function FeedbackModal({
 
   if (!entry) return null;
   const reloadParam = reloadNonce ? `&_r=${reloadNonce}` : "";
+  // 파일 교체(같은 경로, 새 내용) 시 mtime이 바뀌어 URL이 달라짐 → 캐시 버스팅.
+  // 변경 없으면 동일 URL이라 브라우저 캐시 재사용(max-age=3600 그대로 활용).
+  const mediaVer = entry.modifiedAt ? `&v=${Math.floor(entry.modifiedAt)}` : "";
   const src = shareContext
-    ? `/api/s/${shareContext.token}?p=${encodeURIComponent(entry.path)}${reloadParam}`
-    : `/api/download?path=${encodeURIComponent(entry.path)}&inline=1${reloadParam}`;
+    ? `/api/s/${shareContext.token}?p=${encodeURIComponent(entry.path)}${mediaVer}${reloadParam}`
+    : `/api/download?path=${encodeURIComponent(entry.path)}&inline=1${mediaVer}${reloadParam}`;
   const poster = shareContext
     ? undefined
     : directMediaUrl(
-        `/api/thumb?path=${encodeURIComponent(entry.path)}`,
+        `/api/thumb?path=${encodeURIComponent(entry.path)}${mediaVer}`,
         entry.path,
       );
 
@@ -1950,11 +2006,26 @@ export function FeedbackModal({
                 qualityMode={qualityMode}
                 hlsReady={hlsStatus.kind === "ready"}
                 filePath={entry.path}
+                mediaVer={mediaVer}
                 disableThumbs={isGuest}
                 unresolvedCount={unresolvedCount}
                 panelVisible={panelVisible}
                 onTogglePanel={() => setPanelVisible((v) => !v)}
-                onSeek={seek}
+                onScrub={(ms) => {
+                  const v = vidRef.current;
+                  if (v && Number.isFinite(v.duration)) {
+                    v.currentTime = Math.max(0, Math.min(v.duration, ms / 1000));
+                  }
+                }}
+                onNudge={(deltaMs) => {
+                  const v = vidRef.current;
+                  if (v && Number.isFinite(v.duration)) {
+                    v.currentTime = Math.max(
+                      0,
+                      Math.min(v.duration, v.currentTime + deltaMs / 1000),
+                    );
+                  }
+                }}
                 onStepFrame={stepFrame}
                 onTogglePlay={togglePlay}
                 onToggleMute={toggleMute}
@@ -2078,6 +2149,32 @@ export function FeedbackModal({
                             />
                           </span>
                         </button>
+                        {/* 단축키 도움말은 전역 ShortcutHelp(앱 셸)이 들음 — 게스트
+                            공유 트리엔 미마운트라 죽은 버튼이 되므로 비-게스트만 노출 */}
+                        {!isGuest && (
+                          <>
+                            <div className="h-px bg-slate-100 my-1 mx-2" />
+                            <button
+                              onClick={() => {
+                                setSettingsOpen(false);
+                                // 전역 단축키 도움말(ShortcutHelp) 토글 — '?' 키 디스패치
+                                window.dispatchEvent(
+                                  new KeyboardEvent("keydown", {
+                                    key: "?",
+                                    bubbles: true,
+                                  }),
+                                );
+                              }}
+                              className="w-full px-3 py-2 text-left inline-flex items-center gap-2 text-[12px] text-slate-700 hover:bg-slate-50 transition-colors"
+                            >
+                              <Keyboard size={13} strokeWidth={2.2} />
+                              <span className="flex-1">단축키 도움말</span>
+                              <kbd className="text-[10px] font-mono text-slate-400 bg-slate-100 rounded px-1.5 py-px">
+                                ?
+                              </kbd>
+                            </button>
+                          </>
+                        )}
                       </div>
                     </>
                   )}
@@ -2569,9 +2666,11 @@ function TimelineStrip({
   qualityMode,
   hlsReady,
   filePath,
+  mediaVer,
   unresolvedCount,
   panelVisible,
-  onSeek,
+  onScrub,
+  onNudge,
   onStepFrame,
   onTogglePlay,
   onTogglePanel,
@@ -2592,9 +2691,11 @@ function TimelineStrip({
   qualityMode: "proxy" | "original";
   hlsReady: boolean;
   filePath: string;
+  mediaVer: string;
   unresolvedCount: number;
   panelVisible: boolean;
-  onSeek: (ms: number) => void;
+  onScrub: (ms: number) => void;
+  onNudge: (deltaMs: number) => void;
   onStepFrame: (dir: -1 | 1) => void;
   onTogglePlay: () => void;
   onTogglePanel: () => void;
@@ -2623,19 +2724,19 @@ function TimelineStrip({
     barWidth: number;
   } | null>(null);
 
-  const onBarClick = (e: React.MouseEvent) => {
-    if (!barRef.current || duration <= 0) return;
+  const draggingRef = useRef(false);
+
+  const posFromClientX = (clientX: number): number | null => {
+    if (!barRef.current || duration <= 0) return null;
     const rect = barRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const pct = Math.max(0, Math.min(1, x / rect.width));
-    onSeek(pct * duration);
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    return pct * duration;
   };
 
-  const onBarMouseMove = (e: React.MouseEvent) => {
+  const updateHover = (clientX: number) => {
     if (!barRef.current || duration <= 0) return;
     const rect = barRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const pct = Math.max(0, Math.min(1, x / rect.width));
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     setHoverState({
       x: pct * rect.width,
       timeMs: pct * duration,
@@ -2643,11 +2744,80 @@ function TimelineStrip({
     });
   };
 
-  const onBarMouseLeave = () => {
-    setHoverState(null);
+  // 드래그 스크럽: 이동 중엔 onScrub(자동재생 없이 라이브), 놓을 때 onSeek로 최종 커밋
+  const onBarPointerDown = (e: React.PointerEvent) => {
+    // 마커(버튼) 위에서 시작한 포인터는 스크럽이 아니라 마커 선택 → 무시
+    if ((e.target as HTMLElement).closest("button")) return;
+    const ms = posFromClientX(e.clientX);
+    if (ms === null) return;
+    draggingRef.current = true;
+    try {
+      barRef.current?.setPointerCapture(e.pointerId);
+    } catch {}
+    onScrub(ms);
+    updateHover(e.clientX);
   };
 
-  // 모달 열릴 때 썸네일 배치 preload (호버 시 즉시 표시)
+  const onBarPointerMove = (e: React.PointerEvent) => {
+    updateHover(e.clientX);
+    if (draggingRef.current) {
+      const ms = posFromClientX(e.clientX);
+      if (ms !== null) onScrub(ms);
+    }
+  };
+
+  const endDrag = (e: React.PointerEvent) => {
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
+    try {
+      barRef.current?.releasePointerCapture(e.pointerId);
+    } catch {}
+    // 시크바 스크럽은 위치만 확정 — 자동재생 강제 금지(일시정지 영상은 정지 유지).
+    // (자동재생은 '댓글/마커 클릭' 흐름에만, onSelect→seek 경로에서 적용)
+    const ms = posFromClientX(e.clientX);
+    if (ms !== null) onScrub(ms);
+  };
+
+  const onBarPointerLeave = () => {
+    if (!draggingRef.current) setHoverState(null);
+  };
+
+  // 키보드 시킹(슬라이더 포커스): ←/→ ±5s · PageUp/Down ±10s · Home/End. 자동재생 없음.
+  // 상대 이동은 onNudge(라이브 v.currentTime 기준) → stale currentTime prop 누적 방지.
+  const onBarKeyDown = (e: React.KeyboardEvent) => {
+    if (duration <= 0) return;
+    switch (e.key) {
+      case "ArrowLeft":
+        e.preventDefault();
+        onNudge(-5000);
+        return;
+      case "ArrowRight":
+        e.preventDefault();
+        onNudge(5000);
+        return;
+      case "PageDown":
+        e.preventDefault();
+        onNudge(-10000);
+        return;
+      case "PageUp":
+        e.preventDefault();
+        onNudge(10000);
+        return;
+      case "Home":
+        e.preventDefault();
+        onScrub(0);
+        return;
+      case "End":
+        e.preventDefault();
+        onScrub(duration);
+        return;
+      default:
+        return;
+    }
+  };
+
+  // 모달 열릴 때 썸네일 배치 preload — 동시성 제한(4) + 연속 실패 백오프.
+  // 기존엔 최대 200개 GET을 한꺼번에 발사 → 서버/네트워크 폭주. 큐로 throttle.
   useEffect(() => {
     ensureDirectProbe();
     if (disableThumbs) return;
@@ -2658,18 +2828,46 @@ function TimelineStrip({
     if (!Number.isFinite(totalSec) || totalSec <= 0) return;
     // 10초 간격으로 미리 생성 요청 (브라우저가 백그라운드에 캐싱)
     const interval = Math.max(5, Math.floor(totalSec / 60));
-    // 안전: 최대 200개 요청으로 제한 (초장시간 영상 대비)
     const MAX_REQUESTS = 200;
-    let count = 0;
-    for (let t = 0; t <= totalSec && count < MAX_REQUESTS; t += interval) {
-      const img = new Image();
-      img.src = directMediaUrl(
-        `/api/thumb?path=${encodeURIComponent(filePath)}&t=${t}`,
-        filePath,
-      );
-      count++;
+    const times: number[] = [];
+    for (let t = 0; t <= totalSec && times.length < MAX_REQUESTS; t += interval) {
+      times.push(t);
     }
-  }, [filePath, duration, disableThumbs]);
+    const CONCURRENCY = 4;
+    const ERROR_ABORT = 3; // 썸네일 미생성/404 연속 시 폭주 막고 중단
+    let idx = 0;
+    let inflight = 0;
+    let consecutiveErrors = 0;
+    let aborted = false;
+    const pump = () => {
+      if (aborted) return;
+      while (inflight < CONCURRENCY && idx < times.length) {
+        const t = times[idx++];
+        inflight++;
+        const img = new Image();
+        const done = (ok: boolean) => {
+          inflight--;
+          if (ok) {
+            consecutiveErrors = 0;
+          } else if (++consecutiveErrors >= ERROR_ABORT) {
+            aborted = true;
+            return;
+          }
+          pump();
+        };
+        img.onload = () => done(true);
+        img.onerror = () => done(false);
+        img.src = directMediaUrl(
+          `/api/thumb?path=${encodeURIComponent(filePath)}&t=${t}${mediaVer}`,
+          filePath,
+        );
+      }
+    };
+    pump();
+    return () => {
+      aborted = true;
+    };
+  }, [filePath, duration, disableThumbs, mediaVer]);
 
   // 이전/다음 피드백으로 이동 (현재 시간 기준 인접 댓글 탐색)
   const gotoFeedback = (direction: "prev" | "next") => {
@@ -2694,10 +2892,21 @@ function TimelineStrip({
         </span>
         <div
           ref={barRef}
-          onClick={onBarClick}
-          onMouseMove={onBarMouseMove}
-          onMouseLeave={onBarMouseLeave}
-          className="relative h-[18px] cursor-pointer flex-1"
+          role="slider"
+          tabIndex={0}
+          aria-label="재생 위치"
+          aria-orientation="horizontal"
+          aria-valuemin={0}
+          aria-valuemax={Math.max(0, Math.round(duration / 1000))}
+          aria-valuenow={Math.round(currentTime / 1000)}
+          aria-valuetext={`${formatTc(currentTime)} / ${formatTc(duration)}`}
+          onPointerDown={onBarPointerDown}
+          onPointerMove={onBarPointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onPointerLeave={onBarPointerLeave}
+          onKeyDown={onBarKeyDown}
+          className="relative h-[18px] cursor-pointer flex-1 touch-none rounded outline-none focus-visible:ring-2 focus-visible:ring-accent/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b0f17]"
         >
           {/* 호버 썸네일 프리뷰 — 양 끝에서 overflow 안 되도록 clamp */}
           {!disableThumbs && hoverState && duration > 0 && filePath && hoverState.barWidth > 0 && (() => {
@@ -2723,7 +2932,7 @@ function TimelineStrip({
                 >
                   <img
                     src={directMediaUrl(
-                      `/api/thumb?path=${encodeURIComponent(filePath)}&t=${Math.floor(hoverState.timeMs / 1000)}`,
+                      `/api/thumb?path=${encodeURIComponent(filePath)}&t=${Math.floor(hoverState.timeMs / 1000)}${mediaVer}`,
                       filePath,
                     )}
                     alt=""
@@ -2757,18 +2966,23 @@ function TimelineStrip({
             items.map((c) => {
               const left = (c.videoTimeMs / duration) * 100;
               const kindLabel = c.kind === "praise" ? "좋아요" : "수정";
+              const label = `${kindLabel} · ${formatTc(c.videoTimeMs)}`;
               return (
                 <button
                   key={c.id}
+                  onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => {
                     e.stopPropagation();
                     onSelect(c.id);
                   }}
-                  title={`${kindLabel} · ${formatTc(c.videoTimeMs)}`}
-                  className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 z-[2] transition-transform hover:scale-125"
+                  title={label}
+                  aria-label={`코멘트로 이동 · ${label}`}
+                  className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 z-[2] w-4 h-7 grid place-items-center group"
                   style={{ left: `${left}%` }}
                 >
-                  <Marker comment={c} />
+                  <span className="transition-transform group-hover:scale-125">
+                    <Marker comment={c} />
+                  </span>
                 </button>
               );
             })}
@@ -2799,6 +3013,7 @@ function TimelineStrip({
           <button
             onClick={() => onStepFrame(-1)}
             title="이전 프레임"
+            aria-label="이전 프레임"
             className="w-9 h-9 rounded-[9px] grid place-items-center text-slate-300 hover:bg-white/10 transition-colors"
           >
             <StepBack size={18} strokeWidth={2} fill="currentColor" />
@@ -2806,6 +3021,7 @@ function TimelineStrip({
           <button
             onClick={onTogglePlay}
             title={playing ? "일시정지 (Space/K)" : "재생 (Space/K)"}
+            aria-label={playing ? "일시정지" : "재생"}
             className="w-11 h-11 rounded-full bg-accent text-white grid place-items-center shadow-[0_4px_14px_rgba(232,80,8,0.4)] hover:opacity-90 transition-opacity"
           >
             {playing ? (
@@ -2817,6 +3033,7 @@ function TimelineStrip({
           <button
             onClick={() => onStepFrame(1)}
             title="다음 프레임"
+            aria-label="다음 프레임"
             className="w-9 h-9 rounded-[9px] grid place-items-center text-slate-300 hover:bg-white/10 transition-colors"
           >
             <StepForward size={18} strokeWidth={2} fill="currentColor" />
@@ -2832,6 +3049,7 @@ function TimelineStrip({
             onClick={() => gotoFeedback("prev")}
             disabled={items.length === 0}
             title="이전 코멘트 ([ 키)"
+            aria-label="이전 코멘트"
             className="w-[34px] h-[34px] rounded-[9px] grid place-items-center text-slate-300 hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
           >
             <ChevronLeft size={18} strokeWidth={2.2} />
@@ -2839,6 +3057,8 @@ function TimelineStrip({
           <button
             onClick={onTogglePanel}
             title={panelVisible ? "댓글 패널 접기" : "댓글 패널 펼치기"}
+            aria-label={panelVisible ? "댓글 패널 접기" : "댓글 패널 펼치기"}
+            aria-pressed={panelVisible}
             className="relative w-[34px] h-[34px] rounded-[9px] grid place-items-center text-slate-300 hover:bg-white/10 transition-colors"
           >
             <MessageSquare size={18} strokeWidth={2} />
@@ -2852,6 +3072,7 @@ function TimelineStrip({
             onClick={() => gotoFeedback("next")}
             disabled={items.length === 0}
             title="다음 코멘트 (] 키)"
+            aria-label="다음 코멘트"
             className="w-[34px] h-[34px] rounded-[9px] grid place-items-center text-slate-300 hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
           >
             <ChevronRight size={18} strokeWidth={2.2} />
@@ -2865,6 +3086,8 @@ function TimelineStrip({
           <button
             onClick={onToggleMute}
             title={muted ? "음소거 해제" : "음소거"}
+            aria-label={muted ? "음소거 해제" : "음소거"}
+            aria-pressed={muted}
             className="w-9 h-9 rounded-[9px] grid place-items-center text-slate-400 hover:bg-white/10 hover:text-slate-200 transition-colors"
           >
             {muted ? (
@@ -2878,6 +3101,9 @@ function TimelineStrip({
             <button
               onClick={() => setSettingsMenuOpen((v) => !v)}
               title="설정 (재생 속도 · 화질)"
+              aria-label="설정 (재생 속도, 화질)"
+              aria-haspopup="menu"
+              aria-expanded={settingsMenuOpen}
               className={`relative w-9 h-9 rounded-[9px] grid place-items-center transition-colors ${
                 settingsMenuOpen
                   ? "text-white bg-white/10"
@@ -2988,6 +3214,7 @@ function TimelineStrip({
           <button
             onClick={onToggleFullscreen}
             title="전체화면"
+            aria-label="전체화면"
             className="w-9 h-9 rounded-[9px] grid place-items-center text-slate-400 hover:bg-white/10 hover:text-slate-200 transition-colors"
           >
             <Maximize size={16} strokeWidth={2} />

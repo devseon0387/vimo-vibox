@@ -23,7 +23,10 @@ function toFileEntry(f: FileItem): FileEntry {
     path: f.path,
     isFolder: false,
     size: 0,
-    modifiedAt: Date.now(),
+    // 0 = 안정값. Date.now()면 매 렌더마다 바뀌어 검수 뷰어의 캐시버스팅(&v=)이
+    // 영상 src를 계속 갈아끼워 재버퍼링 + SSR/클라 하이드레이션 미스매치를 유발한다.
+    // 게스트 신선도는 공유 라우트의 ETag + must-revalidate 가 담당(0이면 &v= 미부착).
+    modifiedAt: 0,
     kind: kindMap[f.kind],
   };
 }
