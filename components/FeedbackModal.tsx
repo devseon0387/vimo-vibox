@@ -1528,6 +1528,8 @@ export function FeedbackModal({
         <div className="shrink-0 bg-white border-b border-slate-200 px-4 py-2.5 flex items-center gap-3">
           {isGuest ? (
             <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="" className="shrink-0 w-6 h-6 object-contain" />
               <span className="shrink-0 text-[13px] font-extrabold tracking-tight text-slate-900">
                 vi<span className="text-accent">.</span>box
               </span>

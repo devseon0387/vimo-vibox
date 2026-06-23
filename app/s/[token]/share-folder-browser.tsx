@@ -124,6 +124,8 @@ export function ShareFolderBrowser({
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <header className="border-b border-slate-200 bg-white sticky top-0 z-10">
         <div className="flex items-center gap-3 px-4 py-2.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="" className="shrink-0 w-6 h-6 object-contain" />
           <span className="shrink-0 text-[13px] font-extrabold tracking-tight text-slate-900">
             vi<span className="text-accent">.</span>box
           </span>
