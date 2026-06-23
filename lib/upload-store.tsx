@@ -69,6 +69,12 @@ function genId(): string {
   return Math.random().toString(36).slice(2);
 }
 
+/** 단일 영상 업로드는 완료 후 공유 패널을 띄우므로 판별 (자동 정리 보류용) */
+export function isVideoFile(f: File): boolean {
+  if (f.type.startsWith("video/")) return true;
+  return /\.(mp4|mov|m4v|webm|mkv|avi|wmv|flv|mpg|mpeg)$/i.test(f.name);
+}
+
 export function UploadProvider({ children }: { children: React.ReactNode }) {
   const [uploads, setUploads] = useState<UploadEntry[]>([]);
   // 핸들 mutable state — setUploads 의 함수형 업데이트로 안전하게 다룸
@@ -193,8 +199,11 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
         try {
           options?.onComplete?.(finalEntry);
         } catch {}
-        // 모든 상태(완료/취소/실패)는 일정 시간 후 자동 dismiss
-        scheduleDismiss(id);
+        // 단일 영상 성공 업로드는 공유 패널(링크)을 띄우므로 자동 정리 보류 — 사용자가 직접 닫음.
+        // 그 외(다중·이미지·실패·취소)는 일정 시간 후 자동 dismiss.
+        const isSingleVideo =
+          res.ok && files.length === 1 && isVideoFile(files[0]);
+        if (!isSingleVideo) scheduleDismiss(id);
 
         // 성공 시 현재 라우트 리프레시 (사용자가 그 폴더에 있다면 즉시 리스트 갱신)
         if (res.ok) router.refresh();

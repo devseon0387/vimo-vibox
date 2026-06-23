@@ -129,8 +129,9 @@ export async function POST(req: NextRequest) {
   // 공유 뷰 코멘트 API가 이 플래그를 보고 팀 피드백을 함께 반환한다.
   const includeFeedback = body?.includeFeedback === true && mode === "full";
 
+  const shareId = randomUUID();
   await db.insert(shareLinks).values({
-    id: randomUUID(),
+    id: shareId,
     token,
     filePath: primaryPath, // 첫 파일 또는 폴더 경로 (backward compat)
     paths: isMulti ? JSON.stringify(rawPaths) : null,
@@ -145,5 +146,5 @@ export async function POST(req: NextRequest) {
     passwordHash,
   });
 
-  return NextResponse.json({ ok: true, token });
+  return NextResponse.json({ ok: true, token, id: shareId, mode });
 }

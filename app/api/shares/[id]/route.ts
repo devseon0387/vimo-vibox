@@ -60,63 +60,85 @@ export async function PATCH(
     ? body.removePaths.map(String).filter(Boolean)
     : [];
 
-  if (addPaths.length === 0 && removePaths.length === 0) {
+  // 모드·다운로드·댓글 변경 (업로드 직후 공유 패널의 토글) — URL(token)은 유지
+  const setValues: {
+    mode?: "preview" | "full";
+    allowComments?: boolean;
+    allowDownload?: boolean;
+    filePath?: string;
+    paths?: string | null;
+  } = {};
+  if (body.mode === "preview" || body.mode === "full") {
+    setValues.mode = body.mode;
+    // 명시 없으면 full=댓글 허용, preview=댓글 끔
+    setValues.allowComments =
+      typeof body.allowComments === "boolean"
+        ? body.allowComments
+        : body.mode === "full";
+  } else if (typeof body.allowComments === "boolean") {
+    setValues.allowComments = body.allowComments;
+  }
+  if (typeof body.allowDownload === "boolean") {
+    setValues.allowDownload = body.allowDownload;
+  }
+
+  const hasPathChange = addPaths.length > 0 || removePaths.length > 0;
+  const hasFieldChange = Object.keys(setValues).length > 0;
+  if (!hasPathChange && !hasFieldChange) {
     return NextResponse.json({ error: "nothing to change" }, { status: 400 });
   }
 
-  // 추가 대상 접근 권한 확인
-  for (const p of addPaths) {
-    if (!(await canAccessFile(session, p))) {
-      return NextResponse.json({ error: `접근 불가: ${p}` }, { status: 403 });
-    }
-  }
-
-  // 추가 대상 파일 존재 확인
-  for (const p of addPaths) {
-    try {
-      const { stat } = await statPath(p);
-      if (stat.isDirectory()) {
-        return NextResponse.json(
-          { error: `폴더는 추가할 수 없어요: ${p}` },
-          { status: 400 },
-        );
-      }
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "unknown";
-      return NextResponse.json({ error: `${p}: ${msg}` }, { status: 400 });
-    }
-  }
-
-  const current: string[] = existing.paths
+  let resultPaths: string[] = existing.paths
     ? (JSON.parse(existing.paths) as string[])
     : [existing.filePath];
 
-  // 기존에 없는 것만 추가 (중복 방지)
-  const afterAdd = [...current, ...addPaths.filter((p) => !current.includes(p))];
-  const afterRemove = afterAdd.filter((p) => !removePaths.includes(p));
-
-  if (afterRemove.length === 0) {
-    return NextResponse.json(
-      { error: "최소 1개 파일은 남겨야 해요" },
-      { status: 400 },
-    );
+  if (hasPathChange) {
+    // 추가 대상 접근 권한 확인
+    for (const p of addPaths) {
+      if (!(await canAccessFile(session, p))) {
+        return NextResponse.json({ error: `접근 불가: ${p}` }, { status: 403 });
+      }
+    }
+    // 추가 대상 파일 존재 확인
+    for (const p of addPaths) {
+      try {
+        const { stat } = await statPath(p);
+        if (stat.isDirectory()) {
+          return NextResponse.json(
+            { error: `폴더는 추가할 수 없어요: ${p}` },
+            { status: 400 },
+          );
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "unknown";
+        return NextResponse.json({ error: `${p}: ${msg}` }, { status: 400 });
+      }
+    }
+    // 기존에 없는 것만 추가 (중복 방지)
+    const afterAdd = [
+      ...resultPaths,
+      ...addPaths.filter((p) => !resultPaths.includes(p)),
+    ];
+    const afterRemove = afterAdd.filter((p) => !removePaths.includes(p));
+    if (afterRemove.length === 0) {
+      return NextResponse.json(
+        { error: "최소 1개 파일은 남겨야 해요" },
+        { status: 400 },
+      );
+    }
+    resultPaths = afterRemove;
+    setValues.filePath = afterRemove[0]; // primaryPath (backward compat)
+    setValues.paths = afterRemove.length > 1 ? JSON.stringify(afterRemove) : null;
   }
 
-  // primaryPath = 첫 번째 파일 (backward compat)
-  const primaryPath = afterRemove[0];
-  const multi = afterRemove.length > 1;
-
-  await db
-    .update(shareLinks)
-    .set({
-      filePath: primaryPath,
-      paths: multi ? JSON.stringify(afterRemove) : null,
-    })
-    .where(eq(shareLinks.id, id));
+  await db.update(shareLinks).set(setValues).where(eq(shareLinks.id, id));
 
   return NextResponse.json({
     ok: true,
-    paths: afterRemove,
-    filePath: primaryPath,
+    paths: resultPaths,
+    filePath: setValues.filePath ?? existing.filePath,
+    mode: setValues.mode ?? existing.mode,
+    allowComments: setValues.allowComments ?? existing.allowComments,
+    allowDownload: setValues.allowDownload ?? existing.allowDownload,
   });
 }

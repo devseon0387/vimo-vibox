@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Upload,
@@ -11,8 +11,14 @@ import {
   AlertCircle,
   MinusCircle,
   Loader2,
+  Link2,
+  Copy,
+  Eye,
+  MessageSquare,
+  Download,
+  ExternalLink,
 } from "lucide-react";
-import { useUpload, type UploadEntry } from "@/lib/upload-store";
+import { useUpload, isVideoFile, type UploadEntry } from "@/lib/upload-store";
 import { humanError } from "@/lib/human-error";
 
 function formatBytes(b: number): string {
@@ -228,6 +234,198 @@ function UploadRow({
           {humanError(entry.error, "upload")}
         </div>
       )}
+
+      {/* 완료된 단일 영상 → 공유 링크 자동 생성 + 인라인 패널 */}
+      {entry.status === "done" &&
+        entry.fileCount === 1 &&
+        entry.files[0] &&
+        isVideoFile(entry.files[0]) && <UploadSharePanel entry={entry} />}
+    </div>
+  );
+}
+
+/** 업로드 직후 공유 모드 기본값 — 미리보기. 마지막 선택을 기억. */
+function shareDefaultMode(): "preview" | "full" {
+  try {
+    return localStorage.getItem("vibox.shareDefaultMode") === "full"
+      ? "full"
+      : "preview";
+  } catch {
+    return "preview";
+  }
+}
+
+function UploadSharePanel({ entry }: { entry: UploadEntry }) {
+  const filePath = useMemo(() => {
+    const base = entry.targetPath.replace(/\/+$/, "");
+    return `${base}/${entry.files[0]?.name ?? ""}`;
+  }, [entry.targetPath, entry.files]);
+
+  const [phase, setPhase] = useState<"creating" | "ready" | "error">("creating");
+  const [share, setShare] = useState<{ id: string; token: string } | null>(null);
+  const [mode, setMode] = useState<"preview" | "full">("preview");
+  const [allowDownload, setAllowDownload] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const createdRef = useRef(false);
+
+  // 완료 시 공유 링크 1회 자동 생성 (기본 미리보기)
+  useEffect(() => {
+    if (createdRef.current) return;
+    createdRef.current = true;
+    const initial = shareDefaultMode();
+    setMode(initial);
+    void (async () => {
+      try {
+        const res = await fetch("/api/shares", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ path: filePath, mode: initial }),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok || !body?.token || !body?.id) {
+          setPhase("error");
+          return;
+        }
+        setShare({ id: body.id, token: body.token });
+        setPhase("ready");
+      } catch {
+        setPhase("error");
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const origin =
+    typeof window !== "undefined" ? window.location.origin : "";
+  const host =
+    typeof window !== "undefined" ? window.location.host : "vibox.cloud";
+  const shareUrl = share ? `${origin}/s/${share.token}` : "";
+  const shortUrl = share ? `${host}/s/${share.token}` : "";
+
+  const patch = async (changes: Record<string, unknown>) => {
+    if (!share) return;
+    try {
+      await fetch(`/api/shares/${share.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(changes),
+      });
+    } catch {}
+  };
+
+  const changeMode = (m: "preview" | "full") => {
+    if (m === mode) return;
+    setMode(m);
+    try {
+      localStorage.setItem("vibox.shareDefaultMode", m);
+    } catch {}
+    void patch({ mode: m });
+  };
+  const toggleDownload = () => {
+    const v = !allowDownload;
+    setAllowDownload(v);
+    void patch({ allowDownload: v });
+  };
+  const copy = async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+    } catch {}
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1600);
+  };
+
+  if (phase === "creating") {
+    return (
+      <div className="mt-2.5 pt-2.5 border-t border-dashed border-border flex items-center gap-2 text-[11.5px] text-text-faint">
+        <Loader2 size={13} strokeWidth={2.2} className="animate-spin text-accent" />
+        공유 링크 만드는 중…
+      </div>
+    );
+  }
+  if (phase === "error" || !share) {
+    return (
+      <div className="mt-2.5 pt-2.5 border-t border-dashed border-border flex items-center gap-2 text-[11.5px] text-rose-600">
+        <AlertCircle size={13} strokeWidth={2.2} />
+        공유 링크 생성에 실패했어요
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-2.5 pt-2.5 border-t border-dashed border-border flex flex-col gap-2">
+      {/* 링크 바 — 전체 클릭 = 복사 */}
+      <button
+        onClick={copy}
+        className="w-full flex items-center gap-2 border border-border rounded-[9px] bg-white px-3 py-2 hover:bg-surface hover:border-border-hover transition-colors"
+      >
+        <Link2 size={13} strokeWidth={2.2} className="text-text-faint shrink-0" />
+        <span className="flex-1 min-w-0 text-left text-[11.5px] text-text-soft truncate mono">
+          {shortUrl}
+        </span>
+        <span
+          className={`shrink-0 inline-flex items-center gap-1 text-[11px] font-bold ${
+            copied ? "text-emerald-600" : "text-accent"
+          }`}
+        >
+          {copied ? (
+            <Check size={13} strokeWidth={2.5} />
+          ) : (
+            <Copy size={13} strokeWidth={2.2} />
+          )}
+          {copied ? "복사됨" : "복사"}
+        </span>
+      </button>
+
+      {/* 모드(활성=주황) + 다운로드 허용 + 열기 */}
+      <div className="flex items-center gap-2">
+        <div className="flex bg-surface border border-border rounded-lg p-0.5">
+          <button
+            onClick={() => changeMode("full")}
+            className={`px-2.5 py-1 rounded-md text-[11px] font-bold inline-flex items-center gap-1 transition-colors ${
+              mode === "full"
+                ? "bg-white text-accent shadow-sm"
+                : "text-text-faint hover:text-text-soft"
+            }`}
+          >
+            <MessageSquare size={12} strokeWidth={2.2} />
+            검수
+          </button>
+          <button
+            onClick={() => changeMode("preview")}
+            className={`px-2.5 py-1 rounded-md text-[11px] font-bold inline-flex items-center gap-1 transition-colors ${
+              mode === "preview"
+                ? "bg-white text-accent shadow-sm"
+                : "text-text-faint hover:text-text-soft"
+            }`}
+          >
+            <Eye size={12} strokeWidth={2.2} />
+            미리보기
+          </button>
+        </div>
+        <div className="flex-1" />
+        <button
+          onClick={toggleDownload}
+          title={allowDownload ? "다운로드 허용됨" : "다운로드 꺼짐"}
+          aria-pressed={allowDownload}
+          className={`w-[30px] h-[30px] rounded-md grid place-items-center transition-colors ${
+            allowDownload
+              ? "text-accent"
+              : "text-text-faint hover:bg-surface hover:text-text-soft"
+          }`}
+        >
+          <Download size={15} strokeWidth={2} />
+        </button>
+        <a
+          href={shareUrl}
+          target="_blank"
+          rel="noreferrer"
+          title="새 탭에서 열기"
+          className="w-[30px] h-[30px] rounded-md grid place-items-center text-text-faint hover:bg-surface hover:text-text-soft transition-colors"
+        >
+          <ExternalLink size={15} strokeWidth={2} />
+        </a>
+      </div>
     </div>
   );
 }
