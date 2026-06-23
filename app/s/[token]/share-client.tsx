@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Download, AlertTriangle } from "lucide-react";
 import { FeedbackModal, type ShareContext } from "@/components/FeedbackModal";
 import { HlsVideo } from "@/components/HlsVideo";
+import { ShortformReview } from "@/components/ShortformReview";
 import type { FileEntry } from "@/lib/fs/storage";
 
 type Kind = "video" | "image" | "audio" | "pdf" | "other";
@@ -66,6 +67,49 @@ export function SharePageClient({
     } catch {}
   }, []);
 
+  // 모바일 뷰포트 감지 (숏폼 분기용). null = 아직 판별 전(SSR/첫 페인트)
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  // 영상 종횡비 프로브 — 모바일 검수일 때만. portrait=세로(숏폼). null=판별 중
+  const [portrait, setPortrait] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (isMobile !== true || files.length === 0) {
+      setPortrait(null);
+      return;
+    }
+    const af = files[Math.min(activeIdx, files.length - 1)];
+    const isReview = mode === "full" && allowComments && af.kind === "video";
+    if (!isReview) {
+      setPortrait(null);
+      return;
+    }
+    setPortrait(null);
+    const v = document.createElement("video");
+    v.preload = "metadata";
+    v.muted = true;
+    const onMeta = () => {
+      if (v.videoWidth && v.videoHeight)
+        setPortrait(v.videoHeight > v.videoWidth);
+    };
+    v.addEventListener("loadedmetadata", onMeta);
+    v.src = `/api/s/${token}?p=${encodeURIComponent(af.path)}`;
+    // 메타데이터 못 읽으면 3초 후 표준(가로)으로 폴백
+    const fb = setTimeout(() => setPortrait((p) => (p === null ? false : p)), 3000);
+    return () => {
+      clearTimeout(fb);
+      v.removeEventListener("loadedmetadata", onMeta);
+      v.removeAttribute("src");
+      v.load();
+    };
+  }, [isMobile, files, activeIdx, mode, allowComments, token]);
+
   // files=[] 가드 — 빈 공유 링크 (모든 path 제거됨) 시 TypeError 방지
   if (files.length === 0) {
     return (
@@ -119,6 +163,26 @@ export function SharePageClient({
   }
 
   if (useFeedbackUI) {
+    // 판별 전 / 세로 프로브 중 — 깜빡임 방지로 검은 화면
+    if (isMobile === null || (isMobile && portrait === null)) {
+      return <div className="h-screen bg-black" />;
+    }
+    // 모바일 + 세로 영상 → 숏폼 몰입 검수
+    if (isMobile && portrait) {
+      return (
+        <ShortformReview
+          key={activeFile.path}
+          token={token}
+          filePath={activeFile.path}
+          fallbackSrc={fileUrl}
+          title={title}
+          allowDownload={allowDownload}
+          guestName={guestName}
+          onSetGuestName={onSetGuestName}
+        />
+      );
+    }
+    // 데스크톱 또는 모바일 가로 → 기존 검수 뷰어
     return (
       <div className="h-screen overflow-hidden">
         <FeedbackModal
