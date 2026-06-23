@@ -19,6 +19,7 @@ import {
   Trash2,
 } from "lucide-react";
 import type { NoteFolder, NoteSummary, NoteDetail } from "@/lib/notes";
+import { humanError } from "@/lib/human-error";
 import { NoteEditor } from "./NoteEditor";
 
 type Props = {
@@ -110,7 +111,7 @@ export function NotesPane({
       if (content !== detail.content) body.content = content;
       const r = await callPatch(body);
       if (!r.ok) {
-        alert("저장 실패: " + r.error);
+        alert(humanError(r.error, "general"));
         return;
       }
       // 저장 성공 — 로컬 상태 업데이트
@@ -166,7 +167,7 @@ export function NotesPane({
       setDetail({ ...detail, starred: !detail.starred });
       router.refresh();
     } else {
-      alert(r.error);
+      alert(humanError(r.error, "general"));
     }
   };
 
@@ -182,7 +183,7 @@ export function NotesPane({
       setDetail({ ...detail, title: newTitle.trim() });
       router.refresh();
     } else {
-      alert(r.error);
+      alert(humanError(r.error, "rename"));
     }
   };
 
@@ -197,7 +198,7 @@ export function NotesPane({
     if (r.ok) {
       await refresh(r.id);
     } else {
-      alert(r.error);
+      alert(humanError(r.error, "move"));
     }
   };
 
@@ -213,7 +214,7 @@ export function NotesPane({
     setBusy(false);
     if (!r.ok) {
       const j = await r.json().catch(() => ({}));
-      alert(j.error ?? "삭제 실패");
+      alert(humanError(j.error, "delete"));
       return;
     }
     setDetail(null);

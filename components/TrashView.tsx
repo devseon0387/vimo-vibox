@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { RotateCcw, Trash2, AlertCircle } from "lucide-react";
 import { FileIcon, type FileKind } from "./FileIcon";
 import type { TrashRow } from "@/lib/fs/trash";
+import { humanError } from "@/lib/human-error";
 import { useConfirm } from "./ConfirmDialog";
 import { useToast } from "./Toast";
 
@@ -69,7 +70,7 @@ export function TrashView({
       const res = await fetch(`/api/trash/${item.id}`, { method: "POST" });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toastError("복원 실패: " + (body.error ?? res.statusText));
+        toastError(humanError(body.error ?? res.statusText, "trash-restore"));
         return;
       }
       success(
@@ -103,7 +104,7 @@ export function TrashView({
       const res = await fetch(`/api/trash/${item.id}`, { method: "DELETE" });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        toastError("삭제 실패: " + (body.error ?? res.statusText));
+        toastError(humanError(body.error ?? res.statusText, "trash-permanent"));
         return;
       }
       success(
@@ -133,7 +134,7 @@ export function TrashView({
     const res = await fetch("/api/trash", { method: "DELETE" });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      toastError("비우기 실패: " + (body.error ?? res.statusText));
+      toastError(humanError(body.error ?? res.statusText, "trash-permanent"));
       return;
     }
     success("휴지통을 비웠어요");

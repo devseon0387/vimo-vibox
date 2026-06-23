@@ -13,6 +13,7 @@ import {
 import { Modal } from "./Modal";
 import { useConfirm } from "./ConfirmDialog";
 import { useToast } from "./Toast";
+import { humanError } from "@/lib/human-error";
 
 export type AdminUser = {
   id: string;
@@ -67,7 +68,7 @@ export function UsersAdmin({
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        toastError(body.error ?? res.statusText);
+        toastError(humanError(body.error ?? res.statusText, "general"));
         return;
       }
       success(`${user.username} 역할 변경됨`);
@@ -96,7 +97,7 @@ export function UsersAdmin({
       const res = await fetch(`/api/admin/users/${user.id}`, { method: "DELETE" });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        toastError(body.error ?? res.statusText);
+        toastError(humanError(body.error ?? res.statusText, "general"));
         return;
       }
       success(`${user.username} 삭제됨`);
@@ -301,7 +302,7 @@ function QuotaEditor({
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        onError(body.error ?? res.statusText);
+        onError(humanError(body.error ?? res.statusText, "general"));
         return;
       }
       setEditing(false);
@@ -390,7 +391,7 @@ function AddUserModal({
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        toastError(body.error ?? res.statusText);
+        toastError(humanError(body.error ?? res.statusText, "general"));
         return;
       }
       success(
@@ -522,7 +523,7 @@ function ResetPasswordModal({
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        toastError(body.error ?? res.statusText);
+        toastError(humanError(body.error ?? res.statusText, "general"));
         return;
       }
       success(

@@ -13,6 +13,7 @@ import {
   Shield,
 } from "lucide-react";
 import type { Scope } from "@/lib/api-auth";
+import { humanError } from "@/lib/human-error";
 
 export type TokenRow = {
   id: string;
@@ -86,7 +87,7 @@ export function TokensManager({
         return;
       }
       if (!res.ok) {
-        setError(data.error ?? `발급 실패 (${res.status})`);
+        setError(humanError(data.error ?? String(res.status), "general"));
         return;
       }
       const newToken: TokenRow = {

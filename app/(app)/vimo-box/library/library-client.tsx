@@ -22,6 +22,7 @@ import {
 import { startUpload } from "@/lib/upload";
 import type { FileEntry } from "@/lib/fs/storage";
 import { useToast } from "@/components/Toast";
+import { humanError } from "@/lib/human-error";
 
 function formatBytes(n: number): string {
   if (!Number.isFinite(n) || n === 0) return "0 B";
@@ -97,7 +98,7 @@ export function LibraryClient({
         toast.success(`${arr.length}개 업로드 완료`);
         refresh();
       } else {
-        toast.error(`업로드 실패: ${res.error ?? "unknown"}`);
+        toast.error(humanError(res.error, "upload"));
       }
     });
   };
@@ -115,7 +116,7 @@ export function LibraryClient({
       refresh();
     } else {
       const { error } = await r.json().catch(() => ({ error: "failed" }));
-      toast.error(`폴더 생성 실패: ${error}`);
+      toast.error(humanError(error, "library-write"));
     }
   };
 
@@ -129,7 +130,8 @@ export function LibraryClient({
       toast.success("휴지통으로 이동");
       refresh();
     } else {
-      toast.error("삭제 실패");
+      const body = await r.json().catch(() => ({}));
+      toast.error(humanError(body.error ?? r.statusText, "delete"));
     }
   };
 

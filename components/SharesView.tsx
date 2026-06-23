@@ -19,6 +19,7 @@ import {
 import { useConfirm } from "./ConfirmDialog";
 import { useToast } from "./Toast";
 import { FilePickerDialog } from "./FilePickerDialog";
+import { humanError } from "@/lib/human-error";
 
 export type ShareRow = {
   id: string;
@@ -118,7 +119,7 @@ export function SharesView({ items }: { items: ShareRow[] }) {
       const res = await fetch(`/api/shares/${item.id}`, { method: "DELETE" });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        toastError("취소 실패: " + (body.error ?? res.statusText));
+        toastError(humanError(body.error ?? res.statusText, "share"));
         return;
       }
       success("링크가 취소됐어요");
@@ -138,7 +139,7 @@ export function SharesView({ items }: { items: ShareRow[] }) {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        toastError("버전 추가 실패: " + (body.error ?? res.statusText));
+        toastError(humanError(body.error ?? res.statusText, "share"));
         return;
       }
       const data = await res.json();
@@ -186,7 +187,7 @@ export function SharesView({ items }: { items: ShareRow[] }) {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        toastError("제거 실패: " + (body.error ?? res.statusText));
+        toastError(humanError(body.error ?? res.statusText, "share"));
         return;
       }
       success("버전 제거됨");

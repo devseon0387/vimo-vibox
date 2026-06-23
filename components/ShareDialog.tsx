@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Modal } from "./Modal";
 import { Copy, Check, Link as LinkIcon, Eye, MessageSquare } from "lucide-react";
 import type { FileEntry } from "@/lib/fs/storage";
+import { humanError } from "@/lib/human-error";
 
 type Step = "configure" | "ready";
 type Mode = "preview" | "full";
@@ -58,7 +59,7 @@ export function ShareDialog({
       });
       const body = await res.json();
       if (!res.ok) {
-        setError(body.error ?? "생성 실패");
+        setError(humanError(body.error, "share"));
         return;
       }
       setToken(body.token);

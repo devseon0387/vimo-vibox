@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, Users, Mail, ChevronRight, Loader2 } from "lucide-react";
 import { useToast } from "@/components/Toast";
+import { humanError } from "@/lib/human-error";
 
 type ClientRow = {
   id: string;
@@ -53,7 +54,7 @@ export function ClientsList() {
       });
       if (!r.ok) {
         const body = await r.json().catch(() => ({}));
-        toast.error("생성 실패: " + (body.error ?? r.statusText));
+        toast.error(humanError(body.error ?? r.statusText, "general"));
         return;
       }
       const data = (await r.json()) as { slug: string };

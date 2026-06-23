@@ -29,6 +29,7 @@ import {
   Film,
   RotateCcw,
 } from "lucide-react";
+import { humanError } from "@/lib/human-error";
 
 type DiskIO = {
   deviceName: string;
@@ -320,7 +321,7 @@ export function StatsAdmin() {
       const res = await fetch(`/api/admin/stats?${qs}`);
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        setError(body.error ?? res.statusText);
+        setError(humanError(body.error ?? res.statusText, "general"));
         return;
       }
       const json = (await res.json()) as StatsResponse;
@@ -328,7 +329,7 @@ export function StatsAdmin() {
         opts?.skipStorage && prev?.storage ? { ...json, storage: prev.storage } : json,
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : "unknown");
+      setError(humanError(e instanceof Error ? e.message : "unknown", "general"));
     } finally {
       if (!opts?.silent) setLoading(false);
     }

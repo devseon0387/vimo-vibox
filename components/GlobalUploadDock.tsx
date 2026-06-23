@@ -13,6 +13,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useUpload, type UploadEntry } from "@/lib/upload-store";
+import { humanError } from "@/lib/human-error";
 
 function formatBytes(b: number): string {
   if (b === 0) return "0 B";
@@ -220,8 +221,11 @@ function UploadRow({
       )}
 
       {entry.status === "failed" && entry.error && (
-        <div className="mt-1 text-[11px] text-rose-600 truncate" title={entry.error}>
-          실패: {entry.error}
+        <div
+          className="mt-1 text-[11px] text-rose-600 truncate"
+          title={humanError(entry.error, "upload")}
+        >
+          {humanError(entry.error, "upload")}
         </div>
       )}
     </div>

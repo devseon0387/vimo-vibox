@@ -1121,7 +1121,7 @@ export function FeedbackModal({
       await fetchComments();
     } else {
       const body = await res.json().catch(() => ({}));
-      toastError("확인 실패: " + (body.error ?? res.statusText));
+      toastError(humanError(body.error ?? res.statusText, "comment"));
     }
   };
 
@@ -1157,7 +1157,7 @@ export function FeedbackModal({
         await fetchComments();
       } else {
         const b = await res.json().catch(() => ({}));
-        toastError("승인 실패: " + (b.error ?? res.statusText));
+        toastError(humanError(b.error ?? res.statusText, "comment"));
       }
     } finally {
       setDecisionPending(false);
@@ -1259,7 +1259,7 @@ export function FeedbackModal({
         await fetchComments();
       } else {
         const body = await res.json().catch(() => ({}));
-        toastError("변경 실패: " + (body.error ?? res.statusText));
+        toastError(humanError(body.error ?? res.statusText, "comment"));
       }
     },
     // fetchComments 는 아래에서 선언되지만 useCallback deps 에 넣지 않아도 클로저로 최신 참조됨.
@@ -1290,7 +1290,7 @@ export function FeedbackModal({
       await fetchComments();
     } else {
       const body = await res.json().catch(() => ({}));
-      toastError("변경 실패: " + (body.error ?? res.statusText));
+      toastError(humanError(body.error ?? res.statusText, "comment"));
     }
   };
 
@@ -1337,7 +1337,7 @@ export function FeedbackModal({
       await fetchComments();
     } else {
       const body = await res.json().catch(() => ({}));
-      toastError("저장 실패: " + (body.error ?? res.statusText));
+      toastError(humanError(body.error ?? res.statusText, "comment"));
     }
   };
 
@@ -1362,7 +1362,7 @@ export function FeedbackModal({
       await fetchComments();
     } else {
       const body = await res.json().catch(() => ({}));
-      toastError("삭제 실패: " + (body.error ?? res.statusText));
+      toastError(humanError(body.error ?? res.statusText, "comment"));
     }
   };
 
@@ -1404,7 +1404,7 @@ export function FeedbackModal({
           setTimeout(() => setScanJob(null), 2000);
         } else if (data.status === "failed") {
           clearInterval(timer);
-          toastError("검수 실패: " + (data.error ?? "알 수 없음"));
+          toastError(humanError(data.error ?? "알 수 없음", "general"));
           setTimeout(() => setScanJob(null), 3000);
         } else if (data.status === "cancelled") {
           clearInterval(timer);
@@ -1441,7 +1441,7 @@ export function FeedbackModal({
       });
       const data = await res.json();
       if (!res.ok) {
-        toastError("검수 실패: " + (data.error ?? res.statusText));
+        toastError(humanError(data.error ?? res.statusText, "general"));
         return;
       }
       setScanJob({
@@ -1452,7 +1452,7 @@ export function FeedbackModal({
         issuesFound: null,
       });
     } catch (e) {
-      toastError("검수 실패: " + (e instanceof Error ? e.message : "unknown"));
+      toastError(humanError(e instanceof Error ? e.message : "unknown", "general"));
     }
   };
 

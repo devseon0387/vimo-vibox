@@ -8,6 +8,7 @@ import LinkExt from "@tiptap/extension-link";
 import ImageExt from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Markdown } from "tiptap-markdown";
+import { humanError } from "@/lib/human-error";
 import {
   Bold,
   Italic,
@@ -113,7 +114,7 @@ export function NoteEditor({
         });
         if (!r.ok) {
           const j = await r.json().catch(() => ({}));
-          showToast("업로드 실패: " + (j.error ?? r.status));
+          showToast(humanError(j.error ?? String(r.status), "upload"));
           return null;
         }
         const j = await r.json();

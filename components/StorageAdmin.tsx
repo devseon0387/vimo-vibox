@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useConfirm } from "./ConfirmDialog";
 import { useToast } from "./Toast";
+import { humanError } from "@/lib/human-error";
 import type { ReconcileReport } from "@/lib/reconcile";
 
 function formatBytes(n: number): string {
@@ -41,7 +42,7 @@ export function StorageAdmin() {
       });
       const body = await res.json();
       if (!res.ok) {
-        toast.error(body.error ?? res.statusText);
+        toast.error(humanError(body.error ?? res.statusText, "general"));
         return;
       }
       setReport(body.report);

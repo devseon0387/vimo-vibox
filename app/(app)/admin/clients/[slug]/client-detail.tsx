@@ -14,6 +14,7 @@ import {
 import { useToast } from "@/components/Toast";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { FilePickerDialog } from "@/components/FilePickerDialog";
+import { humanError } from "@/lib/human-error";
 
 type Client = {
   id: string;
@@ -63,7 +64,8 @@ export function ClientDetail({ client }: { client: Client }) {
       body: JSON.stringify({ paths: [filePath] }),
     });
     if (!r.ok) {
-      toast.error("추가 실패");
+      const body = await r.json().catch(() => ({}));
+      toast.error(humanError(body.error ?? r.statusText, "general"));
       return;
     }
     const data = (await r.json()) as { added: number; skipped: number };
@@ -95,7 +97,8 @@ export function ClientDetail({ client }: { client: Client }) {
       toast.success("제거됨");
       load();
     } else {
-      toast.error("제거 실패");
+      const body = await r.json().catch(() => ({}));
+      toast.error(humanError(body.error ?? r.statusText, "general"));
     }
   };
 

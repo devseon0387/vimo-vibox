@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { MenuShell, MenuSearch, MenuSection } from "./MenuShell";
 import type { NoteFolder } from "@/lib/notes";
+import { humanError } from "@/lib/human-error";
 
 export function DevMenu() {
   const [folders, setFolders] = useState<NoteFolder[]>([]);
@@ -50,7 +51,7 @@ export function DevMenu() {
     });
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
-      setError(j.error ?? "생성 실패");
+      setError(humanError(j.error, "general"));
       return;
     }
     const created = await res.json();
@@ -73,7 +74,7 @@ export function DevMenu() {
     });
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
-      setError(j.error ?? "이름 변경 실패");
+      setError(humanError(j.error, "general"));
       return;
     }
     const renamed = await res.json();
