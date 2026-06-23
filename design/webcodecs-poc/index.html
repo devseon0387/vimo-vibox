@@ -6,7 +6,7 @@
 <title>WebCodecs 프록시 인코딩 PoC</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
 <style>
-  :root{--accent:#e85008;--accent-soft:#fef0e8;--text:#18181b;--soft:#555;--faint:#999;--border:#e6e6e8;--surface:#fafafa;--success:#16a34a;--success-soft:#f0fdf4;--danger:#dc2626;--danger-soft:#fef2f2;}
+  :root{--accent:#e85008;--accent-soft:#fef0e8;--text:#18181b;--soft:#555;--faint:#999;--border:#e6e6e8;--surface:#fafafa;--success:#16a34a;--success-soft:#f0fdf4;--danger:#dc2626;--danger-soft:#fef2f2;--warn:#b45309;--warn-soft:#fffbeb;}
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:#eceef1;color:var(--text);font-family:Pretendard,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
   .wrap{max-width:880px;margin:0 auto;padding:30px 22px 80px}
@@ -30,8 +30,8 @@
   .m.hl .v{color:var(--accent)}
   .prog{height:8px;background:var(--surface);border-radius:99px;overflow:hidden;margin-top:14px}
   .prog .f{height:100%;background:var(--accent);width:0;transition:width .2s}
-  .log{font-family:ui-monospace,monospace;font-size:11px;color:var(--soft);background:#1a1a1e;border-radius:9px;padding:12px;margin-top:12px;max-height:160px;overflow-y:auto;white-space:pre-wrap;line-height:1.5}
-  .log .e{color:#fca5a5}.log .s{color:#86efac}
+  .log{font-family:ui-monospace,monospace;font-size:11px;color:var(--soft);background:#1a1a1e;border-radius:9px;padding:12px;margin-top:12px;max-height:180px;overflow-y:auto;white-space:pre-wrap;line-height:1.5}
+  .log .e{color:#fca5a5}.log .s{color:#86efac}.log .w{color:#fcd34d}
   video{width:100%;max-width:360px;border-radius:9px;background:#000;margin-top:10px}
   .vids{display:flex;gap:14px;flex-wrap:wrap}
   a.dl{display:inline-block;margin-top:10px;font-size:12.5px;font-weight:700;color:var(--accent)}
@@ -40,7 +40,7 @@
 <body>
 <div class="wrap">
   <h1>WebCodecs 프록시 인코딩 PoC</h1>
-  <p class="sub">영상 선택 → 브라우저가 그 컴퓨터의 하드웨어로 720p 프록시 재인코딩 → 속도·크기·화질 측정. (업로드·서버 없음, 인코딩만)</p>
+  <p class="sub">영상 선택 → 브라우저가 그 컴퓨터의 하드웨어로 720p 프록시 재인코딩 → 속도·크기·화질 측정. (업로드·서버 없음, 인코딩만) · 큰 파일은 <b>스트리밍</b>으로 처리(메모리 안전).</p>
 
   <div id="capbox"></div>
 
@@ -65,8 +65,8 @@
 const $=(id)=>document.getElementById(id);
 const log=(m,c)=>{const el=$('log');el.innerHTML+=`<span class="${c||''}">${m}</span>\n`;el.scrollTop=el.scrollHeight;};
 const setMetrics=(o)=>{$('metrics').innerHTML=Object.entries(o).map(([k,v])=>`<div class="m ${/속도|절감/.test(k)?'hl':''}"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');};
+const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
 
-// 1) 능력 감지
 async function checkCaps(){
   const hasVE = typeof VideoEncoder!=='undefined' && typeof VideoDecoder!=='undefined';
   let h264=false, hw=false;
@@ -81,115 +81,110 @@ async function checkCaps(){
   const ok = hasVE && h264;
   $('capbox').innerHTML = `<div class="cap ${ok?'ok':'no'}">${ok?'✓ WebCodecs + H.264 인코더 지원'+(hw?' · 하드웨어 가속 가능':' · (소프트웨어 폴백)'):'✗ 미지원 — 서버 폴백 필요'}</div>`;
   $('go').disabled = !ok;
-  return {hasVE,h264,hw};
 }
 
 let inputFile=null;
 $('file').addEventListener('change',e=>{ inputFile=e.target.files[0]; $('go').disabled=!inputFile; });
-
-$('go').addEventListener('click',()=>{ if(inputFile) transcode(inputFile); });
+$('go').addEventListener('click',()=>{ if(inputFile) transcode(inputFile).catch(e=>{log('실패: '+(e.message||e),'e'); window.__pocResult={ok:false,error:String(e.message||e)}; $('go').disabled=false;}); });
 
 async function transcode(file){
-  $('go').disabled=true; $('log').innerHTML=''; $('vids').innerHTML=''; $('bar').style.width='0';
-  const targetH = parseInt($('res').value,10);
-  const bitrate = parseInt($('br').value,10);
+  $('go').disabled=true; $('log').innerHTML=''; $('vids').innerHTML=''; $('bar').style.width='0'; $('metrics').innerHTML='';
+  const targetH=parseInt($('res').value,10), bitrate=parseInt($('br').value,10);
   log(`입력: ${file.name} · ${(file.size/1048576).toFixed(1)}MB`);
+  const t0=performance.now();
 
-  const buf = await file.arrayBuffer();
-  const t0 = performance.now();
+  const inFile=MP4Box.createFile(), outFile=MP4Box.createFile();
+  let track=null, srcW=0,srcH=0, durSec=0, fps=30, totalSamples=0;
+  let tW=0,tH=0, canvas,ctx, decoder=null,encoder=null, outTrackId=null;
+  let decoded=0, encoded=0, keyEvery=60, lastNum=0, setupErr=null;
 
-  // ---- 디먹스 (mp4box.js) ----
-  const inFile = MP4Box.createFile();
-  let track=null, totalSamples=0, srcW=0,srcH=0, durSec=0, fps=30;
-  const decodeChunks=[];
-  await new Promise((resolve,reject)=>{
-    inFile.onError = (e)=>reject(new Error('demux: '+e));
-    inFile.onReady = (info)=>{
-      track = info.videoTracks[0];
-      if(!track) return reject(new Error('비디오 트랙 없음'));
+  function makeEncoder(){
+    encoder=new VideoEncoder({
+      output:(chunk,meta)=>{
+        if(outTrackId===null && meta&&meta.decoderConfig&&meta.decoderConfig.description){
+          outTrackId=outFile.addTrack({timescale:1e6,width:tW,height:tH,avcDecoderConfigRecord:meta.decoderConfig.description});
+        }
+        const data=new ArrayBuffer(chunk.byteLength); chunk.copyTo(data);
+        outFile.addSample(outTrackId,data,{duration:chunk.duration||1e6/fps,dts:chunk.timestamp,cts:chunk.timestamp,is_sync:chunk.type==='key'});
+        encoded++;
+      },
+      error:(e)=>{setupErr=e; log('encoder: '+e.message,'e');},
+    });
+    encoder.configure({codec:'avc1.42E01F',width:tW,height:tH,bitrate,framerate:fps,avc:{format:'avc'},hardwareAcceleration:'prefer-hardware'});
+  }
+  function makeDecoder(avcCdesc){
+    decoder=new VideoDecoder({
+      output:(frame)=>{
+        ctx.drawImage(frame,0,0,tW,tH);
+        const vf=new VideoFrame(canvas,{timestamp:frame.timestamp,duration:frame.duration||1e6/fps});
+        encoder.encode(vf,{keyFrame: decoded%keyEvery===0});
+        vf.close(); frame.close(); decoded++;
+        if(decoded%30===0) $('bar').style.width=(totalSamples?Math.min(99,decoded/totalSamples*100):50)+'%';
+      },
+      error:(e)=>{setupErr=e; log('decoder: '+e.message,'e');},
+    });
+    decoder.configure({codec:track.codec,codedWidth:srcW,codedHeight:srcH,description:avcCdesc});
+  }
+
+  let readyFired=false;
+  const ready=new Promise((resolve,reject)=>{
+    inFile.onError=(e)=>reject(new Error('demux: '+e));
+    inFile.onReady=(info)=>{
+      track=info.videoTracks[0];
+      if(!track){ reject(new Error('비디오 트랙 없음')); return; }
       srcW=track.video.width; srcH=track.video.height;
-      durSec = track.duration/track.timescale;
-      totalSamples = track.nb_samples;
-      fps = Math.round(totalSamples/durSec)||30;
+      durSec=track.duration/track.timescale; totalSamples=track.nb_samples;
+      fps=Math.round(totalSamples/durSec)||30; keyEvery=Math.max(1,Math.round(fps*2));
       log(`원본: ${srcW}×${srcH} · ${durSec.toFixed(1)}s · ${totalSamples}프레임 · ~${fps}fps · ${track.codec}`);
-      inFile.setExtractionOptions(track.id,null,{nbSamples:Infinity});
+      const sc=targetH/srcH; tW=Math.round(srcW*sc/2)*2; tH=Math.round(targetH/2)*2;
+      log(`타깃: ${tW}×${tH} · ${(bitrate/1e6).toFixed(1)}Mbps`);
+      canvas=new OffscreenCanvas(tW,tH); ctx=canvas.getContext('2d');
+      const trak=inFile.getTrackById(track.id); let avcCdesc=null;
+      for(const e of trak.mdia.minf.stbl.stsd.entries){ if(e.avcC){ const ds=new DataStream(undefined,0,DataStream.BIG_ENDIAN); e.avcC.write(ds); avcCdesc=new Uint8Array(ds.buffer,8); break; } }
+      try{ makeEncoder(); makeDecoder(avcCdesc); }catch(e){ reject(e); return; }
+      inFile.setExtractionOptions(track.id,null,{nbSamples:60});
       inFile.start();
+      readyFired=true; resolve();
     };
-    inFile.onSamples = (id,user,samples)=>{
-      for(const s of samples){
-        decodeChunks.push(new EncodedVideoChunk({
-          type: s.is_sync?'key':'delta',
-          timestamp: s.cts*1e6/track.timescale,
-          duration: s.duration*1e6/track.timescale,
-          data: s.data,
-        }));
-      }
-      if(decodeChunks.length>=totalSamples) resolve();
-    };
-    buf.fileStart=0; inFile.appendBuffer(buf); inFile.flush();
   });
+  inFile.onSamples=(id,user,samples)=>{
+    for(const s of samples){
+      decoder.decode(new EncodedVideoChunk({type:s.is_sync?'key':'delta',timestamp:s.cts*1e6/track.timescale,duration:s.duration*1e6/track.timescale,data:s.data}));
+      lastNum=s.number;
+    }
+    inFile.releaseUsedSamples(track.id,lastNum);  // mp4box 보관 메모리 해제 (큰 파일 핵심)
+  };
 
-  // avcC (디코더 description)
-  const trak = inFile.getTrackById(track.id);
-  let avcCdesc=null;
-  for(const e of trak.mdia.minf.stbl.stsd.entries){ if(e.avcC){ const ds=new DataStream(undefined,0,DataStream.BIG_ENDIAN); e.avcC.write(ds); avcCdesc=new Uint8Array(ds.buffer,8); break; } }
-
-  // ---- 타깃 크기 (짝수, 비율 유지) ----
-  const scale = targetH/srcH;
-  const tW = Math.round(srcW*scale/2)*2, tH = Math.round(targetH/2)*2;
-  log(`타깃: ${tW}×${tH} · ${(bitrate/1e6).toFixed(1)}Mbps`);
-
-  // ---- mux (출력) ----
-  const outFile = MP4Box.createFile();
-  let outTrackId=null;
-  const canvas = new OffscreenCanvas(tW,tH);
-  const ctx = canvas.getContext('2d');
-
-  // ---- 인코더 ----
-  let encoded=0;
-  const encoder = new VideoEncoder({
-    output:(chunk,meta)=>{
-      if(outTrackId===null && meta&&meta.decoderConfig&&meta.decoderConfig.description){
-        outTrackId = outFile.addTrack({timescale:1e6,width:tW,height:tH,avcDecoderConfigRecord:meta.decoderConfig.description});
-      }
-      const data=new ArrayBuffer(chunk.byteLength); chunk.copyTo(data);
-      outFile.addSample(outTrackId,data,{duration:chunk.duration||1e6/fps,dts:chunk.timestamp,cts:chunk.timestamp,is_sync:chunk.type==='key'});
-      encoded++;
-    },
-    error:(e)=>log('encoder: '+e.message,'e'),
-  });
-  encoder.configure({codec:'avc1.42E01F',width:tW,height:tH,bitrate,framerate:fps,avc:{format:'avc'},hardwareAcceleration:'prefer-hardware'});
-
-  // ---- 디코더 → 다운스케일 → 인코더 ----
-  let decoded=0, keyEvery=Math.max(1,Math.round(fps*2));
-  const decoder = new VideoDecoder({
-    output:(frame)=>{
-      ctx.drawImage(frame,0,0,tW,tH);
-      const vf=new VideoFrame(canvas,{timestamp:frame.timestamp,duration:frame.duration||1e6/fps});
-      encoder.encode(vf,{keyFrame: decoded%keyEvery===0});
-      vf.close(); frame.close();
-      decoded++;
-      if(decoded%15===0){ $('bar').style.width=(decoded/totalSamples*100)+'%'; }
-    },
-    error:(e)=>log('decoder: '+e.message,'e'),
-  });
-  decoder.configure({codec:track.codec,codedWidth:srcW,codedHeight:srcH,description:avcCdesc});
-
-  log('디코드→다운스케일→인코드 중…');
-  for(const ch of decodeChunks) decoder.decode(ch);
+  // ---- 꼬리(moov) 먼저 → 앞에서 본문 스트리밍 + 백프레셔. 메모리 bounded(큰 파일 핵심) ----
+  // 편집 export는 보통 moov가 파일 끝(non-faststart). 꼬리를 먼저 넣으면 3GB여도 메타를 즉시 확보,
+  // faststart(moov 앞)면 본문 스트리밍 중에 onReady. 어느 쪽이든 전체를 들고 있을 필요 없음.
+  const CHUNK=8*1024*1024, TAIL=Math.min(64*1024*1024, file.size);
+  log('스트리밍 디먹스 (꼬리 먼저 → 본문)…');
+  { const ts=file.size-TAIL; const ab=await file.slice(ts,file.size).arrayBuffer(); ab.fileStart=ts; inFile.appendBuffer(ab); }
+  await sleep(40);  // non-faststart면 여기서 moov 파싱 → onReady
+  if(readyFired) log('moov: 파일 끝(non-faststart) — 꼬리에서 확보 ✓','s');
+  let offset=0; const bodyEnd=Math.max(0, file.size-TAIL);
+  while(offset<bodyEnd){
+    if(setupErr) throw setupErr;
+    while(decoder && (decoder.decodeQueueSize>24 || encoder.encodeQueueSize>24)){ await sleep(4); if(setupErr) throw setupErr; }
+    const end=Math.min(offset+CHUNK,bodyEnd);
+    const ab=await file.slice(offset,end).arrayBuffer(); ab.fileStart=offset; offset=end;
+    inFile.appendBuffer(ab);
+    if(!readyFired) $('bar').style.width=(offset/Math.max(1,bodyEnd)*40)+'%';
+    await sleep(0);
+  }
+  inFile.flush();
+  await ready;
+  if(setupErr) throw setupErr;
   await decoder.flush();
   await encoder.flush();
   encoder.close(); decoder.close();
   $('bar').style.width='100%';
 
-  // ---- 출력 MP4 ----
-  outFile.initializeSegmentation && outFile.initializeSegmentation();
-  const outBuf = outFile.getBuffer();
-  const t1 = performance.now();
-  const elapsed = (t1-t0)/1000;
-  const blob = new Blob([outBuf],{type:'video/mp4'});
-  const outMB = blob.size/1048576, inMB=file.size/1048576;
-  const speed = durSec/elapsed; // ×실시간
+  const outBuf=outFile.getBuffer();
+  const elapsed=(performance.now()-t0)/1000;
+  const blob=new Blob([outBuf],{type:'video/mp4'});
+  const outMB=blob.size/1048576, inMB=file.size/1048576, speed=durSec/elapsed;
 
   setMetrics({
     '인코딩 시간': elapsed.toFixed(1)+'<small>s</small>',
@@ -201,12 +196,9 @@ async function transcode(file){
   });
   log(`완료 — ${elapsed.toFixed(1)}s · ${speed.toFixed(2)}×실시간 · ${inMB.toFixed(1)}→${outMB.toFixed(1)}MB`,'s');
 
-  // 미리보기 + 다운로드
   const url=URL.createObjectURL(blob);
   $('vids').innerHTML=`<div><div style="font-size:11px;font-weight:700;color:var(--soft);margin-bottom:4px">출력 프록시 (${tW}×${tH})</div><video src="${url}" controls muted></video></div>`;
   const a=document.createElement('a'); a.className='dl'; a.href=url; a.download='proxy.mp4'; a.textContent='⬇ proxy.mp4 다운로드'; $('vids').appendChild(a);
-
-  // 결과를 자동화 검증용으로 노출
   window.__pocResult={ok:true,elapsed,speed,inMB,outMB,decoded,encoded,tW,tH,durSec};
   $('go').disabled=false;
 }
