@@ -27,6 +27,7 @@ import {
   type Kind,
 } from "@/lib/comments/detect";
 import type { FileEntry } from "@/lib/fs/storage";
+import { humanError } from "@/lib/human-error";
 import { AiFeedbackRow } from "./AiFeedbackRow";
 import {
   parseAnnotation,
@@ -3721,7 +3722,7 @@ function ReplyCompose({
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        toastError("답글 실패: " + (body.error ?? res.statusText));
+        toastError(humanError(body.error ?? res.statusText, "comment"));
         return;
       }
       setText("");
@@ -3800,7 +3801,7 @@ function GuestComposeBar({
       );
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        toastError("전송 실패: " + (body.error ?? res.statusText));
+        toastError(humanError(body.error ?? res.statusText, "comment"));
         return;
       }
       shareContext.onSetGuestName(name.trim());
@@ -3897,7 +3898,7 @@ function ComposeBar({
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        toastError("등록 실패: " + (body.error ?? res.statusText));
+        toastError(humanError(body.error ?? res.statusText, "comment"));
         return;
       }
       setText("");

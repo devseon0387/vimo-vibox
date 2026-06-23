@@ -24,6 +24,30 @@ type ErrorRule = {
 
 // 우선순위 순서대로 매칭됨
 const RULES: ErrorRule[] = [
+  // ── 공유 링크(게스트 검수) 전용 — 외부 클라이언트가 보는 문구라 가장 먼저 매칭 ──
+  {
+    // 링크 회수·만료 (api/s/[token]/* 가 "revoked"/"expired" 반환)
+    match: (r) => /^(revoked|expired)$/i.test(r),
+    byContext: {
+      default:
+        "이 공유 링크는 더 이상 열 수 없어요. 보낸 분께 새 링크를 요청해주세요.",
+    },
+  },
+  {
+    // 공유 비밀번호 필요·불일치
+    match: (r) => /^(password required|wrong password)$/i.test(r),
+    byContext: {
+      default: "비밀번호가 필요하거나 올바르지 않아요. 보낸 분께 확인해주세요.",
+    },
+  },
+  {
+    // 댓글 비허용 공유 ("comments not allowed")
+    match: (r) => /comments? not allowed/i.test(r),
+    byContext: {
+      default:
+        "이 영상에는 의견을 남길 수 없도록 설정돼 있어요. 보낸 분께 문의해주세요.",
+    },
+  },
   {
     match: (r) => /^forbidden$/i.test(r) || /^staff only$/i.test(r),
     byContext: {
