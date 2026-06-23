@@ -10,7 +10,8 @@
     "db:studio": "drizzle-kit studio",
     "seed": "tsx scripts/seed.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "check:design": "node scripts/check-design.mjs"
   },
   "dependencies": {
     "@tiptap/core": "^3.23.4",

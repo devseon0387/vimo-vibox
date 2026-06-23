@@ -16,6 +16,7 @@ import {
   MessageSquare,
   FileVideo,
 } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
 import { useConfirm } from "./ConfirmDialog";
 import { useToast } from "./Toast";
 import { FilePickerDialog } from "./FilePickerDialog";
@@ -241,24 +242,17 @@ export function SharesView({ items }: { items: ShareRow[] }) {
                       <span className="text-base font-semibold text-text truncate">
                         {displayTitle}
                       </span>
-                      <span
-                        className={`inline-flex items-center gap-1 text-2xs font-bold px-1.5 py-0.5 rounded ${
-                          item.mode === "full"
-                            ? "bg-sky-100 text-sky-700"
-                            : "bg-slate-100 text-slate-600"
-                        }`}
+                      <Badge
+                        tone={item.mode === "full" ? "sky" : "neutral"}
+                        size="sm"
+                        icon={item.mode === "full" ? MessageSquare : Eye}
                       >
-                        {item.mode === "full" ? (
-                          <MessageSquare size={9} strokeWidth={2.5} />
-                        ) : (
-                          <Eye size={9} strokeWidth={2.5} />
-                        )}
                         {item.mode === "full" ? "풀" : "프리뷰"}
-                      </span>
+                      </Badge>
                       {multi && (
-                        <span className="inline-flex items-center gap-1 text-2xs font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700">
+                        <Badge tone="purple" size="sm">
                           V1~V{item.paths.length}
-                        </span>
+                        </Badge>
                       )}
                       {item.hasPassword && (
                         <span className="inline-flex items-center gap-1 text-xs text-accent">
