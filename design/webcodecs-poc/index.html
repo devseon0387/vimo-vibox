@@ -67,6 +67,16 @@ const log=(m,c)=>{const el=$('log');el.innerHTML+=`<span class="${c||''}">${m}</
 const setMetrics=(o)=>{$('metrics').innerHTML=Object.entries(o).map(([k,v])=>`<div class="m ${/속도|절감/.test(k)?'hl':''}"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');};
 const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
 
+// 해상도에 맞는 AVC 레벨을 골라 코덱 문자열 생성 (avc1.42E0LL).
+// 레벨이 낮으면 큰 해상도 인코딩이 거부됨(예: 3.1=720p까지). coded area로 최소 레벨 선택.
+function avcCodec(w,h){
+  const area=(Math.ceil(w/16)*16)*(Math.ceil(h/16)*16);
+  const levels=[[0x1F,921600],[0x20,1310720],[0x28,2097152],[0x29,2097152],[0x2A,2228224],[0x32,5652480],[0x33,9437184],[0x40,35651584]];
+  let code=0x33;
+  for(const [c,a] of levels){ if(area<=a){ code=c; break; } }
+  return 'avc1.42E0'+code.toString(16).toUpperCase().padStart(2,'0');
+}
+
 async function checkCaps(){
   const hasVE = typeof VideoEncoder!=='undefined' && typeof VideoDecoder!=='undefined';
   let h264=false, hw=false;
@@ -110,7 +120,9 @@ async function transcode(file){
       },
       error:(e)=>{setupErr=e; log('encoder: '+e.message,'e');},
     });
-    encoder.configure({codec:'avc1.42E01F',width:tW,height:tH,bitrate,framerate:fps,avc:{format:'avc'},hardwareAcceleration:'prefer-hardware'});
+    const codec=avcCodec(tW,tH);
+    log(`인코더 코덱: ${codec}`);
+    encoder.configure({codec,width:tW,height:tH,bitrate,framerate:fps,avc:{format:'avc'},hardwareAcceleration:'prefer-hardware'});
   }
   function makeDecoder(avcCdesc){
     decoder=new VideoDecoder({
