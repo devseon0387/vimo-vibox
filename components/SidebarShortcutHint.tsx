@@ -16,12 +16,12 @@ export function SidebarShortcutHint() {
   return (
     <button
       onClick={trigger}
-      className="mx-3 mb-2 mt-1 flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11.5px] text-text-faint hover:bg-hover hover:text-text-soft transition-colors"
+      className="mx-3 mb-2 mt-1 flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-text-faint hover:bg-hover hover:text-text-soft transition-colors"
       title="키보드 단축키"
     >
       <Keyboard size={12} strokeWidth={2} />
       <span className="flex-1 text-left">단축키</span>
-      <kbd className="font-mono text-[10px] bg-surface border border-border rounded px-1 py-0.5">
+      <kbd className="font-mono text-2xs bg-surface border border-border rounded px-1 py-0.5">
         ?
       </kbd>
     </button>

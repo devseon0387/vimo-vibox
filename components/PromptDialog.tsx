@@ -99,11 +99,11 @@ function PromptDialog({
         style={{ animation: "dialog-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both" }}
       >
         <div className="p-6">
-          <h3 className="text-[15.5px] font-bold text-text mb-1.5">
+          <h3 className="text-lg font-bold text-text mb-1.5">
             {options.title}
           </h3>
           {options.message && (
-            <div className="text-[13px] text-text-muted mb-4 leading-relaxed">
+            <div className="text-base text-text-muted mb-4 leading-relaxed">
               {options.message}
             </div>
           )}
@@ -125,23 +125,23 @@ function PromptDialog({
               }
             }}
             placeholder={options.placeholder}
-            className="w-full px-3 py-2 border border-border rounded-md text-[14px] outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-all"
+            className="w-full px-3 py-2 border border-border rounded-md text-md outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-all"
           />
           {error && (
-            <div className="mt-2 text-[12px] text-danger">{error}</div>
+            <div className="mt-2 text-sm text-danger">{error}</div>
           )}
         </div>
 
         <div className="flex gap-2 justify-end px-5 py-3 bg-surface border-t border-border">
           <button
             onClick={() => onClose(null)}
-            className="px-4 py-2 text-[13px] font-medium text-text-muted hover:text-text hover:bg-hover rounded-md transition-colors"
+            className="px-4 py-2 text-base font-medium text-text-muted hover:text-text hover:bg-hover rounded-md transition-colors"
           >
             {options.cancelLabel ?? "취소"}
           </button>
           <button
             onClick={submit}
-            className="px-4 py-2 text-[13px] font-semibold text-white bg-text hover:bg-[#333] rounded-md transition-colors"
+            className="px-4 py-2 text-base font-semibold text-white bg-text hover:bg-[#333] rounded-md transition-colors"
           >
             {options.confirmLabel ?? "확인"}
           </button>

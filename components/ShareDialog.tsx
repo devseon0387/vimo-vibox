@@ -91,21 +91,21 @@ export function ShareDialog({
       maxWidth="max-w-md"
     >
       <div className="p-6">
-        <div className="text-[12px] text-text-faint mb-1">{entry.isFolder ? "폴더" : "파일"}</div>
-        <div className="text-[14px] font-semibold text-text mb-6 truncate">
+        <div className="text-sm text-text-faint mb-1">{entry.isFolder ? "폴더" : "파일"}</div>
+        <div className="text-md font-semibold text-text mb-6 truncate">
           {entry.name}
         </div>
 
         {step === "configure" && (
           <>
             {entry.isFolder ? (
-              <div className="mb-5 text-[12.5px] text-text-muted leading-relaxed bg-surface border border-border rounded-md p-3">
+              <div className="mb-5 text-sm text-text-muted leading-relaxed bg-surface border border-border rounded-md p-3">
                 받는 사람이 이 폴더 안의 파일을 탐색하고 다운로드할 수 있어요.
                 폴더에 파일을 추가하면 공유에도 자동 반영됩니다.
               </div>
             ) : (
             <div className="mb-5">
-              <label className="block text-[12px] font-semibold text-text-soft mb-2">
+              <label className="block text-sm font-semibold text-text-soft mb-2">
                 모드
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -123,10 +123,10 @@ export function ShareDialog({
                     className={`mt-0.5 shrink-0 ${mode === "preview" ? "text-text" : "text-text-muted"}`}
                   />
                   <div>
-                    <div className="text-[12.5px] font-semibold text-text">
+                    <div className="text-sm font-semibold text-text">
                       보기 전용
                     </div>
-                    <div className="text-[10.5px] text-text-muted mt-0.5 leading-snug">
+                    <div className="text-2xs text-text-muted mt-0.5 leading-snug">
                       클라가 영상만 시청. 댓글·피드백 없음
                     </div>
                   </div>
@@ -145,10 +145,10 @@ export function ShareDialog({
                     className={`mt-0.5 shrink-0 ${mode === "full" ? "text-text" : "text-text-muted"}`}
                   />
                   <div>
-                    <div className="text-[12.5px] font-semibold text-text">
+                    <div className="text-sm font-semibold text-text">
                       피드백 받기
                     </div>
-                    <div className="text-[10.5px] text-text-muted mt-0.5 leading-snug">
+                    <div className="text-2xs text-text-muted mt-0.5 leading-snug">
                       클라가 시간 위에 댓글·주석 달 수 있음
                     </div>
                   </div>
@@ -175,10 +175,10 @@ export function ShareDialog({
                   {includeFeedback && <Check size={11} strokeWidth={3} className="text-white" />}
                 </span>
                 <div>
-                  <div className="text-[12.5px] font-semibold text-text">
+                  <div className="text-sm font-semibold text-text">
                     내가 남긴 피드백도 함께 보이기
                   </div>
-                  <div className="text-[10.5px] text-text-muted mt-0.5 leading-snug">
+                  <div className="text-2xs text-text-muted mt-0.5 leading-snug">
                     이 파일에 팀이 남긴 타임라인 피드백을 받는 사람도 봅니다 · 링크에서만 보이고 끄면 다시 숨겨져요
                   </div>
                 </div>
@@ -186,13 +186,13 @@ export function ShareDialog({
             )}
 
             {error && (
-              <div className="text-[12px] text-danger mb-3">{error}</div>
+              <div className="text-sm text-danger mb-3">{error}</div>
             )}
 
             <button
               onClick={create}
               disabled={creating}
-              className="w-full bg-text text-white hover:bg-[#333] disabled:opacity-60 py-2.5 rounded-md text-[14px] font-semibold"
+              className="w-full bg-text text-white hover:bg-[#333] disabled:opacity-60 py-2.5 rounded-md text-md font-semibold"
             >
               {creating ? "생성 중..." : "공유 링크 생성"}
             </button>
@@ -201,14 +201,14 @@ export function ShareDialog({
 
         {step === "ready" && token && (
           <>
-            <div className="flex items-center gap-1.5 text-[12.5px] text-success font-semibold mb-3">
+            <div className="flex items-center gap-1.5 text-sm text-success font-semibold mb-3">
               <Check size={14} strokeWidth={2.6} />
               링크가 만들어졌습니다
             </div>
 
             <div className="bg-surface border border-border rounded-md p-3 mb-3">
               <div className="flex items-center gap-2">
-                <div className="flex-1 text-[12.5px] font-mono text-text break-all">
+                <div className="flex-1 text-sm font-mono text-text break-all">
                   {shareUrl}
                 </div>
                 <button
@@ -223,7 +223,7 @@ export function ShareDialog({
 
             <button
               onClick={onClose}
-              className="w-full bg-accent text-white hover:bg-accent-hover py-2.5 rounded-md text-[14px] font-semibold"
+              className="w-full bg-accent text-white hover:bg-accent-hover py-2.5 rounded-md text-md font-semibold"
             >
               닫기
             </button>

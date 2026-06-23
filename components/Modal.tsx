@@ -73,7 +73,7 @@ export function Modal({
       >
         {title && (
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-border">
-            <div className="text-[14.5px] font-bold text-text truncate">{title}</div>
+            <div className="text-md font-bold text-text truncate">{title}</div>
             <button
               onClick={onClose}
               className="p-1 rounded hover:bg-hover text-text-soft hover:text-text transition-colors shrink-0"

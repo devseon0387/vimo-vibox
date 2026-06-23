@@ -80,14 +80,14 @@ export function PartnerShell({
               className="flex items-center gap-2.5 shrink-0 hover:opacity-80 transition-opacity"
             >
               <Image src="/logo.png" alt="Vibox" width={30} height={30} priority className="rounded" />
-              <span className="text-[15px] font-semibold tracking-tight">비박스</span>
+              <span className="text-lg font-semibold tracking-tight">비박스</span>
             </Link>
             <span className="h-4 w-px bg-border hidden sm:block" aria-hidden />
-            <span className="text-[13px] text-text-muted hidden sm:block">파트너 워크스페이스</span>
+            <span className="text-base text-text-muted hidden sm:block">파트너 워크스페이스</span>
             {!isHome && (
               <Link
                 href="/"
-                className="ml-1 inline-flex items-center gap-1 text-[12.5px] font-medium text-text-faint hover:text-text transition-colors"
+                className="ml-1 inline-flex items-center gap-1 text-sm font-medium text-text-faint hover:text-text transition-colors"
               >
                 <ArrowLeft size={13} strokeWidth={2.2} /> 홈
               </Link>
@@ -99,7 +99,7 @@ export function PartnerShell({
           <div className="flex items-center gap-2 shrink-0">
             <Link
               href="/shares"
-              className="hidden sm:inline-flex items-center gap-1.5 text-[12.5px] font-medium px-2.5 py-1.5 rounded-md hover:bg-surface transition-colors"
+              className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium px-2.5 py-1.5 rounded-md hover:bg-surface transition-colors"
               style={{ color: onShares ? "var(--accent)" : "var(--text-muted)" }}
             >
               <LinkIcon size={14} strokeWidth={2} />
@@ -115,10 +115,10 @@ export function PartnerShell({
                 aria-label="계정 메뉴"
               >
                 <div className="text-right leading-tight hidden md:block">
-                  <div className="text-[13px] font-medium">{userName || "파트너"}</div>
-                  <div className="text-[11px] text-text-faint">외부 편집자 · 파트너</div>
+                  <div className="text-base font-medium">{userName || "파트너"}</div>
+                  <div className="text-xs text-text-faint">외부 편집자 · 파트너</div>
                 </div>
-                <span className="w-9 h-9 rounded-full bg-gradient-to-br from-accent to-[#C8430A] text-white grid place-items-center text-[12px] font-bold">
+                <span className="w-9 h-9 rounded-full bg-gradient-to-br from-accent to-[#C8430A] text-white grid place-items-center text-sm font-bold">
                   {initials}
                 </span>
                 <ChevronDown size={14} strokeWidth={2} className="text-text-faint hidden md:block" />
@@ -131,29 +131,29 @@ export function PartnerShell({
                 >
                   {/* 모바일에선 헤더에 이름이 안 보이므로 메뉴 상단에 표시 */}
                   <div className="px-3 py-2 border-b border-border md:hidden">
-                    <div className="text-[13px] font-medium">{userName || "파트너"}</div>
-                    <div className="text-[11px] text-text-faint">외부 편집자 · 파트너</div>
+                    <div className="text-base font-medium">{userName || "파트너"}</div>
+                    <div className="text-xs text-text-faint">외부 편집자 · 파트너</div>
                   </div>
 
                   {/* 보조 내비 — 사이드바 제거로 사라진 풀 브라우저 도달성 보존 */}
                   <Link
                     href="/my/box"
                     role="menuitem"
-                    className="flex items-center gap-2.5 px-3 py-2 text-[13px] hover:bg-surface transition-colors"
+                    className="flex items-center gap-2.5 px-3 py-2 text-base hover:bg-surface transition-colors"
                   >
                     <Package size={15} strokeWidth={2} style={{ color: "var(--personal)" }} /> 내 보관함
                   </Link>
                   <Link
                     href="/team"
                     role="menuitem"
-                    className="flex items-center gap-2.5 px-3 py-2 text-[13px] hover:bg-surface transition-colors"
+                    className="flex items-center gap-2.5 px-3 py-2 text-base hover:bg-surface transition-colors"
                   >
                     <Users size={15} strokeWidth={2} style={{ color: "var(--team-color)" }} /> 비모에 납품
                   </Link>
                   <Link
                     href="/shares"
                     role="menuitem"
-                    className="flex items-center gap-2.5 px-3 py-2 text-[13px] hover:bg-surface transition-colors"
+                    className="flex items-center gap-2.5 px-3 py-2 text-base hover:bg-surface transition-colors"
                   >
                     <LinkIcon size={15} strokeWidth={2} className="text-text-soft" /> 내 공유 링크
                   </Link>
@@ -163,7 +163,7 @@ export function PartnerShell({
                     <button
                       type="submit"
                       role="menuitem"
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-danger hover:bg-danger-soft transition-colors"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-base text-danger hover:bg-danger-soft transition-colors"
                     >
                       <LogOut size={15} strokeWidth={2} /> 로그아웃
                     </button>

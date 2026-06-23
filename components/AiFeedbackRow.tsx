@@ -115,7 +115,7 @@ export function AiFeedbackRow({ commentId }: { commentId: string }) {
     return (
       <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
         <span
-          className={`inline-flex items-center gap-1 text-[10.5px] font-bold px-1.5 py-0.5 rounded ${
+          className={`inline-flex items-center gap-1 text-2xs font-bold px-1.5 py-0.5 rounded ${
             isGood
               ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
               : "bg-rose-50 text-rose-700 border border-rose-200"
@@ -133,7 +133,7 @@ export function AiFeedbackRow({ commentId }: { commentId: string }) {
               : "부정확"}
         </span>
         {feedback.note && (
-          <span className="text-[10.5px] text-slate-500 truncate max-w-[200px]" title={feedback.note}>
+          <span className="text-2xs text-slate-500 truncate max-w-[200px]" title={feedback.note}>
             “{feedback.note}”
           </span>
         )}
@@ -143,7 +143,7 @@ export function AiFeedbackRow({ commentId }: { commentId: string }) {
             setEditing(true);
           }}
           disabled={saving}
-          className="text-[10.5px] text-slate-400 hover:text-slate-700 underline decoration-dotted underline-offset-2"
+          className="text-2xs text-slate-400 hover:text-slate-700 underline decoration-dotted underline-offset-2"
         >
           변경
         </button>
@@ -153,7 +153,7 @@ export function AiFeedbackRow({ commentId }: { commentId: string }) {
             clear();
           }}
           disabled={saving}
-          className="text-[10.5px] text-slate-400 hover:text-rose-600"
+          className="text-2xs text-slate-400 hover:text-rose-600"
           title="평가 취소"
         >
           <X size={10} strokeWidth={2.3} />
@@ -171,7 +171,7 @@ export function AiFeedbackRow({ commentId }: { commentId: string }) {
       >
         <div className="flex items-center gap-1.5 mb-1.5">
           <AlertCircle size={11} className="text-rose-600" strokeWidth={2.3} />
-          <span className="text-[11px] font-bold text-rose-700">
+          <span className="text-xs font-bold text-rose-700">
             어느 부분이 잘못됐나요?
           </span>
         </div>
@@ -179,7 +179,7 @@ export function AiFeedbackRow({ commentId }: { commentId: string }) {
           {REASON_ORDER.map((tag) => (
             <label
               key={tag}
-              className="flex items-center gap-1.5 text-[11.5px] cursor-pointer hover:bg-white px-1 py-0.5 rounded"
+              className="flex items-center gap-1.5 text-xs cursor-pointer hover:bg-white px-1 py-0.5 rounded"
             >
               <input
                 type="radio"
@@ -197,7 +197,7 @@ export function AiFeedbackRow({ commentId }: { commentId: string }) {
           onChange={(e) => setNote(e.target.value)}
           placeholder="더 자세한 설명 (선택)"
           rows={2}
-          className="w-full text-[11.5px] px-2 py-1 border border-slate-200 rounded resize-none outline-none focus:border-slate-400"
+          className="w-full text-xs px-2 py-1 border border-slate-200 rounded resize-none outline-none focus:border-slate-400"
         />
         <div className="flex items-center gap-1.5 mt-1.5">
           <button
@@ -207,7 +207,7 @@ export function AiFeedbackRow({ commentId }: { commentId: string }) {
               submit(v, reasonTag, note.trim() || null);
             }}
             disabled={saving}
-            className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-60"
+            className="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-60"
           >
             {saving ? (
               <Loader2 size={11} className="animate-spin" />
@@ -222,7 +222,7 @@ export function AiFeedbackRow({ commentId }: { commentId: string }) {
               setEditing(false);
             }}
             disabled={saving}
-            className="text-[11px] text-slate-500 hover:text-slate-800 px-2 py-1"
+            className="text-xs text-slate-500 hover:text-slate-800 px-2 py-1"
           >
             취소
           </button>
@@ -234,14 +234,14 @@ export function AiFeedbackRow({ commentId }: { commentId: string }) {
   // 평가 전 — 두 버튼만
   return (
     <div className="mt-1.5 flex items-center gap-1">
-      <span className="text-[10.5px] text-slate-400 mr-1">정확?</span>
+      <span className="text-2xs text-slate-400 mr-1">정확?</span>
       <button
         onClick={(e) => {
           e.stopPropagation();
           submit("good", null, null);
         }}
         disabled={saving}
-        className="inline-flex items-center gap-0.5 text-[10.5px] text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 px-1.5 py-0.5 rounded transition-colors"
+        className="inline-flex items-center gap-0.5 text-2xs text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 px-1.5 py-0.5 rounded transition-colors"
         title="잘 잡았어요"
       >
         <ThumbsUp size={11} strokeWidth={2.2} />
@@ -252,7 +252,7 @@ export function AiFeedbackRow({ commentId }: { commentId: string }) {
           setEditing(true);
         }}
         disabled={saving}
-        className="inline-flex items-center gap-0.5 text-[10.5px] text-slate-500 hover:text-rose-700 hover:bg-rose-50 px-1.5 py-0.5 rounded transition-colors"
+        className="inline-flex items-center gap-0.5 text-2xs text-slate-500 hover:text-rose-700 hover:bg-rose-50 px-1.5 py-0.5 rounded transition-colors"
         title="잘못 잡았어요"
       >
         <ThumbsDown size={11} strokeWidth={2.2} />

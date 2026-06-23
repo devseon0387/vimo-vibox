@@ -71,7 +71,7 @@ export function StorageAdmin() {
           아래 항목을 <span className="font-semibold text-text">완전히 삭제</span>{" "}
           합니다. 되돌릴 수 없어요.
           <br />
-          <span className="text-[12px] text-text-muted">
+          <span className="text-sm text-text-muted">
             회수 용량: {formatBytes(report.totalBytesFreed)}
           </span>
         </>
@@ -98,9 +98,9 @@ export function StorageAdmin() {
     <>
       <div className="flex items-center gap-2 mb-1">
         <HardDrive size={18} strokeWidth={2.5} className="text-text" />
-        <h1 className="text-[22px] font-bold">저장소 정리</h1>
+        <h1 className="text-2xl font-bold">저장소 정리</h1>
       </div>
-      <p className="text-[13px] text-text-muted mb-6">
+      <p className="text-base text-text-muted mb-6">
         SSD 실제 파일과 DB/썸네일/청크 업로드를 대조해서 고아 데이터를 찾아내고 정리합니다.
       </p>
 
@@ -109,7 +109,7 @@ export function StorageAdmin() {
         <button
           onClick={() => runScan(false)}
           disabled={loading !== null}
-          className="bg-text text-white hover:bg-[#333] disabled:opacity-60 transition-colors px-3.5 py-2 rounded-md text-[13px] font-semibold flex items-center gap-1.5"
+          className="bg-text text-white hover:bg-[#333] disabled:opacity-60 transition-colors px-3.5 py-2 rounded-md text-base font-semibold flex items-center gap-1.5"
         >
           {loading === "scan" ? (
             <Loader2 size={14} strokeWidth={2.5} className="animate-spin" />
@@ -122,7 +122,7 @@ export function StorageAdmin() {
           <button
             onClick={onApply}
             disabled={loading !== null}
-            className="bg-danger text-white hover:opacity-90 disabled:opacity-60 transition-opacity px-3.5 py-2 rounded-md text-[13px] font-semibold flex items-center gap-1.5"
+            className="bg-danger text-white hover:opacity-90 disabled:opacity-60 transition-opacity px-3.5 py-2 rounded-md text-base font-semibold flex items-center gap-1.5"
           >
             {loading === "apply" ? (
               <Loader2 size={14} strokeWidth={2.5} className="animate-spin" />
@@ -138,8 +138,8 @@ export function StorageAdmin() {
       {!report && (
         <div className="border border-dashed border-border rounded-lg py-12 px-6 text-center bg-white">
           <Search size={28} className="mx-auto text-text-faint mb-3" strokeWidth={1.5} />
-          <div className="text-[14px] text-text-muted">스캔을 실행해 주세요</div>
-          <div className="text-[12px] text-text-faint mt-1">
+          <div className="text-md text-text-muted">스캔을 실행해 주세요</div>
+          <div className="text-sm text-text-faint mt-1">
             드라이런이라 삭제되지 않아요
           </div>
         </div>
@@ -153,10 +153,10 @@ export function StorageAdmin() {
             className="text-success mt-0.5 shrink-0"
           />
           <div>
-            <div className="text-[13.5px] font-semibold text-text">
+            <div className="text-base font-semibold text-text">
               정리 완료 · {formatBytes(report.totalBytesFreed)} 회수
             </div>
-            <div className="text-[12px] text-text-muted mt-0.5">
+            <div className="text-sm text-text-muted mt-0.5">
               SSD 활성 파일 {report.liveFileCount}개 기준
             </div>
           </div>
@@ -171,10 +171,10 @@ export function StorageAdmin() {
             className="text-danger mt-0.5 shrink-0"
           />
           <div>
-            <div className="text-[13.5px] font-semibold text-text">
+            <div className="text-base font-semibold text-text">
               스토리지 마운트 의심 — 삭제가 차단됐어요
             </div>
-            <div className="text-[12px] text-text-muted mt-0.5">
+            <div className="text-sm text-text-muted mt-0.5">
               DB는 참조하는데 디스크엔 파일이 0개인 영역:{" "}
               <span className="font-semibold text-text">
                 {report.suspectZones.join(", ")}
@@ -193,8 +193,8 @@ export function StorageAdmin() {
             className="mx-auto text-success mb-3"
             strokeWidth={2}
           />
-          <div className="text-[14px] font-medium text-text">깨끗해요</div>
-          <div className="text-[12px] text-text-muted mt-1">
+          <div className="text-md font-medium text-text">깨끗해요</div>
+          <div className="text-sm text-text-muted mt-1">
             정리할 고아 데이터가 없어요 (활성 파일 {report.liveFileCount}개)
           </div>
         </div>
@@ -209,7 +209,7 @@ export function StorageAdmin() {
               count={report.legacyDir.files}
               unit="개 파일"
             >
-              <div className="text-[12.5px] text-text-muted">
+              <div className="text-sm text-text-muted">
                 <code className="bg-hover px-1 py-0.5 rounded font-mono">
                   {report.legacyDir.path}/
                 </code>
@@ -225,7 +225,7 @@ export function StorageAdmin() {
             unit="개"
             hideIfEmpty
           >
-            <ul className="text-[12px] text-text-muted space-y-1 max-h-32 overflow-y-auto">
+            <ul className="text-sm text-text-muted space-y-1 max-h-32 overflow-y-auto">
               {report.orphanThumbs.slice(0, 20).map((t) => (
                 <li key={t.path} className="font-mono">
                   {t.path} <span className="text-text-faint">· {formatBytes(t.sizeBytes)}</span>
@@ -246,7 +246,7 @@ export function StorageAdmin() {
             unit="개 세션"
             hideIfEmpty
           >
-            <ul className="text-[12px] text-text-muted space-y-1">
+            <ul className="text-sm text-text-muted space-y-1">
               {report.orphanChunks.map((c) => (
                 <li key={c.fileId} className="flex items-center gap-2">
                   <span className="font-medium text-text">
@@ -265,14 +265,14 @@ export function StorageAdmin() {
           {(report.oldTrafficLogs ?? 0) > 0 && (
             <div className="border border-border bg-white rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-[13.5px] font-semibold text-text">
+                <span className="text-base font-semibold text-text">
                   오래된 트래픽 로그
                 </span>
-                <span className="text-[11.5px] text-text-muted bg-hover px-1.5 py-0.5 rounded">
+                <span className="text-xs text-text-muted bg-hover px-1.5 py-0.5 rounded">
                   {report.oldTrafficLogs}개
                 </span>
               </div>
-              <div className="text-[12.5px] text-text-muted">
+              <div className="text-sm text-text-muted">
                 90일 이상 된 요청 기록. 디스크 용량만 소량 차지해요.
               </div>
             </div>
@@ -305,14 +305,14 @@ function Section({
     <div className="border border-border bg-white rounded-lg p-4">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-[13.5px] font-semibold text-text">{title}</span>
-          <span className="text-[11.5px] text-text-muted bg-hover px-1.5 py-0.5 rounded">
+          <span className="text-base font-semibold text-text">{title}</span>
+          <span className="text-xs text-text-muted bg-hover px-1.5 py-0.5 rounded">
             {count}
             {unit}
           </span>
         </div>
         {size > 0 && (
-          <span className="text-[12px] font-semibold text-danger">
+          <span className="text-sm font-semibold text-danger">
             {formatBytes(size)}
           </span>
         )}
@@ -337,12 +337,12 @@ function DbSection({
   return (
     <div className="border border-border bg-white rounded-lg p-4">
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-[13.5px] font-semibold text-text">DB 고아 행</span>
-        <span className="text-[11.5px] text-text-muted bg-hover px-1.5 py-0.5 rounded">
+        <span className="text-base font-semibold text-text">DB 고아 행</span>
+        <span className="text-xs text-text-muted bg-hover px-1.5 py-0.5 rounded">
           {total}개
         </span>
       </div>
-      <div className="grid grid-cols-2 gap-2 text-[12.5px]">
+      <div className="grid grid-cols-2 gap-2 text-sm">
         <Stat label="댓글" count={orphanDb.comments.length} />
         <Stat label="업로드 소유권" count={orphanDb.fileUploads.length} />
         <Stat label="공유 링크" count={orphanDb.shareLinks.length} />

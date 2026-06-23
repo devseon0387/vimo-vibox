@@ -59,10 +59,10 @@ export function ManagerHome({
     <div className="px-4 md:px-8 py-6 md:py-9 mx-auto w-full max-w-[880px]">
       {/* 인사 */}
       <div className="mb-6">
-        <h1 className="text-[22px] md:text-[24px] font-bold">
+        <h1 className="text-2xl md:text-[24px] font-bold">
           안녕하세요{userName ? `, ${userName}님` : ""}
         </h1>
-        <p className="text-[12.5px] text-text-faint mt-1">
+        <p className="text-sm text-text-faint mt-1">
           {statusParts.length > 0 ? statusParts.join(" · ") : "오늘도 좋은 작업 되세요"}
         </p>
       </div>
@@ -75,7 +75,7 @@ export function ManagerHome({
           className="relative flex flex-col items-start pb-2.5 mr-7 transition-colors"
           style={{ color: tab === "team" ? "var(--team-color)" : "#999999" }}
         >
-          <span className="flex items-center gap-1.5 text-[13.5px] font-semibold">
+          <span className="flex items-center gap-1.5 text-base font-semibold">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/vimo-mark.svg"
@@ -90,7 +90,7 @@ export function ManagerHome({
             비모 프로젝트
           </span>
           <span
-            className="text-[10.5px] font-normal mt-0.5 ml-[21px]"
+            className="text-2xs font-normal mt-0.5 ml-[21px]"
             style={{ color: tab === "team" ? "var(--team-dark)" : "#bbbbbb" }}
           >
             팀 공유 · 검수
@@ -102,12 +102,12 @@ export function ManagerHome({
           className="relative flex flex-col items-start pb-2.5 transition-colors"
           style={{ color: tab === "personal" ? "var(--personal)" : "#999999" }}
         >
-          <span className="flex items-center gap-1.5 text-[13.5px] font-semibold">
+          <span className="flex items-center gap-1.5 text-base font-semibold">
             <Lock size={14} strokeWidth={2.4} />
             My box
           </span>
           <span
-            className="text-[10.5px] font-normal mt-0.5 ml-[20px]"
+            className="text-2xs font-normal mt-0.5 ml-[20px]"
             style={{ color: tab === "personal" ? "var(--personal-dark)" : "#bbbbbb" }}
           >
             나만 봅니다
@@ -153,13 +153,13 @@ function TeamTab({ files }: { files: MyRecentFile[] }) {
         sub="팀이 보고 검수를 진행합니다"
       />
       {files.length > 0 && (
-        <p className="text-[11.5px] text-text-faint mt-3 px-0.5">
+        <p className="text-xs text-text-faint mt-3 px-0.5">
           검수 중 {review} · 수정 요청 {revise} · 승인 {approved}
         </p>
       )}
       <SectionHeader label="최근 작업물" count={files.length} />
       {files.length === 0 ? (
-        <p className="text-[12.5px] text-text-faint py-10 text-center">
+        <p className="text-sm text-text-faint py-10 text-center">
           아직 비모 프로젝트에 올린 작업물이 없습니다
         </p>
       ) : (
@@ -175,14 +175,14 @@ function TeamTab({ files }: { files: MyRecentFile[] }) {
               >
                 <span className="w-1 h-7 rounded-full flex-none" style={{ background: "var(--team-color)" }} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-medium truncate">{f.filename}</div>
-                  <div className="text-[11px] text-text-faint">
+                  <div className="text-base font-medium truncate">{f.filename}</div>
+                  <div className="text-xs text-text-faint">
                     {formatRelative(f.uploadedAt)}
                     {f.commentCount ? ` · 코멘트 ${f.commentCount}` : ""}
                   </div>
                 </div>
                 <span
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold flex-none ${s.cls}`}
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold flex-none ${s.cls}`}
                   style={{ background: s.bg, color: s.color }}
                 >
                   <StatusIcon size={11} strokeWidth={2.4} /> {s.label}
@@ -212,7 +212,7 @@ function PersonalTab({
     <div>
       {/* 용량 */}
       <div className="mb-4">
-        <div className="flex items-center justify-between text-[11px] text-text-faint mb-1.5">
+        <div className="flex items-center justify-between text-xs text-text-faint mb-1.5">
           <span className="inline-flex items-center gap-1">
             <Lock size={11} strokeWidth={2.4} /> 나만 보는 개인 보관함
           </span>
@@ -235,7 +235,7 @@ function PersonalTab({
 
       <SectionHeader label="내 파일" count={files.length} />
       {files.length === 0 ? (
-        <p className="text-[12.5px] text-text-faint py-10 text-center">보관함이 비어 있습니다</p>
+        <p className="text-sm text-text-faint py-10 text-center">보관함이 비어 있습니다</p>
       ) : (
         <ul className="divide-y divide-border">
           {files.map((f, i) => (
@@ -246,8 +246,8 @@ function PersonalTab({
             >
               <span className="w-1 h-7 rounded-full flex-none" style={{ background: "var(--personal)" }} />
               <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-medium truncate">{f.filename}</div>
-                <div className="text-[11px] text-text-faint">{formatRelative(f.uploadedAt)}</div>
+                <div className="text-base font-medium truncate">{f.filename}</div>
+                <div className="text-xs text-text-faint">{formatRelative(f.uploadedAt)}</div>
               </div>
             </li>
           ))}

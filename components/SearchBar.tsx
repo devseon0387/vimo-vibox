@@ -39,7 +39,7 @@ export function SearchBar() {
           if (e.key === "Escape" && q) clear();
         }}
         placeholder="파일 검색... (Enter)"
-        className="w-full pl-9 pr-9 py-1.5 border border-border rounded-md text-[13px] outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-all bg-white"
+        className="w-full pl-9 pr-9 py-1.5 border border-border rounded-md text-base outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-all bg-white"
       />
       {q && (
         <button

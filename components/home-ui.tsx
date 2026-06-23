@@ -75,10 +75,10 @@ export function UploadBar({
         <Upload size={16} strokeWidth={2.3} />
       </span>
       <div className="flex-1 min-w-0">
-        <div className="text-[13px] font-semibold leading-tight" style={{ color }}>
+        <div className="text-base font-semibold leading-tight" style={{ color }}>
           {label}
         </div>
-        <div className="text-[11px] text-text-faint mt-0.5">{sub}</div>
+        <div className="text-xs text-text-faint mt-0.5">{sub}</div>
       </div>
       <ArrowRight
         size={16}
@@ -92,8 +92,8 @@ export function UploadBar({
 export function SectionHeader({ label, count }: { label: string; count: number }) {
   return (
     <div className="flex items-center justify-between mt-6 mb-1 px-0.5">
-      <span className="text-[11.5px] font-semibold text-text-faint tracking-wide">{label}</span>
-      {count > 0 && <span className="text-[11px] text-text-faint tabular-nums">{count}개</span>}
+      <span className="text-xs font-semibold text-text-faint tracking-wide">{label}</span>
+      {count > 0 && <span className="text-xs text-text-faint tabular-nums">{count}개</span>}
     </div>
   );
 }
@@ -103,7 +103,7 @@ export function SeeAllLink({ href, color, label }: { href: string; color: string
   return (
     <Link
       href={href}
-      className="mt-3 inline-flex items-center gap-1 text-[12px] font-medium transition-opacity hover:opacity-70"
+      className="mt-3 inline-flex items-center gap-1 text-sm font-medium transition-opacity hover:opacity-70"
       style={{ color }}
     >
       {label}

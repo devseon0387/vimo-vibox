@@ -63,11 +63,11 @@ export function SpaceCard(props: Props) {
                 <Package size={20} strokeWidth={2.4} />
               </div>
               <div>
-                <div className="text-[16px] font-bold">My box</div>
-                <div className="text-[11px] text-text-faint">개인 파일 — 나만 봄</div>
+                <div className="text-lg font-bold">My box</div>
+                <div className="text-xs text-text-faint">개인 파일 — 나만 봄</div>
               </div>
             </div>
-            <span className="text-[11px] text-text-faint">
+            <span className="text-xs text-text-faint">
               {formatBytes(props.usedBytes)} / {formatBytes(props.quotaBytes)}
             </span>
           </div>
@@ -81,7 +81,7 @@ export function SpaceCard(props: Props) {
                 style={{ background: "var(--personal)", width: `${pct}%` }}
               />
             </div>
-            <div className="text-[10.5px] text-text-faint mt-1.5">
+            <div className="text-2xs text-text-faint mt-1.5">
               {props.fileCount} 파일 · 마지막 업로드 {formatRelative(props.lastUploadAt)}
             </div>
           </div>
@@ -91,7 +91,7 @@ export function SpaceCard(props: Props) {
           >
             <Link
               href="/my/box?upload=1"
-              className="flex-1 text-white rounded-md py-2 text-[12.5px] font-semibold flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity"
+              className="flex-1 text-white rounded-md py-2 text-sm font-semibold flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity"
               style={{ background: "var(--personal)" }}
             >
               <Upload size={14} strokeWidth={2.4} /> My box에 올리기
@@ -126,16 +126,16 @@ export function SpaceCard(props: Props) {
               <Users size={20} strokeWidth={2.4} />
             </div>
             <div>
-              <div className="text-[16px] font-bold">비모 프로젝트</div>
-              <div className="text-[11px] text-text-faint">팀 공유 — 검수 워크플로</div>
+              <div className="text-lg font-bold">비모 프로젝트</div>
+              <div className="text-xs text-text-faint">팀 공유 — 검수 워크플로</div>
             </div>
           </div>
-          <span className="text-[11px] text-text-faint">진행 {props.inProgress}건</span>
+          <span className="text-xs text-text-faint">진행 {props.inProgress}건</span>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap mt-3">
           {props.pendingReviews > 0 && (
             <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
               style={{ background: "#fff7ed", color: "#c2410c" }}
             >
               <Inbox size={11} strokeWidth={2.4} /> 검수 대기 {props.pendingReviews}
@@ -143,14 +143,14 @@ export function SpaceCard(props: Props) {
           )}
           {props.newComments > 0 && (
             <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
               style={{ background: "var(--team-soft)", color: "var(--team-dark)" }}
             >
               <MessageCircle size={11} strokeWidth={2.4} /> 새 코멘트 {props.newComments}
             </span>
           )}
           {props.pendingReviews === 0 && props.newComments === 0 && (
-            <span className="text-[11.5px] text-text-faint">새 활동 없음</span>
+            <span className="text-xs text-text-faint">새 활동 없음</span>
           )}
         </div>
         <div
@@ -159,7 +159,7 @@ export function SpaceCard(props: Props) {
         >
           <Link
             href="/team?upload=1"
-            className="flex-1 text-white rounded-md py-2 text-[12.5px] font-semibold flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity"
+            className="flex-1 text-white rounded-md py-2 text-sm font-semibold flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity"
             style={{ background: "var(--team-color)" }}
           >
             <Upload size={14} strokeWidth={2.4} /> 비모 프로젝트에 올리기

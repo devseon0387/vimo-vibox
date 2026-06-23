@@ -29,7 +29,7 @@ export function FileTableSkeleton({ rows = 8 }: { rows?: number }) {
   return (
     <div className="bg-white rounded-md overflow-hidden" aria-hidden="true">
       {/* Header (real header 스타일을 단순화) */}
-      <div className="border-b border-border px-4 py-3 flex gap-3 text-[11.5px] uppercase tracking-wider text-text-faint font-semibold">
+      <div className="border-b border-border px-4 py-3 flex gap-3 text-xs uppercase tracking-wider text-text-faint font-semibold">
         <span className="w-4" />
         <span className="flex-1">이름</span>
         <span className="w-[120px]">업로더</span>

@@ -128,7 +128,7 @@ export function AppShell({
                   if (e.key === "Escape") setSearchOpen(false);
                 }}
                 placeholder="파일 검색…"
-                className="w-full bg-surface border border-transparent rounded-md pl-9 pr-3 py-2.5 text-[15px] outline-none focus:border-accent focus:bg-white focus:ring-2 focus:ring-accent-soft"
+                className="w-full bg-surface border border-transparent rounded-md pl-9 pr-3 py-2.5 text-lg outline-none focus:border-accent focus:bg-white focus:ring-2 focus:ring-accent-soft"
               />
             </div>
           </div>
@@ -191,7 +191,7 @@ function MobileTabBar({ pathname }: { pathname: string }) {
               )}
             </span>
             <span
-              className="text-[10px]"
+              className="text-2xs"
               style={{ fontWeight: active ? 600 : 500 }}
             >
               {label}

@@ -122,13 +122,13 @@ export function DisksPane({
       <div className="px-8 py-10 max-w-[900px]">
         <button
           onClick={() => navigate(null)}
-          className="text-[12.5px] text-text-soft hover:text-accent flex items-center gap-1 mb-4"
+          className="text-sm text-text-soft hover:text-accent flex items-center gap-1 mb-4"
         >
           <ChevronLeft size={14} /> 디스크 목록으로
         </button>
-        <div className="bg-danger-soft text-danger px-4 py-3 rounded-md text-[13px]">
+        <div className="bg-danger-soft text-danger px-4 py-3 rounded-md text-base">
           이 경로는 탐색할 수 없습니다 (비박스가 관리하는 zone 안이 아니거나 접근 불가).
-          <div className="mt-2 font-mono text-[11.5px] text-text-soft break-all">{currentPath}</div>
+          <div className="mt-2 font-mono text-xs text-text-soft break-all">{currentPath}</div>
         </div>
       </div>
     );
@@ -137,17 +137,17 @@ export function DisksPane({
   return (
     <div className="px-8 py-6 max-w-[1400px]">
       <div className="flex items-baseline justify-between mb-1">
-        <h1 className="text-[22px] font-extrabold">디스크 인벤토리</h1>
+        <h1 className="text-2xl font-extrabold">디스크 인벤토리</h1>
         <button
           onClick={refresh}
           disabled={refreshing}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-[12.5px] text-text-soft border border-border rounded-md hover:bg-surface disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-text-soft border border-border rounded-md hover:bg-surface disabled:opacity-50"
         >
           <RefreshCcw size={12} strokeWidth={2.2} className={refreshing ? "animate-spin" : ""} />
           새로고침
         </button>
       </div>
-      <p className="text-[13px] text-text-soft mb-6">
+      <p className="text-base text-text-soft mb-6">
         이 머신에 마운트된 모든 볼륨. 비박스가 관리하는 zone은 <span className="text-accent font-semibold">오렌지 뱃지</span>로 표시 — 클릭하면 폴더 진입 가능.
       </p>
 
@@ -177,9 +177,9 @@ function BackupStatusPanel({ backup }: { backup: BackupStatus }) {
     <div className={`mb-6 border rounded-xl px-5 py-4 ${tone}`}>
       <div className="flex items-center gap-2 mb-3">
         <Icon size={16} strokeWidth={2.2} />
-        <div className="text-[14px] font-bold">DB 백업 (Litestream)</div>
+        <div className="text-md font-bold">DB 백업 (Litestream)</div>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 text-[12px]">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 text-sm">
         <Stat
           label="Daemon"
           value={
@@ -206,7 +206,7 @@ function BackupStatusPanel({ backup }: { backup: BackupStatus }) {
         />
       </div>
       {backup.replicaPath && (
-        <div className="text-[11px] font-mono text-text-soft mt-3 break-all opacity-90">
+        <div className="text-xs font-mono text-text-soft mt-3 break-all opacity-90">
           {backup.replicaPath}
         </div>
       )}
@@ -225,7 +225,7 @@ function Stat({
 }) {
   return (
     <div>
-      <div className="text-[10.5px] uppercase tracking-widest opacity-80 mb-0.5">
+      <div className="text-2xs uppercase tracking-widest opacity-80 mb-0.5">
         {label}
       </div>
       <div className={`font-semibold ${ok ? "" : "opacity-90"}`}>{value}</div>
@@ -278,24 +278,24 @@ function VolumeCard({
             strokeWidth={2}
             className={volume.managed ? "text-accent" : "text-text-soft"}
           />
-          <h3 className="text-[15px] font-bold text-text">{volume.name}</h3>
-          <span className="text-[10.5px] uppercase tracking-wider text-text-faint font-mono ml-auto">
+          <h3 className="text-lg font-bold text-text">{volume.name}</h3>
+          <span className="text-2xs uppercase tracking-wider text-text-faint font-mono ml-auto">
             {volume.fsType}
           </span>
         </div>
-        <div className="text-[11.5px] text-text-faint font-mono break-all mb-2">
+        <div className="text-xs text-text-faint font-mono break-all mb-2">
           {volume.mountPath}
         </div>
 
         {(migrationCandidate || hostsReplica) && (
           <div className="flex flex-wrap gap-1.5 mb-3">
             {migrationCandidate && (
-              <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-2 py-0.5 rounded-full bg-accent text-white tracking-wider uppercase">
+              <span className="inline-flex items-center gap-1 text-2xs font-semibold px-2 py-0.5 rounded-full bg-accent text-white tracking-wider uppercase">
                 <Truck size={10} strokeWidth={2.4} /> Mac mini 이전 대상
               </span>
             )}
             {hostsReplica && (
-              <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-2 py-0.5 rounded-full bg-success-soft text-success tracking-wider uppercase">
+              <span className="inline-flex items-center gap-1 text-2xs font-semibold px-2 py-0.5 rounded-full bg-success-soft text-success tracking-wider uppercase">
                 <Database size={10} strokeWidth={2.4} /> DB 백업 호스트
               </span>
             )}
@@ -304,7 +304,7 @@ function VolumeCard({
 
         {accessible ? (
           <>
-            <div className="flex items-baseline justify-between text-[11.5px] text-text-soft mb-1.5">
+            <div className="flex items-baseline justify-between text-xs text-text-soft mb-1.5">
               <span>{formatBytes(volume.usedBytes)} / {formatBytes(volume.totalBytes)}</span>
               <span className={isFull ? "text-danger font-semibold" : "text-text-faint"}>
                 {usedPct.toFixed(1)}% 사용
@@ -316,12 +316,12 @@ function VolumeCard({
                 style={{ width: `${Math.min(100, usedPct)}%` }}
               />
             </div>
-            <div className="text-[11px] text-text-faint mt-1.5">
+            <div className="text-xs text-text-faint mt-1.5">
               여유 {formatBytes(volume.freeBytes)}
             </div>
           </>
         ) : (
-          <div className="flex items-center gap-1.5 text-[12px] text-text-faint">
+          <div className="flex items-center gap-1.5 text-sm text-text-faint">
             <Lock size={12} /> 접근 불가 (시스템 볼륨 또는 권한 부족)
           </div>
         )}
@@ -329,7 +329,7 @@ function VolumeCard({
 
       {accessible && volume.topEntries.length > 0 && (
         <div className="px-5 pb-5 pt-2 border-t border-border">
-          <div className="text-[10.5px] text-text-faint uppercase tracking-wider mb-2 font-semibold">
+          <div className="text-2xs text-text-faint uppercase tracking-wider mb-2 font-semibold">
             최상위 폴더 ({volume.topEntries.length})
           </div>
           <div className="flex flex-col gap-px">
@@ -348,7 +348,7 @@ function VolumeCard({
                 <Wrapper
                   key={e.name}
                   {...linkProps}
-                  className={`flex items-center gap-2 px-2 py-1.5 rounded text-[12.5px] font-mono ${
+                  className={`flex items-center gap-2 px-2 py-1.5 rounded text-sm font-mono ${
                     e.zone
                       ? "text-accent hover:bg-accent-soft cursor-pointer"
                       : "text-text-soft"
@@ -357,7 +357,7 @@ function VolumeCard({
                   <Icon size={13} strokeWidth={2} className="shrink-0 opacity-80" />
                   <span className="truncate">{e.name}</span>
                   {e.zone && (
-                    <span className="text-[10px] px-1.5 py-px rounded bg-accent-soft text-accent ml-auto font-sans tracking-wider uppercase">
+                    <span className="text-2xs px-1.5 py-px rounded bg-accent-soft text-accent ml-auto font-sans tracking-wider uppercase">
                       {ZONE_LABELS[e.zone]}
                     </span>
                   )}
@@ -365,7 +365,7 @@ function VolumeCard({
               );
             })}
             {volume.topEntries.length > 12 && (
-              <div className="text-[11px] text-text-faint pl-2 pt-1">
+              <div className="text-xs text-text-faint pl-2 pt-1">
                 + {volume.topEntries.length - 12}개 더
               </div>
             )}
@@ -389,7 +389,7 @@ function DrilldownView({
     <div className="px-8 py-6 max-w-[1100px]">
       <button
         onClick={() => (listing.parent ? onNavigate(listing.parent) : onNavigate(null))}
-        className="text-[12.5px] text-text-soft hover:text-accent flex items-center gap-1 mb-3"
+        className="text-sm text-text-soft hover:text-accent flex items-center gap-1 mb-3"
       >
         <ChevronLeft size={14} />
         {listing.parent ? "상위 폴더" : "디스크 목록"}
@@ -402,18 +402,18 @@ function DrilldownView({
         })()}
         <h1 className="text-[20px] font-extrabold">{ZONE_LABELS[listing.zone]} zone</h1>
       </div>
-      <div className="text-[12px] font-mono text-text-faint break-all mb-5">
+      <div className="text-sm font-mono text-text-faint break-all mb-5">
         {listing.path}
       </div>
 
       <div className="border border-border rounded-xl bg-white overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-border bg-surface text-[11px] text-text-faint flex items-center justify-between">
+        <div className="px-4 py-2.5 border-b border-border bg-surface text-xs text-text-faint flex items-center justify-between">
           <span>{listing.entries.length}개 항목</span>
           {loading && <span>로딩 중…</span>}
         </div>
         <div className="divide-y divide-border">
           {listing.entries.length === 0 ? (
-            <div className="px-6 py-10 text-center text-text-faint text-[13px]">
+            <div className="px-6 py-10 text-center text-text-faint text-base">
               비어있는 폴더
             </div>
           ) : (
@@ -439,11 +439,11 @@ function DrilldownView({
                     strokeWidth={2}
                     className={e.isDir ? "text-text-soft" : "text-text-faint"}
                   />
-                  <span className="text-[13.5px] font-mono truncate flex-1">{e.name}</span>
-                  <span className="text-[11px] text-text-faint">
+                  <span className="text-base font-mono truncate flex-1">{e.name}</span>
+                  <span className="text-xs text-text-faint">
                     {e.isDir ? "폴더" : formatBytes(e.size)}
                   </span>
-                  <span className="text-[11px] text-text-faint hidden md:inline w-32 text-right">
+                  <span className="text-xs text-text-faint hidden md:inline w-32 text-right">
                     {new Date(e.mtime).toLocaleString("ko-KR")}
                   </span>
                 </Wrapper>

@@ -38,8 +38,8 @@ export default async function AdminKeysPage() {
 
   return (
     <div className="px-8 py-6 max-w-[1000px]">
-      <h1 className="text-[22px] font-extrabold mb-1">API 토큰</h1>
-      <p className="text-[13px] text-text-soft mb-6">
+      <h1 className="text-2xl font-extrabold mb-1">API 토큰</h1>
+      <p className="text-base text-text-soft mb-6">
         외부 클라이언트(Claude, SEON Hub 등)가 비박스 API에 접근할 때 사용하는 베어러 토큰. 토큰은 발급 직후 한 번만 표시되고, 이후엔 prefix만 보입니다.
       </p>
       <TokensManager initial={tokens} availableScopes={ALL_SCOPES} />

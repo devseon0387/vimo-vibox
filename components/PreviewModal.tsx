@@ -151,7 +151,7 @@ export function PreviewModal({
   } else {
     body = (
       <div className="p-12 text-center">
-        <div className="text-[14px] text-text-muted mb-6">
+        <div className="text-md text-text-muted mb-6">
           이 파일은 브라우저에서 미리볼 수 없습니다
         </div>
         <a
@@ -160,7 +160,7 @@ export function PreviewModal({
             entry.path,
           )}
           download={entry.name}
-          className="inline-flex items-center gap-2 bg-accent text-white px-5 py-2.5 rounded-md text-[14px] font-semibold hover:bg-accent-hover"
+          className="inline-flex items-center gap-2 bg-accent text-white px-5 py-2.5 rounded-md text-md font-semibold hover:bg-accent-hover"
         >
           <Download size={15} strokeWidth={2.5} />
           다운로드
@@ -179,7 +179,7 @@ export function PreviewModal({
       {body}
       {/* footer: 검수 확장 + navigation hint + counter */}
       {(counter || onNavigate || isVideo(entry.kind)) && (
-        <div className="flex items-center gap-3 px-5 py-2.5 border-t border-border bg-surface text-[11.5px] text-text-faint">
+        <div className="flex items-center gap-3 px-5 py-2.5 border-t border-border bg-surface text-xs text-text-faint">
           {isVideo(entry.kind) && (
             <button
               type="button"
@@ -190,7 +190,7 @@ export function PreviewModal({
                 );
               }}
               title="이 영상을 검수 화면으로 (댓글 패널과 함께)"
-              className="inline-flex items-center gap-1.5 bg-accent text-white px-3 py-1.5 rounded-md text-[12px] font-semibold hover:bg-accent-hover"
+              className="inline-flex items-center gap-1.5 bg-accent text-white px-3 py-1.5 rounded-md text-sm font-semibold hover:bg-accent-hover"
             >
               <MessageSquare size={13} strokeWidth={2.4} />
               검수로 확장
@@ -222,12 +222,12 @@ export function PreviewModal({
             </span>
           )}
           <span className="ml-auto flex items-center gap-2">
-            <kbd className="px-1.5 py-0.5 text-[10px] bg-white border border-border rounded font-mono">←</kbd>
-            <kbd className="px-1.5 py-0.5 text-[10px] bg-white border border-border rounded font-mono">→</kbd>
+            <kbd className="px-1.5 py-0.5 text-2xs bg-white border border-border rounded font-mono">←</kbd>
+            <kbd className="px-1.5 py-0.5 text-2xs bg-white border border-border rounded font-mono">→</kbd>
             <span>전환</span>
             <span className="opacity-50">·</span>
-            <kbd className="px-1.5 py-0.5 text-[10px] bg-white border border-border rounded font-mono">Space</kbd>
-            <kbd className="px-1.5 py-0.5 text-[10px] bg-white border border-border rounded font-mono">Esc</kbd>
+            <kbd className="px-1.5 py-0.5 text-2xs bg-white border border-border rounded font-mono">Space</kbd>
+            <kbd className="px-1.5 py-0.5 text-2xs bg-white border border-border rounded font-mono">Esc</kbd>
             <span>닫기</span>
           </span>
         </div>

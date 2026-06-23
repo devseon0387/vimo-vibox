@@ -37,7 +37,7 @@ export function UploadProgress({
   return (
     <div className="fixed bottom-6 right-6 w-[360px] bg-white border border-border rounded-lg shadow-xl z-40 overflow-hidden">
       <div className="px-4 py-3 flex items-center justify-between border-b border-border">
-        <div className="text-[13px] font-bold">
+        <div className="text-base font-bold">
           업로드 중 ({state.files.length}개 파일)
         </div>
         <button
@@ -50,7 +50,7 @@ export function UploadProgress({
       </div>
 
       <div className="p-4">
-        <div className="text-[12px] text-text-muted mb-2 truncate">
+        <div className="text-sm text-text-muted mb-2 truncate">
           {state.files[0]?.name}
           {state.files.length > 1 && ` 외 ${state.files.length - 1}개`}
         </div>
@@ -62,7 +62,7 @@ export function UploadProgress({
           />
         </div>
 
-        <div className="flex justify-between text-[11.5px] text-text-faint font-mono">
+        <div className="flex justify-between text-xs text-text-faint font-mono">
           <span>
             {formatBytes(state.sent)} / {formatBytes(state.total)}
           </span>
@@ -78,7 +78,7 @@ export function UploadProgress({
 
         {/* 진단 정보 — 피크 속도 · 샤드 분포 */}
         {(peak > 0 || shardEntries.length > 0) && (
-          <div className="mt-3 pt-2.5 border-t border-[#f0f0f0] text-[10.5px] text-text-faint font-mono flex items-center justify-between gap-2">
+          <div className="mt-3 pt-2.5 border-t border-[#f0f0f0] text-2xs text-text-faint font-mono flex items-center justify-between gap-2">
             <span className="flex items-center gap-1.5">
               {peak > 0 && (
                 <span>

@@ -98,9 +98,9 @@ export function GlobalUploadDock() {
             <Upload size={14} strokeWidth={2.2} className="text-text-soft" />
           )}
           <div className="flex-1 text-left min-w-0">
-            <div className="text-[13px] font-bold text-text truncate">{headerLabel}</div>
+            <div className="text-base font-bold text-text truncate">{headerLabel}</div>
             {summary.runningCount > 0 && summary.total > 0 && (
-              <div className="text-[11px] text-text-faint mono tabular-nums truncate">
+              <div className="text-xs text-text-faint mono tabular-nums truncate">
                 {formatBytes(summary.sent)} / {formatBytes(summary.total)} ·{" "}
                 {Math.round(summary.pct)}%
               </div>
@@ -165,13 +165,13 @@ function UploadRow({
       <div className="flex items-start gap-2.5">
         <span className="mt-0.5 shrink-0">{statusIcon(entry.status)}</span>
         <div className="flex-1 min-w-0">
-          <div className="text-[12.5px] text-text truncate font-medium">
+          <div className="text-sm text-text truncate font-medium">
             {firstName}
             {moreCount > 0 && (
               <span className="text-text-soft font-normal"> 외 {moreCount}개</span>
             )}
           </div>
-          <div className="text-[11px] text-text-faint truncate flex items-center gap-1">
+          <div className="text-xs text-text-faint truncate flex items-center gap-1">
             <span>→</span>
             <Link
               href={pathHref(entry.targetPath)}
@@ -209,7 +209,7 @@ function UploadRow({
               style={{ width: `${pct}%` }}
             />
           </div>
-          <div className="flex justify-between items-center text-[10.5px] text-text-faint mono tabular-nums">
+          <div className="flex justify-between items-center text-2xs text-text-faint mono tabular-nums">
             <span>
               {formatBytes(entry.sent)} / {formatBytes(entry.total)}
             </span>
@@ -228,7 +228,7 @@ function UploadRow({
 
       {entry.status === "failed" && entry.error && (
         <div
-          className="mt-1 text-[11px] text-rose-600 truncate"
+          className="mt-1 text-xs text-rose-600 truncate"
           title={humanError(entry.error, "upload")}
         >
           {humanError(entry.error, "upload")}
@@ -337,7 +337,7 @@ function UploadSharePanel({ entry }: { entry: UploadEntry }) {
 
   if (phase === "creating") {
     return (
-      <div className="mt-2.5 pt-2.5 border-t border-dashed border-border flex items-center gap-2 text-[11.5px] text-text-faint">
+      <div className="mt-2.5 pt-2.5 border-t border-dashed border-border flex items-center gap-2 text-xs text-text-faint">
         <Loader2 size={13} strokeWidth={2.2} className="animate-spin text-accent" />
         공유 링크 만드는 중…
       </div>
@@ -345,7 +345,7 @@ function UploadSharePanel({ entry }: { entry: UploadEntry }) {
   }
   if (phase === "error" || !share) {
     return (
-      <div className="mt-2.5 pt-2.5 border-t border-dashed border-border flex items-center gap-2 text-[11.5px] text-rose-600">
+      <div className="mt-2.5 pt-2.5 border-t border-dashed border-border flex items-center gap-2 text-xs text-rose-600">
         <AlertCircle size={13} strokeWidth={2.2} />
         공유 링크 생성에 실패했어요
       </div>
@@ -360,11 +360,11 @@ function UploadSharePanel({ entry }: { entry: UploadEntry }) {
         className="w-full flex items-center gap-2 border border-border rounded-[9px] bg-white px-3 py-2 hover:bg-surface hover:border-border-hover transition-colors"
       >
         <Link2 size={13} strokeWidth={2.2} className="text-text-faint shrink-0" />
-        <span className="flex-1 min-w-0 text-left text-[11.5px] text-text-soft truncate mono">
+        <span className="flex-1 min-w-0 text-left text-xs text-text-soft truncate mono">
           {shortUrl}
         </span>
         <span
-          className={`shrink-0 inline-flex items-center gap-1 text-[11px] font-bold ${
+          className={`shrink-0 inline-flex items-center gap-1 text-xs font-bold ${
             copied ? "text-emerald-600" : "text-accent"
           }`}
         >
@@ -382,7 +382,7 @@ function UploadSharePanel({ entry }: { entry: UploadEntry }) {
         <div className="flex bg-surface border border-border rounded-lg p-0.5">
           <button
             onClick={() => changeMode("full")}
-            className={`px-2.5 py-1 rounded-md text-[11px] font-bold inline-flex items-center gap-1 transition-colors ${
+            className={`px-2.5 py-1 rounded-md text-xs font-bold inline-flex items-center gap-1 transition-colors ${
               mode === "full"
                 ? "bg-white text-accent shadow-sm"
                 : "text-text-faint hover:text-text-soft"
@@ -393,7 +393,7 @@ function UploadSharePanel({ entry }: { entry: UploadEntry }) {
           </button>
           <button
             onClick={() => changeMode("preview")}
-            className={`px-2.5 py-1 rounded-md text-[11px] font-bold inline-flex items-center gap-1 transition-colors ${
+            className={`px-2.5 py-1 rounded-md text-xs font-bold inline-flex items-center gap-1 transition-colors ${
               mode === "preview"
                 ? "bg-white text-accent shadow-sm"
                 : "text-text-faint hover:text-text-soft"

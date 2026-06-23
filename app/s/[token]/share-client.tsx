@@ -153,7 +153,7 @@ export function SharePageClient({
         <h1 className="text-[20px] font-bold mb-2 text-slate-900">
           링크가 만료되었습니다
         </h1>
-        <p className="text-[13.5px] text-slate-500 mb-6">
+        <p className="text-base text-slate-500 mb-6">
           이 공유 링크는 더 이상 사용할 수 없습니다.
           <br />
           파일을 공유한 분에게 새 링크를 요청하세요.
@@ -206,17 +206,17 @@ export function SharePageClient({
         <div className="flex items-center gap-3 px-4 py-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="" className="shrink-0 w-6 h-6 object-contain" />
-          <span className="shrink-0 text-[13px] font-extrabold tracking-tight text-slate-900">
+          <span className="shrink-0 text-base font-extrabold tracking-tight text-slate-900">
             vi<span className="text-accent">.</span>box
           </span>
           <div className="h-4 w-px bg-slate-200" />
-          <h1 className="text-[13px] font-semibold text-slate-700 truncate min-w-0 flex-1">
+          <h1 className="text-base font-semibold text-slate-700 truncate min-w-0 flex-1">
             {title}
           </h1>
           {allowDownload && (
             <button
               onClick={download}
-              className="shrink-0 bg-slate-900 text-white hover:bg-slate-700 px-2.5 sm:px-3 py-1.5 rounded-md text-[12px] font-semibold inline-flex items-center gap-1.5 min-h-[36px]"
+              className="shrink-0 bg-slate-900 text-white hover:bg-slate-700 px-2.5 sm:px-3 py-1.5 rounded-md text-sm font-semibold inline-flex items-center gap-1.5 min-h-[36px]"
               aria-label="다운로드"
             >
               <Download size={14} strokeWidth={2.3} />
@@ -233,14 +233,14 @@ export function SharePageClient({
                 <button
                   key={f.path}
                   onClick={() => setActiveIdx(i)}
-                  className={`shrink-0 px-2.5 py-1 rounded-md text-[11.5px] font-semibold inline-flex items-center gap-1.5 ${
+                  className={`shrink-0 px-2.5 py-1 rounded-md text-xs font-semibold inline-flex items-center gap-1.5 ${
                     isActive
                       ? "bg-slate-900 text-white"
                       : "bg-white border border-slate-200 text-slate-600 hover:border-slate-400"
                   }`}
                 >
                   <span
-                    className={`font-mono text-[10px] px-1 rounded ${
+                    className={`font-mono text-2xs px-1 rounded ${
                       isActive ? "bg-white/20" : "bg-slate-100 text-slate-500"
                     }`}
                   >
@@ -248,7 +248,7 @@ export function SharePageClient({
                   </span>
                   <span className="truncate max-w-[180px]">{f.name}</span>
                   {isLatest && !isActive && (
-                    <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1 rounded">
+                    <span className="text-2xs font-bold text-emerald-600 bg-emerald-50 px-1 rounded">
                       NEW
                     </span>
                   )}
@@ -293,10 +293,10 @@ export function SharePageClient({
         )}
         {activeFile.kind === "other" && (
           <div className="bg-white p-12 text-center rounded-xl shadow-md">
-            <div className="text-[13.5px] text-slate-600 mb-1">
+            <div className="text-base text-slate-600 mb-1">
               이 파일은 브라우저에서 미리볼 수 없습니다
             </div>
-            <div className="text-[12px] text-slate-400">
+            <div className="text-sm text-slate-400">
               위 다운로드 버튼을 눌러주세요
             </div>
           </div>

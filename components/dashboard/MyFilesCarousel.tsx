@@ -35,8 +35,8 @@ export function MyFilesCarousel({ files }: { files: MyRecentFile[] }) {
   if (files.length === 0) {
     return (
       <div className="border border-dashed border-border rounded-xl bg-white py-10 text-center">
-        <div className="text-[13px] text-text-muted mb-1">아직 올린 파일이 없어요</div>
-        <div className="text-[11.5px] text-text-faint">
+        <div className="text-base text-text-muted mb-1">아직 올린 파일이 없어요</div>
+        <div className="text-xs text-text-faint">
           위 두 공간 카드의 업로드 버튼으로 시작하세요
         </div>
       </div>
@@ -45,14 +45,14 @@ export function MyFilesCarousel({ files }: { files: MyRecentFile[] }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-[14px] font-bold flex items-center gap-2">
+        <h2 className="text-md font-bold flex items-center gap-2">
           <FolderOpen size={16} strokeWidth={2.2} className="text-text-soft" />
           내가 올린 파일
-          <span className="text-text-faint text-[11.5px] font-medium">최근 {files.length}개</span>
+          <span className="text-text-faint text-xs font-medium">최근 {files.length}개</span>
         </h2>
         <Link
           href="/my/box?recent=1"
-          className="text-[11.5px] text-text-soft hover:text-accent flex items-center gap-0.5 transition"
+          className="text-xs text-text-soft hover:text-accent flex items-center gap-0.5 transition"
         >
           모두 보기 <ChevronRight size={12} strokeWidth={2.2} />
         </Link>
@@ -78,22 +78,22 @@ export function MyFilesCarousel({ files }: { files: MyRecentFile[] }) {
               <div className="absolute top-1.5 right-1.5 flex flex-col gap-1 items-end">
                 {f.needsNewVersion && (
                   <span
-                    className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-white text-[9.5px] font-bold"
+                    className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-white text-2xs font-bold"
                     style={{ background: "var(--accent)" }}
                   >
                     <ArrowUp size={9} strokeWidth={3} /> 새 버전
                   </span>
                 )}
                 {f.approved && !f.needsNewVersion && (
-                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-white/95 text-[color:var(--success)]">
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-2xs font-bold bg-white/95 text-[color:var(--success)]">
                     <Check size={10} strokeWidth={3} /> OK
                   </span>
                 )}
               </div>
             </div>
             <div className="px-2.5 py-2">
-              <div className="text-[12.5px] font-semibold truncate">{f.filename}</div>
-              <div className="flex items-center gap-1.5 mt-0.5 text-[10.5px] text-text-faint">
+              <div className="text-sm font-semibold truncate">{f.filename}</div>
+              <div className="flex items-center gap-1.5 mt-0.5 text-2xs text-text-faint">
                 <span>{relativeTime(f.uploadedAt)}</span>
                 {f.commentCount > 0 && (
                   <span className="inline-flex items-center gap-0.5">

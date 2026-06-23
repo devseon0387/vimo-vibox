@@ -81,14 +81,14 @@ export function MyStatsClient({ name }: { name: string }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 grid place-items-center text-[13px] text-slate-400">
+      <div className="min-h-screen bg-slate-50 grid place-items-center text-base text-slate-400">
         불러오는 중…
       </div>
     );
   }
   if (!stats) {
     return (
-      <div className="min-h-screen bg-slate-50 grid place-items-center text-[13px] text-slate-400">
+      <div className="min-h-screen bg-slate-50 grid place-items-center text-base text-slate-400">
         데이터를 불러오지 못했어요
       </div>
     );
@@ -106,13 +106,13 @@ export function MyStatsClient({ name }: { name: string }) {
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-[1100px] mx-auto px-6 py-8">
-        <div className="text-[11px] text-slate-500 tracking-wide mb-1">
+        <div className="text-xs text-slate-500 tracking-wide mb-1">
           VIBOX · 내 기록
         </div>
         <h1 className="text-[20px] font-extrabold text-slate-900 mb-0.5">
           내 작업 기록
         </h1>
-        <div className="text-[12px] text-slate-500 mb-6">
+        <div className="text-sm text-slate-500 mb-6">
           {name} · 지난 {period.days}일 ({formatDate(period.from)} ~{" "}
           {formatDate(period.to)})
         </div>
@@ -164,7 +164,7 @@ export function MyStatsClient({ name }: { name: string }) {
                 return (
                   <div
                     key={c.category}
-                    className="grid grid-cols-[80px_1fr_40px_52px] gap-2.5 items-center text-[12px]"
+                    className="grid grid-cols-[80px_1fr_40px_52px] gap-2.5 items-center text-sm"
                   >
                     <span className="font-semibold text-slate-900">
                       {c.label}
@@ -204,7 +204,7 @@ export function MyStatsClient({ name }: { name: string }) {
                 return (
                   <div
                     key={c.category}
-                    className="flex justify-between items-center text-[12px] py-2 border-b border-slate-100 last:border-b-0"
+                    className="flex justify-between items-center text-sm py-2 border-b border-slate-100 last:border-b-0"
                   >
                     <span className="font-semibold text-slate-900">
                       {c.label}
@@ -234,7 +234,7 @@ export function MyStatsClient({ name }: { name: string }) {
               tag={`최근 ${praiseList.length}건`}
             />
             {praiseList.length === 0 ? (
-              <div className="text-[12px] text-slate-400 italic mt-3">
+              <div className="text-sm text-slate-400 italic mt-3">
                 아직 받은 칭찬이 없어요
               </div>
             ) : (
@@ -244,10 +244,10 @@ export function MyStatsClient({ name }: { name: string }) {
                     key={i}
                     className="px-3 py-2.5 bg-fuchsia-50 border-l-[3px] border-fuchsia-500 rounded"
                   >
-                    <div className="text-[12.5px] text-slate-900 font-medium">
+                    <div className="text-sm text-slate-900 font-medium">
                       &ldquo;{p.body}&rdquo;
                     </div>
-                    <div className="text-[10.5px] text-fuchsia-800 mt-1">
+                    <div className="text-2xs text-fuchsia-800 mt-1">
                       {p.fromName || "익명"} · {p.filePath.split("/").pop()} ·{" "}
                       {formatShortDate(p.createdAt)}
                     </div>
@@ -260,7 +260,7 @@ export function MyStatsClient({ name }: { name: string }) {
           <div className="bg-white border border-slate-200 rounded-lg p-5">
             <CardTitle title="반복되는 지적" />
             {repeatWarning ? (
-              <div className="mt-3 px-3.5 py-3 bg-amber-50 border border-amber-200 rounded-md text-[12px]">
+              <div className="mt-3 px-3.5 py-3 bg-amber-50 border border-amber-200 rounded-md text-sm">
                 <div className="font-bold text-amber-700 flex items-center gap-1.5">
                   ⚠ &ldquo;{repeatWarning.keyword}&rdquo;
                 </div>
@@ -270,14 +270,14 @@ export function MyStatsClient({ name }: { name: string }) {
                 </div>
               </div>
             ) : (
-              <div className="text-[12px] text-slate-400 italic mt-3">
+              <div className="text-sm text-slate-400 italic mt-3">
                 반복되는 지적 없음
               </div>
             )}
           </div>
         </div>
 
-        <div className="text-[10.5px] text-slate-400 text-center mt-6">
+        <div className="text-2xs text-slate-400 text-center mt-6">
           이 페이지는 본인에게만 보여요 · 실시간 반영
         </div>
       </div>
@@ -313,16 +313,16 @@ function KpiCard({
         : "text-slate-400";
   return (
     <div className="bg-white border border-slate-200 rounded-lg px-4 py-3.5">
-      <div className="text-[10.5px] font-bold tracking-widest text-slate-400 uppercase">
+      <div className="text-2xs font-bold tracking-widest text-slate-400 uppercase">
         {label}
       </div>
       <div className="text-[24px] font-extrabold tabular-nums mt-0.5">
         {value}
-        <span className="text-[12px] text-slate-400 font-semibold ml-1">
+        <span className="text-sm text-slate-400 font-semibold ml-1">
           {unit}
         </span>
       </div>
-      <div className={`text-[11px] mt-1 font-semibold ${color}`}>
+      <div className={`text-xs mt-1 font-semibold ${color}`}>
         {delta.text}
       </div>
     </div>
@@ -331,10 +331,10 @@ function KpiCard({
 
 function CardTitle({ title, tag }: { title: string; tag?: string }) {
   return (
-    <h2 className="text-[13px] font-bold text-slate-900 flex items-center gap-1.5">
+    <h2 className="text-base font-bold text-slate-900 flex items-center gap-1.5">
       {title}
       {tag && (
-        <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+        <span className="text-2xs font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
           {tag}
         </span>
       )}

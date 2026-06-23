@@ -81,7 +81,7 @@ export function ActionBar({
         <button
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="bg-text text-white hover:bg-[#333] disabled:opacity-60 transition-colors flex-1 md:flex-none px-3.5 py-2.5 md:py-2 rounded-md text-[13px] font-semibold flex items-center justify-center md:justify-start gap-1.5"
+          className="bg-text text-white hover:bg-[#333] disabled:opacity-60 transition-colors flex-1 md:flex-none px-3.5 py-2.5 md:py-2 rounded-md text-base font-semibold flex items-center justify-center md:justify-start gap-1.5"
         >
           <Upload size={14} strokeWidth={2.5} />
           업로드
@@ -91,7 +91,7 @@ export function ActionBar({
           disabled={uploading}
           title="폴더 통째로 업로드 (구조 보존)"
           aria-label="폴더 업로드"
-          className="bg-white border border-border hover:border-border-hover text-text-muted hover:text-text disabled:opacity-60 transition-colors px-3 md:px-3.5 py-2.5 md:py-2 rounded-md text-[13px] font-medium flex items-center gap-1.5 shrink-0"
+          className="bg-white border border-border hover:border-border-hover text-text-muted hover:text-text disabled:opacity-60 transition-colors px-3 md:px-3.5 py-2.5 md:py-2 rounded-md text-base font-medium flex items-center gap-1.5 shrink-0"
         >
           <FolderUp size={14} strokeWidth={2} />
           <span className="hidden md:inline">폴더 업로드</span>
@@ -100,7 +100,7 @@ export function ActionBar({
           <button
             onClick={handleNewFolder}
             aria-label="새 폴더"
-            className="hidden md:flex bg-white border border-border hover:border-border-hover text-text-muted hover:text-text transition-colors px-3.5 py-2 rounded-md text-[13px] font-medium items-center gap-1.5"
+            className="hidden md:flex bg-white border border-border hover:border-border-hover text-text-muted hover:text-text transition-colors px-3.5 py-2 rounded-md text-base font-medium items-center gap-1.5"
           >
             <FolderPlus size={14} strokeWidth={2} /> 새 폴더
           </button>

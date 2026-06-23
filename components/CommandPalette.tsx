@@ -300,27 +300,27 @@ export function CommandPalette() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="파일·폴더·페이지 검색…"
-            className="flex-1 outline-none text-[14.5px] text-text placeholder:text-text-faint bg-transparent"
+            className="flex-1 outline-none text-md text-text placeholder:text-text-faint bg-transparent"
           />
-          <kbd className="text-[10.5px] font-mono text-text-faint bg-surface border border-border rounded px-1.5 py-0.5">
+          <kbd className="text-2xs font-mono text-text-faint bg-surface border border-border rounded px-1.5 py-0.5">
             Esc
           </kbd>
         </div>
 
         <div ref={listRef} className="max-h-[60vh] overflow-y-auto">
           {loading && items.length === 0 && (
-            <div className="px-4 py-8 text-center text-[13px] text-text-faint">
+            <div className="px-4 py-8 text-center text-base text-text-faint">
               검색 중…
             </div>
           )}
           {!loading && items.length === 0 && query.trim() && (
-            <div className="px-4 py-8 text-center text-[13px] text-text-faint">
+            <div className="px-4 py-8 text-center text-base text-text-faint">
               결과가 없어요
             </div>
           )}
           {grouped.map((g) => (
             <div key={g.title} className="py-1">
-              <div className="px-4 pt-2 pb-1 text-[10.5px] font-bold text-text-faint uppercase tracking-wider">
+              <div className="px-4 pt-2 pb-1 text-2xs font-bold text-text-faint uppercase tracking-wider">
                 {g.title}
               </div>
               {g.items.map(({ item, idx }) => (
@@ -352,26 +352,26 @@ export function CommandPalette() {
                   </span>
                   <span className="flex-1 min-w-0">
                     {item.kind === "page" && (
-                      <span className="block text-[13.5px] text-text truncate">
+                      <span className="block text-base text-text truncate">
                         {item.label}
                       </span>
                     )}
                     {item.kind === "file" && (
                       <>
-                        <span className="block text-[13.5px] text-text truncate">
+                        <span className="block text-base text-text truncate">
                           {item.entry.name}
                         </span>
-                        <span className="block text-[11px] text-text-faint truncate font-mono">
+                        <span className="block text-xs text-text-faint truncate font-mono">
                           {item.entry.path}
                         </span>
                       </>
                     )}
                     {item.kind === "comment" && (
                       <>
-                        <span className="block text-[13.5px] text-text truncate">
+                        <span className="block text-base text-text truncate">
                           {item.hit.body}
                         </span>
-                        <span className="block text-[11px] text-text-faint truncate">
+                        <span className="block text-xs text-text-faint truncate">
                           {item.hit.authorName} · {formatTime(item.hit.videoTimeMs)} ·{" "}
                           {item.hit.filePath.split("/").pop()}
                         </span>
@@ -379,20 +379,20 @@ export function CommandPalette() {
                     )}
                     {item.kind === "share" && (
                       <>
-                        <span className="block text-[13.5px] text-text truncate">
+                        <span className="block text-base text-text truncate">
                           {item.hit.title || item.hit.filePath.split("/").pop() || "공유"}
                         </span>
-                        <span className="block text-[11px] text-text-faint truncate font-mono">
+                        <span className="block text-xs text-text-faint truncate font-mono">
                           /s/{item.hit.token.slice(0, 12)}…
                         </span>
                       </>
                     )}
                     {item.kind === "note" && (
                       <>
-                        <span className="block text-[13.5px] text-text truncate">
+                        <span className="block text-base text-text truncate">
                           {item.hit.title}
                         </span>
-                        <span className="block text-[11px] text-text-faint truncate">
+                        <span className="block text-xs text-text-faint truncate">
                           {item.hit.folder}/ · {item.hit.snippet}
                         </span>
                       </>
@@ -411,7 +411,7 @@ export function CommandPalette() {
           ))}
         </div>
 
-        <div className="border-t border-border bg-surface px-4 py-2 flex items-center gap-3 text-[10.5px] text-text-faint">
+        <div className="border-t border-border bg-surface px-4 py-2 flex items-center gap-3 text-2xs text-text-faint">
           <span>
             <kbd className="font-mono bg-white border border-border rounded px-1 py-0.5 mr-1">↑↓</kbd>
             이동

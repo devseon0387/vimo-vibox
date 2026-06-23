@@ -69,7 +69,7 @@ function SectionLabel({
   label: string;
 }) {
   return (
-    <div className="flex items-center gap-1.5 px-3 pt-3 pb-1 text-[10.5px] font-bold tracking-widest text-text-faint uppercase">
+    <div className="flex items-center gap-1.5 px-3 pt-3 pb-1 text-2xs font-bold tracking-widest text-text-faint uppercase">
       <Icon size={11} strokeWidth={2.3} />
       {label}
     </div>
@@ -94,7 +94,7 @@ function NavRow({
       onClick={() => {
         if (item.badge) badge.markSeen();
       }}
-      className={`relative flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] mb-0.5 transition-colors ${
+      className={`relative flex items-center gap-2.5 px-3 py-2 rounded-md text-base mb-0.5 transition-colors ${
         isActive
           ? "bg-accent-soft text-accent font-semibold"
           : "text-text-muted hover:bg-hover hover:text-text"
@@ -109,7 +109,7 @@ function NavRow({
       <Icon size={15} strokeWidth={isActive ? 2.5 : 2} />
       <span className="flex-1 truncate">{item.label}</span>
       {typeof inboxCount === "number" && inboxCount > 0 && (
-        <span className="text-[10.5px] font-bold tabular-nums text-white bg-rose-500 rounded-full px-1.5 py-[1px] leading-tight">
+        <span className="text-2xs font-bold tabular-nums text-white bg-rose-500 rounded-full px-1.5 py-[1px] leading-tight">
           {inboxCount > 99 ? "99+" : inboxCount}
         </span>
       )}

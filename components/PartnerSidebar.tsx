@@ -120,7 +120,7 @@ export function PartnerSidebar({
     return (
       <Link
         href={href}
-        className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-[9px] text-[13px] font-medium transition-colors hover:bg-[#f0f0f0]"
+        className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-[9px] text-base font-medium transition-colors hover:bg-[#f0f0f0]"
         style={
           on
             ? { background: "#ececec", color: "var(--text)", fontWeight: 600 }
@@ -149,12 +149,12 @@ export function PartnerSidebar({
     <div className="w-[236px] bg-surface border-r border-border flex flex-col h-screen overflow-y-auto">
       {/* 프로필 — 최상단 */}
       <div className="px-3 pt-4 flex items-center gap-2.5">
-        <span className="w-[31px] h-[31px] rounded-full bg-gradient-to-br from-accent to-[#c8430a] text-white grid place-items-center text-[12.5px] font-bold shrink-0">
+        <span className="w-[31px] h-[31px] rounded-full bg-gradient-to-br from-accent to-[#c8430a] text-white grid place-items-center text-sm font-bold shrink-0">
           {initials.slice(0, 1)}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="text-[12.5px] font-bold text-text truncate">{userName || "파트너"}</div>
-          <div className="text-[10px] text-text-faint truncate">외부 편집 · 파트너</div>
+          <div className="text-sm font-bold text-text truncate">{userName || "파트너"}</div>
+          <div className="text-2xs text-text-faint truncate">외부 편집 · 파트너</div>
         </div>
         <form action={logoutAction}>
           <button
@@ -173,7 +173,7 @@ export function PartnerSidebar({
         href="/my/box"
         className="mx-3 mt-1 px-2 py-[9px] rounded-[9px] hover:bg-[#f0f0f0] transition-colors"
       >
-        <div className="flex items-center justify-between text-[10px] text-text-faint mb-1.5">
+        <div className="flex items-center justify-between text-2xs text-text-faint mb-1.5">
           <span className="font-semibold text-text-muted">저장 공간</span>
           <span className="tabular-nums">
             {pct}% · {formatBytes(usedBytes)}
@@ -196,7 +196,7 @@ export function PartnerSidebar({
         {/* 즐겨찾기 — 홈 다음, "클라우드" 라벨 앞. 항목 없으면 섹션 자체 미표시. */}
         {favs.length > 0 && (
           <>
-            <div className="text-[9.5px] font-bold text-text-faint tracking-wide px-2.5 pt-3 pb-1.5">
+            <div className="text-2xs font-bold text-text-faint tracking-wide px-2.5 pt-3 pb-1.5">
               즐겨찾기
             </div>
             {favs.slice(0, 8).map((f) => (
@@ -211,13 +211,13 @@ export function PartnerSidebar({
           </>
         )}
 
-        <div className="text-[9.5px] font-bold text-text-faint tracking-wide px-2.5 pt-3 pb-1.5">
+        <div className="text-2xs font-bold text-text-faint tracking-wide px-2.5 pt-3 pb-1.5">
           클라우드
         </div>
         {item(active === "team", "/team?path=/Rendering", "비모와의 작업", { icon: Handshake, tint: VIMO })}
         {item(active === "mybox", "/my/box", "My box", { icon: HardDrive, tint: MYBOX })}
 
-        <div className="text-[9.5px] font-bold text-text-faint tracking-wide px-2.5 pt-3 pb-1.5">
+        <div className="text-2xs font-bold text-text-faint tracking-wide px-2.5 pt-3 pb-1.5">
           라이브러리
         </div>
         {item(active === "shares", "/shares", "공유", { icon: Share2 })}
@@ -230,7 +230,7 @@ export function PartnerSidebar({
         href="/"
         className="mt-auto border-t border-border px-[9px] py-[13px] flex items-center gap-2.5 sticky bottom-0 bg-surface hover:opacity-80 transition-opacity"
       >
-        <span className="text-[15px] font-extrabold tracking-tight text-text">
+        <span className="text-lg font-extrabold tracking-tight text-text">
           vi<span className="text-accent">.</span>box
         </span>
       </Link>

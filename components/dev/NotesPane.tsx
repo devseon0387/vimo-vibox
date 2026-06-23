@@ -230,16 +230,16 @@ export function NotesPane({
         <div className="px-5 pt-5 pb-3 border-b border-border bg-white">
           <div className="flex items-baseline justify-between mb-1">
             <div>
-              <div className="text-[17px] font-bold text-text">{headTitle}</div>
-              <div className="text-[12px] text-text-faint mt-0.5">
+              <div className="text-xl font-bold text-text">{headTitle}</div>
+              <div className="text-sm text-text-faint mt-0.5">
                 {notes.length}개 노트 · {(totalSize / 1024).toFixed(1)} KB
               </div>
             </div>
             <div className="flex gap-1.5">
-              <button className="px-2.5 py-1.5 rounded-md text-[12px] text-text-soft bg-surface border border-border hover:bg-hover flex items-center gap-1">
+              <button className="px-2.5 py-1.5 rounded-md text-sm text-text-soft bg-surface border border-border hover:bg-hover flex items-center gap-1">
                 <Filter size={11} strokeWidth={2.4} /> 필터
               </button>
-              <button className="px-2.5 py-1.5 rounded-md text-[12px] font-semibold bg-accent text-white border border-accent hover:bg-accent-hover flex items-center gap-1">
+              <button className="px-2.5 py-1.5 rounded-md text-sm font-semibold bg-accent text-white border border-accent hover:bg-accent-hover flex items-center gap-1">
                 <Plus size={11} strokeWidth={2.4} /> 새 노트
               </button>
             </div>
@@ -248,7 +248,7 @@ export function NotesPane({
 
         <div className="flex-1 overflow-y-auto">
           {notes.length === 0 ? (
-            <div className="p-10 text-center text-text-faint text-[13px]">
+            <div className="p-10 text-center text-text-faint text-base">
               노트가 없습니다.
             </div>
           ) : (
@@ -265,7 +265,7 @@ export function NotesPane({
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[14px] font-semibold truncate flex-1 text-text">
+                    <span className="text-md font-semibold truncate flex-1 text-text">
                       {n.title}
                     </span>
                     {n.starred && (
@@ -275,14 +275,14 @@ export function NotesPane({
                       />
                     )}
                   </div>
-                  <div className="text-[12.5px] text-text-soft line-clamp-2 mb-1.5 leading-snug">
+                  <div className="text-sm text-text-soft line-clamp-2 mb-1.5 leading-snug">
                     {n.excerpt}
                   </div>
-                  <div className="flex items-center gap-1.5 text-[11px] text-text-faint">
+                  <div className="flex items-center gap-1.5 text-xs text-text-faint">
                     {n.tags.slice(0, 2).map((t) => (
                       <span
                         key={t}
-                        className="px-1.5 py-px rounded bg-surface-2 text-text-soft text-[10.5px]"
+                        className="px-1.5 py-px rounded bg-surface-2 text-text-soft text-2xs"
                       >
                         #{t}
                       </span>
@@ -298,12 +298,12 @@ export function NotesPane({
 
       <section className="flex-1 min-w-0 min-h-0 bg-white flex flex-col relative">
         {!detail ? (
-          <div className="flex-1 grid place-items-center text-text-faint text-[13px] p-10 text-center">
+          <div className="flex-1 grid place-items-center text-text-faint text-base p-10 text-center">
             <div>
               <div className="w-16 h-16 rounded-full bg-surface mx-auto mb-4 grid place-items-center">
                 <FileText size={26} strokeWidth={1.6} />
               </div>
-              <div className="font-semibold text-text mb-1.5 text-[15px]">
+              <div className="font-semibold text-text mb-1.5 text-lg">
                 노트를 선택하세요
               </div>
               <div className="max-w-[260px] mx-auto leading-relaxed">
@@ -324,7 +324,7 @@ export function NotesPane({
           <>
             <div className="px-6 pt-3.5 pb-2.5 border-b border-border flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
-                <div className="text-[12px] text-text-faint">
+                <div className="text-sm text-text-faint">
                   <span>{detail.folder}</span>
                   <span className="mx-1.5 opacity-50">/</span>
                   <span className="text-text font-semibold">{detail.title}</span>
@@ -334,7 +334,7 @@ export function NotesPane({
                   type="button"
                   onClick={() => setEditing(true)}
                   disabled={busy}
-                  className="h-[30px] px-3 rounded-md border border-border bg-white text-text-soft hover:bg-surface flex items-center gap-1.5 text-[12.5px] font-semibold disabled:opacity-50"
+                  className="h-[30px] px-3 rounded-md border border-border bg-white text-text-soft hover:bg-surface flex items-center gap-1.5 text-sm font-semibold disabled:opacity-50"
                   title="수정"
                 >
                   <Pencil size={13} strokeWidth={2.2} />
@@ -400,7 +400,7 @@ export function NotesPane({
                                 type="button"
                                 onClick={() => moveNoteAction(f.name)}
                                 disabled={f.name === detail.folder}
-                                className={`block w-full text-left px-3 py-1.5 text-[12.5px] rounded ${
+                                className={`block w-full text-left px-3 py-1.5 text-sm rounded ${
                                   f.name === detail.folder
                                     ? "text-text-faint"
                                     : "text-text-soft hover:bg-surface"
@@ -428,7 +428,7 @@ export function NotesPane({
                     href={`${process.env.NEXT_PUBLIC_SEON_HUB_URL}/notes/${encodeURIComponent(detail.id)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="h-[30px] px-3 rounded-md bg-accent text-white text-[12.5px] font-semibold hover:bg-accent-hover flex items-center gap-1.5"
+                    className="h-[30px] px-3 rounded-md bg-accent text-white text-sm font-semibold hover:bg-accent-hover flex items-center gap-1.5"
                   >
                     <ExternalLink size={13} strokeWidth={2.2} />
                     SEON Hub에서 편집
@@ -445,7 +445,7 @@ export function NotesPane({
                     setTimeout(() => setCopied(false), 1400);
                   } catch {}
                 }}
-                className="self-start group flex items-center gap-1.5 text-[11px] text-text-faint hover:text-accent font-mono transition-colors"
+                className="self-start group flex items-center gap-1.5 text-xs text-text-faint hover:text-accent font-mono transition-colors"
                 title="경로 복사"
               >
                 <span className="opacity-80 group-hover:opacity-100">{detail.path}</span>
@@ -462,7 +462,7 @@ export function NotesPane({
                 <h1 className="text-[26px] font-extrabold mb-1.5 text-text">
                   {detail.title}
                 </h1>
-                <div className="text-text-faint text-[12px] mb-6 flex gap-3 items-center">
+                <div className="text-text-faint text-sm mb-6 flex gap-3 items-center">
                   <span>{relativeTime(detail.updated)}</span>
                   <span>·</span>
                   <span>{(detail.size / 1024).toFixed(1)} KB</span>
@@ -486,7 +486,7 @@ export function NotesPane({
               </div>
             </div>
             {loadingDetail && (
-              <div className="absolute top-3 right-3 text-[11px] text-text-faint bg-white px-2 py-1 rounded border border-border">
+              <div className="absolute top-3 right-3 text-xs text-text-faint bg-white px-2 py-1 rounded border border-border">
                 로딩 중…
               </div>
             )}
@@ -499,16 +499,16 @@ export function NotesPane({
 
 const mdComponents = {
   h1: ({ children }: { children?: React.ReactNode }) => (
-    <h1 className="text-[22px] font-bold mt-6 mb-3 text-text">{children}</h1>
+    <h1 className="text-2xl font-bold mt-6 mb-3 text-text">{children}</h1>
   ),
   h2: ({ children }: { children?: React.ReactNode }) => (
-    <h2 className="text-[17px] font-bold mt-6 mb-2.5 text-text">{children}</h2>
+    <h2 className="text-xl font-bold mt-6 mb-2.5 text-text">{children}</h2>
   ),
   h3: ({ children }: { children?: React.ReactNode }) => (
-    <h3 className="text-[15px] font-bold mt-5 mb-2 text-text">{children}</h3>
+    <h3 className="text-lg font-bold mt-5 mb-2 text-text">{children}</h3>
   ),
   p: ({ children }: { children?: React.ReactNode }) => (
-    <p className="text-[14px] leading-[1.75] text-text-muted mb-3">{children}</p>
+    <p className="text-md leading-[1.75] text-text-muted mb-3">{children}</p>
   ),
   ul: ({ children }: { children?: React.ReactNode }) => (
     <ul className="list-disc pl-6 mb-3 space-y-1">{children}</ul>
@@ -517,24 +517,24 @@ const mdComponents = {
     <ol className="list-decimal pl-6 mb-3 space-y-1">{children}</ol>
   ),
   li: ({ children }: { children?: React.ReactNode }) => (
-    <li className="text-[14px] leading-[1.7] text-text-muted">{children}</li>
+    <li className="text-md leading-[1.7] text-text-muted">{children}</li>
   ),
   code: ({ children, className }: { children?: React.ReactNode; className?: string }) => {
     const isBlock = Boolean(className);
     if (isBlock) return <code className={className}>{children}</code>;
     return (
-      <code className="bg-surface-2 text-accent px-1.5 py-0.5 rounded text-[12.5px] font-mono">
+      <code className="bg-surface-2 text-accent px-1.5 py-0.5 rounded text-sm font-mono">
         {children}
       </code>
     );
   },
   pre: ({ children }: { children?: React.ReactNode }) => (
-    <pre className="bg-surface-2 p-4 rounded-md text-[12.5px] overflow-x-auto mb-3 font-mono leading-snug">
+    <pre className="bg-surface-2 p-4 rounded-md text-sm overflow-x-auto mb-3 font-mono leading-snug">
       {children}
     </pre>
   ),
   blockquote: ({ children }: { children?: React.ReactNode }) => (
-    <blockquote className="border-l-[3px] border-accent bg-accent-soft py-2 px-4 my-3 text-text-soft text-[13.5px] rounded-r">
+    <blockquote className="border-l-[3px] border-accent bg-accent-soft py-2 px-4 my-3 text-text-soft text-base rounded-r">
       {children}
     </blockquote>
   ),
@@ -556,7 +556,7 @@ const mdComponents = {
   ),
   table: ({ children }: { children?: React.ReactNode }) => (
     <div className="overflow-x-auto mb-4">
-      <table className="text-[13px] border-collapse w-full">{children}</table>
+      <table className="text-base border-collapse w-full">{children}</table>
     </div>
   ),
   th: ({ children }: { children?: React.ReactNode }) => (
@@ -589,14 +589,14 @@ function MenuButton({
     <button
       type="button"
       onClick={onClick}
-      className={`w-full flex items-center gap-2.5 px-3 py-1.5 text-[12.5px] text-left ${
+      className={`w-full flex items-center gap-2.5 px-3 py-1.5 text-sm text-left ${
         danger ? "text-danger hover:bg-danger-soft" : "text-text-soft hover:bg-surface"
       } ${submenu ? "bg-surface" : ""}`}
     >
       <Icon size={13} strokeWidth={2} className="opacity-80" />
       <span>{label}</span>
       {submenu !== undefined && (
-        <span className="ml-auto text-[10px] opacity-60">
+        <span className="ml-auto text-2xs opacity-60">
           {submenu ? "▾" : "▸"}
         </span>
       )}

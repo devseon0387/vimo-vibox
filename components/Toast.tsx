@@ -153,7 +153,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             role="status"
           >
             <IconFor kind={t.kind} />
-            <div className="flex-1 text-[12.5px] leading-relaxed break-all font-medium">
+            <div className="flex-1 text-sm leading-relaxed break-all font-medium">
               {t.message}
             </div>
             {t.action && (
@@ -165,7 +165,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                     dismiss(t.id);
                   }
                 }}
-                className="shrink-0 px-3 py-1 rounded-full text-[12px] font-bold text-accent hover:bg-accent-soft transition-colors"
+                className="shrink-0 px-3 py-1 rounded-full text-sm font-bold text-accent hover:bg-accent-soft transition-colors"
               >
                 {t.action.label}
               </button>

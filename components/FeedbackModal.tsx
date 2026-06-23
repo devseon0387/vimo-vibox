@@ -199,7 +199,7 @@ function RoleBadge({
   if (!c) return null;
   return (
     <span
-      className={`px-1 py-[1px] rounded text-[9px] font-bold tracking-wider ${c.cls}`}
+      className={`px-1 py-[1px] rounded text-2xs font-bold tracking-wider ${c.cls}`}
     >
       {c.label}
     </span>
@@ -1425,7 +1425,7 @@ export function FeedbackModal({
         <>
           자막 오타를 자동으로 검사합니다.
           <br />
-          <span className="text-text-faint text-[11.5px]">
+          <span className="text-text-faint text-xs">
             약 2~3분 소요 · 기존 AI 피드백은 새 결과로 교체됩니다
           </span>
         </>
@@ -1530,11 +1530,11 @@ export function FeedbackModal({
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logo.png" alt="" className="shrink-0 w-6 h-6 object-contain" />
-              <span className="shrink-0 text-[13px] font-extrabold tracking-tight text-slate-900">
+              <span className="shrink-0 text-base font-extrabold tracking-tight text-slate-900">
                 vi<span className="text-accent">.</span>box
               </span>
               <div className="w-px h-5 bg-slate-200" />
-              <h1 className="text-[14px] font-semibold text-slate-900 truncate min-w-0">
+              <h1 className="text-md font-semibold text-slate-900 truncate min-w-0">
                 {entry.name}
               </h1>
             </>
@@ -1550,11 +1550,11 @@ export function FeedbackModal({
                 <ArrowLeft size={19} strokeWidth={2.2} />
               </Link>
               {/* 비박스 워드마크 (게스트 헤더와 동일 브랜딩) */}
-              <span className="shrink-0 text-[13px] font-extrabold tracking-tight text-slate-900">
+              <span className="shrink-0 text-base font-extrabold tracking-tight text-slate-900">
                 vi<span className="text-accent">.</span>box
               </span>
               {/* 브레드크럼: 상위 폴더(클릭=목록) › 영상 */}
-              <nav className="flex items-center gap-1.5 min-w-0 text-[12.5px]">
+              <nav className="flex items-center gap-1.5 min-w-0 text-sm">
                 <Link
                   href={backHref}
                   title="파일 목록으로"
@@ -1575,12 +1575,12 @@ export function FeedbackModal({
           )}
           {/* 버전 핀 */}
           {versionTag && (
-            <span className="shrink-0 inline-flex items-center text-[11px] font-bold text-accent bg-accent-soft px-2 py-0.5 rounded-md tabular-nums">
+            <span className="shrink-0 inline-flex items-center text-xs font-bold text-accent bg-accent-soft px-2 py-0.5 rounded-md tabular-nums">
               {versionTag}
             </span>
           )}
           {uploaderName && (
-            <span className="hidden lg:inline shrink-0 text-[11.5px] text-slate-500">
+            <span className="hidden lg:inline shrink-0 text-xs text-slate-500">
               올린 사람{" "}
               <span className="font-semibold text-slate-700">{uploaderName}</span>
             </span>
@@ -1608,7 +1608,7 @@ export function FeedbackModal({
               {isStaff ? (
                 versionApproved ? (
                   <div className="flex items-center gap-1">
-                    <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1.5 rounded-md">
+                    <span className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1.5 rounded-md">
                       <CheckCircle2 size={14} strokeWidth={2.2} />
                       승인됨
                     </span>
@@ -1625,7 +1625,7 @@ export function FeedbackModal({
                   <>
                     <button
                       onClick={handleRequestRevision}
-                      className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 px-2.5 py-1.5 rounded-md transition-colors"
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 px-2.5 py-1.5 rounded-md transition-colors"
                     >
                       <PencilLine size={13} strokeWidth={2.2} />
                       수정 요청
@@ -1633,7 +1633,7 @@ export function FeedbackModal({
                     <button
                       onClick={handleApproveVersion}
                       disabled={decisionPending}
-                      className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 px-2.5 py-1.5 rounded-md transition-colors"
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 px-2.5 py-1.5 rounded-md transition-colors"
                     >
                       <Check size={14} strokeWidth={2.6} />
                       승인
@@ -1644,7 +1644,7 @@ export function FeedbackModal({
                 /* 편집자(파트너): 같은 폴더에 새 버전 올리기 */
                 <Link
                   href={backHref}
-                  className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-white bg-accent hover:opacity-90 px-2.5 py-1.5 rounded-md transition-opacity"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-accent hover:opacity-90 px-2.5 py-1.5 rounded-md transition-opacity"
                 >
                   <Upload size={13} strokeWidth={2.2} />
                   새 버전 올리기
@@ -1655,7 +1655,7 @@ export function FeedbackModal({
                   <Link
                     href={prevHref ?? "#"}
                     aria-disabled={!prevHref}
-                    className={`p-1.5 rounded inline-flex items-center gap-1 text-[12px] ${
+                    className={`p-1.5 rounded inline-flex items-center gap-1 text-sm ${
                       prevHref
                         ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                         : "text-slate-300 pointer-events-none"
@@ -1667,7 +1667,7 @@ export function FeedbackModal({
                   <Link
                     href={nextHref ?? "#"}
                     aria-disabled={!nextHref}
-                    className={`p-1.5 rounded inline-flex items-center gap-1 text-[12px] ${
+                    className={`p-1.5 rounded inline-flex items-center gap-1 text-sm ${
                       nextHref
                         ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                         : "text-slate-300 pointer-events-none"
@@ -1745,7 +1745,7 @@ export function FeedbackModal({
               {/* 시킹·버퍼링 스피너 — HLS 세그먼트 fetch 동안 시각적 피드백 */}
               {seekingNow && (
                 <div className="absolute inset-0 z-15 grid place-items-center pointer-events-none">
-                  <div className="bg-black/60 backdrop-blur rounded-full px-3 py-2 flex items-center gap-2 text-white text-[11.5px] font-semibold">
+                  <div className="bg-black/60 backdrop-blur rounded-full px-3 py-2 flex items-center gap-2 text-white text-xs font-semibold">
                     <svg
                       className="w-4 h-4 animate-spin"
                       viewBox="0 0 24 24"
@@ -1777,10 +1777,10 @@ export function FeedbackModal({
                     <div className="w-12 h-12 rounded-full bg-white/10 grid place-items-center mx-auto mb-3">
                       <AlertCircle size={24} className="text-white/80" strokeWidth={2} />
                     </div>
-                    <div className="text-[14px] font-semibold text-white">
+                    <div className="text-md font-semibold text-white">
                       영상을 불러올 수 없어요
                     </div>
-                    <div className="text-[12px] text-white/60 mt-1 leading-relaxed">
+                    <div className="text-sm text-white/60 mt-1 leading-relaxed">
                       파일이 이동·교체됐거나 네트워크 문제일 수 있어요.
                     </div>
                     <button
@@ -1788,7 +1788,7 @@ export function FeedbackModal({
                         e.stopPropagation();
                         retryLoad();
                       }}
-                      className="mt-4 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-white bg-white/15 hover:bg-white/25 px-3.5 py-1.5 rounded-md transition-colors"
+                      className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-white/15 hover:bg-white/25 px-3.5 py-1.5 rounded-md transition-colors"
                     >
                       다시 시도
                     </button>
@@ -1800,10 +1800,10 @@ export function FeedbackModal({
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur text-white rounded-lg px-4 py-3 z-20 w-[min(90%,360px)] shadow-xl border border-white/10">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                    <span className="text-[12.5px] font-bold tracking-tight">
+                    <span className="text-sm font-bold tracking-tight">
                       스트리밍 최적화 중
                     </span>
-                    <span className="ml-auto text-[12.5px] font-mono tabular-nums text-amber-300">
+                    <span className="ml-auto text-sm font-mono tabular-nums text-amber-300">
                       {hlsStatus.progress}%
                     </span>
                   </div>
@@ -1813,7 +1813,7 @@ export function FeedbackModal({
                       style={{ width: `${hlsStatus.progress}%` }}
                     />
                   </div>
-                  <div className="flex items-center justify-between text-[10.5px] text-white/70">
+                  <div className="flex items-center justify-between text-2xs text-white/70">
                     <span>
                       {hlsStatus.etaSec != null
                         ? `약 ${formatEta(hlsStatus.etaSec)} 남음`
@@ -1831,7 +1831,7 @@ export function FeedbackModal({
                   setAnnotationMode((v) => !v);
                   if (!annotationMode && vidRef.current) vidRef.current.pause();
                 }}
-                className={`absolute top-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11.5px] font-semibold border backdrop-blur transition-all z-20 ${
+                className={`absolute top-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold border backdrop-blur transition-all z-20 ${
                   isFullscreen && !controlsVisible
                     ? "opacity-0 pointer-events-none"
                     : "opacity-100"
@@ -2060,12 +2060,12 @@ export function FeedbackModal({
               <div className="flex items-center gap-1.5">
                 {/* 미해결 카운트 — 헤더·시크바 배지와 단일 출처 */}
                 {unresolvedCount > 0 ? (
-                  <span className="text-[12.5px] font-semibold text-slate-600">
+                  <span className="text-sm font-semibold text-slate-600">
                     미해결{" "}
                     <span className="text-accent font-bold">{unresolvedCount}</span>
                   </span>
                 ) : (
-                  <span className="text-[12.5px] font-medium text-slate-400">
+                  <span className="text-sm font-medium text-slate-400">
                     댓글 {topLevelItems.filter((c) => c.kind !== "approve").length}
                   </span>
                 )}
@@ -2124,14 +2124,14 @@ export function FeedbackModal({
                               setSettingsOpen(false);
                               handleScan();
                             }}
-                            className="w-full px-3 py-2 text-left inline-flex items-center gap-2 text-[12px] text-violet-700 hover:bg-violet-50 transition-colors"
+                            className="w-full px-3 py-2 text-left inline-flex items-center gap-2 text-sm text-violet-700 hover:bg-violet-50 transition-colors"
                           >
                             <Sparkles size={13} strokeWidth={2.3} />
                             <span className="flex-1">
                               {lastScan ? "AI 자막 재검수" : "AI 자막 검수"}
                             </span>
                             {lastScan && (
-                              <span className="text-[10px] text-slate-400">
+                              <span className="text-2xs text-slate-400">
                                 {formatRelative(lastScan.finishedAt)}
                               </span>
                             )}
@@ -2139,7 +2139,7 @@ export function FeedbackModal({
                         )}
                         <button
                           onClick={() => setAutoPlayOnSeek((v) => !v)}
-                          className="w-full px-3 py-2 text-left inline-flex items-center gap-2 text-[12px] text-slate-700 hover:bg-slate-50 transition-colors"
+                          className="w-full px-3 py-2 text-left inline-flex items-center gap-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
                         >
                           <span className="flex-1">댓글 클릭 시 재생</span>
                           <span
@@ -2172,11 +2172,11 @@ export function FeedbackModal({
                                   }),
                                 );
                               }}
-                              className="w-full px-3 py-2 text-left inline-flex items-center gap-2 text-[12px] text-slate-700 hover:bg-slate-50 transition-colors"
+                              className="w-full px-3 py-2 text-left inline-flex items-center gap-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
                             >
                               <Keyboard size={13} strokeWidth={2.2} />
                               <span className="flex-1">단축키 도움말</span>
-                              <kbd className="text-[10px] font-mono text-slate-400 bg-slate-100 rounded px-1.5 py-px">
+                              <kbd className="text-2xs font-mono text-slate-400 bg-slate-100 rounded px-1.5 py-px">
                                 ?
                               </kbd>
                             </button>
@@ -2196,8 +2196,8 @@ export function FeedbackModal({
                   <div className="bg-gradient-to-br from-violet-500 to-blue-500 rounded-lg p-3 text-white shadow-sm">
                     <div className="flex items-center gap-2 mb-2">
                       <Sparkles size={12} strokeWidth={2.4} />
-                      <span className="text-[12px] font-bold">AI 검수 중</span>
-                      <span className="ml-auto text-[11px] font-mono tabular-nums opacity-90">
+                      <span className="text-sm font-bold">AI 검수 중</span>
+                      <span className="ml-auto text-xs font-mono tabular-nums opacity-90">
                         {scanJob.progress}%
                       </span>
                     </div>
@@ -2208,25 +2208,25 @@ export function FeedbackModal({
                       />
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] opacity-90">
+                      <span className="text-xs opacity-90">
                         {scanJob.stage}
                       </span>
                       {(scanJob.status === "running" ||
                         scanJob.status === "pending") && (
                         <button
                           onClick={handleCancelScan}
-                          className="text-[10.5px] font-semibold px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 transition-colors"
+                          className="text-2xs font-semibold px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 transition-colors"
                         >
                           취소
                         </button>
                       )}
                       {scanJob.status === "done" && (
-                        <span className="text-[10.5px] font-semibold">
+                        <span className="text-2xs font-semibold">
                           ✓ {scanJob.issuesFound ?? 0}건
                         </span>
                       )}
                       {scanJob.status === "failed" && (
-                        <span className="text-[10.5px] font-semibold">
+                        <span className="text-2xs font-semibold">
                           ✗ 실패
                         </span>
                       )}
@@ -2269,10 +2269,10 @@ export function FeedbackModal({
                           strokeWidth={2.4}
                         />
                       </div>
-                      <div className="text-[13px] font-semibold text-slate-700">
+                      <div className="text-base font-semibold text-slate-700">
                         모든 항목 확인 완료!
                       </div>
-                      <div className="text-[11.5px] text-slate-400 mt-1">
+                      <div className="text-xs text-slate-400 mt-1">
                         해결 숨기기를 끄면 지난 내역을 볼 수 있어요
                       </div>
                     </>
@@ -2285,16 +2285,16 @@ export function FeedbackModal({
                           strokeWidth={2}
                         />
                       </div>
-                      <div className="text-[13px] font-semibold text-slate-700">
+                      <div className="text-base font-semibold text-slate-700">
                         첫 번째 댓글을 남겨보세요
                       </div>
-                      <div className="text-[11.5px] text-slate-400 mt-1">
+                      <div className="text-xs text-slate-400 mt-1">
                         재생 중 아래 입력창에 자유롭게 작성
                       </div>
                       {!isGuest && entry.kind === "video" && (
                         <button
                           onClick={handleScan}
-                          className="mt-4 inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-violet-600 bg-violet-50 hover:bg-violet-100 px-3 py-1.5 rounded-md transition-colors"
+                          className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-violet-600 bg-violet-50 hover:bg-violet-100 px-3 py-1.5 rounded-md transition-colors"
                         >
                           <Sparkles size={12} strokeWidth={2.3} />
                           AI 자동 검수 시작
@@ -2307,7 +2307,7 @@ export function FeedbackModal({
                 <div>
                   {/* 파트너: 매니저 확인 대기중인 게스트 피드백 안내 */}
                   {!isStaff && pendingCount > 0 && (
-                    <div className="mx-3 mt-3 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 text-[12px] text-amber-800">
+                    <div className="mx-3 mt-3 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 text-sm text-amber-800">
                       <AlertCircle size={13} strokeWidth={2.2} />
                       <span>
                         클라이언트 피드백{" "}
@@ -2329,7 +2329,7 @@ export function FeedbackModal({
                       ).length;
                       if (internalCount === 0) return null;
                       return (
-                        <div className="mx-3 mt-3 flex items-center gap-2 bg-sky-50 border border-sky-200 rounded-md px-3 py-2 text-[12px] text-sky-900">
+                        <div className="mx-3 mt-3 flex items-center gap-2 bg-sky-50 border border-sky-200 rounded-md px-3 py-2 text-sm text-sky-900">
                           <Eye size={13} strokeWidth={2.2} />
                           <span className="flex-1">
                             내부 댓글{" "}
@@ -2349,7 +2349,7 @@ export function FeedbackModal({
                                 targets.map((c) => c.id),
                               );
                             }}
-                            className="inline-flex items-center gap-1 text-[11px] font-bold bg-sky-600 text-white hover:bg-sky-700 px-2 py-0.5 rounded"
+                            className="inline-flex items-center gap-1 text-xs font-bold bg-sky-600 text-white hover:bg-sky-700 px-2 py-0.5 rounded"
                           >
                             모두 클라공개
                           </button>
@@ -2445,7 +2445,7 @@ export function FeedbackModal({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
-              <h3 className="text-[13px] font-bold text-slate-900">
+              <h3 className="text-base font-bold text-slate-900">
                 어떤 공유 링크에 공개할까요?
               </h3>
               <button
@@ -2467,7 +2467,7 @@ export function FeedbackModal({
                     strokeWidth={2}
                     className="shrink-0 text-text-muted"
                   />
-                  <span className="text-[13px] text-text truncate">
+                  <span className="text-base text-text truncate">
                     {o.title ?? o.filePath.split("/").pop() ?? o.filePath}
                   </span>
                 </button>
@@ -2531,7 +2531,7 @@ function ModerateModal({
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
           <div className="flex items-center gap-2">
             <PencilLine size={15} strokeWidth={2.2} className="text-slate-700" />
-            <h2 className="text-[14px] font-bold text-slate-900">순화 편집</h2>
+            <h2 className="text-md font-bold text-slate-900">순화 편집</h2>
           </div>
           <button
             onClick={onClose}
@@ -2543,16 +2543,16 @@ function ModerateModal({
 
         <div className="p-4 overflow-y-auto space-y-3">
           <div>
-            <div className="text-[11px] font-bold text-slate-500 uppercase mb-1">
+            <div className="text-xs font-bold text-slate-500 uppercase mb-1">
               원문 (클라이언트 작성)
             </div>
-            <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5 text-[13px] text-slate-700 whitespace-pre-wrap">
+            <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5 text-base text-slate-700 whitespace-pre-wrap">
               {comment.body}
             </div>
           </div>
 
           <div>
-            <div className="text-[11px] font-bold text-slate-500 uppercase mb-1">
+            <div className="text-xs font-bold text-slate-500 uppercase mb-1">
               파트너 뷰에 보일 텍스트 (순화본)
             </div>
             <textarea
@@ -2560,9 +2560,9 @@ function ModerateModal({
               onChange={(e) => setValue(e.target.value)}
               placeholder="거친 표현을 중립적으로 바꾸거나 핵심만 정리"
               rows={4}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md text-[13px] outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft resize-none"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md text-base outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft resize-none"
             />
-            <div className="text-[10.5px] text-slate-400 mt-1">
+            <div className="text-2xs text-slate-400 mt-1">
               비워두고 저장하면 원문이 그대로 파트너에게 표시됩니다.
             </div>
           </div>
@@ -2570,15 +2570,15 @@ function ModerateModal({
           <div className="border-t border-slate-100 pt-2">
             <button
               onClick={() => setShowHistory((v) => !v)}
-              className="text-[11.5px] font-semibold text-slate-600 hover:text-slate-900 inline-flex items-center gap-1"
+              className="text-xs font-semibold text-slate-600 hover:text-slate-900 inline-flex items-center gap-1"
             >
               편집 히스토리 ({historyLoading ? "..." : history.length})
-              <span className="text-[9px]">{showHistory ? "▲" : "▼"}</span>
+              <span className="text-2xs">{showHistory ? "▲" : "▼"}</span>
             </button>
             {showHistory && (
               <div className="mt-2 space-y-1.5 max-h-48 overflow-y-auto">
                 {history.length === 0 && !historyLoading && (
-                  <div className="text-[11.5px] text-slate-400 italic">
+                  <div className="text-xs text-slate-400 italic">
                     히스토리 없음
                   </div>
                 )}
@@ -2587,16 +2587,16 @@ function ModerateModal({
                     key={h.id}
                     className="bg-slate-50 border border-slate-200 rounded p-2"
                   >
-                    <div className="flex items-center justify-between text-[10.5px] text-slate-500 mb-1">
+                    <div className="flex items-center justify-between text-2xs text-slate-500 mb-1">
                       <span className="font-semibold">{h.editedByName}</span>
                       <span>{formatRelative(h.editedAt)}</span>
                     </div>
                     {h.bodyBefore !== null && (
-                      <div className="text-[11px] text-slate-500 line-through mb-0.5 whitespace-pre-wrap">
+                      <div className="text-xs text-slate-500 line-through mb-0.5 whitespace-pre-wrap">
                         {h.bodyBefore}
                       </div>
                     )}
-                    <div className="text-[11.5px] text-slate-700 whitespace-pre-wrap">
+                    <div className="text-xs text-slate-700 whitespace-pre-wrap">
                       {h.bodyAfter || "(순화본 제거)"}
                     </div>
                   </div>
@@ -2610,21 +2610,21 @@ function ModerateModal({
           <button
             onClick={() => onSave(null)}
             disabled={!canRemove}
-            className="text-[12.5px] font-semibold text-red-600 hover:bg-red-50 disabled:text-slate-300 disabled:hover:bg-transparent px-3 py-1.5 rounded-md"
+            className="text-sm font-semibold text-red-600 hover:bg-red-50 disabled:text-slate-300 disabled:hover:bg-transparent px-3 py-1.5 rounded-md"
           >
             순화본 제거
           </button>
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
-              className="text-[13px] font-semibold text-slate-600 hover:bg-slate-100 px-3 py-1.5 rounded-md"
+              className="text-base font-semibold text-slate-600 hover:bg-slate-100 px-3 py-1.5 rounded-md"
             >
               취소
             </button>
             <button
               onClick={() => onSave(value.trim() ? value.trim() : null)}
               disabled={!hasChange}
-              className="text-[13px] font-semibold text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-50 px-4 py-1.5 rounded-md"
+              className="text-base font-semibold text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-50 px-4 py-1.5 rounded-md"
             >
               저장
             </button>
@@ -2894,7 +2894,7 @@ function TimelineStrip({
     <div className="flex-none bg-[#0b0f17] border-t border-[#1e293b] px-4 pt-2.5 pb-3 select-none">
       {/* Row 1: 시크바 */}
       <div className="flex items-center gap-3">
-        <span className="shrink-0 text-[12px] font-mono font-semibold text-slate-300 tabular-nums">
+        <span className="shrink-0 text-sm font-mono font-semibold text-slate-300 tabular-nums">
           {formatTc(currentTime)}
         </span>
         <div
@@ -2949,7 +2949,7 @@ function TimelineStrip({
                         "hidden";
                     }}
                   />
-                  <div className="bg-black text-white text-[10.5px] font-mono font-semibold tabular-nums text-center py-1">
+                  <div className="bg-black text-white text-2xs font-mono font-semibold tabular-nums text-center py-1">
                     {formatTc(hoverState.timeMs)}
                   </div>
                 </div>
@@ -3008,7 +3008,7 @@ function TimelineStrip({
             </div>
           )}
         </div>
-        <span className="shrink-0 text-[12px] font-mono text-slate-500 tabular-nums text-right">
+        <span className="shrink-0 text-sm font-mono text-slate-500 tabular-nums text-right">
           {formatTc(duration)}
         </span>
       </div>
@@ -3135,7 +3135,7 @@ function TimelineStrip({
                   onClick={() => setSettingsMenuOpen(false)}
                 />
                 <div className="absolute bottom-full right-0 mb-2 bg-white border border-slate-200 rounded-xl shadow-lg p-1.5 z-20 w-[240px]">
-                  <div className="px-2 pt-1 pb-1.5 text-[9.5px] font-bold text-slate-400 tracking-wide">
+                  <div className="px-2 pt-1 pb-1.5 text-2xs font-bold text-slate-400 tracking-wide">
                     재생 속도
                   </div>
                   <div className="flex flex-nowrap gap-1 px-1 pb-2">
@@ -3143,7 +3143,7 @@ function TimelineStrip({
                       <button
                         key={rate}
                         onClick={() => onChangePlaybackRate(rate)}
-                        className={`flex-1 h-7 rounded-md text-[10px] font-bold font-mono tabular-nums grid place-items-center transition-colors ${
+                        className={`flex-1 h-7 rounded-md text-2xs font-bold font-mono tabular-nums grid place-items-center transition-colors ${
                           playbackRate === rate
                             ? "bg-accent text-white shadow-sm"
                             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -3156,7 +3156,7 @@ function TimelineStrip({
                   {hlsReady ? (
                     <>
                       <div className="h-px bg-slate-100 mx-1 my-0.5" />
-                      <div className="px-2 pt-1.5 pb-1 text-[9.5px] font-bold text-slate-400 tracking-wide">
+                      <div className="px-2 pt-1.5 pb-1 text-2xs font-bold text-slate-400 tracking-wide">
                         화질
                       </div>
                       {(
@@ -3190,7 +3190,7 @@ function TimelineStrip({
                           />
                           <span className="flex-1 min-w-0">
                             <span
-                              className={`block text-[12px] font-bold ${
+                              className={`block text-sm font-bold ${
                                 qualityMode === q.mode
                                   ? "text-accent"
                                   : "text-slate-700"
@@ -3198,7 +3198,7 @@ function TimelineStrip({
                             >
                               {q.label}
                             </span>
-                            <span className="block text-[10px] text-slate-400">
+                            <span className="block text-2xs text-slate-400">
                               {q.desc}
                             </span>
                           </span>
@@ -3208,7 +3208,7 @@ function TimelineStrip({
                   ) : (
                     <>
                       <div className="h-px bg-slate-100 mx-1 my-0.5" />
-                      <div className="px-2 py-1.5 text-[10px] text-slate-400 leading-relaxed">
+                      <div className="px-2 py-1.5 text-2xs text-slate-400 leading-relaxed">
                         지금은 원본으로 재생 중입니다. 저화질(스트리밍 변환)은
                         준비되면 켜집니다.
                       </div>
@@ -3327,18 +3327,18 @@ function CommentItem({
         <div className="flex items-center justify-between mb-2 gap-1.5 flex-wrap">
           <div className="flex items-center gap-1.5 flex-wrap">
             {isGuest && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700">
+              <span className="inline-flex items-center gap-1 text-2xs font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700">
                 <User size={9} strokeWidth={2.5} />
                 클라이언트
               </span>
             )}
             {isPending && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">
+              <span className="inline-flex items-center gap-1 text-2xs font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">
                 확인 대기
               </span>
             )}
             {!isPending && isClientVisible && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-100 text-sky-700">
+              <span className="inline-flex items-center gap-1 text-2xs font-bold px-1.5 py-0.5 rounded bg-sky-100 text-sky-700">
                 <Eye size={9} strokeWidth={2.5} />
                 클라에게 공개
               </span>
@@ -3349,7 +3349,7 @@ function CommentItem({
                   e.stopPropagation();
                   setShowOriginal((v) => !v);
                 }}
-                className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 hover:bg-slate-200"
+                className="inline-flex items-center gap-1 text-2xs font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 hover:bg-slate-200"
                 title={showOriginal ? "순화본 보기" : "원문 보기"}
               >
                 <PencilLine size={9} strokeWidth={2.5} />
@@ -3366,7 +3366,7 @@ function CommentItem({
                     e.stopPropagation();
                     onApprove();
                   }}
-                  className="inline-flex items-center gap-1 text-[10.5px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white hover:bg-emerald-700"
+                  className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded bg-emerald-600 text-white hover:bg-emerald-700"
                   title="파트너에게 공개"
                 >
                   <Check size={10} strokeWidth={3} />
@@ -3379,7 +3379,7 @@ function CommentItem({
                     e.stopPropagation();
                     onOpenModerate();
                   }}
-                  className="inline-flex items-center gap-1 text-[10.5px] font-bold px-2 py-0.5 rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
+                  className="inline-flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
                   title="파트너 뷰에 보일 순화본 편집"
                 >
                   <PencilLine size={10} strokeWidth={2.5} />
@@ -3391,7 +3391,7 @@ function CommentItem({
                   e.stopPropagation();
                   onToggleVisibility();
                 }}
-                className={`inline-flex items-center gap-1 text-[10.5px] font-bold px-2 py-0.5 rounded border ${
+                className={`inline-flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded border ${
                   isClientVisible
                     ? "bg-sky-600 text-white border-sky-600 hover:bg-sky-700"
                     : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
@@ -3443,7 +3443,7 @@ function CommentItem({
             className="flex items-center gap-1.5 mb-1.5 max-w-full text-left"
           >
             <span
-              className="font-mono text-[10px] font-extrabold px-1.5 py-0.5 rounded tabular-nums shrink-0"
+              className="font-mono text-2xs font-extrabold px-1.5 py-0.5 rounded tabular-nums shrink-0"
               style={{ color: status.color, background: status.soft }}
             >
               {formatTc(comment.videoTimeMs)}
@@ -3476,7 +3476,7 @@ function CommentItem({
                 {(comment.authorName || "?").slice(0, 1)}
               </span>
             )}
-            <span className="text-[11px] font-semibold text-slate-500 inline-flex items-center gap-1 min-w-0">
+            <span className="text-xs font-semibold text-slate-500 inline-flex items-center gap-1 min-w-0">
               <span className="truncate">
                 {isAI ? "AI 검수" : comment.authorName}
               </span>
@@ -3488,7 +3488,7 @@ function CommentItem({
           <button onClick={onSelect} className="block w-full text-left">
             {hasKeywordFormat ? (
               <div
-                className={`text-[14px] leading-relaxed ${
+                className={`text-md leading-relaxed ${
                   isResolved ? "text-slate-400" : "text-slate-900"
                 }`}
               >
@@ -3504,7 +3504,7 @@ function CommentItem({
               </div>
             ) : (
               <div
-                className={`text-[14px] leading-relaxed whitespace-pre-wrap break-words ${
+                className={`text-md leading-relaxed whitespace-pre-wrap break-words ${
                   isResolved ? "text-slate-400" : "text-slate-900"
                 }`}
               >
@@ -3512,7 +3512,7 @@ function CommentItem({
               </div>
             )}
             {hasKeywordFormat && annotation?.note && (
-              <div className="text-[11px] text-slate-400 mt-1 truncate">
+              <div className="text-xs text-slate-400 mt-1 truncate">
                 {annotation.note}
               </div>
             )}
@@ -3525,7 +3525,7 @@ function CommentItem({
                 e.stopPropagation();
                 setReplyOpen((v) => !v);
               }}
-              className={`text-[11px] font-semibold inline-flex items-center gap-1 transition-colors ${
+              className={`text-xs font-semibold inline-flex items-center gap-1 transition-colors ${
                 replyOpen
                   ? "text-slate-900"
                   : "text-slate-400 hover:text-slate-700"
@@ -3540,7 +3540,7 @@ function CommentItem({
                   e.stopPropagation();
                   setMenuOpen((v) => !v);
                 }}
-                className="text-[11px] font-semibold text-slate-400 hover:text-slate-700 inline-flex items-center gap-1 transition-colors"
+                className="text-xs font-semibold text-slate-400 hover:text-slate-700 inline-flex items-center gap-1 transition-colors"
               >
                 <MoreHorizontal size={13} strokeWidth={2.2} />
                 더보기
@@ -3557,7 +3557,7 @@ function CommentItem({
                         setMenuOpen(false);
                         onChangeKind(isPraise ? "feedback" : "praise");
                       }}
-                      className="w-full px-3 py-1.5 text-left text-[11.5px] text-slate-700 hover:bg-slate-50 inline-flex items-center gap-2"
+                      className="w-full px-3 py-1.5 text-left text-xs text-slate-700 hover:bg-slate-50 inline-flex items-center gap-2"
                     >
                       {isPraise ? (
                         <>
@@ -3572,7 +3572,7 @@ function CommentItem({
                       )}
                     </button>
                     <div className="border-t border-slate-100 my-0.5" />
-                    <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase">
+                    <div className="px-3 py-1 text-2xs font-semibold text-slate-400 uppercase">
                       카테고리
                     </div>
                     {CATEGORIES.map((cat) => (
@@ -3583,7 +3583,7 @@ function CommentItem({
                           if (cat.key !== comment.category)
                             onChangeCategory(cat.key);
                         }}
-                        className={`w-full px-3 py-1.5 text-left text-[11.5px] inline-flex items-center gap-2 hover:bg-slate-50 ${
+                        className={`w-full px-3 py-1.5 text-left text-xs inline-flex items-center gap-2 hover:bg-slate-50 ${
                           cat.key === comment.category ? "font-bold" : ""
                         }`}
                         style={{ color: cat.color }}
@@ -3607,7 +3607,7 @@ function CommentItem({
                             setMenuOpen(false);
                             onDelete();
                           }}
-                          className="w-full px-3 py-1.5 text-left text-[11.5px] text-red-600 hover:bg-red-50 inline-flex items-center gap-2"
+                          className="w-full px-3 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 inline-flex items-center gap-2"
                         >
                           <Trash2 size={11} strokeWidth={2.2} />
                           삭제
@@ -3637,14 +3637,14 @@ function CommentItem({
             return (
               <div
                 key={r.id}
-                className="group flex items-start gap-2 text-[11.5px]"
+                className="group flex items-start gap-2 text-xs"
               >
                 <div className="flex-1 min-w-0">
                   <div className="inline-flex items-center gap-1.5">
                     <span className="font-semibold text-slate-900">
                       {r.authorName}
                     </span>
-                    <span className="text-slate-400 text-[10.5px]">
+                    <span className="text-slate-400 text-2xs">
                       {formatRelative(r.createdAt)}
                     </span>
                   </div>
@@ -3747,7 +3747,7 @@ function ReplyCompose({
         }}
         placeholder="답글 달기... (⌘+Enter)"
         rows={1}
-        className="flex-1 bg-white border border-border rounded px-2 py-1.5 text-[12px] outline-none focus:border-text focus:ring-2 focus:ring-black/5 resize-none"
+        className="flex-1 bg-white border border-border rounded px-2 py-1.5 text-sm outline-none focus:border-text focus:ring-2 focus:ring-black/5 resize-none"
         autoFocus
       />
       <button
@@ -3820,7 +3820,7 @@ function GuestComposeBar({
       <div className="rounded-lg border border-slate-200 bg-slate-50 focus-within:border-slate-400 focus-within:bg-white transition-colors">
         <div className="flex items-center gap-2 px-3 pt-2.5 pb-1.5">
           <span
-            className="inline-flex items-center gap-1 font-mono text-[10.5px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded"
+            className="inline-flex items-center gap-1 font-mono text-2xs font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded"
             title="현재 재생 시간"
           >
             {formatTc(currentTime)}
@@ -3829,7 +3829,7 @@ function GuestComposeBar({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="이름"
-            className="ml-auto w-24 text-[11px] bg-white border border-slate-200 rounded px-1.5 py-0.5 outline-none focus:border-slate-400"
+            className="ml-auto w-24 text-xs bg-white border border-slate-200 rounded px-1.5 py-0.5 outline-none focus:border-slate-400"
           />
         </div>
         <div className="flex gap-2 items-end px-3 pb-3">
@@ -3844,7 +3844,7 @@ function GuestComposeBar({
             }}
             placeholder="의견을 남겨주세요 (⌘+Enter 전송)"
             rows={2}
-            className="flex-1 bg-transparent text-[13px] outline-none resize-none placeholder:text-slate-400"
+            className="flex-1 bg-transparent text-base outline-none resize-none placeholder:text-slate-400"
           />
           <button
             onClick={submit}
@@ -3924,7 +3924,7 @@ function ComposeBar({
         {/* 상단 메타: 타임코드 + 모드 토글 */}
         <div className="flex items-center gap-2 px-3 pt-2.5 pb-1.5">
           <span
-            className="inline-flex items-center gap-1 font-mono text-[10.5px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded"
+            className="inline-flex items-center gap-1 font-mono text-2xs font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded"
             title="현재 재생 시간"
           >
             {formatTc(currentTime)}
@@ -3932,7 +3932,7 @@ function ComposeBar({
           <div className="flex items-center gap-0.5 bg-white border border-slate-200 rounded-md p-0.5">
             <button
               onClick={() => setOverrideKind("feedback")}
-              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10.5px] font-semibold transition-colors ${
+              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-semibold transition-colors ${
                 !isPraise
                   ? "bg-slate-900 text-white"
                   : "text-slate-400 hover:text-slate-700"
@@ -3944,7 +3944,7 @@ function ComposeBar({
             </button>
             <button
               onClick={() => setOverrideKind("praise")}
-              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10.5px] font-semibold transition-colors ${
+              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-semibold transition-colors ${
                 isPraise
                   ? "bg-pink-500 text-white"
                   : "text-slate-400 hover:text-slate-700"
@@ -3959,7 +3959,7 @@ function ComposeBar({
             {/* 카테고리 선택 */}
             <button
               onClick={() => setCatOpen((v) => !v)}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-bold transition-colors"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-2xs font-bold transition-colors"
               style={{
                 color: meta.color,
                 background: meta.bgSoft,
@@ -3984,7 +3984,7 @@ function ComposeBar({
                         setCatOpen(false);
                         setOverrideCat(cat.key);
                       }}
-                      className={`w-full px-3 py-1.5 text-left text-[11.5px] flex items-center gap-2 hover:bg-slate-50 ${
+                      className={`w-full px-3 py-1.5 text-left text-xs flex items-center gap-2 hover:bg-slate-50 ${
                         cat.key === category ? "font-bold" : ""
                       }`}
                       style={{ color: cat.color }}
@@ -4028,7 +4028,7 @@ function ComposeBar({
                 : "피드백을 입력하세요 (⌘+Enter)"
             }
             rows={2}
-            className="flex-1 bg-transparent text-[12.5px] outline-none resize-none placeholder:text-slate-400"
+            className="flex-1 bg-transparent text-sm outline-none resize-none placeholder:text-slate-400"
           />
           <button
             onClick={submit}
@@ -4114,7 +4114,7 @@ function AnnotationOverlay({
           }}
         >
           <span
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11.5px] font-semibold whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap"
             style={{
               background: isPraise ? color : "#fff",
               color: isPraise ? "#fff" : "#1a1a1a",
@@ -4270,7 +4270,7 @@ function AnnotationOverlay({
           }}
         >
           <span
-            className="inline-block px-2.5 py-1 rounded-md text-[11.5px] font-semibold"
+            className="inline-block px-2.5 py-1 rounded-md text-xs font-semibold"
             style={{
               background: isPraise ? color : "#fff",
               color: isPraise ? "#fff" : "#1a1a1a",
@@ -4318,7 +4318,7 @@ function AnnotationToolbar({
               e.stopPropagation();
               onChange(id);
             }}
-            className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-semibold transition-colors ${
+            className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold transition-colors ${
               active
                 ? "bg-amber-400 text-black"
                 : "text-white hover:bg-white/10"
@@ -4662,13 +4662,13 @@ function AnnotationPopover({
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="bg-white rounded-xl shadow-2xl p-3.5 text-[13px]">
+      <div className="bg-white rounded-xl shadow-2xl p-3.5 text-base">
         <div className="flex items-center gap-1.5 mb-2.5">
           <span
             className="w-2 h-2 rounded-full"
             style={{ background: isPraise ? PRAISE_COLOR : "#eab308" }}
           />
-          <span className="text-[10.5px] font-bold tracking-widest uppercase text-text-faint">
+          <span className="text-2xs font-bold tracking-widest uppercase text-text-faint">
             {toolLabel}
           </span>
           <button
@@ -4683,7 +4683,7 @@ function AnnotationPopover({
         <div className="flex gap-1 bg-surface p-0.5 rounded-md mb-2.5">
           <button
             onClick={() => onChange({ ...anno, kind: "feedback" })}
-            className={`flex-1 flex items-center justify-center gap-1 py-1 text-[11.5px] font-semibold rounded ${
+            className={`flex-1 flex items-center justify-center gap-1 py-1 text-xs font-semibold rounded ${
               !isPraise ? "bg-white shadow-sm text-amber-600" : "text-text-faint"
             }`}
           >
@@ -4692,7 +4692,7 @@ function AnnotationPopover({
           </button>
           <button
             onClick={() => onChange({ ...anno, kind: "praise" })}
-            className={`flex-1 flex items-center justify-center gap-1 py-1 text-[11.5px] font-semibold rounded ${
+            className={`flex-1 flex items-center justify-center gap-1 py-1 text-xs font-semibold rounded ${
               isPraise ? "bg-white shadow-sm" : "text-text-faint"
             }`}
             style={isPraise ? { color: PRAISE_COLOR } : undefined}
@@ -4705,16 +4705,16 @@ function AnnotationPopover({
         {isBox ? (
           <>
             <div className="mb-2">
-              <label className="block text-[10.5px] font-semibold text-text-soft mb-1 tracking-wide flex items-center gap-1.5">
+              <label className="block text-2xs font-semibold text-text-soft mb-1 tracking-wide flex items-center gap-1.5">
                 {isPraise ? "대상 (자동 인식됨)" : "원본 자막"}
                 {anno.ocrLoading && (
-                  <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 font-normal">
+                  <span className="inline-flex items-center gap-1 text-2xs text-amber-600 font-normal">
                     <span className="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                     인식 중...
                   </span>
                 )}
                 {!anno.ocrLoading && anno.original && (
-                  <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 font-normal">
+                  <span className="inline-flex items-center gap-1 text-2xs text-amber-600 font-normal">
                     ✓ 자동 인식됨
                   </span>
                 )}
@@ -4727,7 +4727,7 @@ function AnnotationPopover({
                 placeholder={
                   anno.ocrLoading ? "자막 읽는 중..." : "드래그한 텍스트"
                 }
-                className={`w-full px-2.5 py-1.5 border rounded-md text-[13px] outline-none focus:border-text ${
+                className={`w-full px-2.5 py-1.5 border rounded-md text-base outline-none focus:border-text ${
                   anno.ocrLoading
                     ? "bg-amber-50 border-amber-300"
                     : anno.original
@@ -4739,41 +4739,41 @@ function AnnotationPopover({
 
             {!isPraise && (
               <div className="mb-2">
-                <label className="block text-[10.5px] font-semibold text-text-soft mb-1 tracking-wide">
+                <label className="block text-2xs font-semibold text-text-soft mb-1 tracking-wide">
                   → 수정안
                 </label>
                 <input
                   value={anno.suggestion}
                   onChange={(e) => onChange({ ...anno, suggestion: e.target.value })}
                   placeholder="예: agent"
-                  className="w-full px-2.5 py-1.5 border border-border rounded-md text-[13px] outline-none focus:border-text"
+                  className="w-full px-2.5 py-1.5 border border-border rounded-md text-base outline-none focus:border-text"
                 />
               </div>
             )}
 
             {isPraise && (
               <div className="mb-2">
-                <label className="block text-[10.5px] font-semibold text-text-soft mb-1 tracking-wide">
+                <label className="block text-2xs font-semibold text-text-soft mb-1 tracking-wide">
                   좋은 점
                 </label>
                 <input
                   value={anno.suggestion}
                   onChange={(e) => onChange({ ...anno, suggestion: e.target.value })}
                   placeholder="예: 이 구간 색감 완벽!"
-                  className="w-full px-2.5 py-1.5 border border-border rounded-md text-[13px] outline-none focus:border-text"
+                  className="w-full px-2.5 py-1.5 border border-border rounded-md text-base outline-none focus:border-text"
                 />
               </div>
             )}
 
             <div className="mb-3">
-              <label className="block text-[10.5px] font-semibold text-text-soft mb-1 tracking-wide">
+              <label className="block text-2xs font-semibold text-text-soft mb-1 tracking-wide">
                 부가 설명 (선택)
               </label>
               <input
                 value={anno.note}
                 onChange={(e) => onChange({ ...anno, note: e.target.value })}
                 placeholder="예: 영문 통일"
-                className="w-full px-2.5 py-1.5 border border-border rounded-md text-[13px] outline-none focus:border-text"
+                className="w-full px-2.5 py-1.5 border border-border rounded-md text-base outline-none focus:border-text"
                 onKeyDown={(e) => {
                   if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
                     e.preventDefault();
@@ -4785,7 +4785,7 @@ function AnnotationPopover({
           </>
         ) : (
           <div className="mb-3">
-            <label className="block text-[10.5px] font-semibold text-text-soft mb-1 tracking-wide">
+            <label className="block text-2xs font-semibold text-text-soft mb-1 tracking-wide">
               피드백
             </label>
             <textarea
@@ -4804,7 +4804,7 @@ function AnnotationPopover({
                   : "이 부분 뭘 수정할까요? (⌘+Enter)"
               }
               rows={3}
-              className="w-full px-2.5 py-1.5 border border-border rounded-md text-[13px] outline-none focus:border-text resize-none"
+              className="w-full px-2.5 py-1.5 border border-border rounded-md text-base outline-none focus:border-text resize-none"
             />
           </div>
         )}
@@ -4812,14 +4812,14 @@ function AnnotationPopover({
         <div className="flex gap-2 justify-end">
           <button
             onClick={onCancel}
-            className="px-3 py-1.5 text-[12px] font-semibold text-text-soft rounded-md hover:bg-hover"
+            className="px-3 py-1.5 text-sm font-semibold text-text-soft rounded-md hover:bg-hover"
           >
             취소
           </button>
           <button
             onClick={onSubmit}
             disabled={!canSubmit}
-            className="px-3 py-1.5 text-[12px] font-bold rounded-md disabled:opacity-40"
+            className="px-3 py-1.5 text-sm font-bold rounded-md disabled:opacity-40"
             style={{
               background: isPraise ? PRAISE_COLOR : "#eab308",
               color: isPraise ? "#fff" : "#1a1a1a",

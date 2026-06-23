@@ -82,7 +82,7 @@ export function FilePickerDialog({
       maxWidth="max-w-md"
     >
       <div className="p-5">
-        <div className="flex items-center gap-1 text-[13px] mb-3 flex-wrap">
+        <div className="flex items-center gap-1 text-base mb-3 flex-wrap">
           <button
             onClick={() => setPath("/")}
             className="hover:text-accent text-text-muted transition-colors"
@@ -120,19 +120,19 @@ export function FilePickerDialog({
               onClick={() =>
                 setPath("/" + segments.slice(0, -1).join("/") || "/")
               }
-              className="w-full flex items-center gap-2 px-4 py-2 text-[13px] text-text-muted hover:bg-white border-b border-border"
+              className="w-full flex items-center gap-2 px-4 py-2 text-base text-text-muted hover:bg-white border-b border-border"
             >
               <ArrowLeft size={13} />
               상위 폴더로
             </button>
           )}
           {loading && (
-            <div className="p-4 text-[12.5px] text-text-faint">
+            <div className="p-4 text-sm text-text-faint">
               불러오는 중...
             </div>
           )}
           {!loading && entries.length === 0 && (
-            <div className="p-6 text-center text-[12.5px] text-text-faint">
+            <div className="p-6 text-center text-sm text-text-faint">
               비어있어요
             </div>
           )}
@@ -146,7 +146,7 @@ export function FilePickerDialog({
                   if (isFolder) setPath(e.path);
                   else setSelected(isSelected ? null : e);
                 }}
-                className={`w-full flex items-center gap-2 px-4 py-2 text-[13.5px] border-b border-[#f5f5f5] text-left transition-colors ${
+                className={`w-full flex items-center gap-2 px-4 py-2 text-base border-b border-[#f5f5f5] text-left transition-colors ${
                   isSelected
                     ? "bg-accent-soft text-accent font-medium"
                     : "text-text hover:bg-white"
@@ -173,7 +173,7 @@ export function FilePickerDialog({
           })}
         </div>
 
-        <div className="text-[12px] text-text-soft mb-4 truncate">
+        <div className="text-sm text-text-soft mb-4 truncate">
           {selected ? (
             <>
               선택됨:{" "}
@@ -187,14 +187,14 @@ export function FilePickerDialog({
         <div className="flex gap-2">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 text-[13.5px] font-medium text-text-muted hover:text-text hover:bg-hover rounded-md transition-colors"
+            className="flex-1 px-4 py-2 text-base font-medium text-text-muted hover:text-text hover:bg-hover rounded-md transition-colors"
           >
             취소
           </button>
           <button
             onClick={confirm}
             disabled={!selected}
-            className="flex-1 bg-text text-white hover:bg-[#333] disabled:opacity-60 disabled:cursor-not-allowed py-2 rounded-md text-[13.5px] font-semibold"
+            className="flex-1 bg-text text-white hover:bg-[#333] disabled:opacity-60 disabled:cursor-not-allowed py-2 rounded-md text-base font-semibold"
           >
             {confirmLabel}
           </button>

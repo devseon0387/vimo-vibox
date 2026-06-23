@@ -28,7 +28,7 @@ export function ConflictDialog({
       maxWidth="max-w-md"
     >
       <div className="p-5 space-y-4">
-        <div className="text-[13px] text-text-muted">
+        <div className="text-base text-text-muted">
           업로드하려는 폴더 안에{" "}
           <span className="font-semibold text-text">{conflicts.length}개</span>{" "}
           파일이 이미 존재합니다. 어떻게 처리할까요?
@@ -38,14 +38,14 @@ export function ConflictDialog({
           {conflicts.slice(0, 20).map((p) => (
             <div
               key={p}
-              className="font-mono text-[11px] text-text-faint truncate"
+              className="font-mono text-xs text-text-faint truncate"
               title={p}
             >
               {p.split("/").pop()}
             </div>
           ))}
           {conflicts.length > 20 && (
-            <div className="text-[11px] text-text-faint italic pt-1">
+            <div className="text-xs text-text-faint italic pt-1">
               … 외 {conflicts.length - 20}개
             </div>
           )}
@@ -62,10 +62,10 @@ export function ConflictDialog({
               className="text-text-soft mt-0.5 shrink-0"
             />
             <div>
-              <div className="text-[13px] font-semibold text-text">
+              <div className="text-base font-semibold text-text">
                 자동 번호 매기기
               </div>
-              <div className="text-[11.5px] text-text-faint">
+              <div className="text-xs text-text-faint">
                 새 파일은 <span className="font-mono">name (1).mp4</span> 처럼 번호가
                 붙어요. 기존 파일은 그대로
               </div>
@@ -81,8 +81,8 @@ export function ConflictDialog({
               className="text-rose-500 mt-0.5 shrink-0"
             />
             <div>
-              <div className="text-[13px] font-semibold text-text">덮어쓰기</div>
-              <div className="text-[11.5px] text-text-faint">
+              <div className="text-base font-semibold text-text">덮어쓰기</div>
+              <div className="text-xs text-text-faint">
                 기존 파일이 새 파일로 교체돼요. 되돌릴 수 없음
               </div>
             </div>
@@ -97,8 +97,8 @@ export function ConflictDialog({
               className="text-text-soft mt-0.5 shrink-0"
             />
             <div>
-              <div className="text-[13px] font-semibold text-text">건너뛰기</div>
-              <div className="text-[11.5px] text-text-faint">
+              <div className="text-base font-semibold text-text">건너뛰기</div>
+              <div className="text-xs text-text-faint">
                 충돌 파일은 업로드 안 함. 새로운 파일만 올라감
               </div>
             </div>
@@ -108,7 +108,7 @@ export function ConflictDialog({
         <div className="flex justify-end pt-1">
           <button
             onClick={onCancel}
-            className="px-4 py-1.5 text-[13px] text-text-muted hover:text-text"
+            className="px-4 py-1.5 text-base text-text-muted hover:text-text"
           >
             취소
           </button>

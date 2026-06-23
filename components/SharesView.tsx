@@ -181,8 +181,8 @@ export function SharesView({ items }: { items: ShareRow[] }) {
   return (
     <>
       <div className="mb-5">
-        <h1 className="text-[22px] font-bold">공유 링크</h1>
-        <p className="text-[12.5px] text-text-faint mt-1">
+        <h1 className="text-2xl font-bold">공유 링크</h1>
+        <p className="text-sm text-text-faint mt-1">
           내가 만든 공유 링크를 관리해요. 한 링크에 여러 버전을 누적해서 클라에게
           같은 주소로 계속 전달할 수 있어요.
         </p>
@@ -195,10 +195,10 @@ export function SharesView({ items }: { items: ShareRow[] }) {
             className="mx-auto text-text-faint mb-3"
             strokeWidth={1.5}
           />
-          <div className="text-[14px] text-text-muted">
+          <div className="text-md text-text-muted">
             만든 공유 링크가 없어요
           </div>
-          <div className="text-[12px] text-text-faint mt-1">
+          <div className="text-sm text-text-faint mt-1">
             파일 목록에서 공유 링크 아이콘을 눌러 링크를 만들 수 있어요
           </div>
         </div>
@@ -238,11 +238,11 @@ export function SharesView({ items }: { items: ShareRow[] }) {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[13.5px] font-semibold text-text truncate">
+                      <span className="text-base font-semibold text-text truncate">
                         {displayTitle}
                       </span>
                       <span
-                        className={`inline-flex items-center gap-1 text-[10.5px] font-bold px-1.5 py-0.5 rounded ${
+                        className={`inline-flex items-center gap-1 text-2xs font-bold px-1.5 py-0.5 rounded ${
                           item.mode === "full"
                             ? "bg-sky-100 text-sky-700"
                             : "bg-slate-100 text-slate-600"
@@ -256,22 +256,22 @@ export function SharesView({ items }: { items: ShareRow[] }) {
                         {item.mode === "full" ? "풀" : "프리뷰"}
                       </span>
                       {multi && (
-                        <span className="inline-flex items-center gap-1 text-[10.5px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700">
+                        <span className="inline-flex items-center gap-1 text-2xs font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700">
                           V1~V{item.paths.length}
                         </span>
                       )}
                       {item.hasPassword && (
-                        <span className="inline-flex items-center gap-1 text-[11px] text-accent">
+                        <span className="inline-flex items-center gap-1 text-xs text-accent">
                           <Lock size={10} strokeWidth={2.2} />
                         </span>
                       )}
                     </div>
-                    <div className="text-[11.5px] text-text-faint truncate mt-0.5">
+                    <div className="text-xs text-text-faint truncate mt-0.5">
                       {parent}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 shrink-0 text-[11.5px] text-text-soft">
+                  <div className="flex items-center gap-3 shrink-0 text-xs text-text-soft">
                     <span title="다운로드 횟수">
                       {item.downloadCount}회
                     </span>
@@ -312,12 +312,12 @@ export function SharesView({ items }: { items: ShareRow[] }) {
                 {isOpen && (
                   <div className="border-t border-border bg-surface px-4 py-3">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="text-[11.5px] font-bold uppercase tracking-wider text-text-soft">
+                      <div className="text-xs font-bold uppercase tracking-wider text-text-soft">
                         버전 ({item.paths.length})
                       </div>
                       <button
                         onClick={() => setAddingTo(item)}
-                        className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-accent hover:bg-accent-soft px-2 py-0.5 rounded"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:bg-accent-soft px-2 py-0.5 rounded"
                       >
                         <Plus size={11} strokeWidth={2.5} />
                         버전 추가
@@ -327,9 +327,9 @@ export function SharesView({ items }: { items: ShareRow[] }) {
                       {item.paths.map((p, idx) => (
                         <li
                           key={p}
-                          className="flex items-center gap-2 text-[12.5px] bg-white border border-border rounded-md px-2.5 py-1.5"
+                          className="flex items-center gap-2 text-sm bg-white border border-border rounded-md px-2.5 py-1.5"
                         >
-                          <span className="font-mono font-bold text-[10.5px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 shrink-0">
+                          <span className="font-mono font-bold text-2xs px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 shrink-0">
                             V{idx + 1}
                           </span>
                           <FileVideo
@@ -340,7 +340,7 @@ export function SharesView({ items }: { items: ShareRow[] }) {
                           <span className="flex-1 truncate text-text">
                             {basename(p)}
                           </span>
-                          <span className="text-[10.5px] text-text-faint truncate max-w-[240px]">
+                          <span className="text-2xs text-text-faint truncate max-w-[240px]">
                             {p}
                           </span>
                           {item.paths.length > 1 && (

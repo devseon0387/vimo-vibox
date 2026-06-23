@@ -130,7 +130,7 @@ export function PwaInit() {
               <div className="text-sm font-semibold text-zinc-900">홈화면에 추가</div>
               <div className="mt-1 text-xs leading-relaxed text-zinc-600">
                 Safari 하단의 <Share size={12} className="inline align-text-bottom" /> 공유 메뉴를 열고
-                <span className="mx-1 inline-flex items-center gap-1 rounded bg-zinc-100 px-1.5 py-0.5 text-[11px] font-medium">
+                <span className="mx-1 inline-flex items-center gap-1 rounded bg-zinc-100 px-1.5 py-0.5 text-xs font-medium">
                   <Plus size={11} /> 홈 화면에 추가
                 </span>
                 를 누르면 비박스가 앱처럼 설치돼요.

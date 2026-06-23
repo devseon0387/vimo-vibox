@@ -151,10 +151,10 @@ export function DropZone({
       >
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <Upload size={48} strokeWidth={2} className="text-accent mb-4" />
-          <div className="text-[18px] font-bold text-accent mb-1">
+          <div className="text-xl font-bold text-accent mb-1">
             여기에 놓으면 업로드됩니다
           </div>
-          <div className="text-[13px] text-text-soft">
+          <div className="text-base text-text-soft">
             현재 폴더에 파일이 추가됩니다
           </div>
         </div>

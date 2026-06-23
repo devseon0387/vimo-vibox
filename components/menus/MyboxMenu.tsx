@@ -33,7 +33,7 @@ export function MyboxMenu({ isPartner = false }: { isPartner?: boolean }) {
     <>
       {/* 사용량 게이지 — /api/my/box/usage 실데이터 */}
       <div className="px-4 py-3 border-b border-border">
-        <div className="flex items-center justify-between text-[11px] text-text-faint mb-1.5">
+        <div className="flex items-center justify-between text-xs text-text-faint mb-1.5">
           <span>스토리지</span>
           <span>
             {usage

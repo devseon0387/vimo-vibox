@@ -37,7 +37,7 @@ export default async function TeamPage({
     const results = await searchFiles(query);
     return (
       <div className="px-4 md:px-8 py-4 md:py-6 max-w-[1400px]">
-        <div className="flex items-center gap-1.5 text-[12.5px] text-text-muted mb-3">
+        <div className="flex items-center gap-1.5 text-sm text-text-muted mb-3">
           <Link href="/team" className="hover:text-text transition-colors">
             비모 프로젝트
           </Link>
@@ -46,9 +46,9 @@ export default async function TeamPage({
         </div>
 
         <div className="flex items-start md:items-center justify-between gap-3 flex-col md:flex-row mb-5">
-          <h1 className="text-[22px] font-bold">
+          <h1 className="text-2xl font-bold">
             &quot;{query}&quot; 검색 결과{" "}
-            <span className="text-text-faint font-medium text-[16px]">
+            <span className="text-text-faint font-medium text-lg">
               {results.length}개
             </span>
           </h1>
@@ -59,10 +59,10 @@ export default async function TeamPage({
 
         {results.length === 0 ? (
           <div className="border-2 border-dashed border-border rounded-xl p-12 text-center bg-white">
-            <div className="text-[14px] text-text-muted mb-1">
+            <div className="text-md text-text-muted mb-1">
               일치하는 파일이 없어요
             </div>
-            <div className="text-[12px] text-text-faint">
+            <div className="text-sm text-text-faint">
               검색어를 다른 표현으로 바꿔보거나 ⌘K 로 댓글·공유 링크까지 검색해보세요
             </div>
           </div>
@@ -116,7 +116,7 @@ export default async function TeamPage({
   return (
     <div className="px-4 md:px-8 py-4 md:py-6 max-w-[1400px]">
       {segments.length > 0 && !(isRenderingTree && segments.length === 1) && (
-        <div className="flex items-center gap-1.5 text-[12.5px] text-text-muted mb-3 overflow-x-auto">
+        <div className="flex items-center gap-1.5 text-sm text-text-muted mb-3 overflow-x-auto">
           {!isRenderingTree && (
             <Link href="/team" className="hover:text-text transition-colors shrink-0">
               비모 프로젝트
@@ -156,9 +156,9 @@ export default async function TeamPage({
             style={{ background: "var(--team-color)" }}
             aria-hidden
           />
-          <h1 className="text-[22px] font-bold truncate">{currentName}</h1>
+          <h1 className="text-2xl font-bold truncate">{currentName}</h1>
           <span
-            className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-text-faint shrink-0"
+            className="hidden sm:inline-flex items-center gap-1 text-xs font-medium text-text-faint shrink-0"
             title="비모 프로젝트 공간"
           >
             <Users size={12} strokeWidth={2.2} />

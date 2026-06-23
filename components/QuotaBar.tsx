@@ -18,7 +18,7 @@ export function QuotaBar({ usage }: { usage: PersonalUsage }) {
 
   return (
     <div className="mb-4 bg-white border border-slate-200 rounded-lg px-4 py-3">
-      <div className="flex items-center justify-between text-[11.5px] mb-1.5">
+      <div className="flex items-center justify-between text-xs mb-1.5">
         <span className="text-slate-500">
           사용{" "}
           <span className="font-semibold text-slate-900 tabular-nums">

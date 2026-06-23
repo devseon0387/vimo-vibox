@@ -23,12 +23,12 @@ export function NewCommentsCard({ comments }: { comments: MyNewComment[] }) {
   return (
     <div className="bg-white border border-border rounded-xl p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[13.5px] font-bold flex items-center gap-2">
+        <h3 className="text-base font-bold flex items-center gap-2">
           <MessageCircle size={16} strokeWidth={2.2} className="text-accent" />
           내 작업에 달린 새 코멘트
           {comments.length > 0 && (
             <span
-              className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold"
+              className="inline-flex items-center px-1.5 py-0.5 rounded-full text-2xs font-semibold"
               style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
             >
               {comments.length}
@@ -37,7 +37,7 @@ export function NewCommentsCard({ comments }: { comments: MyNewComment[] }) {
         </h3>
       </div>
       {comments.length === 0 ? (
-        <div className="text-[12px] text-text-faint py-4 text-center">
+        <div className="text-sm text-text-faint py-4 text-center">
           24시간 내 새 코멘트가 없어요
         </div>
       ) : (
@@ -49,18 +49,18 @@ export function NewCommentsCard({ comments }: { comments: MyNewComment[] }) {
               className="flex items-start gap-2.5 py-1.5 border-b border-border last:border-0 hover:bg-surface -mx-1 px-1 rounded transition"
             >
               <div
-                className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-700 grid place-items-center text-white text-[11px] font-bold shrink-0"
+                className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-700 grid place-items-center text-white text-xs font-bold shrink-0"
                 aria-hidden
               >
                 {initials(c.authorName)}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[12px] flex items-center gap-1">
+                <div className="text-sm flex items-center gap-1">
                   <strong className="truncate">{c.authorName}</strong>
                   <SpaceLabel space={c.space} size="sm" withText={false} />
                   <span className="text-text-faint">· {relativeTime(c.createdAt)}</span>
                 </div>
-                <div className="text-[11.5px] text-text-soft mt-0.5 truncate">
+                <div className="text-xs text-text-soft mt-0.5 truncate">
                   {c.filename}: &quot;{c.body}&quot;
                 </div>
               </div>

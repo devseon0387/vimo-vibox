@@ -98,12 +98,12 @@ export function FilesPane({ initialTree, initialPath, initialFile }: Props) {
         <div className="px-5 pt-5 pb-3 border-b border-border bg-white">
           <div className="flex items-center gap-2 mb-1">
             <HardDrive size={14} strokeWidth={2.2} className="text-text-soft" />
-            <div className="text-[15px] font-bold text-text">파일 트리</div>
+            <div className="text-lg font-bold text-text">파일 트리</div>
           </div>
-          <div className="text-[11.5px] text-text-faint font-mono">
+          <div className="text-xs text-text-faint font-mono">
             notes/
           </div>
-          <div className="text-[11px] text-text-faint mt-1">
+          <div className="text-xs text-text-faint mt-1">
             {initialTree.length}개 폴더 · {totals.count}개 파일 · {(totals.bytes / 1024).toFixed(1)} KB
           </div>
         </div>
@@ -116,7 +116,7 @@ export function FilesPane({ initialTree, initialPath, initialFile }: Props) {
                 <button
                   type="button"
                   onClick={() => setExpanded((s) => ({ ...s, [folder.name]: !open }))}
-                  className="w-full px-3 py-1.5 flex items-center gap-1.5 text-[13px] text-text-soft hover:bg-surface text-left font-mono"
+                  className="w-full px-3 py-1.5 flex items-center gap-1.5 text-base text-text-soft hover:bg-surface text-left font-mono"
                 >
                   {open ? (
                     <ChevronDown size={12} strokeWidth={2.4} className="text-text-faint" />
@@ -129,7 +129,7 @@ export function FilesPane({ initialTree, initialPath, initialFile }: Props) {
                     <Folder size={13} strokeWidth={2} className="text-text-soft" />
                   )}
                   <span className="truncate">{folder.name}/</span>
-                  <span className="ml-auto text-[10.5px] text-text-faint font-sans">
+                  <span className="ml-auto text-2xs text-text-faint font-sans">
                     {folder.files.length}
                   </span>
                 </button>
@@ -141,7 +141,7 @@ export function FilesPane({ initialTree, initialPath, initialFile }: Props) {
                         key={f.path}
                         type="button"
                         onClick={() => select(f.path)}
-                        className={`w-full pl-9 pr-3 py-1 flex items-center gap-1.5 text-left font-mono text-[12.5px] ${
+                        className={`w-full pl-9 pr-3 py-1 flex items-center gap-1.5 text-left font-mono text-sm ${
                           sel
                             ? "bg-accent-soft text-accent"
                             : "text-text-soft hover:bg-surface"
@@ -150,7 +150,7 @@ export function FilesPane({ initialTree, initialPath, initialFile }: Props) {
                         <FileText size={12} strokeWidth={2} className="opacity-70" />
                         <span className="truncate">{f.name}</span>
                         <span
-                          className={`ml-auto text-[10.5px] font-sans ${
+                          className={`ml-auto text-2xs font-sans ${
                             sel ? "text-accent" : "text-text-faint"
                           }`}
                         >
@@ -167,12 +167,12 @@ export function FilesPane({ initialTree, initialPath, initialFile }: Props) {
 
       <section className="flex-1 min-w-0 min-h-0 bg-white flex flex-col relative">
         {!file ? (
-          <div className="flex-1 grid place-items-center text-text-faint text-[13px] p-10 text-center">
+          <div className="flex-1 grid place-items-center text-text-faint text-base p-10 text-center">
             <div>
               <div className="w-16 h-16 rounded-full bg-surface mx-auto mb-4 grid place-items-center">
                 <FileText size={26} strokeWidth={1.6} />
               </div>
-              <div className="font-semibold text-text mb-1.5 text-[15px]">
+              <div className="font-semibold text-text mb-1.5 text-lg">
                 파일을 선택하세요
               </div>
               <div className="max-w-[280px] mx-auto leading-relaxed">
@@ -193,7 +193,7 @@ export function FilesPane({ initialTree, initialPath, initialFile }: Props) {
                       setTimeout(() => setCopied(false), 1400);
                     } catch {}
                   }}
-                  className="group flex items-center gap-2 text-[12.5px] text-text font-mono hover:text-accent transition-colors"
+                  className="group flex items-center gap-2 text-sm text-text font-mono hover:text-accent transition-colors"
                   title="경로 복사"
                 >
                   <FileText size={13} strokeWidth={2} className="text-text-soft" />
@@ -204,7 +204,7 @@ export function FilesPane({ initialTree, initialPath, initialFile }: Props) {
                     <Copy size={13} strokeWidth={2} className="opacity-0 group-hover:opacity-70" />
                   )}
                 </button>
-                <div className="ml-auto flex items-center gap-3 text-[11.5px] text-text-faint font-mono">
+                <div className="ml-auto flex items-center gap-3 text-xs text-text-faint font-mono">
                   <span>{file.size.toLocaleString()} B</span>
                   <span>·</span>
                   <span>{new Date(file.mtime).toLocaleString("ko-KR")}</span>
@@ -213,12 +213,12 @@ export function FilesPane({ initialTree, initialPath, initialFile }: Props) {
             </div>
 
             <div className="flex-1 overflow-auto bg-surface-2">
-              <pre className="p-6 text-[12.5px] leading-[1.65] font-mono text-text whitespace-pre">
+              <pre className="p-6 text-sm leading-[1.65] font-mono text-text whitespace-pre">
                 {numberedLines(file.raw)}
               </pre>
             </div>
             {loading && (
-              <div className="absolute top-3 right-3 text-[11px] text-text-faint bg-white px-2 py-1 rounded border border-border">
+              <div className="absolute top-3 right-3 text-xs text-text-faint bg-white px-2 py-1 rounded border border-border">
                 로딩 중…
               </div>
             )}

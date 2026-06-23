@@ -488,7 +488,7 @@ export function FileTable({
         />
       ) : (
         <div className="bg-white rounded-md overflow-x-auto">
-          <table className="w-full min-w-[680px] text-[13.5px]">
+          <table className="w-full min-w-[680px] text-base">
             <thead>
               <tr className="border-b border-border">
                 <th className="px-3 py-2.5 w-[36px]">
@@ -520,19 +520,19 @@ export function FileTable({
                     />
                   )}
                 </th>
-                <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider">
+                <th className="text-left px-4 py-2.5 font-semibold text-xs text-text-soft uppercase tracking-wider">
                   이름
                 </th>
-                <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider w-[120px]">
+                <th className="text-left px-4 py-2.5 font-semibold text-xs text-text-soft uppercase tracking-wider w-[120px]">
                   업로더
                 </th>
-                <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider w-[140px]">
+                <th className="text-left px-4 py-2.5 font-semibold text-xs text-text-soft uppercase tracking-wider w-[140px]">
                   수정일
                 </th>
-                <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider w-[100px]">
+                <th className="text-left px-4 py-2.5 font-semibold text-xs text-text-soft uppercase tracking-wider w-[100px]">
                   크기
                 </th>
-                <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider w-[170px]">
+                <th className="text-left px-4 py-2.5 font-semibold text-xs text-text-soft uppercase tracking-wider w-[170px]">
                   작업
                 </th>
               </tr>

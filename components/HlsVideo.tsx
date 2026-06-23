@@ -165,7 +165,7 @@ export function HlsVideo({
   }, [shareToken, filePath, manifestUrl]);
 
   const badge = encoding && (
-    <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-amber-500/90 text-black px-2.5 py-1 rounded text-[11px] font-bold inline-flex items-center gap-1.5 z-10">
+    <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-amber-500/90 text-black px-2.5 py-1 rounded text-xs font-bold inline-flex items-center gap-1.5 z-10">
       <span className="inline-block w-2 h-2 rounded-full bg-amber-200 animate-pulse" />
       스트리밍 최적화 중 {encoding.progress}%
     </div>

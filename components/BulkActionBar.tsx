@@ -137,30 +137,30 @@ export function BulkActionBar({
         >
           <X size={15} strokeWidth={2.2} />
         </button>
-        <span className="text-[13px] font-semibold text-text">
+        <span className="text-base font-semibold text-text">
           {selected.length}개 선택
         </span>
         {totalBytes > 0 && (
-          <span className="text-[12px] text-text-soft">
+          <span className="text-sm text-text-soft">
             · {formatSize(totalBytes)}
           </span>
         )}
         <div className="flex-1" />
         <button
           onClick={onDownload}
-          className="px-3 py-1.5 rounded-md bg-white border border-border hover:border-border-hover text-text text-[12.5px] font-semibold inline-flex items-center gap-1.5"
+          className="px-3 py-1.5 rounded-md bg-white border border-border hover:border-border-hover text-text text-sm font-semibold inline-flex items-center gap-1.5"
         >
           <Download size={13} strokeWidth={2.2} /> ZIP 다운
         </button>
         <button
           onClick={() => setMoveOpen(true)}
-          className="px-3 py-1.5 rounded-md bg-white border border-border hover:border-border-hover text-text text-[12.5px] font-semibold inline-flex items-center gap-1.5"
+          className="px-3 py-1.5 rounded-md bg-white border border-border hover:border-border-hover text-text text-sm font-semibold inline-flex items-center gap-1.5"
         >
           <MoveRight size={13} strokeWidth={2.2} /> 이동
         </button>
         <button
           onClick={onDelete}
-          className="px-3 py-1.5 rounded-md bg-white border border-border hover:border-danger text-danger hover:bg-danger-soft text-[12.5px] font-semibold inline-flex items-center gap-1.5"
+          className="px-3 py-1.5 rounded-md bg-white border border-border hover:border-danger text-danger hover:bg-danger-soft text-sm font-semibold inline-flex items-center gap-1.5"
         >
           <Trash2 size={13} strokeWidth={2.2} /> 삭제
         </button>

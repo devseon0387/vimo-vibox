@@ -152,7 +152,7 @@ export function LibraryClient({
 
   return (
     <div className="px-4 md:px-8 py-4 md:py-6 max-w-[1400px]">
-      <div className="flex items-center gap-1.5 text-[12.5px] text-slate-500 mb-3 overflow-x-auto">
+      <div className="flex items-center gap-1.5 text-sm text-slate-500 mb-3 overflow-x-auto">
         <BookOpen size={14} className="text-slate-400 shrink-0" strokeWidth={2} />
         <Link
           href="/vimo-box/library"
@@ -187,10 +187,10 @@ export function LibraryClient({
 
       <div className="flex items-start md:items-center justify-between gap-3 flex-col md:flex-row mb-4">
         <div>
-          <h1 className="text-[22px] font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-slate-900">
             {segments.length === 0 ? "자료실" : segments[segments.length - 1]}
           </h1>
-          <div className="text-[11.5px] text-slate-400 mt-0.5">
+          <div className="text-xs text-slate-400 mt-0.5">
             팀 공용 레퍼런스·템플릿·자산
             {!isStaff && " · 읽기 전용"}
           </div>
@@ -200,14 +200,14 @@ export function LibraryClient({
           <div className="flex items-center gap-2">
             <button
               onClick={onNewFolder}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50"
             >
               <FolderPlus size={13} strokeWidth={2.2} />
               새 폴더
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-700"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-700"
             >
               <UploadIcon size={13} strokeWidth={2.3} />
               업로드
@@ -225,7 +225,7 @@ export function LibraryClient({
 
       {uploading && (
         <div className="mb-4 bg-sky-50 border border-sky-200 rounded-lg px-4 py-3">
-          <div className="flex items-center justify-between text-[12px] mb-1.5">
+          <div className="flex items-center justify-between text-sm mb-1.5">
             <span className="text-sky-900 font-semibold inline-flex items-center gap-1.5">
               <Loader2 size={14} className="animate-spin" strokeWidth={2.3} />
               업로드 중 · {formatBytes(uploading.sent)} /{" "}
@@ -245,7 +245,7 @@ export function LibraryClient({
       )}
 
       {loading ? (
-        <div className="bg-white border border-slate-200 rounded-lg p-12 text-center text-[13px] text-slate-400">
+        <div className="bg-white border border-slate-200 rounded-lg p-12 text-center text-base text-slate-400">
           불러오는 중…
         </div>
       ) : entries.length === 0 ? (
@@ -255,10 +255,10 @@ export function LibraryClient({
             className="text-slate-300 mx-auto mb-3"
             strokeWidth={1.5}
           />
-          <div className="text-[14px] text-slate-500 mb-1">
+          <div className="text-md text-slate-500 mb-1">
             아직 자료가 없어요
           </div>
-          <div className="text-[12px] text-slate-400">
+          <div className="text-sm text-slate-400">
             {isStaff
               ? "레퍼런스·템플릿·브랜드 자산을 올려봐요"
               : "팀에서 자료가 추가되면 여기에 보여요"}
@@ -266,7 +266,7 @@ export function LibraryClient({
         </div>
       ) : (
         <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-          <table className="w-full text-[13px]">
+          <table className="w-full text-base">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="px-4 py-2.5 text-left font-semibold text-slate-700">

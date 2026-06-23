@@ -145,15 +145,15 @@ export function TrashView({
     <>
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-[22px] font-bold">휴지통</h1>
-          <p className="text-[12.5px] text-text-faint mt-1">
+          <h1 className="text-2xl font-bold">휴지통</h1>
+          <p className="text-sm text-text-faint mt-1">
             삭제한 파일은 30일 뒤 자동으로 영구 삭제됩니다
           </p>
         </div>
         {isAdmin && items.length > 0 && (
           <button
             onClick={onEmptyAll}
-            className="text-[13px] font-semibold text-danger hover:bg-danger-soft px-3 py-1.5 rounded-md border border-[#fee2e2] flex items-center gap-1.5"
+            className="text-base font-semibold text-danger hover:bg-danger-soft px-3 py-1.5 rounded-md border border-[#fee2e2] flex items-center gap-1.5"
           >
             <Trash2 size={14} strokeWidth={2} />
             전부 비우기
@@ -164,29 +164,29 @@ export function TrashView({
       {items.length === 0 ? (
         <div className="border border-dashed border-border rounded-lg p-12 text-center">
           <Trash2 size={32} className="mx-auto text-text-faint mb-3" strokeWidth={1.5} />
-          <div className="text-[14px] text-text-muted">휴지통이 비어 있어요</div>
+          <div className="text-md text-text-muted">휴지통이 비어 있어요</div>
         </div>
       ) : (
         <div className="border border-border rounded-lg overflow-x-auto bg-white">
-          <table className="w-full min-w-[780px] text-[13px]">
+          <table className="w-full min-w-[780px] text-base">
             <thead className="bg-surface border-b border-border">
               <tr>
-                <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider">
+                <th className="text-left px-4 py-2.5 font-semibold text-xs text-text-soft uppercase tracking-wider">
                   이름
                 </th>
-                <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider w-[200px]">
+                <th className="text-left px-4 py-2.5 font-semibold text-xs text-text-soft uppercase tracking-wider w-[200px]">
                   원래 위치
                 </th>
-                <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider w-[130px]">
+                <th className="text-left px-4 py-2.5 font-semibold text-xs text-text-soft uppercase tracking-wider w-[130px]">
                   지운 사람
                 </th>
-                <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider w-[140px]">
+                <th className="text-left px-4 py-2.5 font-semibold text-xs text-text-soft uppercase tracking-wider w-[140px]">
                   지운 날짜
                 </th>
-                <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider w-[90px]">
+                <th className="text-left px-4 py-2.5 font-semibold text-xs text-text-soft uppercase tracking-wider w-[90px]">
                   크기
                 </th>
-                <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider w-[130px]">
+                <th className="text-left px-4 py-2.5 font-semibold text-xs text-text-soft uppercase tracking-wider w-[130px]">
                   작업
                 </th>
               </tr>
@@ -208,14 +208,14 @@ export function TrashView({
                         <span className="text-text truncate">{item.name}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-2.5 text-text-faint text-[12px] truncate">
+                    <td className="px-4 py-2.5 text-text-faint text-sm truncate">
                       {parentPath}
                     </td>
                     <td className="px-4 py-2.5 text-text-soft truncate">{item.deletedByName}</td>
                     <td className="px-4 py-2.5 text-text-soft">
                       <div>{formatDeletedAt(item.deletedAt)}</div>
                       {remaining <= 7 && (
-                        <div className="text-[11px] text-warning flex items-center gap-1 mt-0.5">
+                        <div className="text-xs text-warning flex items-center gap-1 mt-0.5">
                           <AlertCircle size={11} />
                           {remaining}일 뒤 영구삭제
                         </div>

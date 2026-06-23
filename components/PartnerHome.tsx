@@ -104,14 +104,14 @@ function Hero({ f }: { f: MyRecentFile }) {
             <Play size={20} strokeWidth={1} className="text-neutral-900 ml-0.5" fill="currentColor" />
           </span>
           {ver && (
-            <span className="absolute left-2.5 bottom-2.5 text-[10px] font-extrabold px-2 py-0.5 rounded-md" style={{ background: "var(--accent-soft)", color: "#c8430a" }}>{ver}</span>
+            <span className="absolute left-2.5 bottom-2.5 text-2xs font-extrabold px-2 py-0.5 rounded-md" style={{ background: "var(--accent-soft)", color: "#c8430a" }}>{ver}</span>
           )}
         </Link>
         <div className="flex-1 min-w-0 p-4 flex flex-col">
-          <div className="flex items-center gap-1.5 text-[12px] font-extrabold mb-2">
+          <div className="flex items-center gap-1.5 text-sm font-extrabold mb-2">
             <History size={15} strokeWidth={2.2} style={{ color: "var(--accent)" }} /> 가장 최근 영상
           </div>
-          <div className="flex items-center gap-1.5 text-[11.5px] text-text-faint mb-1.5">
+          <div className="flex items-center gap-1.5 text-xs text-text-faint mb-1.5">
             {isTeam ? (
               <>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -126,25 +126,25 @@ function Hero({ f }: { f: MyRecentFile }) {
             )}
             <span>· {formatRelative(f.uploadedAt)} 업로드</span>
           </div>
-          <h2 className="text-[17px] font-extrabold tracking-tight flex items-center gap-2 min-w-0">
+          <h2 className="text-xl font-extrabold tracking-tight flex items-center gap-2 min-w-0">
             <span className="truncate">{f.filename}</span>
-            {ver && <span className="flex-none text-[11px] font-extrabold px-1.5 py-0.5 rounded-md" style={{ background: "var(--accent-soft)", color: "var(--team-dark)", border: "1px solid #fbd9c4" }}>{ver}</span>}
+            {ver && <span className="flex-none text-xs font-extrabold px-1.5 py-0.5 rounded-md" style={{ background: "var(--accent-soft)", color: "var(--team-dark)", border: "1px solid #fbd9c4" }}>{ver}</span>}
           </h2>
           {isTeam && s && (
             <div className="mt-2.5">
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold" style={{ background: s.bg, color: s.color }}>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold" style={{ background: s.bg, color: s.color }}>
                 {SIcon && <SIcon size={12} strokeWidth={2.4} />} {s.label}
               </span>
             </div>
           )}
           <div className="mt-auto pt-4 flex items-center gap-2 flex-wrap">
-            <Link href={uploadHref} className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-white px-3.5 py-2 rounded-lg" style={{ background: "var(--accent)" }}>
+            <Link href={uploadHref} className="inline-flex items-center gap-1.5 text-sm font-semibold text-white px-3.5 py-2 rounded-lg" style={{ background: "var(--accent)" }}>
               <Upload size={15} strokeWidth={2.2} /> 새 버전 올리기
             </Link>
-            <Link href={fileHref} className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold px-3.5 py-2 rounded-lg border border-border hover:bg-surface-2 transition-colors">
+            <Link href={fileHref} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-lg border border-border hover:bg-surface-2 transition-colors">
               <MessageSquare size={15} strokeWidth={2.1} /> 코멘트 보기
             </Link>
-            <Link href={fileHref} className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold px-3.5 py-2 rounded-lg border border-border hover:bg-surface-2 transition-colors">
+            <Link href={fileHref} className="inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-lg border border-border hover:bg-surface-2 transition-colors">
               <Share2 size={15} strokeWidth={2.1} /> 공유
             </Link>
           </div>
@@ -202,8 +202,8 @@ function FavCard({ f, hrefOf, onToggle }: { f: MyRecentFile; hrefOf: (f: MyRecen
     >
       <FavIcon f={f} />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[12px] font-bold pr-[15px]">{f.filename}</span>
-        <span className="block text-[10.5px]" style={{ color: "var(--faint)" }}>
+        <span className="block truncate text-sm font-bold pr-[15px]">{f.filename}</span>
+        <span className="block text-2xs" style={{ color: "var(--faint)" }}>
           {kindLabel(f.filename)} · {subRight}
         </span>
       </span>
@@ -279,7 +279,7 @@ function DriveRow({
             <span className="t block truncate font-semibold group-hover:underline" style={{ fontSize: "12.5px" }}>
               {f.filename}
             </span>
-            <span className="sub flex items-center gap-1 truncate text-[10.5px]" style={{ color: "var(--faint)" }}>
+            <span className="sub flex items-center gap-1 truncate text-2xs" style={{ color: "var(--faint)" }}>
               <span className="truncate">{kindLabel(f.filename)}</span>
               {s && <span className="truncate">· {s.label}</span>}
               {f.hasShareLink && (
@@ -390,8 +390,8 @@ function GridCard({
       </button>
       {/* 메타 */}
       <div className="gmeta flex items-center gap-1.5" style={{ padding: "9px 11px" }}>
-        <span className="gn truncate flex-1 text-[12px] font-bold">{f.filename}</span>
-        <span className="gc text-[10.5px]" style={{ color: "var(--faint)" }}>{kindLabel(f.filename)}</span>
+        <span className="gn truncate flex-1 text-sm font-bold">{f.filename}</span>
+        <span className="gc text-2xs" style={{ color: "var(--faint)" }}>{kindLabel(f.filename)}</span>
         <button type="button" aria-label="더보기" onClick={(e) => e.preventDefault()}
           className="more-b grid place-items-center" style={{ color: "var(--faint)" }}>
           <Ellipsis size={15} />
@@ -601,12 +601,12 @@ export function PartnerHome({
     <div className="min-h-full bg-surface-2">
       {/* 툴바 */}
       <div className="bg-white border-b border-border px-4 md:px-8 py-3 flex items-center gap-3">
-        <h1 className="text-[15.5px] font-bold truncate">안녕하세요{userName ? `, ${userName}님` : ""}</h1>
+        <h1 className="text-lg font-bold truncate">안녕하세요{userName ? `, ${userName}님` : ""}</h1>
         <div className="ml-auto flex items-center gap-2">
-          <Link href="/?focus=search" className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-2 text-text-faint text-[12.5px] hover:bg-hover transition-colors">
+          <Link href="/?focus=search" className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-2 text-text-faint text-sm hover:bg-hover transition-colors">
             <Search size={14} strokeWidth={2} /> 검색
           </Link>
-          <Link href="/team?upload=1" className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-white px-3.5 py-2 rounded-lg" style={{ background: "var(--accent)" }}>
+          <Link href="/team?upload=1" className="inline-flex items-center gap-1.5 text-sm font-semibold text-white px-3.5 py-2 rounded-lg" style={{ background: "var(--accent)" }}>
             <Upload size={15} strokeWidth={2.2} /> 업로드
           </Link>
         </div>
@@ -617,10 +617,10 @@ export function PartnerHome({
 
         {/* My box 헤더 + 리스트/그리드 토글 */}
         <div>
-          <div className="mbhead flex items-center flex-wrap gap-[9px] mt-[26px] mb-3.5 mx-0.5 text-[13.5px] font-extrabold">
+          <div className="mbhead flex items-center flex-wrap gap-[9px] mt-[26px] mb-3.5 mx-0.5 text-base font-extrabold">
             <HardDrive size={17} strokeWidth={2.2} style={{ color: "var(--mybox)" }} />
             My box
-            <span className="sum font-medium text-[11.5px]" style={{ color: "var(--faint)" }}>
+            <span className="sum font-medium text-xs" style={{ color: "var(--faint)" }}>
               파일 {cnt.f} · 폴더 {cnt.d}
             </span>
             <div className="right ml-auto flex items-center gap-[7px]">
@@ -628,7 +628,7 @@ export function PartnerHome({
                 <button
                   type="button"
                   onClick={() => setView("list")}
-                  className={`px-2 py-[5px] flex items-center gap-1 text-[11px] font-semibold ${view === "list" ? "on" : ""}`}
+                  className={`px-2 py-[5px] flex items-center gap-1 text-xs font-semibold ${view === "list" ? "on" : ""}`}
                   style={view === "list" ? { background: "#ececec", color: "var(--ink)" } : { background: "#fff", color: "var(--faint)" }}
                 >
                   <ListIcon size={13} /> 리스트
@@ -636,7 +636,7 @@ export function PartnerHome({
                 <button
                   type="button"
                   onClick={() => setView("grid")}
-                  className={`px-2 py-[5px] flex items-center gap-1 text-[11px] font-semibold ${view === "grid" ? "on" : ""}`}
+                  className={`px-2 py-[5px] flex items-center gap-1 text-xs font-semibold ${view === "grid" ? "on" : ""}`}
                   style={view === "grid" ? { background: "#ececec", color: "var(--ink)" } : { background: "#fff", color: "var(--faint)" }}
                 >
                   <LayoutGrid size={13} /> 그리드
@@ -644,7 +644,7 @@ export function PartnerHome({
               </div>
               <Link
                 href="/my/box?upload=1"
-                className="mbup inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-white rounded-lg px-3 py-1.5"
+                className="mbup inline-flex items-center gap-1.5 text-xs font-semibold text-white rounded-lg px-3 py-1.5"
                 style={{ background: "var(--ink)" }}
               >
                 <Upload size={13} strokeWidth={2.3} /> 올리기
@@ -655,7 +655,7 @@ export function PartnerHome({
           {/* 즐겨찾기 카드 행 — 루트에서만 */}
           {favFiles.length > 0 ? (
             <>
-              <div className="sublbl flex items-center gap-1.5 mb-2.5 mx-0.5 text-[11.5px] font-bold" style={{ color: "var(--text-soft)" }}>
+              <div className="sublbl flex items-center gap-1.5 mb-2.5 mx-0.5 text-xs font-bold" style={{ color: "var(--text-soft)" }}>
                 <Star size={13} className="fill-accent text-accent" /> 즐겨찾기
               </div>
               <div className="fcards grid grid-cols-2 sm:grid-cols-4 gap-[11px] mb-[22px]">
@@ -663,7 +663,7 @@ export function PartnerHome({
               </div>
             </>
           ) : (
-            <div className="sublbl flex items-center gap-1.5 mb-2.5 mx-0.5 text-[11.5px] font-bold" style={{ color: "var(--text-soft)" }}>
+            <div className="sublbl flex items-center gap-1.5 mb-2.5 mx-0.5 text-xs font-bold" style={{ color: "var(--text-soft)" }}>
               <Star size={13} className="fill-accent text-accent" /> 즐겨찾기
               <span className="hint font-medium" style={{ color: "var(--faint)" }}>— 아래 파일의 별을 눌러 자주 쓰는 항목을 고정하세요</span>
             </div>
@@ -672,7 +672,7 @@ export function PartnerHome({
           {/* 전체 파일 — 리스트/그리드 */}
           {rest.length === 0 ? (
             <section className="dlist bg-white overflow-hidden" style={{ border: "1px solid var(--line2)", borderRadius: 12 }}>
-              <p className="text-[12.5px] py-8 text-center" style={{ color: "var(--faint)" }}>보관함이 비어 있어요</p>
+              <p className="text-sm py-8 text-center" style={{ color: "var(--faint)" }}>보관함이 비어 있어요</p>
             </section>
           ) : view === "list" ? (
             <section className="dlist bg-white overflow-hidden" style={{ border: "1px solid var(--line2)", borderRadius: 12 }}>
@@ -713,7 +713,7 @@ export function PartnerHome({
 
           {/* 저장 공간 */}
           <div className="pt-2.5 pb-1 mt-3" style={{ borderTop: "1px solid var(--hair)" }}>
-            <div className="flex items-center justify-between text-[10.5px] mb-1" style={{ color: "var(--faint)" }}>
+            <div className="flex items-center justify-between text-2xs mb-1" style={{ color: "var(--faint)" }}>
               <span>저장 공간</span>
               <span className="tabular-nums">{formatBytes(personalSummary.usedBytes)} / {formatBytes(personalSummary.quotaBytes)}</span>
             </div>

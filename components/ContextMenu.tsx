@@ -124,7 +124,7 @@ export function ContextMenu({
         transformOrigin: "top left",
         animation: "ctxmenu-in 100ms cubic-bezier(0.16, 1, 0.3, 1) both",
       }}
-      className="bg-white border border-border rounded-lg p-1 shadow-[0_6px_18px_rgba(0,0,0,0.10)] min-w-[180px] text-[12.5px] select-none"
+      className="bg-white border border-border rounded-lg p-1 shadow-[0_6px_18px_rgba(0,0,0,0.10)] min-w-[180px] text-sm select-none"
       role="menu"
       onContextMenu={(e) => e.preventDefault()}
     >
@@ -160,7 +160,7 @@ export function ContextMenu({
           >
             <span>{it.label}</span>
             {it.shortcut && (
-              <span className="text-text-faint text-[11px] font-mono shrink-0">
+              <span className="text-text-faint text-xs font-mono shrink-0">
                 {it.shortcut}
               </span>
             )}

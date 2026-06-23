@@ -146,8 +146,8 @@ export function MoveDialog({
       maxWidth="max-w-md"
     >
       <div className="p-5">
-        <div className="text-[12px] text-text-faint mb-2">대상 폴더</div>
-        <div className="flex items-center gap-1 text-[13px] mb-3 flex-wrap">
+        <div className="text-sm text-text-faint mb-2">대상 폴더</div>
+        <div className="flex items-center gap-1 text-base mb-3 flex-wrap">
           <button
             onClick={() => setPath(rootPath)}
             className="hover:text-accent text-text-muted transition-colors"
@@ -178,17 +178,17 @@ export function MoveDialog({
           {path !== rootPath && (
             <button
               onClick={() => setPath(parentFull)}
-              className="w-full flex items-center gap-2 px-4 py-2 text-[13px] text-text-muted hover:bg-white border-b border-border"
+              className="w-full flex items-center gap-2 px-4 py-2 text-base text-text-muted hover:bg-white border-b border-border"
             >
               <ArrowLeft size={13} />
               상위 폴더로
             </button>
           )}
           {loading && (
-            <div className="p-4 text-[12.5px] text-text-faint">불러오는 중...</div>
+            <div className="p-4 text-sm text-text-faint">불러오는 중...</div>
           )}
           {!loading && folders.length === 0 && (
-            <div className="p-6 text-center text-[12.5px] text-text-faint">
+            <div className="p-6 text-center text-sm text-text-faint">
               여기엔 폴더가 없습니다
               {path === rootPath && " (현재 위치에 이동)"}
             </div>
@@ -197,7 +197,7 @@ export function MoveDialog({
             <button
               key={f.path}
               onClick={() => setPath(f.path)}
-              className="w-full flex items-center gap-2 px-4 py-2 text-[13.5px] text-text hover:bg-white border-b border-[#f5f5f5]"
+              className="w-full flex items-center gap-2 px-4 py-2 text-base text-text hover:bg-white border-b border-[#f5f5f5]"
             >
               <Folder size={14} className="text-accent" strokeWidth={2} />
               <span className="flex-1 text-left">{f.name}</span>
@@ -206,21 +206,21 @@ export function MoveDialog({
           ))}
         </div>
 
-        <div className="text-[12px] text-text-soft mb-4">
+        <div className="text-sm text-text-soft mb-4">
           이동 대상: <span className="font-mono text-text">{relPath}</span>
         </div>
 
         <div className="flex gap-2">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 text-[13.5px] font-medium text-text-muted hover:text-text hover:bg-hover rounded-md transition-colors"
+            className="flex-1 px-4 py-2 text-base font-medium text-text-muted hover:text-text hover:bg-hover rounded-md transition-colors"
           >
             취소
           </button>
           <button
             onClick={doMove}
             disabled={moving || targetSame}
-            className="flex-1 bg-text text-white hover:bg-[#333] disabled:opacity-60 disabled:cursor-not-allowed py-2 rounded-md text-[13.5px] font-semibold"
+            className="flex-1 bg-text text-white hover:bg-[#333] disabled:opacity-60 disabled:cursor-not-allowed py-2 rounded-md text-base font-semibold"
           >
             {moving ? "이동 중..." : targetSame ? "현재 폴더" : "여기로 이동"}
           </button>

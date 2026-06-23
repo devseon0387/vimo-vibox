@@ -13,8 +13,8 @@ export default async function AdminActivityPage() {
   const entries = await getRecentActivity(150);
   return (
     <div className="px-8 py-6 max-w-[1100px]">
-      <h1 className="text-[22px] font-extrabold mb-1">활동 로그</h1>
-      <p className="text-[13px] text-text-soft mb-6">
+      <h1 className="text-2xl font-extrabold mb-1">활동 로그</h1>
+      <p className="text-base text-text-soft mb-6">
         업로드, 공유 링크 생성, 다운로드를 시간순으로 통합 표시합니다.
       </p>
       <ActivityFeed entries={entries} />

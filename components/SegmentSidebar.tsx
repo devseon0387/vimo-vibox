@@ -108,7 +108,7 @@ export function SegmentSidebar({
           priority
           className="rounded"
         />
-        <span className="text-[17px] font-bold tracking-tight text-text">
+        <span className="text-xl font-bold tracking-tight text-text">
           vi<span className="text-accent">.box</span>
         </span>
       </Link>
@@ -150,7 +150,7 @@ export function SegmentSidebar({
                   />
                 )}
               </span>
-              <span className="text-[10.5px] font-medium tracking-tight leading-none">
+              <span className="text-2xs font-medium tracking-tight leading-none">
                 {s.label}
               </span>
             </Link>
@@ -162,7 +162,7 @@ export function SegmentSidebar({
       {cta && (
         <Link
           href={cta.href}
-          className="mx-3 mb-2 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-white text-[13px] font-semibold hover:opacity-90 transition-opacity"
+          className="mx-3 mb-2 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-white text-base font-semibold hover:opacity-90 transition-opacity"
           style={{ background: cta.color }}
         >
           <Upload size={14} strokeWidth={2.4} />
@@ -177,14 +177,14 @@ export function SegmentSidebar({
 
       {/* 하단: 유저 · 관리(admin) · 로그아웃 */}
       <div className="mt-auto border-t border-[#f0ece9] px-3 py-2.5 flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-[#C8430A] text-white grid place-items-center text-[12px] font-bold shrink-0">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-[#C8430A] text-white grid place-items-center text-sm font-bold shrink-0">
           {initials}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[13px] font-semibold text-text truncate">
+          <div className="text-base font-semibold text-text truncate">
             {name}
           </div>
-          <div className="text-[11px] text-text-faint truncate">{subtitle}</div>
+          <div className="text-xs text-text-faint truncate">{subtitle}</div>
         </div>
         {isAdmin && (
           <Link

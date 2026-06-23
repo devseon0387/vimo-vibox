@@ -15,31 +15,31 @@ export function InboxCard({ items }: { items: InboxItem[] }) {
   return (
     <div className="border border-border rounded-xl p-4" style={{ background: "linear-gradient(to right, #fff, #fafafa)" }}>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[13.5px] font-bold flex items-center gap-2">
+        <h3 className="text-base font-bold flex items-center gap-2">
           <Inbox size={16} strokeWidth={2.2} className="text-text-soft" />
           받은편지함
           <span
-            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold tracking-tight"
+            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-bold tracking-tight"
             style={{ background: "var(--team-soft)", color: "var(--team-dark)" }}
           >
             <Users size={10} strokeWidth={2.4} />
             비모
           </span>
-          <span className="text-[11px] font-medium text-text-faint">매니저</span>
+          <span className="text-xs font-medium text-text-faint">매니저</span>
         </h3>
         <Link
           href="/inbox"
-          className="text-[11px] text-text-soft hover:text-accent transition"
+          className="text-xs text-text-soft hover:text-accent transition"
         >
           모두 →
         </Link>
       </div>
       {items.length === 0 ? (
-        <div className="text-[12px] text-text-faint py-3 text-center">
+        <div className="text-sm text-text-faint py-3 text-center">
           검수 대기 영상 없음 — 깔끔!
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-[12px]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
           {items.map((it) => (
             <Link
               key={it.path}
@@ -51,7 +51,7 @@ export function InboxCard({ items }: { items: InboxItem[] }) {
                 <div className="truncate">
                   <strong>{it.uploadedByName}</strong> · {it.filename}
                 </div>
-                <div className="text-text-faint text-[10.5px]">{relativeTime(it.uploadedAt)}</div>
+                <div className="text-text-faint text-2xs">{relativeTime(it.uploadedAt)}</div>
               </div>
             </Link>
           ))}

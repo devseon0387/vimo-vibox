@@ -96,7 +96,7 @@ export function ShareFolderBrowser({
         <div className="w-full max-w-[420px] text-center flex flex-col items-center">
           <AlertTriangle size={44} className="text-amber-500 mb-4" strokeWidth={1.8} />
           <h1 className="text-[20px] font-bold mb-2 text-slate-900">링크가 만료되었습니다</h1>
-          <p className="text-[13.5px] text-slate-500">
+          <p className="text-base text-slate-500">
             파일을 공유한 분에게 새 링크를 요청하세요.
           </p>
         </div>
@@ -126,15 +126,15 @@ export function ShareFolderBrowser({
         <div className="flex items-center gap-3 px-4 py-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="" className="shrink-0 w-6 h-6 object-contain" />
-          <span className="shrink-0 text-[13px] font-extrabold tracking-tight text-slate-900">
+          <span className="shrink-0 text-base font-extrabold tracking-tight text-slate-900">
             vi<span className="text-accent">.</span>box
           </span>
           <div className="h-4 w-px bg-slate-200" />
-          <h1 className="text-[13px] font-semibold text-slate-700 truncate min-w-0 flex-1">
+          <h1 className="text-base font-semibold text-slate-700 truncate min-w-0 flex-1">
             {title}
           </h1>
         </div>
-        <div className="flex items-center gap-1 px-4 pb-2 text-[12px] text-slate-500 overflow-x-auto">
+        <div className="flex items-center gap-1 px-4 pb-2 text-sm text-slate-500 overflow-x-auto">
           <button
             onClick={() => setCwd(root)}
             className="hover:text-slate-900 shrink-0 font-medium"
@@ -161,9 +161,9 @@ export function ShareFolderBrowser({
 
       <div className="flex-1 px-3 md:px-4 py-3 max-w-[1100px] w-full mx-auto">
         {loading ? (
-          <div className="text-center text-[13px] text-slate-400 py-16">불러오는 중…</div>
+          <div className="text-center text-base text-slate-400 py-16">불러오는 중…</div>
         ) : sorted.length === 0 ? (
-          <div className="text-center text-[13px] text-slate-400 py-16">빈 폴더예요</div>
+          <div className="text-center text-base text-slate-400 py-16">빈 폴더예요</div>
         ) : (
           <ul className="grid gap-1">
             {sorted.map((e) => (
@@ -174,9 +174,9 @@ export function ShareFolderBrowser({
                     className="flex items-center gap-3 min-w-0 flex-1 text-left"
                   >
                     <KindIcon e={e} />
-                    <span className="truncate text-[13.5px] text-slate-800">{e.name}</span>
+                    <span className="truncate text-base text-slate-800">{e.name}</span>
                     {!e.isFolder && e.size > 0 && (
-                      <span className="ml-auto text-[11px] text-slate-400 shrink-0">
+                      <span className="ml-auto text-xs text-slate-400 shrink-0">
                         {fmtSize(e.size)}
                       </span>
                     )}
@@ -241,7 +241,7 @@ function FileViewer({
         className="flex items-center gap-3 px-4 py-2.5 text-white"
         onClick={(e) => e.stopPropagation()}
       >
-        <span className="text-[13px] font-medium truncate flex-1">{entry.name}</span>
+        <span className="text-base font-medium truncate flex-1">{entry.name}</span>
         {allowDownload && (
           <a
             href={`${url}&download=1`}
@@ -293,12 +293,12 @@ function FileViewer({
         )}
         {!["video", "image", "audio"].includes(entry.kind) && !isPdf && (
           <div className="bg-white p-12 text-center rounded-xl">
-            <div className="text-[13.5px] text-slate-600 mb-3">이 파일은 미리볼 수 없어요</div>
+            <div className="text-base text-slate-600 mb-3">이 파일은 미리볼 수 없어요</div>
             {allowDownload && (
               <a
                 href={`${url}&download=1`}
                 download
-                className="inline-flex items-center gap-1.5 bg-slate-900 text-white px-3 py-1.5 rounded-md text-[12px] font-semibold"
+                className="inline-flex items-center gap-1.5 bg-slate-900 text-white px-3 py-1.5 rounded-md text-sm font-semibold"
               >
                 <Download size={14} /> 다운로드
               </a>

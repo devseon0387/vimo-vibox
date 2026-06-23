@@ -11,8 +11,8 @@ export default async function AdminIntegrationsPage() {
 
   return (
     <div className="px-8 py-6 max-w-[900px]">
-      <h1 className="text-[22px] font-extrabold mb-1">SEON Hub 연동</h1>
-      <p className="text-[13px] text-text-soft mb-6">
+      <h1 className="text-2xl font-extrabold mb-1">SEON Hub 연동</h1>
+      <p className="text-base text-text-soft mb-6">
         SEON Hub와 비박스 사이의 노트 동기화 상태를 확인하고 설정합니다.
       </p>
 
@@ -22,8 +22,8 @@ export default async function AdminIntegrationsPage() {
             <Plug size={18} strokeWidth={2} />
           </div>
           <div className="flex-1">
-            <div className="text-[15px] font-bold text-text">SEON Hub</div>
-            <div className="text-[12px] text-text-faint">
+            <div className="text-lg font-bold text-text">SEON Hub</div>
+            <div className="text-sm text-text-faint">
               MD 노트 리더기 — 비박스가 storage backend
             </div>
           </div>
@@ -32,12 +32,12 @@ export default async function AdminIntegrationsPage() {
               href={`${process.env.NEXT_PUBLIC_SEON_HUB_URL}/notes`}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 h-9 rounded-md border border-border text-[12.5px] text-text-soft hover:bg-surface flex items-center gap-1.5"
+              className="px-3 h-9 rounded-md border border-border text-sm text-text-soft hover:bg-surface flex items-center gap-1.5"
             >
               <ExternalLink size={12} strokeWidth={2.2} /> 열기
             </a>
           ) : (
-            <span className="px-3 h-9 rounded-md border border-border text-[12.5px] text-text-faint flex items-center gap-1.5 italic">
+            <span className="px-3 h-9 rounded-md border border-border text-sm text-text-faint flex items-center gap-1.5 italic">
               URL 미설정
             </span>
           )}
@@ -56,10 +56,10 @@ export default async function AdminIntegrationsPage() {
       </div>
 
       <div className="mt-6 border border-border rounded-xl bg-surface px-6 py-5">
-        <div className="text-[13px] font-semibold text-text mb-2">
+        <div className="text-base font-semibold text-text mb-2">
           연동 활성화에 필요한 작업
         </div>
-        <ol className="text-[12.5px] text-text-soft leading-relaxed list-decimal pl-5 space-y-1">
+        <ol className="text-sm text-text-soft leading-relaxed list-decimal pl-5 space-y-1">
           <li>
             서비스 계정 JWT 발급 흐름 구현 (`/api/integration/upload`, `/file`,
             `/files`, `/shares` 등 6개 엔드포인트)
@@ -67,7 +67,7 @@ export default async function AdminIntegrationsPage() {
           <li>SEON Hub 측 클라이언트가 위 엔드포인트로 노트 push</li>
           <li>토큰 관리 UI (이 페이지에서 발급/회수)</li>
         </ol>
-        <div className="text-[11.5px] text-text-faint mt-3">
+        <div className="text-xs text-text-faint mt-3">
           현재는 비박스 자체 admin 세션으로만 노트 작업 가능. SEON Hub 작업 시작 시 구현 예정.
         </div>
       </div>
@@ -88,11 +88,11 @@ function Field({
 }) {
   return (
     <div>
-      <div className="text-[10.5px] uppercase tracking-widest text-text-faint font-semibold mb-1">
+      <div className="text-2xs uppercase tracking-widest text-text-faint font-semibold mb-1">
         {label}
       </div>
       <div
-        className={`text-[13px] ${mono ? "font-mono" : ""} ${
+        className={`text-base ${mono ? "font-mono" : ""} ${
           muted ? "text-text-faint" : "text-text"
         }`}
       >

@@ -146,7 +146,7 @@ export function TokensManager({
       )}
 
       <div className="flex items-center justify-between mb-4">
-        <div className="text-[13px] text-text-faint">
+        <div className="text-base text-text-faint">
           {tokens.filter((t) => !t.revokedAt).length}개 활성 · {tokens.length}개 전체
         </div>
         <button
@@ -154,7 +154,7 @@ export function TokensManager({
             setShowCreate((v) => !v);
             setError(null);
           }}
-          className="px-3 py-1.5 rounded-md text-[12.5px] font-semibold bg-accent text-white hover:bg-accent-hover flex items-center gap-1.5"
+          className="px-3 py-1.5 rounded-md text-sm font-semibold bg-accent text-white hover:bg-accent-hover flex items-center gap-1.5"
         >
           <Plus size={12} strokeWidth={2.4} /> 토큰 발급
         </button>
@@ -162,22 +162,22 @@ export function TokensManager({
 
       {showCreate && (
         <div className="border border-accent/30 bg-accent-soft rounded-xl p-5 mb-5">
-          <div className="text-[13px] font-bold text-accent mb-3">새 토큰 발급</div>
+          <div className="text-base font-bold text-accent mb-3">새 토큰 발급</div>
           <div className="space-y-3">
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-widest text-text-faint mb-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-widest text-text-faint mb-1.5">
                 이름
               </label>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="예: Claude — 맥북, iPhone Shortcut"
-                className="w-full px-3 py-2 rounded-md border border-border bg-white text-[13.5px] outline-none focus:border-accent"
+                className="w-full px-3 py-2 rounded-md border border-border bg-white text-base outline-none focus:border-accent"
                 autoFocus
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-widest text-text-faint mb-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-widest text-text-faint mb-1.5">
                 권한 scope
               </label>
               <div className="flex flex-col gap-1.5">
@@ -201,15 +201,15 @@ export function TokensManager({
                         }}
                         className="accent-accent"
                       />
-                      <code className="text-[12px] font-mono text-accent">{s}</code>
-                      <span className="text-[12px] text-text-soft">{SCOPE_DESC[s]}</span>
+                      <code className="text-sm font-mono text-accent">{s}</code>
+                      <span className="text-sm text-text-soft">{SCOPE_DESC[s]}</span>
                     </label>
                   );
                 })}
               </div>
             </div>
             {error && (
-              <div className="text-[12px] text-danger bg-danger-soft px-3 py-2 rounded">
+              <div className="text-sm text-danger bg-danger-soft px-3 py-2 rounded">
                 {error}
               </div>
             )}
@@ -217,7 +217,7 @@ export function TokensManager({
               <button
                 onClick={onCreate}
                 disabled={creating}
-                className="px-4 py-1.5 rounded-md text-[12.5px] font-semibold bg-accent text-white hover:bg-accent-hover disabled:opacity-50"
+                className="px-4 py-1.5 rounded-md text-sm font-semibold bg-accent text-white hover:bg-accent-hover disabled:opacity-50"
               >
                 {creating ? "발급 중..." : "발급"}
               </button>
@@ -226,7 +226,7 @@ export function TokensManager({
                   setShowCreate(false);
                   setError(null);
                 }}
-                className="px-4 py-1.5 rounded-md text-[12.5px] text-text-soft border border-border bg-white hover:bg-surface"
+                className="px-4 py-1.5 rounded-md text-sm text-text-soft border border-border bg-white hover:bg-surface"
               >
                 취소
               </button>
@@ -240,8 +240,8 @@ export function TokensManager({
           <div className="w-14 h-14 rounded-full bg-surface mx-auto mb-4 grid place-items-center text-text-faint">
             <Key size={22} strokeWidth={1.6} />
           </div>
-          <div className="text-[15px] font-semibold text-text mb-1.5">토큰이 없습니다</div>
-          <div className="text-[13px] text-text-soft">
+          <div className="text-lg font-semibold text-text mb-1.5">토큰이 없습니다</div>
+          <div className="text-base text-text-soft">
             "토큰 발급"을 눌러 첫 토큰을 만들어 주세요.
           </div>
         </div>
@@ -276,20 +276,20 @@ function RevealedTokenBanner({
       <div className="flex items-start gap-3">
         <Shield size={18} className="text-accent shrink-0 mt-1" strokeWidth={2.2} />
         <div className="flex-1 min-w-0">
-          <div className="text-[14px] font-bold text-text mb-1">
+          <div className="text-md font-bold text-text mb-1">
             "{token.name}" 토큰이 발급됐습니다
           </div>
-          <div className="text-[12.5px] text-text-soft mb-3">
+          <div className="text-sm text-text-soft mb-3">
             아래 토큰은 <strong className="text-danger">지금 한 번만 표시</strong>됩니다.
             안전한 곳(맥북 환경변수 / 1Password 등)에 즉시 저장하세요.
           </div>
           <div className="flex items-center gap-2 mb-3">
-            <code className="flex-1 px-3 py-2 rounded-md bg-surface-2 text-[12.5px] font-mono break-all text-text">
+            <code className="flex-1 px-3 py-2 rounded-md bg-surface-2 text-sm font-mono break-all text-text">
               {raw}
             </code>
             <button
               onClick={onCopy}
-              className="px-3 h-9 rounded-md bg-accent text-white text-[12px] font-semibold hover:bg-accent-hover flex items-center gap-1.5 shrink-0"
+              className="px-3 h-9 rounded-md bg-accent text-white text-sm font-semibold hover:bg-accent-hover flex items-center gap-1.5 shrink-0"
             >
               {copied ? (
                 <>
@@ -302,13 +302,13 @@ function RevealedTokenBanner({
               )}
             </button>
           </div>
-          <div className="text-[11.5px] text-text-faint font-mono bg-surface px-3 py-2 rounded">
+          <div className="text-xs text-text-faint font-mono bg-surface px-3 py-2 rounded">
             export VIBOX_API_TOKEN={raw}
           </div>
         </div>
         <button
           onClick={onClose}
-          className="text-text-faint hover:text-text text-[12px] px-2 py-1"
+          className="text-text-faint hover:text-text text-sm px-2 py-1"
         >
           닫기
         </button>
@@ -332,26 +332,26 @@ function TokenRowItem({
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-[14px] font-bold text-text truncate">{token.name}</span>
+          <span className="text-md font-bold text-text truncate">{token.name}</span>
           {revoked && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-px rounded bg-danger-soft text-danger">
+            <span className="inline-flex items-center gap-1 text-2xs font-semibold px-1.5 py-px rounded bg-danger-soft text-danger">
               <AlertTriangle size={9} /> 회수됨
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3 text-[11.5px] text-text-faint">
+        <div className="flex items-center gap-3 text-xs text-text-faint">
           <code className="font-mono text-text-soft">{token.prefix}…</code>
           <span>·</span>
           <div className="flex gap-1">
             {token.scopes.map((s) => (
-              <span key={s} className="px-1.5 py-px rounded bg-surface text-[10.5px] font-mono text-text-soft">
+              <span key={s} className="px-1.5 py-px rounded bg-surface text-2xs font-mono text-text-soft">
                 {s}
               </span>
             ))}
           </div>
         </div>
       </div>
-      <div className="hidden md:flex flex-col items-end text-[11px] text-text-faint gap-0.5 shrink-0">
+      <div className="hidden md:flex flex-col items-end text-xs text-text-faint gap-0.5 shrink-0">
         <div className="flex items-center gap-1">
           <Clock size={10} />
           <span>최근: {token.lastUsedAt ? relativeTime(token.lastUsedAt) : "사용 안 됨"}</span>
@@ -374,8 +374,8 @@ function TokenRowItem({
 function UsageHint() {
   return (
     <div className="mt-6 border border-border rounded-xl bg-surface px-6 py-5">
-      <div className="text-[13px] font-semibold text-text mb-3">사용 예 — 노트 저장</div>
-      <pre className="text-[11.5px] font-mono leading-relaxed bg-white border border-border rounded-md p-4 overflow-x-auto">
+      <div className="text-base font-semibold text-text mb-3">사용 예 — 노트 저장</div>
+      <pre className="text-xs font-mono leading-relaxed bg-white border border-border rounded-md p-4 overflow-x-auto">
 {`curl -X POST https://vibox.cloud/api/notes/save \\
   -H "Authorization: Bearer $VIBOX_API_TOKEN" \\
   -H "Content-Type: application/json" \\
@@ -386,7 +386,7 @@ function UsageHint() {
     "content": "# 본문\\n\\n마크다운 본문..."
   }'`}
       </pre>
-      <div className="text-[11px] text-text-faint mt-3 leading-relaxed">
+      <div className="text-xs text-text-faint mt-3 leading-relaxed">
         성공 시 응답: <code className="font-mono text-accent">{"{ ok, id, path, url, created }"}</code>.
         Notes/{"<folder>"}/{"<slug>"}.md 형태로 외장 SSD에 저장됩니다.
         <br />

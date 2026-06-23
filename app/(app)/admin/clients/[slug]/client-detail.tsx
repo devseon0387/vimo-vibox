@@ -105,7 +105,7 @@ export function ClientDetail({ client }: { client: Client }) {
   return (
     <div className="px-4 md:px-8 py-4 md:py-6 max-w-[1100px]">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 text-[12.5px] text-text-muted mb-3">
+      <div className="flex items-center gap-1.5 text-sm text-text-muted mb-3">
         <Link
           href="/admin/clients"
           className="hover:text-text transition-colors inline-flex items-center gap-1"
@@ -120,12 +120,12 @@ export function ClientDetail({ client }: { client: Client }) {
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-[22px] font-bold mb-1">{client.name}</h1>
-          <div className="text-[12.5px] text-text-muted font-mono">
+          <h1 className="text-2xl font-bold mb-1">{client.name}</h1>
+          <div className="text-sm text-text-muted font-mono">
             /c/{client.slug}
           </div>
           {client.contactEmail && (
-            <div className="text-[12px] text-text-soft mt-1">
+            <div className="text-sm text-text-soft mt-1">
               {client.contactEmail}
             </div>
           )}
@@ -135,18 +135,18 @@ export function ClientDetail({ client }: { client: Client }) {
       {/* 영상 목록 */}
       <section>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-[14px] font-bold flex items-center gap-2">
+          <h2 className="text-md font-bold flex items-center gap-2">
             <FileVideo size={14} strokeWidth={2.2} />
             컬렉션 영상
             {videos && (
-              <span className="text-[11.5px] font-semibold text-accent bg-accent-soft rounded-full px-2 py-0.5">
+              <span className="text-xs font-semibold text-accent bg-accent-soft rounded-full px-2 py-0.5">
                 {videos.length}
               </span>
             )}
           </h2>
           <button
             onClick={() => setShowPicker(true)}
-            className="bg-text text-white hover:bg-[#333] px-3 py-1.5 rounded-md text-[12.5px] font-semibold inline-flex items-center gap-1.5"
+            className="bg-text text-white hover:bg-[#333] px-3 py-1.5 rounded-md text-sm font-semibold inline-flex items-center gap-1.5"
           >
             <Plus size={13} strokeWidth={2.5} />
             영상 추가
@@ -154,7 +154,7 @@ export function ClientDetail({ client }: { client: Client }) {
         </div>
 
         {videos === null ? (
-          <div className="grid place-items-center py-12 text-text-faint text-[13px]">
+          <div className="grid place-items-center py-12 text-text-faint text-base">
             <Loader2 size={18} className="animate-spin mb-2" />
             불러오는 중…
           </div>
@@ -165,10 +165,10 @@ export function ClientDetail({ client }: { client: Client }) {
               strokeWidth={1.6}
               className="mx-auto text-text-faint mb-3"
             />
-            <div className="text-[14px] font-semibold text-text mb-1">
+            <div className="text-md font-semibold text-text mb-1">
               아직 영상이 없어요
             </div>
-            <div className="text-[12.5px] text-text-muted">
+            <div className="text-sm text-text-muted">
               위 &quot;영상 추가&quot; 버튼으로 렌더링 폴더에서 골라 담으세요
             </div>
           </div>
@@ -190,12 +190,12 @@ export function ClientDetail({ client }: { client: Client }) {
                     href={`/vimo-box?path=${encodeURIComponent(v.filePath)}`}
                     className="flex-1 min-w-0 hover:text-accent"
                   >
-                    <div className="text-[13px] text-text truncate">{name}</div>
-                    <div className="text-[11px] text-text-faint truncate font-mono">
+                    <div className="text-base text-text truncate">{name}</div>
+                    <div className="text-xs text-text-faint truncate font-mono">
                       {v.filePath}
                     </div>
                   </Link>
-                  <span className="shrink-0 text-[10.5px] text-text-faint">
+                  <span className="shrink-0 text-2xs text-text-faint">
                     {formatDate(v.addedAt)}
                   </span>
                   <button

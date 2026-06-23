@@ -36,11 +36,11 @@ export function SidebarSearchTrigger() {
   return (
     <button
       onClick={trigger}
-      className="mx-3 mb-1 flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-white border border-border hover:border-border-hover text-text-soft hover:text-text text-[12.5px] transition-colors"
+      className="mx-3 mb-1 flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-white border border-border hover:border-border-hover text-text-soft hover:text-text text-sm transition-colors"
     >
       <Search size={13} strokeWidth={2} />
       <span className="flex-1 text-left">빠른 검색</span>
-      <kbd className="font-mono text-[10.5px] text-text-faint bg-surface border border-border rounded px-1 py-0.5">
+      <kbd className="font-mono text-2xs text-text-faint bg-surface border border-border rounded px-1 py-0.5">
         {hint}
       </kbd>
     </button>

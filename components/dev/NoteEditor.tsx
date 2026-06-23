@@ -246,7 +246,7 @@ export function NoteEditor({
           </div>
         )}
 
-        <div className="ml-auto text-[11px] text-text-faint">
+        <div className="ml-auto text-xs text-text-faint">
           {uploading && "이미지 업로드 중…"}
         </div>
       </div>
@@ -278,7 +278,7 @@ export function NoteEditor({
             </h1>
           )}
           {mode === "preview" && (
-            <div className="text-[12px] text-neutral-400 mb-8">
+            <div className="text-sm text-neutral-400 mb-8">
               {new Date().toLocaleString("ko-KR", { dateStyle: "long" })}
             </div>
           )}
@@ -288,7 +288,7 @@ export function NoteEditor({
 
       {/* 하단 푸터 */}
       <div className="px-6 py-3 border-t border-border bg-white flex items-center gap-3">
-        <div className="text-[12px] text-text-faint">
+        <div className="text-sm text-text-faint">
           {mode === "preview" ? "👁 미리보기 — 발행 시 이 모습 그대로" : "✏️ 편집 모드"}
         </div>
         <div className="ml-auto flex gap-2">
@@ -296,7 +296,7 @@ export function NoteEditor({
             type="button"
             onClick={triggerCancel}
             disabled={saving}
-            className="px-4 py-1.5 rounded-md text-[12.5px] border border-border bg-white text-text-soft hover:bg-surface disabled:opacity-50"
+            className="px-4 py-1.5 rounded-md text-sm border border-border bg-white text-text-soft hover:bg-surface disabled:opacity-50"
           >
             취소
           </button>
@@ -304,7 +304,7 @@ export function NoteEditor({
             type="button"
             onClick={triggerSave}
             disabled={saving}
-            className="px-5 py-1.5 rounded-md text-[12.5px] font-semibold bg-accent text-white hover:bg-accent-hover disabled:opacity-50"
+            className="px-5 py-1.5 rounded-md text-sm font-semibold bg-accent text-white hover:bg-accent-hover disabled:opacity-50"
           >
             {saving ? "저장 중…" : "저장 (Cmd+S)"}
           </button>
@@ -312,7 +312,7 @@ export function NoteEditor({
       </div>
 
       {toast && (
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-50 bg-text text-white px-4 py-2 rounded-md text-[12.5px] shadow-lg">
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-50 bg-text text-white px-4 py-2 rounded-md text-sm shadow-lg">
           {toast}
         </div>
       )}
@@ -428,7 +428,7 @@ function ModeBtn({
     <button
       type="button"
       onClick={onClick}
-      className={`h-7 px-3 rounded-md text-[12px] font-medium flex items-center gap-1.5 border ${
+      className={`h-7 px-3 rounded-md text-sm font-medium flex items-center gap-1.5 border ${
         active
           ? "bg-text text-white border-text"
           : "bg-white text-text-soft border-border hover:bg-surface"
@@ -452,7 +452,7 @@ function DeviceBtn({
     <button
       type="button"
       onClick={onClick}
-      className={`h-6 px-2 rounded text-[11px] flex items-center ${
+      className={`h-6 px-2 rounded text-xs flex items-center ${
         active ? "bg-white shadow-sm text-text" : "text-text-soft"
       }`}
     >

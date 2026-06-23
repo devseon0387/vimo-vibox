@@ -32,7 +32,7 @@ export default function LoginPage() {
               vi<span className="text-accent">.</span>box
             </span>
           </Link>
-          <p className="text-[13px] text-text-soft mt-2">
+          <p className="text-base text-text-soft mt-2">
             VIMO 내부 팀 파일 공간
           </p>
         </div>
@@ -42,13 +42,13 @@ export default function LoginPage() {
           className="bg-white border border-border rounded-lg p-7 space-y-4 shadow-sm"
         >
           {state.error && (
-            <div className="text-[12.5px] text-danger bg-danger-soft border border-[#fee2e2] rounded-md px-3 py-2">
+            <div className="text-sm text-danger bg-danger-soft border border-[#fee2e2] rounded-md px-3 py-2">
               {state.error}
             </div>
           )}
 
           <div>
-            <label className="block text-[12px] font-semibold text-text-soft mb-1.5">
+            <label className="block text-sm font-semibold text-text-soft mb-1.5">
               아이디 또는 이메일
             </label>
             <div className="relative">
@@ -63,13 +63,13 @@ export default function LoginPage() {
                 autoComplete="username"
                 required
                 placeholder="seon 또는 you@example.com"
-                className="w-full pl-9 pr-3 py-2 border border-border rounded-md text-[14px] outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-all"
+                className="w-full pl-9 pr-3 py-2 border border-border rounded-md text-md outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-all"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[12px] font-semibold text-text-soft mb-1.5">
+            <label className="block text-sm font-semibold text-text-soft mb-1.5">
               비밀번호
             </label>
             <div className="relative">
@@ -84,7 +84,7 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 required
                 placeholder="••••••••"
-                className="w-full pl-9 pr-3 py-2 border border-border rounded-md text-[14px] outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-all"
+                className="w-full pl-9 pr-3 py-2 border border-border rounded-md text-md outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-all"
               />
             </div>
           </div>
@@ -92,13 +92,13 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={pending}
-            className="w-full bg-text text-white hover:bg-[#333] disabled:opacity-60 disabled:cursor-not-allowed transition-colors py-2.5 rounded-md text-[14px] font-semibold"
+            className="w-full bg-text text-white hover:bg-[#333] disabled:opacity-60 disabled:cursor-not-allowed transition-colors py-2.5 rounded-md text-md font-semibold"
           >
             {pending ? "확인 중..." : "로그인"}
           </button>
         </form>
 
-        <p className="text-center text-[12px] text-text-faint mt-6">
+        <p className="text-center text-sm text-text-faint mt-6">
           계정이 필요하면 관리자에게 문의하세요
         </p>
       </div>

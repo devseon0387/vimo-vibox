@@ -107,20 +107,20 @@ export function ShortcutHelp() {
       <div className="p-5 grid gap-5 sm:grid-cols-2">
         {SECTIONS.map((sec) => (
           <div key={sec.title}>
-            <div className="text-[10.5px] font-bold tracking-widest uppercase text-text-faint mb-2">
+            <div className="text-2xs font-bold tracking-widest uppercase text-text-faint mb-2">
               {sec.title}
             </div>
             <ul className="space-y-1.5">
               {sec.shortcuts.map((s, i) => (
                 <li
                   key={i}
-                  className="flex items-center gap-2 text-[12.5px] text-text-muted"
+                  className="flex items-center gap-2 text-sm text-text-muted"
                 >
                   <span className="flex items-center gap-1 shrink-0">
                     {s.keys.map((k, j) => (
                       <kbd
                         key={j}
-                        className="font-mono text-[10.5px] bg-white border border-border rounded px-1.5 py-0.5 text-text-soft min-w-[18px] text-center"
+                        className="font-mono text-2xs bg-white border border-border rounded px-1.5 py-0.5 text-text-soft min-w-[18px] text-center"
                       >
                         {k}
                       </kbd>
@@ -133,7 +133,7 @@ export function ShortcutHelp() {
           </div>
         ))}
       </div>
-      <div className="px-5 pb-4 text-[11px] text-text-faint">
+      <div className="px-5 pb-4 text-xs text-text-faint">
         Tip: 입력 필드에선 단축키가 작동하지 않습니다.
       </div>
     </Modal>

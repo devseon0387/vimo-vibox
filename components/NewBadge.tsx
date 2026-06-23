@@ -6,7 +6,7 @@ export function NewBadge({ feature }: { feature: FeatureKey }) {
   const { show } = useFeatureBadge(feature);
   if (!show) return null;
   return (
-    <span className="text-[9px] font-extrabold tracking-wider px-1.5 py-[1px] rounded bg-emerald-500 text-white shrink-0 leading-tight">
+    <span className="text-2xs font-extrabold tracking-wider px-1.5 py-[1px] rounded bg-emerald-500 text-white shrink-0 leading-tight">
       NEW
     </span>
   );

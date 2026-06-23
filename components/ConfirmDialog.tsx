@@ -104,11 +104,11 @@ function ConfirmDialog({
               </div>
             )}
             <div className="flex-1 pt-0.5">
-              <h3 className="text-[15.5px] font-bold text-text mb-1.5">
+              <h3 className="text-lg font-bold text-text mb-1.5">
                 {options.title}
               </h3>
               {options.message && (
-                <div className="text-[13.5px] text-text-muted leading-relaxed">
+                <div className="text-base text-text-muted leading-relaxed">
                   {options.message}
                 </div>
               )}
@@ -119,14 +119,14 @@ function ConfirmDialog({
         <div className="flex gap-2 justify-end px-5 py-3 bg-surface border-t border-border">
           <button
             onClick={() => onClose(false)}
-            className="px-4 py-2 text-[13px] font-medium text-text-muted hover:text-text hover:bg-hover rounded-md transition-colors"
+            className="px-4 py-2 text-base font-medium text-text-muted hover:text-text hover:bg-hover rounded-md transition-colors"
           >
             {options.cancelLabel ?? "취소"}
           </button>
           <button
             ref={confirmRef}
             onClick={() => onClose(true)}
-            className={`px-4 py-2 text-[13px] font-semibold text-white rounded-md transition-colors ${
+            className={`px-4 py-2 text-base font-semibold text-white rounded-md transition-colors ${
               isDanger
                 ? "bg-danger hover:bg-[#b91c1c]"
                 : "bg-text hover:bg-[#333]"

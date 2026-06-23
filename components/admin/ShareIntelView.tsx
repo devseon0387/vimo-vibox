@@ -52,7 +52,7 @@ export function ShareIntelView({ intel }: { intel: ShareIntel[] }) {
 
   if (intel.length === 0) {
     return (
-      <div className="border border-border rounded-xl bg-white px-6 py-16 text-center text-text-faint text-[13px]">
+      <div className="border border-border rounded-xl bg-white px-6 py-16 text-center text-text-faint text-base">
         아직 시청 기록이 없습니다.
         <br />
         공유 링크를 받은 사람이 영상을 열면 여기에 표시됩니다.
@@ -86,26 +86,26 @@ export function ShareIntelView({ intel }: { intel: ShareIntel[] }) {
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-[14.5px] font-bold text-text truncate">
+                  <span className="text-md font-bold text-text truncate">
                     {s.title || fname}
                   </span>
                   {s.mode && (
-                    <span className="text-[10px] uppercase font-semibold tracking-wider px-1.5 py-px rounded bg-surface text-text-faint">
+                    <span className="text-2xs uppercase font-semibold tracking-wider px-1.5 py-px rounded bg-surface text-text-faint">
                       {s.mode}
                     </span>
                   )}
                   {stale && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-px rounded bg-danger-soft text-danger">
+                    <span className="inline-flex items-center gap-1 text-2xs font-semibold px-1.5 py-px rounded bg-danger-soft text-danger">
                       <AlertTriangle size={9} /> 만료/회수
                     </span>
                   )}
                 </div>
-                <div className="text-[11.5px] text-text-faint font-mono truncate">
+                <div className="text-xs text-text-faint font-mono truncate">
                   {s.filePath}
                 </div>
               </div>
 
-              <div className="hidden md:flex items-center gap-5 text-[12px] text-text-soft shrink-0">
+              <div className="hidden md:flex items-center gap-5 text-sm text-text-soft shrink-0">
                 <Stat icon={Users} value={`${s.totalVisitors}명`} hint="방문자" />
                 <Stat icon={Eye} value={formatSec(s.totalWatchSec)} hint="누적 시청" />
                 <Stat icon={CheckCircle2} value={`${s.completedCount}명`} hint="끝까지 본 사람" />
@@ -126,7 +126,7 @@ export function ShareIntelView({ intel }: { intel: ShareIntel[] }) {
 
             {open && (
               <div className="border-t border-border bg-surface px-5 py-4">
-                <div className="text-[10.5px] font-semibold uppercase tracking-widest text-text-faint mb-2">
+                <div className="text-2xs font-semibold uppercase tracking-widest text-text-faint mb-2">
                   방문자 {s.visitors.length}명
                 </div>
                 <div className="space-y-2">
@@ -138,18 +138,18 @@ export function ShareIntelView({ intel }: { intel: ShareIntel[] }) {
                         className="bg-white border border-border rounded-lg px-4 py-3"
                       >
                         <div className="flex items-center gap-3 mb-2">
-                          <div className="w-8 h-8 rounded-full bg-accent-soft text-accent grid place-items-center text-[10px] font-bold">
+                          <div className="w-8 h-8 rounded-full bg-accent-soft text-accent grid place-items-center text-2xs font-bold">
                             {uaShort(v.userAgent).slice(0, 2)}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-[12.5px] text-text font-mono truncate">
+                            <div className="text-sm text-text font-mono truncate">
                               {v.ip ?? "ip 알 수 없음"} · {uaShort(v.userAgent)}
                             </div>
-                            <div className="text-[11px] text-text-faint">
+                            <div className="text-xs text-text-faint">
                               첫 접속 {relativeTime(v.openedAt)} · 마지막 활동 {relativeTime(v.lastEventAt)}
                             </div>
                           </div>
-                          <div className="flex items-center gap-3 text-[11px] text-text-soft shrink-0">
+                          <div className="flex items-center gap-3 text-xs text-text-soft shrink-0">
                             <span title="실제 누적 시청">
                               <Eye size={11} strokeWidth={2.2} className="inline mr-1 -mt-px" />
                               {formatSec(v.totalWatchSec)}
@@ -170,14 +170,14 @@ export function ShareIntelView({ intel }: { intel: ShareIntel[] }) {
                                 style={{ width: `${pct}%` }}
                               />
                             </div>
-                            <div className="flex items-center justify-between text-[10.5px] text-text-faint mt-1">
+                            <div className="flex items-center justify-between text-2xs text-text-faint mt-1">
                               <span>가장 멀리 본 지점: {formatSec(v.maxPositionSec)}</span>
                               <span>{pct.toFixed(0)}% / {formatSec(v.durationSec)}</span>
                             </div>
                           </>
                         )}
                         {(!v.durationSec || v.durationSec <= 0) && (
-                          <div className="text-[11px] text-text-faint">
+                          <div className="text-xs text-text-faint">
                             영상 길이 정보 없음 (이미지·문서 등)
                           </div>
                         )}
@@ -209,7 +209,7 @@ function Stat({
         <Icon size={12} strokeWidth={2.2} className="text-text-faint" />
         <span className="font-semibold text-text">{value}</span>
       </div>
-      <div className="text-[10px] text-text-faint">{hint}</div>
+      <div className="text-2xs text-text-faint">{hint}</div>
     </div>
   );
 }

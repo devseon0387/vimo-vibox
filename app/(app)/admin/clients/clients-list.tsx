@@ -70,7 +70,7 @@ export function ClientsList() {
 
   if (items === null) {
     return (
-      <div className="grid place-items-center py-16 text-text-faint text-[13px]">
+      <div className="grid place-items-center py-16 text-text-faint text-base">
         <Loader2 size={18} className="animate-spin mb-2" />
         불러오는 중…
       </div>
@@ -80,14 +80,14 @@ export function ClientsList() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <div className="text-[13px] text-text-soft">
+        <div className="text-base text-text-soft">
           총{" "}
           <span className="font-semibold text-text">{items.length}</span>개
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setShowAdd((v) => !v)}
-            className="bg-text text-white hover:bg-[#333] px-3.5 py-2 rounded-md text-[13px] font-semibold inline-flex items-center gap-1.5"
+            className="bg-text text-white hover:bg-[#333] px-3.5 py-2 rounded-md text-base font-semibold inline-flex items-center gap-1.5"
           >
             <Plus size={14} strokeWidth={2.5} />새 클라이언트
           </button>
@@ -97,7 +97,7 @@ export function ClientsList() {
       {showAdd && (
         <div className="bg-white border border-border rounded-lg p-4 mb-5 space-y-3">
           <div>
-            <label className="block text-[12px] font-semibold text-text-soft mb-1">
+            <label className="block text-sm font-semibold text-text-soft mb-1">
               이름
             </label>
             <input
@@ -105,14 +105,14 @@ export function ClientsList() {
               onChange={(e) => setName(e.target.value)}
               autoFocus
               placeholder="예: A 브랜드"
-              className="w-full px-3 py-2 border border-border rounded-md text-[14px] outline-none focus:border-accent"
+              className="w-full px-3 py-2 border border-border rounded-md text-md outline-none focus:border-accent"
               onKeyDown={(e) => {
                 if (e.key === "Enter") create();
               }}
             />
           </div>
           <div>
-            <label className="block text-[12px] font-semibold text-text-soft mb-1">
+            <label className="block text-sm font-semibold text-text-soft mb-1">
               이메일 (선택)
             </label>
             <input
@@ -120,20 +120,20 @@ export function ClientsList() {
               onChange={(e) => setEmail(e.target.value)}
               type="email"
               placeholder="contact@a-brand.com"
-              className="w-full px-3 py-2 border border-border rounded-md text-[14px] outline-none focus:border-accent"
+              className="w-full px-3 py-2 border border-border rounded-md text-md outline-none focus:border-accent"
             />
           </div>
           <div className="flex justify-end gap-2">
             <button
               onClick={() => setShowAdd(false)}
-              className="px-3 py-1.5 text-[13px] text-text-muted hover:text-text"
+              className="px-3 py-1.5 text-base text-text-muted hover:text-text"
             >
               취소
             </button>
             <button
               onClick={create}
               disabled={creating || !name.trim()}
-              className="bg-accent text-white hover:bg-accent/90 disabled:opacity-50 px-3 py-1.5 rounded-md text-[13px] font-semibold"
+              className="bg-accent text-white hover:bg-accent/90 disabled:opacity-50 px-3 py-1.5 rounded-md text-base font-semibold"
             >
               {creating ? "추가 중…" : "추가"}
             </button>
@@ -148,10 +148,10 @@ export function ClientsList() {
             strokeWidth={1.6}
             className="mx-auto text-text-faint mb-3"
           />
-          <div className="text-[14px] font-semibold text-text mb-1">
+          <div className="text-md font-semibold text-text mb-1">
             아직 등록된 클라이언트가 없어요
           </div>
-          <div className="text-[12.5px] text-text-muted">
+          <div className="text-sm text-text-muted">
             위 버튼을 눌러 첫 클라이언트를 추가해보세요
           </div>
         </div>
@@ -164,19 +164,19 @@ export function ClientsList() {
               className="bg-white border border-border rounded-lg p-4 hover:border-border-hover transition-colors"
             >
               <div className="flex items-center justify-between gap-2 mb-1">
-                <h3 className="text-[15px] font-bold text-text truncate">
+                <h3 className="text-lg font-bold text-text truncate">
                   {c.name}
                 </h3>
                 {!c.active && (
-                  <span className="shrink-0 text-[10.5px] font-bold text-text-faint bg-surface border border-border rounded px-1.5 py-0.5">
+                  <span className="shrink-0 text-2xs font-bold text-text-faint bg-surface border border-border rounded px-1.5 py-0.5">
                     비활성
                   </span>
                 )}
               </div>
-              <div className="text-[11.5px] text-text-faint truncate font-mono mb-2">
+              <div className="text-xs text-text-faint truncate font-mono mb-2">
                 /c/{c.slug}
               </div>
-              <div className="flex items-center gap-3 text-[11.5px] text-text-muted">
+              <div className="flex items-center gap-3 text-xs text-text-muted">
                 <span>
                   영상{" "}
                   <span className="font-semibold tabular-nums text-text">

@@ -315,8 +315,8 @@ function Card({
           )}
         </div>
         <div className="px-0.5">
-          <div className="text-[13px] font-medium text-text truncate">{entry.name}</div>
-          <div className="text-[11.5px] text-text-muted mt-0.5">폴더</div>
+          <div className="text-base font-medium text-text truncate">{entry.name}</div>
+          <div className="text-xs text-text-muted mt-0.5">폴더</div>
         </div>
       </div>
     );
@@ -365,12 +365,12 @@ function Card({
           )}
           {stats && stats.commentCount > 0 && (
             <>
-              <span className="bg-black/70 text-white text-[10.5px] font-semibold px-1.5 py-0.5 rounded flex items-center gap-0.5 backdrop-blur-sm">
+              <span className="bg-black/70 text-white text-2xs font-semibold px-1.5 py-0.5 rounded flex items-center gap-0.5 backdrop-blur-sm">
                 <MessageSquare size={10} strokeWidth={2.5} />
                 {stats.commentCount}
               </span>
               {stats.openCount > 0 && (
-                <span className="bg-amber-500 text-white text-[10.5px] font-semibold px-1.5 py-0.5 rounded">
+                <span className="bg-amber-500 text-white text-2xs font-semibold px-1.5 py-0.5 rounded">
                   {stats.openCount} 남음
                 </span>
               )}
@@ -419,10 +419,10 @@ function Card({
         )}
       </div>
       <div className="px-0.5">
-        <div className="text-[13px] font-medium text-text truncate" title={entry.name}>
+        <div className="text-base font-medium text-text truncate" title={entry.name}>
           {entry.name}
         </div>
-        <div className="text-[11.5px] text-text-muted mt-0.5 truncate">
+        <div className="text-xs text-text-muted mt-0.5 truncate">
           {stats?.uploaderName && (
             <>
               <span className="text-text-soft">{stats.uploaderName}</span>

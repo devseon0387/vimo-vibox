@@ -78,7 +78,7 @@ export function InboxClient() {
 
   if (loading && !data) {
     return (
-      <div className="grid place-items-center py-16 text-text-faint text-[13px]">
+      <div className="grid place-items-center py-16 text-text-faint text-base">
         <Loader2 size={18} className="animate-spin mb-2" />
         불러오는 중…
       </div>
@@ -87,7 +87,7 @@ export function InboxClient() {
 
   if (!data) {
     return (
-      <div className="text-[13px] text-text-faint">
+      <div className="text-base text-text-faint">
         받은편지함을 불러올 수 없어요.
       </div>
     );
@@ -99,10 +99,10 @@ export function InboxClient() {
         <div className="mx-auto w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 grid place-items-center mb-4">
           <Check size={28} strokeWidth={2.2} />
         </div>
-        <div className="text-[15px] font-semibold text-text mb-1">
+        <div className="text-lg font-semibold text-text mb-1">
           처리할 게 없어요
         </div>
-        <div className="text-[12.5px] text-text-muted">
+        <div className="text-sm text-text-muted">
           새 영상이 올라오거나 클라이언트 피드백이 달리면 여기에 표시됩니다.
         </div>
       </div>
@@ -135,10 +135,10 @@ export function InboxClient() {
                   className="text-text-soft shrink-0"
                 />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] text-text truncate">
+                  <div className="text-base text-text truncate">
                     {r.path.split("/").pop()}
                   </div>
-                  <div className="text-[11px] text-text-faint truncate">
+                  <div className="text-xs text-text-faint truncate">
                     {r.uploadedBy} · {formatRelative(r.uploadedAt)}
                   </div>
                 </div>
@@ -179,10 +179,10 @@ export function InboxClient() {
                   className="text-text-soft shrink-0 mt-0.5"
                 />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] text-text line-clamp-2">
+                  <div className="text-base text-text line-clamp-2">
                     {a.body}
                   </div>
-                  <div className="text-[11px] text-text-faint truncate mt-0.5">
+                  <div className="text-xs text-text-faint truncate mt-0.5">
                     {a.author} · {a.filePath.split("/").pop()} ·{" "}
                     {formatTc(a.videoTimeMs)} · {formatRelative(a.createdAt)}
                   </div>
@@ -216,19 +216,19 @@ function SectionHeader({
     <div className="flex items-baseline justify-between gap-3 mb-2">
       <div className="flex items-center gap-2">
         <span className="text-text-soft">{icon}</span>
-        <h2 className="text-[14px] font-bold text-text">{title}</h2>
-        <span className="text-[11.5px] font-semibold text-accent bg-accent-soft rounded-full px-2 py-0.5 tabular-nums">
+        <h2 className="text-md font-bold text-text">{title}</h2>
+        <span className="text-xs font-semibold text-accent bg-accent-soft rounded-full px-2 py-0.5 tabular-nums">
           {count}
         </span>
       </div>
-      <span className="text-[11px] text-text-faint">{desc}</span>
+      <span className="text-xs text-text-faint">{desc}</span>
     </div>
   );
 }
 
 function EmptyTinyMessage({ text }: { text: string }) {
   return (
-    <div className="bg-white border border-border rounded-lg py-6 text-center text-[12.5px] text-text-faint">
+    <div className="bg-white border border-border rounded-lg py-6 text-center text-sm text-text-faint">
       <Inbox size={16} strokeWidth={2} className="inline-block mr-1.5 mb-0.5" />
       {text}
     </div>

@@ -451,13 +451,13 @@ export function StatsAdmin() {
       <div className="flex items-start md:items-center gap-2 justify-between mb-1 flex-col md:flex-row">
         <div className="flex items-center gap-2">
           <BarChart3 size={18} strokeWidth={2.5} className="text-text" />
-          <h1 className="text-[22px] font-bold">트래픽 통계</h1>
+          <h1 className="text-2xl font-bold">트래픽 통계</h1>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={exportCsv}
             disabled={!data || loading}
-            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-text-muted hover:text-text hover:bg-hover disabled:opacity-50 px-2.5 py-1.5 rounded-md"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-text-muted hover:text-text hover:bg-hover disabled:opacity-50 px-2.5 py-1.5 rounded-md"
           >
             <Download size={13} strokeWidth={2.5} />
             CSV
@@ -465,7 +465,7 @@ export function StatsAdmin() {
           <button
             onClick={() => load()}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-text-muted hover:text-text hover:bg-hover disabled:opacity-50 px-2.5 py-1.5 rounded-md"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-text-muted hover:text-text hover:bg-hover disabled:opacity-50 px-2.5 py-1.5 rounded-md"
           >
             {loading ? (
               <Loader2 size={13} strokeWidth={2.5} className="animate-spin" />
@@ -476,14 +476,14 @@ export function StatsAdmin() {
           </button>
         </div>
       </div>
-      <p className="text-[13px] text-text-muted mb-5">
+      <p className="text-base text-text-muted mb-5">
         서버가 주고받은 바이트 집계. 10초마다 자동 새로고침. CSV 내보내기로 회계 자료 활용 가능.
       </p>
 
       {/* 월 한도 경고 */}
       {monthWarning && (
         <div
-          className={`flex items-center gap-2 mb-4 px-3 py-2 rounded-md text-[12.5px] border ${
+          className={`flex items-center gap-2 mb-4 px-3 py-2 rounded-md text-sm border ${
             monthWarning.tone === "danger"
               ? "bg-danger-soft border-[#fee2e2] text-danger"
               : "bg-warning-soft border-[#fde68a] text-warning"
@@ -498,13 +498,13 @@ export function StatsAdmin() {
       )}
 
       {error && (
-        <div className="text-[12.5px] text-danger bg-danger-soft border border-[#fee2e2] rounded-md px-3 py-2 mb-5">
+        <div className="text-sm text-danger bg-danger-soft border border-[#fee2e2] rounded-md px-3 py-2 mb-5">
           {error}
         </div>
       )}
 
       {!data && loading && (
-        <div className="text-[13px] text-text-muted">불러오는 중…</div>
+        <div className="text-base text-text-muted">불러오는 중…</div>
       )}
 
       {data && (
@@ -556,7 +556,7 @@ export function StatsAdmin() {
 
           {/* 날짜 범위 선택 */}
           <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <span className="text-[11.5px] font-bold text-text-soft uppercase tracking-wider">
+            <span className="text-xs font-bold text-text-soft uppercase tracking-wider">
               기간
             </span>
             {(
@@ -572,7 +572,7 @@ export function StatsAdmin() {
               <button
                 key={k}
                 onClick={() => setPreset(k)}
-                className={`text-[12px] font-semibold px-2.5 py-1 rounded border transition-colors ${
+                className={`text-sm font-semibold px-2.5 py-1 rounded border transition-colors ${
                   preset === k
                     ? "bg-text text-white border-text"
                     : "bg-white text-text-muted border-border hover:border-border-hover"
@@ -582,7 +582,7 @@ export function StatsAdmin() {
               </button>
             ))}
             {preset === "custom" && (
-              <div className="flex items-center gap-1.5 text-[12px] ml-1">
+              <div className="flex items-center gap-1.5 text-sm ml-1">
                 <input
                   type="date"
                   value={customFrom}
@@ -603,10 +603,10 @@ export function StatsAdmin() {
           {/* 일별 차트 */}
           <div className="bg-white border border-border rounded-lg p-4 mb-5">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-[13.5px] font-bold text-text">
+              <h2 className="text-base font-bold text-text">
                 기간 일별 추이
               </h2>
-              <span className="text-[11.5px] text-text-muted">
+              <span className="text-xs text-text-muted">
                 총 {formatBytes(data.rangeTotal.bytes)} · {formatCount(data.rangeTotal.count)}회
               </span>
             </div>
@@ -616,7 +616,7 @@ export function StatsAdmin() {
           {/* 소스별 분해 + 요약 */}
           <div className="grid md:grid-cols-2 gap-3 mb-5">
             <div className="bg-white border border-border rounded-lg p-4">
-              <h2 className="text-[13.5px] font-bold text-text mb-3">
+              <h2 className="text-base font-bold text-text mb-3">
                 경로별 분해 (기간)
               </h2>
               <SourceBreakdown
@@ -626,10 +626,10 @@ export function StatsAdmin() {
             </div>
 
             <div className="bg-white border border-border rounded-lg p-4">
-              <h2 className="text-[13.5px] font-bold text-text mb-3">
+              <h2 className="text-base font-bold text-text mb-3">
                 요약
               </h2>
-              <dl className="space-y-2 text-[13px]">
+              <dl className="space-y-2 text-base">
                 <Row label="활성 공유 링크" value={`${data.activeShares}개`} />
                 <Row
                   label="기간 일 평균"
@@ -713,19 +713,19 @@ function SystemHealthSection({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Heart size={15} strokeWidth={2.3} className="text-text" />
-          <h2 className="text-[13.5px] font-bold text-text">시스템 건강도</h2>
-          <span className="text-[11px] text-text-faint">30초 간격 갱신</span>
+          <h2 className="text-base font-bold text-text">시스템 건강도</h2>
+          <span className="text-xs text-text-faint">30초 간격 갱신</span>
         </div>
       </div>
 
       {!health ? (
-        <div className="text-[12.5px] text-text-faint italic">불러오는 중…</div>
+        <div className="text-sm text-text-faint italic">불러오는 중…</div>
       ) : (
         <>
           {/* 3-Tier 볼륨 사용량 */}
           {health.volumes && health.volumes.length > 0 && (
             <div className="mb-4">
-              <div className="flex items-center gap-1.5 text-[12px] font-bold text-text mb-2">
+              <div className="flex items-center gap-1.5 text-sm font-bold text-text mb-2">
                 <Layers size={13} strokeWidth={2.3} />
                 백업 계층 (3-Tier)
               </div>
@@ -791,12 +791,12 @@ function HealthCard({
   return (
     <div className={`rounded-lg border p-3 ${toneStyles[statusTone]}`}>
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5 text-[12px] font-bold text-text">
+        <div className="flex items-center gap-1.5 text-sm font-bold text-text">
           {icon}
           {title}
         </div>
         <span
-          className={`inline-flex items-center gap-1 text-[10.5px] font-bold px-1.5 py-0.5 rounded ${badgeStyles[statusTone]}`}
+          className={`inline-flex items-center gap-1 text-2xs font-bold px-1.5 py-0.5 rounded ${badgeStyles[statusTone]}`}
         >
           <StatusIcon size={9} strokeWidth={2.5} />
           {statusText}
@@ -816,7 +816,7 @@ function SmartCard({ smart }: { smart: HealthSnapshot["smart"] }) {
         statusText="미탐지"
         statusTone="muted"
       >
-        <div className="text-[11px] text-text-faint">
+        <div className="text-xs text-text-faint">
           system_profiler 로 외장 디스크 못 찾음
         </div>
       </HealthCard>
@@ -847,7 +847,7 @@ function SmartCard({ smart }: { smart: HealthSnapshot["smart"] }) {
       statusText={overallLabel}
       statusTone={overallTone}
     >
-      <div className="space-y-1.5 text-[11px]">
+      <div className="space-y-1.5 text-xs">
         {smart.map((s) => (
           <SmartRow key={s.volumeLabel} smart={s} />
         ))}
@@ -902,7 +902,7 @@ function SwapCard({
         statusText="측정 실패"
         statusTone="muted"
       >
-        <div className="text-[11px] text-text-faint">—</div>
+        <div className="text-xs text-text-faint">—</div>
       </HealthCard>
     );
   }
@@ -923,7 +923,7 @@ function SwapCard({
       statusText={label}
       statusTone={tone}
     >
-      <div className="space-y-0.5 text-[11.5px] text-text-muted">
+      <div className="space-y-0.5 text-xs text-text-muted">
         <div>
           스왑 사용:{" "}
           <span className="font-semibold text-text tabular-nums">
@@ -953,7 +953,7 @@ function PingCard({ ping }: { ping: HealthSnapshot["ping"] }) {
         statusText="측정 실패"
         statusTone="muted"
       >
-        <div className="text-[11px] text-text-faint">—</div>
+        <div className="text-xs text-text-faint">—</div>
       </HealthCard>
     );
   }
@@ -971,7 +971,7 @@ function PingCard({ ping }: { ping: HealthSnapshot["ping"] }) {
       statusText={label}
       statusTone={tone}
     >
-      <div className="space-y-0.5 text-[11.5px] text-text-muted">
+      <div className="space-y-0.5 text-xs text-text-muted">
         <div>
           {ping.host}:{" "}
           <span className="font-semibold text-text tabular-nums">
@@ -999,7 +999,7 @@ function Pm2Card({ pm2 }: { pm2: HealthSnapshot["pm2"] }) {
         statusText="없음"
         statusTone="bad"
       >
-        <div className="text-[11px] text-text-faint">PM2 미실행</div>
+        <div className="text-xs text-text-faint">PM2 미실행</div>
       </HealthCard>
     );
   }
@@ -1015,7 +1015,7 @@ function Pm2Card({ pm2 }: { pm2: HealthSnapshot["pm2"] }) {
       statusTone={tone}
     >
       {vibox ? (
-        <div className="space-y-0.5 text-[11.5px] text-text-muted">
+        <div className="space-y-0.5 text-xs text-text-muted">
           <div>
             <span className="font-semibold text-text">{vibox.name}</span>
             <span className="text-text-faint"> · pid {vibox.pid}</span>
@@ -1038,7 +1038,7 @@ function Pm2Card({ pm2 }: { pm2: HealthSnapshot["pm2"] }) {
           </div>
         </div>
       ) : (
-        <div className="text-[11px] text-text-faint">vibox 프로세스 없음</div>
+        <div className="text-xs text-text-faint">vibox 프로세스 없음</div>
       )}
     </HealthCard>
   );
@@ -1069,7 +1069,7 @@ function LitestreamCard({
       statusText={label}
       statusTone={tone}
     >
-      <div className="space-y-0.5 text-[11.5px] text-text-muted">
+      <div className="space-y-0.5 text-xs text-text-muted">
         <div>
           프로세스:{" "}
           <span
@@ -1154,21 +1154,21 @@ function VolumeCard({
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-1.5">
           {tierMeta.icon}
-          <span className="text-[10.5px] font-bold tracking-widest text-text-faint">
+          <span className="text-2xs font-bold tracking-widest text-text-faint">
             {tierMeta.label}
           </span>
-          <span className="text-[12px] font-bold text-text truncate max-w-[180px]">
+          <span className="text-sm font-bold text-text truncate max-w-[180px]">
             {volume.label}
           </span>
         </div>
         {!mounted && (
-          <span className="text-[10px] font-bold text-rose-600 inline-flex items-center gap-0.5">
+          <span className="text-2xs font-bold text-rose-600 inline-flex items-center gap-0.5">
             <XCircle size={9} strokeWidth={2.5} />
             연결 끊김
           </span>
         )}
       </div>
-      <div className="text-[10.5px] text-text-faint mb-2">{tierMeta.desc}</div>
+      <div className="text-2xs text-text-faint mb-2">{tierMeta.desc}</div>
 
       {mounted ? (
         <>
@@ -1180,7 +1180,7 @@ function VolumeCard({
               style={{ width: `${pct.toFixed(1)}%` }}
             />
           </div>
-          <div className="flex items-center justify-between text-[11px] tabular-nums">
+          <div className="flex items-center justify-between text-xs tabular-nums">
             <span className="text-text-muted">
               사용{" "}
               <span className="font-semibold text-text">
@@ -1205,7 +1205,7 @@ function VolumeCard({
           </div>
         </>
       ) : (
-        <div className="text-[11px] text-text-faint italic">
+        <div className="text-xs text-text-faint italic">
           볼륨이 마운트되어 있지 않음
         </div>
       )}
@@ -1222,7 +1222,7 @@ function MirrorCard({ mirror }: { mirror: HealthSnapshot["mirror"] }) {
         statusText="미탐지"
         statusTone="bad"
       >
-        <div className="text-[11px] text-text-faint">
+        <div className="text-xs text-text-faint">
           Vibox Mirror 볼륨 마운트 안 됨
         </div>
       </HealthCard>
@@ -1253,7 +1253,7 @@ function MirrorCard({ mirror }: { mirror: HealthSnapshot["mirror"] }) {
       statusText={label}
       statusTone={tone}
     >
-      <div className="space-y-0.5 text-[11.5px] text-text-muted">
+      <div className="space-y-0.5 text-xs text-text-muted">
         <div>
           launchd:{" "}
           <span
@@ -1287,7 +1287,7 @@ function MirrorCard({ mirror }: { mirror: HealthSnapshot["mirror"] }) {
         </div>
         {mirror.lastLogTail && (
           <div
-            className="text-[10.5px] text-text-faint truncate"
+            className="text-2xs text-text-faint truncate"
             title={mirror.lastLogTail}
           >
             {mirror.lastLogTail}
@@ -1325,23 +1325,23 @@ function SystemStatusSection({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2 flex-wrap">
           <Gauge size={15} strokeWidth={2.3} className="text-text" />
-          <h2 className="text-[13.5px] font-bold text-text">시스템 실시간</h2>
+          <h2 className="text-base font-bold text-text">시스템 실시간</h2>
           {system?.remoteHost ? (
-            <span className="text-[10.5px] font-bold px-1.5 py-0.5 rounded bg-violet-100 text-violet-700">
+            <span className="text-2xs font-bold px-1.5 py-0.5 rounded bg-violet-100 text-violet-700">
               SSH → {system.remoteHost}
             </span>
           ) : null}
-          <span className="text-[11px] text-text-faint">2초 간격 갱신</span>
+          <span className="text-xs text-text-faint">2초 간격 갱신</span>
         </div>
         {system && (
-          <div className="text-[11px] text-text-muted tabular-nums">
+          <div className="text-xs text-text-muted tabular-nums">
             가동: {formatUptime(system.uptimeSec)}
           </div>
         )}
       </div>
 
       {!system ? (
-        <div className="text-[12.5px] text-text-faint italic">
+        <div className="text-sm text-text-faint italic">
           불러오는 중…
         </div>
       ) : (
@@ -1379,10 +1379,10 @@ function SystemStatusSection({
 
       {system && system.disk.system && (
         <div className="mt-3 pt-3 border-t border-border">
-          <div className="text-[11px] font-bold text-text-muted mb-1.5">
+          <div className="text-xs font-bold text-text-muted mb-1.5">
             참고 — 내장 디스크 ({system.disk.system.deviceName})
           </div>
-          <div className="flex items-center gap-3 text-[12px]">
+          <div className="flex items-center gap-3 text-sm">
             <span className="text-text-muted">I/O</span>
             <span className="text-text tabular-nums">
               {formatBytesPerSec(
@@ -1426,11 +1426,11 @@ function GaugeCard({
       className="rounded-lg border border-border bg-surface px-3 py-2.5"
       title={tooltip}
     >
-      <div className="flex items-center gap-1.5 text-[11px] font-bold text-text-muted mb-1">
+      <div className="flex items-center gap-1.5 text-xs font-bold text-text-muted mb-1">
         {icon}
         {label}
       </div>
-      <div className="text-[18px] font-bold text-text tabular-nums">
+      <div className="text-xl font-bold text-text tabular-nums">
         {valueText}
       </div>
       <div className="h-1.5 bg-white rounded-full overflow-hidden mt-1.5 mb-1">
@@ -1439,7 +1439,7 @@ function GaugeCard({
           style={{ width: `${Math.min(100, pct)}%` }}
         />
       </div>
-      <div className="text-[10.5px] text-text-faint truncate">{subText}</div>
+      <div className="text-2xs text-text-faint truncate">{subText}</div>
     </div>
   );
 }
@@ -1456,11 +1456,11 @@ function DiskCard({
   if (!disk) {
     return (
       <div className="rounded-lg border border-border bg-surface px-3 py-2.5">
-        <div className="flex items-center gap-1.5 text-[11px] font-bold text-text-muted mb-1">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-text-muted mb-1">
           <HardDrive size={13} strokeWidth={2.3} />
           {label}
         </div>
-        <div className="text-[12.5px] text-text-faint italic mt-1">
+        <div className="text-sm text-text-faint italic mt-1">
           {fallbackNote}
         </div>
       </div>
@@ -1469,19 +1469,19 @@ function DiskCard({
   const totalBps = disk.readBytesPerSec + disk.writeBytesPerSec;
   return (
     <div className="rounded-lg border border-border bg-surface px-3 py-2.5">
-      <div className="flex items-center justify-between gap-1.5 text-[11px] font-bold text-text-muted mb-1">
+      <div className="flex items-center justify-between gap-1.5 text-xs font-bold text-text-muted mb-1">
         <span className="flex items-center gap-1.5">
           <HardDrive size={13} strokeWidth={2.3} />
           {label}
         </span>
-        <span className="text-text-faint font-mono font-normal text-[10px]">
+        <span className="text-text-faint font-mono font-normal text-2xs">
           {disk.deviceName}
         </span>
       </div>
-      <div className="text-[16px] font-bold text-text tabular-nums">
+      <div className="text-lg font-bold text-text tabular-nums">
         {formatBytesPerSec(totalBps)}
       </div>
-      <div className="flex items-center gap-2 mt-1.5 text-[11px] text-text-muted">
+      <div className="flex items-center gap-2 mt-1.5 text-xs text-text-muted">
         <span className="inline-flex items-center gap-0.5">
           <span className="text-blue-500">↓</span>
           <span className="tabular-nums">
@@ -1495,7 +1495,7 @@ function DiskCard({
           </span>
         </span>
       </div>
-      <div className="text-[10.5px] text-text-faint mt-0.5 tabular-nums">
+      <div className="text-2xs text-text-faint mt-0.5 tabular-nums">
         {disk.tps.toFixed(0)} ops/s
       </div>
     </div>
@@ -1506,11 +1506,11 @@ function NetCard({ net }: { net: SystemSnapshot["network"] }) {
   if (!net) {
     return (
       <div className="rounded-lg border border-border bg-surface px-3 py-2.5">
-        <div className="flex items-center gap-1.5 text-[11px] font-bold text-text-muted mb-1">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-text-muted mb-1">
           <Wifi size={13} strokeWidth={2.3} />
           네트워크
         </div>
-        <div className="text-[12.5px] text-text-faint italic mt-1">
+        <div className="text-sm text-text-faint italic mt-1">
           측정 실패
         </div>
       </div>
@@ -1522,19 +1522,19 @@ function NetCard({ net }: { net: SystemSnapshot["network"] }) {
 
   return (
     <div className="rounded-lg border border-border bg-surface px-3 py-2.5">
-      <div className="flex items-center justify-between gap-1.5 text-[11px] font-bold text-text-muted mb-1">
+      <div className="flex items-center justify-between gap-1.5 text-xs font-bold text-text-muted mb-1">
         <span className="flex items-center gap-1.5">
           <Wifi size={13} strokeWidth={2.3} />
           네트워크
         </span>
-        <span className="text-text-faint font-mono font-normal text-[10px]">
+        <span className="text-text-faint font-mono font-normal text-2xs">
           {net.interfaceName}
         </span>
       </div>
-      <div className="text-[16px] font-bold text-text tabular-nums">
+      <div className="text-lg font-bold text-text tabular-nums">
         {formatBytesPerSec(total)}
       </div>
-      <div className="flex items-center gap-2 mt-1.5 text-[11px] text-text-muted">
+      <div className="flex items-center gap-2 mt-1.5 text-xs text-text-muted">
         <span className="inline-flex items-center gap-0.5">
           <span className="text-blue-500">↓</span>
           <span className="tabular-nums">
@@ -1548,7 +1548,7 @@ function NetCard({ net }: { net: SystemSnapshot["network"] }) {
           </span>
         </span>
       </div>
-      <div className="text-[10.5px] text-text-faint mt-0.5 tabular-nums">
+      <div className="text-2xs text-text-faint mt-0.5 tabular-nums">
         기가비트 사용률 {utilPct.toFixed(1)}%
       </div>
     </div>
@@ -1565,14 +1565,14 @@ function LiveCard({ bytesPerSec }: { bytesPerSec: number }) {
           : "bg-surface border-border text-text"
       }`}
     >
-      <div className="text-[11px] font-bold uppercase tracking-wider opacity-70 mb-1 flex items-center gap-1">
+      <div className="text-xs font-bold uppercase tracking-wider opacity-70 mb-1 flex items-center gap-1">
         <Activity size={10} strokeWidth={2.5} className={isHot ? "animate-pulse" : ""} />
         지금
       </div>
-      <div className="text-[18px] font-bold tabular-nums">
+      <div className="text-xl font-bold tabular-nums">
         {formatBytesPerSec(bytesPerSec)}
       </div>
-      <div className="text-[11px] opacity-70 mt-0.5">최근 1분 평균</div>
+      <div className="text-xs opacity-70 mt-0.5">최근 1분 평균</div>
     </div>
   );
 }
@@ -1587,9 +1587,9 @@ function StorageCard({
       <div className="bg-white border border-border rounded-lg p-4">
         <div className="flex items-center gap-2 mb-2">
           <HardDrive size={14} strokeWidth={2.3} className="text-text" />
-          <span className="text-[13.5px] font-bold text-text">스토리지</span>
+          <span className="text-base font-bold text-text">스토리지</span>
         </div>
-        <div className="text-[12px] text-text-faint italic">측정 안 됨</div>
+        <div className="text-sm text-text-faint italic">측정 안 됨</div>
       </div>
     );
   }
@@ -1602,14 +1602,14 @@ function StorageCard({
     <div className="bg-white border border-border rounded-lg p-4">
       <div className="flex items-center gap-2 mb-2">
         <HardDrive size={14} strokeWidth={2.3} className="text-text" />
-        <span className="text-[13.5px] font-bold text-text">스토리지</span>
+        <span className="text-base font-bold text-text">스토리지</span>
       </div>
       <div className="flex items-baseline gap-2 mb-2">
         <span className="text-[20px] font-bold text-text tabular-nums">
           {formatBytes(storage.usedBytes)}
         </span>
         {storage.totalBytes !== null && (
-          <span className="text-[12px] text-text-muted">
+          <span className="text-sm text-text-muted">
             / {formatBytes(storage.totalBytes)} ({usedPct.toFixed(1)}%)
           </span>
         )}
@@ -1628,7 +1628,7 @@ function StorageCard({
           />
         </div>
       )}
-      <div className="flex items-center justify-between text-[11.5px] text-text-muted">
+      <div className="flex items-center justify-between text-xs text-text-muted">
         <span>{formatCount(storage.fileCount)}개 파일</span>
         {storage.freeBytes !== null && (
           <span>{formatBytes(storage.freeBytes)} 여유</span>
@@ -1655,9 +1655,9 @@ function MonthlyLimitCard({
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <AlertTriangle size={14} strokeWidth={2.3} className="text-text" />
-          <span className="text-[13.5px] font-bold text-text">월 트래픽 한도</span>
+          <span className="text-base font-bold text-text">월 트래픽 한도</span>
         </div>
-        <label className="flex items-center gap-1 text-[12px]">
+        <label className="flex items-center gap-1 text-sm">
           <input
             type="number"
             min={0.1}
@@ -1676,7 +1676,7 @@ function MonthlyLimitCard({
         <span className="text-[20px] font-bold text-text tabular-nums">
           {formatBytes(usage)}
         </span>
-        <span className="text-[12px] text-text-muted">
+        <span className="text-sm text-text-muted">
           / {formatBytes(limitBytes)} ({pct.toFixed(1)}%)
         </span>
       </div>
@@ -1688,7 +1688,7 @@ function MonthlyLimitCard({
           style={{ width: `${pct}%` }}
         />
       </div>
-      <div className="text-[10.5px] text-text-faint mt-1.5">
+      <div className="text-2xs text-text-faint mt-1.5">
         80% 도달 시 경고 배너 표시. 한도는 브라우저에 저장돼요.
       </div>
     </div>
@@ -1714,13 +1714,13 @@ function SummaryCard({
   };
   return (
     <div className={`rounded-lg border px-4 py-3 ${accentColors[accent]}`}>
-      <div className="text-[11px] font-bold uppercase tracking-wider opacity-70 mb-1">
+      <div className="text-xs font-bold uppercase tracking-wider opacity-70 mb-1">
         {label}
       </div>
-      <div className="text-[18px] font-bold tabular-nums">
+      <div className="text-xl font-bold tabular-nums">
         {formatBytes(bytes)}
       </div>
-      <div className="text-[11px] opacity-70 mt-0.5 tabular-nums">
+      <div className="text-xs opacity-70 mt-0.5 tabular-nums">
         {formatCount(count)}회 요청
       </div>
     </div>
@@ -1757,7 +1757,7 @@ function DailyChart({
               />
             </div>
             {showLabels && (
-              <div className="text-[10px] text-text-muted whitespace-nowrap">
+              <div className="text-2xs text-text-muted whitespace-nowrap">
                 {label}
               </div>
             )}
@@ -1782,7 +1782,7 @@ function SourceBreakdown({
   return (
     <div className="space-y-2.5">
       <div>
-        <div className="text-[11px] font-bold text-text-muted mb-1.5">
+        <div className="text-xs font-bold text-text-muted mb-1.5">
           아웃바운드 (사용자에게 전달)
         </div>
         <div className="flex h-3 rounded-md overflow-hidden bg-surface mb-2">
@@ -1799,7 +1799,7 @@ function SourceBreakdown({
             );
           })}
         </div>
-        <ul className="space-y-1 text-[12px]">
+        <ul className="space-y-1 text-sm">
           {outbound.map((s) => {
             const meta =
               SOURCE_LABELS[s.source] ?? { label: s.source, color: "#94a3b8" };
@@ -1813,7 +1813,7 @@ function SourceBreakdown({
                 <span className="text-text tabular-nums">
                   {formatBytes(s.bytes)}
                 </span>
-                <span className="text-text-faint tabular-nums text-[11px] w-12 text-right">
+                <span className="text-text-faint tabular-nums text-xs w-12 text-right">
                   {formatCount(s.count)}회
                 </span>
               </li>
@@ -1824,10 +1824,10 @@ function SourceBreakdown({
 
       {upload && upload.bytes > 0 && (
         <div className="pt-2 border-t border-border">
-          <div className="text-[11px] font-bold text-text-muted mb-1.5">
+          <div className="text-xs font-bold text-text-muted mb-1.5">
             인바운드 (들어온 업로드)
           </div>
-          <div className="flex items-center gap-2 text-[12px]">
+          <div className="flex items-center gap-2 text-sm">
             <UploadIcon
               size={11}
               strokeWidth={2.2}
@@ -1837,7 +1837,7 @@ function SourceBreakdown({
             <span className="text-text tabular-nums">
               {formatBytes(upload.bytes)}
             </span>
-            <span className="text-text-faint tabular-nums text-[11px] w-12 text-right">
+            <span className="text-text-faint tabular-nums text-xs w-12 text-right">
               {formatCount(upload.count)}회
             </span>
           </div>
@@ -1845,7 +1845,7 @@ function SourceBreakdown({
       )}
 
       {total === 0 && (
-        <div className="text-[12.5px] text-text-faint italic">
+        <div className="text-sm text-text-faint italic">
           아직 기록 없음
         </div>
       )}
@@ -1869,9 +1869,9 @@ function TopList({
 }) {
   return (
     <div className="bg-white border border-border rounded-lg p-4">
-      <h2 className="text-[13.5px] font-bold text-text mb-3">{title}</h2>
+      <h2 className="text-base font-bold text-text mb-3">{title}</h2>
       {items.length === 0 ? (
-        <div className="text-[12.5px] text-text-faint italic">
+        <div className="text-sm text-text-faint italic">
           아직 기록 없음
         </div>
       ) : (
@@ -1881,9 +1881,9 @@ function TopList({
             return (
               <li
                 key={it.key || i}
-                className="flex items-center gap-2 text-[12.5px]"
+                className="flex items-center gap-2 text-sm"
               >
-                <span className="font-mono text-[10.5px] font-bold text-text-faint w-5 text-right shrink-0">
+                <span className="font-mono text-2xs font-bold text-text-faint w-5 text-right shrink-0">
                   #{i + 1}
                 </span>
                 <LabelEl
@@ -1899,7 +1899,7 @@ function TopList({
                 <span className="text-text-soft tabular-nums shrink-0">
                   {formatBytes(it.bytes)}
                 </span>
-                <span className="text-text-faint tabular-nums text-[11px] shrink-0 w-10 text-right">
+                <span className="text-text-faint tabular-nums text-xs shrink-0 w-10 text-right">
                   {formatCount(it.count)}
                 </span>
               </li>
@@ -1945,7 +1945,7 @@ function EncodingCard({
       statusText={label}
       statusTone={tone}
     >
-      <div className="space-y-1 text-[11.5px] text-text-muted">
+      <div className="space-y-1 text-xs text-text-muted">
         <div className="flex items-center gap-2 flex-wrap">
           <span>
             동작{" "}
@@ -1996,7 +1996,7 @@ function EncodingCard({
             {encoding.active.map((j) => (
               <div key={j.id} className="flex items-center gap-2">
                 <span
-                  className="flex-1 truncate font-mono text-[10.5px] text-text-soft"
+                  className="flex-1 truncate font-mono text-2xs text-text-soft"
                   title={j.filePath}
                 >
                   {j.filePath.replace(/^\//, "")}
@@ -2016,7 +2016,7 @@ function EncodingCard({
         )}
         {encoding.recentFailed.length > 0 && (
           <div className="space-y-1 pt-1 border-t border-border/40 mt-1">
-            <div className="text-[10.5px] font-semibold text-rose-600">
+            <div className="text-2xs font-semibold text-rose-600">
               최근 실패
             </div>
             {encoding.recentFailed.slice(0, 3).map((f) => (
@@ -2025,7 +2025,7 @@ function EncodingCard({
                 className="flex items-center gap-1.5"
                 title={`${f.filePath}\n${f.error ?? ""}`}
               >
-                <span className="font-mono text-[10.5px] text-text-faint truncate flex-1 min-w-0">
+                <span className="font-mono text-2xs text-text-faint truncate flex-1 min-w-0">
                   {f.filePath.replace(/^\//, "")}
                 </span>
                 <button
@@ -2040,7 +2040,7 @@ function EncodingCard({
                     }
                     // 차회 health 폴링이 알아서 갱신
                   }}
-                  className="shrink-0 inline-flex items-center gap-0.5 text-[10.5px] text-text-soft hover:text-accent px-1 py-0.5 rounded hover:bg-hover"
+                  className="shrink-0 inline-flex items-center gap-0.5 text-2xs text-text-soft hover:text-accent px-1 py-0.5 rounded hover:bg-hover"
                   title="재시도"
                 >
                   <RotateCcw size={10} strokeWidth={2.4} />

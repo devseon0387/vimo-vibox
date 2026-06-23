@@ -97,10 +97,10 @@ export function EmptyState({
         <div className="mx-auto w-12 h-12 rounded-full bg-white text-accent grid place-items-center mb-3 shadow-sm">
           <UploadIcon size={22} strokeWidth={2} />
         </div>
-        <div className="text-[14px] font-semibold text-text mb-1">
+        <div className="text-md font-semibold text-text mb-1">
           {isRoot ? "아직 파일이 없어요" : "이 폴더가 비어있어요"}
         </div>
-        <div className="text-[12.5px] text-text-soft">
+        <div className="text-sm text-text-soft">
           {dropzoneClickable
             ? "끌어다 놓거나 클릭해서 업로드"
             : "파일을 여기로 끌어다 놓거나 위쪽 업로드 버튼"}
@@ -108,7 +108,7 @@ export function EmptyState({
       </div>
 
       {/* 폴더 추천 chip */}
-      <div className="mt-5 text-[11.5px] text-text-faint flex flex-wrap items-center justify-center gap-2">
+      <div className="mt-5 text-xs text-text-faint flex flex-wrap items-center justify-center gap-2">
         <span>또는 폴더부터 만들기:</span>
         {SUGGESTED.map((name) => (
           <button
@@ -116,7 +116,7 @@ export function EmptyState({
             type="button"
             disabled={creating !== null}
             onClick={() => createFolder(name)}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-border text-text-soft text-[11.5px] hover:border-accent hover:text-accent transition-colors disabled:opacity-40"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-border text-text-soft text-xs hover:border-accent hover:text-accent transition-colors disabled:opacity-40"
           >
             <FolderPlus size={11} strokeWidth={2.2} />
             {creating === name ? "생성중…" : name}
@@ -126,7 +126,7 @@ export function EmptyState({
           type="button"
           disabled={creating !== null}
           onClick={onCustomFolder}
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-dashed border-border text-text-faint text-[11.5px] hover:border-accent hover:text-accent transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-dashed border-border text-text-faint text-xs hover:border-accent hover:text-accent transition-colors disabled:opacity-40"
         >
           + 새 폴더
         </button>

@@ -144,18 +144,18 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
     <div className="px-4 md:px-8 py-4 md:py-6 max-w-[1200px]">
       <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
         <div>
-          <h1 className="text-[22px] font-bold flex items-center gap-2">
+          <h1 className="text-2xl font-bold flex items-center gap-2">
             <Sparkles size={18} className="text-violet-600" strokeWidth={2.3} />
             AI 검수 피드백
           </h1>
-          <p className="text-[12.5px] text-text-muted mt-0.5">
+          <p className="text-sm text-text-muted mt-0.5">
             누적 사용자 평가 — Claude 에 붙여넣어 검수 로직 개선 분석에 활용
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={copyForClaude}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-bold rounded border border-slate-200 bg-white hover:bg-slate-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded border border-slate-200 bg-white hover:bg-slate-50"
             title="요약 markdown 으로 클립보드 복사 — Claude 에 붙여넣기"
           >
             <Copy size={12} strokeWidth={2.3} />
@@ -163,7 +163,7 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
           </button>
           <button
             onClick={exportJson}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-bold rounded bg-slate-900 text-white hover:bg-slate-800"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded bg-slate-900 text-white hover:bg-slate-800"
           >
             <Download size={12} strokeWidth={2.3} />
             JSON 내보내기
@@ -177,18 +177,18 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
           onClick={() => setFilter("all")}
           className={`text-left p-3 rounded-lg border bg-white ${filter === "all" ? "border-slate-900" : "border-slate-200"}`}
         >
-          <div className="text-[11px] text-text-muted">전체</div>
-          <div className="text-[22px] font-bold">{stats.total}</div>
+          <div className="text-xs text-text-muted">전체</div>
+          <div className="text-2xl font-bold">{stats.total}</div>
         </button>
         <button
           onClick={() => setFilter("good")}
           className={`text-left p-3 rounded-lg border bg-white ${filter === "good" ? "border-emerald-600" : "border-slate-200"}`}
         >
-          <div className="text-[11px] text-text-muted inline-flex items-center gap-1">
+          <div className="text-xs text-text-muted inline-flex items-center gap-1">
             <ThumbsUp size={10} className="text-emerald-600" />
             정확
           </div>
-          <div className="text-[22px] font-bold text-emerald-700">
+          <div className="text-2xl font-bold text-emerald-700">
             {stats.good}
           </div>
         </button>
@@ -196,21 +196,21 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
           onClick={() => setFilter("bad")}
           className={`text-left p-3 rounded-lg border bg-white ${filter === "bad" ? "border-rose-600" : "border-slate-200"}`}
         >
-          <div className="text-[11px] text-text-muted inline-flex items-center gap-1">
+          <div className="text-xs text-text-muted inline-flex items-center gap-1">
             <ThumbsDown size={10} className="text-rose-600" />
             부정확
           </div>
-          <div className="text-[22px] font-bold text-rose-700">{stats.bad}</div>
+          <div className="text-2xl font-bold text-rose-700">{stats.bad}</div>
         </button>
         <button
           onClick={() => setFilter("partial")}
           className={`text-left p-3 rounded-lg border bg-white ${filter === "partial" ? "border-amber-600" : "border-slate-200"}`}
         >
-          <div className="text-[11px] text-text-muted inline-flex items-center gap-1">
+          <div className="text-xs text-text-muted inline-flex items-center gap-1">
             <CircleAlert size={10} className="text-amber-600" />
             부분
           </div>
-          <div className="text-[22px] font-bold text-amber-700">
+          <div className="text-2xl font-bold text-amber-700">
             {stats.partial}
           </div>
         </button>
@@ -219,7 +219,7 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
       {/* 사유 분포 */}
       {Object.keys(stats.byReason).length > 0 && (
         <div className="mb-5 p-3 rounded-lg border border-slate-200 bg-white">
-          <div className="text-[11px] font-bold text-text-muted mb-1.5">
+          <div className="text-xs font-bold text-text-muted mb-1.5">
             부정확 사유 분포
           </div>
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -228,7 +228,7 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
               .map(([tag, c]) => (
                 <span
                   key={tag}
-                  className="inline-flex items-center gap-1 text-[11.5px] px-2 py-0.5 rounded bg-slate-100 text-slate-700"
+                  className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-700"
                 >
                   {REASON_LABELS[tag] ?? tag}
                   <span className="font-bold text-slate-900">{c}</span>
@@ -241,7 +241,7 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
       {/* 리스트 */}
       {filtered.length === 0 ? (
         <div className="border-2 border-dashed border-slate-200 rounded-xl p-12 text-center bg-white">
-          <div className="text-[13px] text-text-muted">아직 피드백이 없습니다</div>
+          <div className="text-base text-text-muted">아직 피드백이 없습니다</div>
         </div>
       ) : (
         <div className="space-y-1.5">
@@ -255,7 +255,7 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
               >
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <span
-                    className={`inline-flex items-center gap-1 text-[10.5px] font-bold px-1.5 py-0.5 rounded ${
+                    className={`inline-flex items-center gap-1 text-2xs font-bold px-1.5 py-0.5 rounded ${
                       isGood
                         ? "bg-emerald-50 text-emerald-700"
                         : isBad
@@ -276,18 +276,18 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
                         ? "정확"
                         : "부정확"}
                   </span>
-                  <span className="font-mono text-[10.5px] text-text-muted">
+                  <span className="font-mono text-2xs text-text-muted">
                     {formatTc(it.videoTimeMs)}
                   </span>
-                  <span className="text-[11px] text-slate-600 truncate flex-1">
+                  <span className="text-xs text-slate-600 truncate flex-1">
                     {it.filePath}
                   </span>
-                  <span className="text-[10.5px] text-text-muted">
+                  <span className="text-2xs text-text-muted">
                     {it.reporterName} · {formatRel(it.createdAt)}
                   </span>
                 </div>
                 {(it.aiOcrWrong || it.aiSuggestion) && (
-                  <div className="text-[12.5px] font-medium text-slate-900 mb-1">
+                  <div className="text-sm font-medium text-slate-900 mb-1">
                     “{it.aiOcrWrong ?? "?"}”{" "}
                     <span className="text-slate-300 mx-0.5">→</span>{" "}
                     <span className="text-orange-600">
@@ -296,10 +296,10 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
                   </div>
                 )}
                 {it.aiBody && (
-                  <div className="text-[11px] text-text-muted">{it.aiBody}</div>
+                  <div className="text-xs text-text-muted">{it.aiBody}</div>
                 )}
                 {it.note && (
-                  <div className="mt-1.5 p-1.5 bg-slate-50 rounded text-[12px] text-slate-700">
+                  <div className="mt-1.5 p-1.5 bg-slate-50 rounded text-sm text-slate-700">
                     “{it.note}”
                   </div>
                 )}

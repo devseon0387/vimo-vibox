@@ -106,7 +106,7 @@ export function DevMenu() {
       <div className="mx-3 mb-2 grid grid-cols-2 gap-1 p-1 bg-surface rounded-md">
         <Link
           href="/dev/notes"
-          className={`flex items-center justify-center gap-1.5 py-1.5 rounded text-[12px] font-medium transition-colors ${
+          className={`flex items-center justify-center gap-1.5 py-1.5 rounded text-sm font-medium transition-colors ${
             view === "notes"
               ? "bg-white text-text shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
               : "text-text-soft hover:text-text"
@@ -117,7 +117,7 @@ export function DevMenu() {
         </Link>
         <Link
           href="/dev/notes?view=files"
-          className={`flex items-center justify-center gap-1.5 py-1.5 rounded text-[12px] font-medium transition-colors ${
+          className={`flex items-center justify-center gap-1.5 py-1.5 rounded text-sm font-medium transition-colors ${
             view === "files"
               ? "bg-white text-text shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
               : "text-text-soft hover:text-text"
@@ -138,7 +138,7 @@ export function DevMenu() {
           <DevMenuLink href="/dev/notes?tags=1" icon={Tag} label="태그" />
 
           <div className="px-4 pt-3 pb-1.5 flex items-center justify-between">
-            <span className="text-[10.5px] font-semibold tracking-widest text-text-faint uppercase">
+            <span className="text-2xs font-semibold tracking-widest text-text-faint uppercase">
               폴더
             </span>
             <button
@@ -166,13 +166,13 @@ export function DevMenu() {
             />
           )}
           {error && (
-            <div className="mx-3 my-1 px-2 py-1 text-[11px] text-danger bg-danger-soft rounded">
+            <div className="mx-3 my-1 px-2 py-1 text-xs text-danger bg-danger-soft rounded">
               {error}
             </div>
           )}
 
           {folders.length === 0 && !creating ? (
-            <div className="px-4 py-2 text-[12px] text-text-faint">불러오는 중…</div>
+            <div className="px-4 py-2 text-sm text-text-faint">불러오는 중…</div>
           ) : (
             folders.map((f) =>
               renaming === f.name ? (
@@ -202,11 +202,11 @@ export function DevMenu() {
       ) : (
         <>
           <MenuSection label="저장 위치" />
-          <div className="mx-3 mb-2 px-3 py-2 rounded-md bg-surface text-[11.5px] text-text-soft font-mono">
+          <div className="mx-3 mb-2 px-3 py-2 rounded-md bg-surface text-xs text-text-soft font-mono">
             <div className="text-text-faint mb-0.5">root</div>
             <div className="text-text">/Volumes/Vibox Storage A/Notes/</div>
           </div>
-          <div className="px-4 py-2 text-[11.5px] text-text-faint leading-relaxed">
+          <div className="px-4 py-2 text-xs text-text-faint leading-relaxed">
             외장 SSD에 저장된 raw 파일을 보여줍니다.
             SEON Hub가 어떤 경로에 저장하는지 확인할 때 사용.
           </div>
@@ -238,14 +238,14 @@ function FolderRow({
     >
       <Link
         href={`/dev/notes?folder=${encodeURIComponent(folder.name)}`}
-        className={`flex items-center gap-2.5 pl-3 pr-9 py-1.5 text-[13.5px] ${
+        className={`flex items-center gap-2.5 pl-3 pr-9 py-1.5 text-base ${
           active ? "text-accent font-medium" : "text-text-soft"
         }`}
       >
         <Icon size={14} strokeWidth={2} className="shrink-0 opacity-90" />
         <span className="truncate">{label}</span>
         <span
-          className={`ml-auto text-[11px] ${
+          className={`ml-auto text-xs ${
             active ? "text-accent" : "text-text-faint"
           }`}
         >
@@ -304,7 +304,7 @@ function FolderInput({
           else if (e.key === "Escape") onCancel();
         }}
         placeholder={placeholder}
-        className="flex-1 bg-transparent border-0 outline-none text-[13.5px] text-text min-w-0"
+        className="flex-1 bg-transparent border-0 outline-none text-base text-text min-w-0"
       />
       <button
         type="button"
@@ -359,7 +359,7 @@ function DevMenuLink({ href, icon: Icon, label }: LinkProps) {
   return (
     <Link
       href={href}
-      className={`mx-2 my-px flex items-center gap-2.5 pl-3 pr-3 py-1.5 rounded-md text-[13.5px] transition-colors ${
+      className={`mx-2 my-px flex items-center gap-2.5 pl-3 pr-3 py-1.5 rounded-md text-base transition-colors ${
         active
           ? "bg-accent-soft text-accent font-medium"
           : "text-text-soft hover:bg-surface"

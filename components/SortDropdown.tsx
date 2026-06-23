@@ -37,7 +37,7 @@ export function SortDropdown({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border bg-white text-text-soft hover:text-text hover:border-border-hover text-[12.5px] transition-colors"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border bg-white text-text-soft hover:text-text hover:border-border-hover text-sm transition-colors"
         title="정렬"
       >
         {config.order === "asc" ? (
@@ -58,7 +58,7 @@ export function SortDropdown({
                   if (config.key === k) onToggleOrder();
                   else onChangeKey(k);
                 }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-[12.5px] text-text-muted hover:bg-hover hover:text-text"
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-text-muted hover:bg-hover hover:text-text"
               >
                 <span className="w-3.5 shrink-0">
                   {config.key === k && (
@@ -71,7 +71,7 @@ export function SortDropdown({
                 </span>
                 <span className="flex-1 text-left">{SORT_LABELS[k]}</span>
                 {config.key === k && (
-                  <span className="text-[10px] text-text-faint">
+                  <span className="text-2xs text-text-faint">
                     {config.order === "asc" ? "↑" : "↓"}
                   </span>
                 )}
@@ -81,7 +81,7 @@ export function SortDropdown({
           <div className="border-t border-border py-1">
             <button
               onClick={() => onToggleFoldersFirst(!config.foldersFirst)}
-              className="w-full flex items-center gap-2 px-3 py-1.5 text-[12.5px] text-text-muted hover:bg-hover hover:text-text"
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-text-muted hover:bg-hover hover:text-text"
             >
               <span className="w-3.5 shrink-0">
                 {config.foldersFirst && (

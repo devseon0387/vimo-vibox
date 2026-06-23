@@ -448,19 +448,19 @@ export function ShortformReview({
       <div
         className={`absolute top-0 inset-x-0 z-20 flex items-center gap-2 px-4 pt-3 pb-2 transition-opacity duration-300 ${chromeShown ? "opacity-100" : "opacity-0 pointer-events-none"}`}
       >
-        <span className="flex items-center gap-1.5 font-extrabold text-[13px] text-white tracking-tight shrink-0">
+        <span className="flex items-center gap-1.5 font-extrabold text-base text-white tracking-tight shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="" className="w-5 h-5 object-contain" />
           vi<span className="text-accent">.</span>box
         </span>
-        <span className="flex-1 min-w-0 truncate text-[12px] text-white/90">
+        <span className="flex-1 min-w-0 truncate text-sm text-white/90">
           {title}
         </span>
         {allowDownload && (
           <button
             onClick={download}
             aria-label="다운로드"
-            className="h-8 px-2.5 rounded-lg bg-white/20 backdrop-blur text-white text-[11.5px] font-bold inline-flex items-center gap-1"
+            className="h-8 px-2.5 rounded-lg bg-white/20 backdrop-blur text-white text-xs font-bold inline-flex items-center gap-1"
           >
             <Download size={13} strokeWidth={2.4} />
             받기
@@ -494,18 +494,18 @@ export function ShortformReview({
           >
             <MessageSquare size={21} strokeWidth={2} />
             {topMarkers.length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] px-1 rounded-full bg-accent text-[9.5px] font-bold grid place-items-center">
+              <span className="absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] px-1 rounded-full bg-accent text-2xs font-bold grid place-items-center">
                 {topMarkers.length}
               </span>
             )}
           </button>
-          <span className="text-[10px] font-bold drop-shadow">댓글</span>
+          <span className="text-2xs font-bold drop-shadow">댓글</span>
         </div>
       )}
 
       {/* 진입 힌트 (재생 중 + 크롬 표시 시) */}
       {playing && chromeShown && (
-        <div className="absolute left-1/2 bottom-16 -translate-x-1/2 z-10 inline-flex items-center gap-1.5 bg-black/45 backdrop-blur text-white text-[12px] font-semibold px-3.5 py-2 rounded-full pointer-events-none">
+        <div className="absolute left-1/2 bottom-16 -translate-x-1/2 z-10 inline-flex items-center gap-1.5 bg-black/45 backdrop-blur text-white text-sm font-semibold px-3.5 py-2 rounded-full pointer-events-none">
           <Hand size={14} strokeWidth={2.2} />
           화면을 탭하면 멈추고 의견을 남겨요
         </div>
@@ -555,7 +555,7 @@ export function ShortformReview({
               />
             )}
           </div>
-          <div className="flex items-center justify-between text-[11px] font-mono text-white/80 mb-2">
+          <div className="flex items-center justify-between text-xs font-mono text-white/80 mb-2">
             <span>{formatTc(curMs)}</span>
             <span>{formatTc(durMs)}</span>
           </div>
@@ -568,11 +568,11 @@ export function ShortformReview({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="이름"
-                  className="w-full h-10 rounded-xl bg-white px-3.5 text-[13px] outline-none"
+                  className="w-full h-10 rounded-xl bg-white px-3.5 text-base outline-none"
                 />
               )}
               <div className="flex items-center gap-2">
-                <span className="shrink-0 text-[10.5px] font-bold font-mono bg-accent text-white px-2 py-1.5 rounded-md">
+                <span className="shrink-0 text-2xs font-bold font-mono bg-accent text-white px-2 py-1.5 rounded-md">
                   {formatTc(curMs)}
                 </span>
                 <input
@@ -583,7 +583,7 @@ export function ShortformReview({
                     if (e.key === "Enter") submit();
                   }}
                   placeholder="이 순간에 의견 남기기…"
-                  className="flex-1 h-11 rounded-xl bg-white px-3.5 text-[13px] outline-none"
+                  className="flex-1 h-11 rounded-xl bg-white px-3.5 text-base outline-none"
                 />
                 <button
                   onClick={submit}
@@ -623,7 +623,7 @@ export function ShortformReview({
               </div>
               <button
                 onClick={startCompose}
-                className="flex-1 h-11 rounded-full bg-white/16 backdrop-blur border border-white/25 text-white/85 text-[13px] text-left px-4"
+                className="flex-1 h-11 rounded-full bg-white/16 backdrop-blur border border-white/25 text-white/85 text-base text-left px-4"
               >
                 이 순간에 의견 남기기…
               </button>
@@ -653,7 +653,7 @@ export function ShortformReview({
           <div className="absolute inset-x-0 bottom-0 z-40 h-[60%] bg-white rounded-t-[18px] flex flex-col shadow-[0_-8px_30px_rgba(0,0,0,.3)]">
             <div className="w-9 h-1 rounded-full bg-slate-200 mx-auto mt-2 mb-1" />
             <div className="flex items-center gap-2 px-4 py-2">
-              <span className="text-[13px] font-extrabold">
+              <span className="text-base font-extrabold">
                 댓글 {topMarkers.length}
               </span>
               <span className="flex-1" />
@@ -667,7 +667,7 @@ export function ShortformReview({
             </div>
             <div className="flex-1 overflow-y-auto border-t border-slate-100">
               {topMarkers.length === 0 ? (
-                <div className="h-full grid place-items-center text-center text-slate-400 text-[12.5px] px-8">
+                <div className="h-full grid place-items-center text-center text-slate-400 text-sm px-8">
                   아직 의견이 없어요. 영상을 보다가 탭해서 그 순간에 의견을
                   남겨보세요.
                 </div>
@@ -685,7 +685,7 @@ export function ShortformReview({
                       className="w-full text-left flex gap-2.5 px-4 py-2.5 border-b border-slate-100 active:bg-slate-50"
                     >
                       <span
-                        className="shrink-0 w-6 h-6 rounded-full grid place-items-center text-white text-[10px] font-bold"
+                        className="shrink-0 w-6 h-6 rounded-full grid place-items-center text-white text-2xs font-bold"
                         style={{ background: markerColor(c) }}
                       >
                         {(c.authorName || "?").slice(0, 1)}
@@ -693,17 +693,17 @@ export function ShortformReview({
                       <span className="min-w-0">
                         <span className="flex items-center gap-1.5 mb-0.5">
                           <span
-                            className="text-[10px] font-bold font-mono text-white px-1.5 rounded"
+                            className="text-2xs font-bold font-mono text-white px-1.5 rounded"
                             style={{ background: markerColor(c) }}
                           >
                             {formatTc(c.videoTimeMs)}
                           </span>
-                          <span className="text-[10.5px] text-slate-400">
+                          <span className="text-2xs text-slate-400">
                             {c.authorName}
                           </span>
                         </span>
                         <span
-                          className={`block text-[12.5px] leading-snug ${c.resolvedAt ? "text-slate-400 line-through" : "text-slate-800"}`}
+                          className={`block text-sm leading-snug ${c.resolvedAt ? "text-slate-400 line-through" : "text-slate-800"}`}
                         >
                           {c.body}
                         </span>
@@ -718,7 +718,7 @@ export function ShortformReview({
 
       {/* 토스트 */}
       {toast && (
-        <div className="absolute left-1/2 top-20 -translate-x-1/2 z-50 bg-black/80 text-white text-[12.5px] font-semibold px-4 py-2 rounded-full">
+        <div className="absolute left-1/2 top-20 -translate-x-1/2 z-50 bg-black/80 text-white text-sm font-semibold px-4 py-2 rounded-full">
           {toast}
         </div>
       )}

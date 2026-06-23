@@ -64,7 +64,7 @@ export function ChangelogTimeline({
     return (
       <div className="text-center py-16 text-text-faint border border-dashed border-border rounded-xl">
         <p className="font-medium">아직 기록이 없어요</p>
-        <p className="text-[12.5px] mt-1">
+        <p className="text-sm mt-1">
           <code className="bg-surface px-1.5 py-0.5 rounded">
             lib/changelog.ts
           </code>{" "}
@@ -97,24 +97,24 @@ export function ChangelogTimeline({
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                  <span className="text-[12px] font-bold text-text-faint font-mono">
+                  <span className="text-sm font-bold text-text-faint font-mono">
                     {item.version}
                   </span>
                   <span
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-semibold ${cfg.bg} ${cfg.color}`}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-semibold ${cfg.bg} ${cfg.color}`}
                   >
                     {cfg.icon}
                     {cfg.label}
                   </span>
-                  <span className="text-[11.5px] text-text-faint">
+                  <span className="text-xs text-text-faint">
                     {item.date}
                   </span>
                 </div>
-                <h3 className="text-[14.5px] font-bold text-text leading-snug">
+                <h3 className="text-md font-bold text-text leading-snug">
                   {item.title}
                 </h3>
                 {item.description && (
-                  <p className="text-[12.5px] text-text-soft mt-1 leading-relaxed">
+                  <p className="text-sm text-text-soft mt-1 leading-relaxed">
                     {item.description}
                   </p>
                 )}
@@ -174,7 +174,7 @@ function DetailGroup({
   return (
     <div className="mt-4">
       <div
-        className={`text-[10.5px] font-bold uppercase tracking-wider mb-2 ${color}`}
+        className={`text-2xs font-bold uppercase tracking-wider mb-2 ${color}`}
       >
         {title}
       </div>
@@ -182,7 +182,7 @@ function DetailGroup({
         {items.map((it, i) => (
           <li
             key={i}
-            className="flex items-start gap-2 text-[12.5px] text-text leading-relaxed"
+            className="flex items-start gap-2 text-sm text-text leading-relaxed"
           >
             <span
               className={`mt-1.5 w-1 h-1 rounded-full bg-current shrink-0 ${color}`}

@@ -247,7 +247,7 @@ export function PreviewControls({
     <div className="flex-none bg-[#0b0f17] border-t border-[#1e293b] px-4 pt-2.5 pb-3 select-none">
       {/* Row 1: 시크바 */}
       <div className="flex items-center gap-3">
-        <span className="shrink-0 text-[12px] font-mono font-semibold text-slate-300 tabular-nums">
+        <span className="shrink-0 text-sm font-mono font-semibold text-slate-300 tabular-nums">
           {formatTc(cur)}
         </span>
         <div
@@ -286,7 +286,7 @@ export function PreviewControls({
             </div>
           )}
         </div>
-        <span className="shrink-0 text-[12px] font-mono text-slate-500 tabular-nums text-right">
+        <span className="shrink-0 text-sm font-mono text-slate-500 tabular-nums text-right">
           {formatTc(dur)}
         </span>
       </div>
@@ -367,7 +367,7 @@ export function PreviewControls({
                   onClick={() => setSettingsOpen(false)}
                 />
                 <div className="absolute bottom-full right-0 mb-2 bg-white border border-slate-200 rounded-xl shadow-lg p-1.5 z-20 w-[240px]">
-                  <div className="px-2 pt-1 pb-1.5 text-[9.5px] font-bold text-slate-400 tracking-wide">
+                  <div className="px-2 pt-1 pb-1.5 text-2xs font-bold text-slate-400 tracking-wide">
                     재생 속도
                   </div>
                   <div className="flex flex-nowrap gap-1 px-1 pb-1.5">
@@ -375,7 +375,7 @@ export function PreviewControls({
                       <button
                         key={r}
                         onClick={() => changeRate(r)}
-                        className={`flex-1 h-7 rounded-md text-[10px] font-bold font-mono tabular-nums grid place-items-center transition-colors ${
+                        className={`flex-1 h-7 rounded-md text-2xs font-bold font-mono tabular-nums grid place-items-center transition-colors ${
                           rate === r
                             ? "bg-accent text-white shadow-sm"
                             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -386,7 +386,7 @@ export function PreviewControls({
                     ))}
                   </div>
                   {hasHls && (
-                    <div className="px-2 py-1 text-[10px] text-slate-400 leading-relaxed border-t border-slate-100 mt-0.5 pt-1.5">
+                    <div className="px-2 py-1 text-2xs text-slate-400 leading-relaxed border-t border-slate-100 mt-0.5 pt-1.5">
                       <Check size={11} strokeWidth={2.5} className="inline text-accent" /> 스트리밍 최적화 재생 중
                     </div>
                   )}

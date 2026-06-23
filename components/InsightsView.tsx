@@ -72,8 +72,8 @@ export function InsightsView({
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-[22px] font-bold">인사이트</h1>
-        <p className="text-[12.5px] text-text-faint mt-1">
+        <h1 className="text-2xl font-bold">인사이트</h1>
+        <p className="text-sm text-text-faint mt-1">
           팀 전체의 좋아요와 수정 패턴을 한눈에
         </p>
       </div>
@@ -110,7 +110,7 @@ export function InsightsView({
       {accuracy.total > 5 && (
         <div className="mb-6 bg-surface border border-border rounded-lg px-4 py-3 flex items-center gap-3">
           <Brain size={18} className="text-accent" strokeWidth={2} />
-          <div className="text-[12.5px] text-text-soft">
+          <div className="text-sm text-text-soft">
             자동 분류 정확도:{" "}
             <span className="font-bold text-text">
               카테고리 {catAccPct}%
@@ -118,7 +118,7 @@ export function InsightsView({
             {" · "}
             <span className="font-bold text-text">종류 {kindAccPct}%</span>
           </div>
-          <span className="text-[11px] text-text-faint ml-auto">
+          <span className="text-xs text-text-faint ml-auto">
             {accuracy.total}개 샘플 기반
           </span>
         </div>
@@ -128,7 +128,7 @@ export function InsightsView({
         {/* 좋아요 모음 */}
         <section>
           <div className="flex items-baseline justify-between mb-3">
-            <h2 className="text-[15px] font-bold flex items-center gap-2">
+            <h2 className="text-lg font-bold flex items-center gap-2">
               <Heart
                 size={14}
                 strokeWidth={2.2}
@@ -138,7 +138,7 @@ export function InsightsView({
               />
               좋아요 모음
             </h2>
-            <span className="text-[11.5px] text-text-faint">
+            <span className="text-xs text-text-faint">
               팀이 잘한 포인트
             </span>
           </div>
@@ -150,10 +150,10 @@ export function InsightsView({
                 className="mx-auto text-text-faint mb-2"
                 strokeWidth={1.5}
               />
-              <div className="text-[13px] text-text-muted">
+              <div className="text-base text-text-muted">
                 아직 좋아요가 없어요
               </div>
-              <div className="text-[11.5px] text-text-faint mt-1">
+              <div className="text-xs text-text-faint mt-1">
                 영상 피드백에서 "좋아요" 모드로 남길 수 있어요
               </div>
             </div>
@@ -164,7 +164,7 @@ export function InsightsView({
                 if (!list || list.length === 0) return null;
                 return (
                   <div key={cat.key}>
-                    <div className="flex items-center gap-1.5 mb-2 text-[11.5px] font-semibold uppercase tracking-wider"
+                    <div className="flex items-center gap-1.5 mb-2 text-xs font-semibold uppercase tracking-wider"
                       style={{ color: cat.color }}>
                       <CategoryIcon category={cat.key} size={11} stroke={2.5} />
                       {cat.label}
@@ -177,10 +177,10 @@ export function InsightsView({
                           className="bg-white border border-border rounded-lg p-3 hover:border-border-hover transition-colors"
                           style={{ background: PRAISE_BG + "40" }}
                         >
-                          <div className="text-[13px] text-text leading-[1.5] mb-1.5">
+                          <div className="text-base text-text leading-[1.5] mb-1.5">
                             {p.body}
                           </div>
-                          <div className="flex items-center gap-2 text-[11px] text-text-faint flex-wrap">
+                          <div className="flex items-center gap-2 text-xs text-text-faint flex-wrap">
                             <Link
                               href={`/?path=${encodeURIComponent(p.filePath.split("/").slice(0, -1).join("/") || "/")}`}
                               className="hover:text-text truncate max-w-[240px]"
@@ -212,18 +212,18 @@ export function InsightsView({
         {/* 수정 패턴 */}
         <section>
           <div className="flex items-baseline justify-between mb-3">
-            <h2 className="text-[15px] font-bold flex items-center gap-2">
+            <h2 className="text-lg font-bold flex items-center gap-2">
               <TrendingUp size={14} strokeWidth={2.2} />
               반복되는 수정 패턴
             </h2>
-            <span className="text-[11.5px] text-text-faint">
+            <span className="text-xs text-text-faint">
               카테고리별 빈도
             </span>
           </div>
 
           {patterns.length === 0 ? (
             <div className="border border-dashed border-border rounded-lg p-10 text-center">
-              <div className="text-[13px] text-text-muted">
+              <div className="text-base text-text-muted">
                 아직 수정 요청이 없어요
               </div>
             </div>
@@ -243,12 +243,12 @@ export function InsightsView({
                       <CategoryIconBox category={p.category} size={26} />
                       <div className="flex-1">
                         <div
-                          className="text-[13.5px] font-bold"
+                          className="text-base font-bold"
                           style={{ color: meta.color }}
                         >
                           {meta.label}
                         </div>
-                        <div className="text-[11px] text-text-faint">
+                        <div className="text-xs text-text-faint">
                           총 {p.total}건
                           {p.unresolved > 0 && (
                             <>
@@ -284,14 +284,14 @@ export function InsightsView({
                           className="px-4 py-2.5 flex items-start gap-2"
                         >
                           <span
-                            className="font-mono text-[11px] font-semibold shrink-0 mt-0.5"
+                            className="font-mono text-xs font-semibold shrink-0 mt-0.5"
                             style={{ color: meta.color }}
                           >
                             {formatTc(r.videoTimeMs)}
                           </span>
                           <div className="flex-1 min-w-0">
                             <div
-                              className={`text-[12.5px] leading-[1.5] ${
+                              className={`text-sm leading-[1.5] ${
                                 r.resolved
                                   ? "text-text-faint line-through"
                                   : "text-text"
@@ -299,7 +299,7 @@ export function InsightsView({
                             >
                               {r.body}
                             </div>
-                            <div className="text-[10.5px] text-text-faint mt-0.5 truncate">
+                            <div className="text-2xs text-text-faint mt-0.5 truncate">
                               {basename(r.filePath)} · {r.authorName}
                             </div>
                           </div>
@@ -335,7 +335,7 @@ function StatCard({
   };
   return (
     <div className="bg-white border border-border rounded-lg p-3">
-      <div className="flex items-center gap-1.5 text-[11.5px] text-text-faint font-semibold mb-1.5">
+      <div className="flex items-center gap-1.5 text-xs text-text-faint font-semibold mb-1.5">
         {icon}
         {label}
       </div>

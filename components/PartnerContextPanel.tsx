@@ -36,7 +36,7 @@ function section(pathname: string): "home" | "team" | "mybox" | "shares" {
 
 function PanelHeader({ icon, title, addHref }: { icon: ReactNode; title: string; addHref?: string }) {
   return (
-    <div className="flex items-center gap-2 px-2.5 pt-4 pb-2 font-extrabold text-[14px]">
+    <div className="flex items-center gap-2 px-2.5 pt-4 pb-2 font-extrabold text-md">
       {icon}
       <span className="truncate">{title}</span>
       {addHref && (
@@ -53,12 +53,12 @@ function PanelHeader({ icon, title, addHref }: { icon: ReactNode; title: string;
 
 function SecLabel({ children }: { children: ReactNode }) {
   return (
-    <div className="text-[10px] font-bold text-text-faint tracking-wide px-2.5 pt-3 pb-1">{children}</div>
+    <div className="text-2xs font-bold text-text-faint tracking-wide px-2.5 pt-3 pb-1">{children}</div>
   );
 }
 
 function Empty({ children }: { children: ReactNode }) {
-  return <p className="text-[12px] text-text-faint px-2.5 py-4">{children}</p>;
+  return <p className="text-sm text-text-faint px-2.5 py-4">{children}</p>;
 }
 
 // My box 폴더 모션 — 스프링 결(폴더 열기·아이콘 morph·별 팝/반짝·빈상태). reduced-motion 가드.
@@ -194,7 +194,7 @@ function MyBoxPanel({ folders, curPath }: { folders: PanelFolder[]; curPath: str
               <div className="lid" />
               <Plus size={15} strokeWidth={2.6} className="pl" />
             </div>
-            <p className="text-[12px] text-text-faint leading-relaxed">
+            <p className="text-sm text-text-faint leading-relaxed">
               아직 폴더가 없어요.
               <br />새 폴더를 만들어 정리해 보세요.
             </p>
@@ -215,7 +215,7 @@ function MyBoxPanel({ folders, curPath }: { folders: PanelFolder[]; curPath: str
                   return (
                     <div
                       key={`fav-${f.name}`}
-                      className="group flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[13px] hover:bg-surface-2 transition-colors"
+                      className="group flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-base hover:bg-surface-2 transition-colors"
                       style={selected ? selStyle : undefined}
                     >
                       <Link
@@ -245,7 +245,7 @@ function MyBoxPanel({ folders, curPath }: { folders: PanelFolder[]; curPath: str
               return (
                 <div key={f.name}>
                   <div
-                    className="group flex items-center gap-1.5 px-1.5 py-1.5 rounded-lg text-[13px] hover:bg-surface-2 transition-colors"
+                    className="group flex items-center gap-1.5 px-1.5 py-1.5 rounded-lg text-base hover:bg-surface-2 transition-colors"
                     style={selected ? selStyle : undefined}
                   >
                     <button
@@ -284,7 +284,7 @@ function MyBoxPanel({ folders, curPath }: { folders: PanelFolder[]; curPath: str
                           <Link
                             key={c}
                             href={`/my/box?path=/${encodeURIComponent(f.name)}/${encodeURIComponent(c)}`}
-                            className="mbx-ch flex items-center gap-2 pl-[34px] pr-2 py-1.5 rounded-lg text-[13px] text-text-soft hover:bg-surface-2"
+                            className="mbx-ch flex items-center gap-2 pl-[34px] pr-2 py-1.5 rounded-lg text-base text-text-soft hover:bg-surface-2"
                             style={{ transitionDelay: expanded ? `${i * 45}ms` : "0ms" }}
                           >
                             <Folder size={15} style={{ color: FOLDER_ICON }} className="shrink-0" />
@@ -322,7 +322,7 @@ function TeamPanel({ projects, curPath }: { projects: string[]; curPath: string 
               <Link
                 key={p}
                 href={TEAM_ROOT}
-                className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-[13px] hover:bg-surface-2 transition-colors"
+                className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-base hover:bg-surface-2 transition-colors"
                 style={selected ? { background: "var(--accent-soft)", color: "var(--accent)", fontWeight: 700 } : undefined}
               >
                 <Folder size={16} style={{ color: selected ? "var(--accent)" : "#a98e6a" }} className="shrink-0" />
@@ -348,7 +348,7 @@ function SharesPanel({ shares }: { shares: { name: string; token: string }[] }) 
             <Link
               key={s.token}
               href="/shares"
-              className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-[13px] hover:bg-surface-2 transition-colors"
+              className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-base hover:bg-surface-2 transition-colors"
             >
               <Link2 size={15} className="text-text-soft shrink-0" />
               <span className="truncate flex-1">{s.name}</span>
@@ -372,7 +372,7 @@ function HomePanel({ folders, projects }: { folders: PanelFolder[]; projects: st
           <Link
             key={p}
             href={TEAM_ROOT}
-            className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-[13px] hover:bg-surface-2 transition-colors"
+            className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-base hover:bg-surface-2 transition-colors"
           >
             <Folder size={16} style={{ color: "var(--accent)" }} className="shrink-0" />
             <span className="truncate">{p}</span>
@@ -383,7 +383,7 @@ function HomePanel({ folders, projects }: { folders: PanelFolder[]; projects: st
           <Link
             key={f.name}
             href={`/my/box?path=/${encodeURIComponent(f.name)}`}
-            className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-[13px] hover:bg-surface-2 transition-colors"
+            className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-base hover:bg-surface-2 transition-colors"
           >
             <Folder size={16} style={{ color: MYBOX }} className="shrink-0" />
             <span className="truncate">{f.name}</span>

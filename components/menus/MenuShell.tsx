@@ -23,7 +23,7 @@ export function MenuShell({
   return (
     <nav className="w-[240px] bg-white border-r border-border flex flex-col h-screen overflow-y-auto">
       <div className="px-4 pt-5 pb-3 flex items-center justify-between sticky top-0 bg-white z-10">
-        <span className="text-[16px] font-bold tracking-tight text-text">
+        <span className="text-lg font-bold tracking-tight text-text">
           {title}
         </span>
         {headerExtra}
@@ -31,7 +31,7 @@ export function MenuShell({
       {children}
       <div className="mt-auto px-4 py-3 border-t border-[#f0ece9] shrink-0">
         <p
-          className="text-[10px] font-bold text-[#d6cec8]"
+          className="text-2xs font-bold text-[#d6cec8]"
           style={{ letterSpacing: "0.1em" }}
         >
           VIBOX{" "}
@@ -61,8 +61,8 @@ export function MenuSearch({
       }}
     >
       <Search size={13} strokeWidth={2.2} />
-      <span className="text-[12.5px]">{placeholder}</span>
-      <kbd className="ml-auto text-[10px] px-1.5 py-px bg-white border border-border rounded text-text-faint font-sans">
+      <span className="text-sm">{placeholder}</span>
+      <kbd className="ml-auto text-2xs px-1.5 py-px bg-white border border-border rounded text-text-faint font-sans">
         ⌘K
       </kbd>
     </button>
@@ -71,7 +71,7 @@ export function MenuSearch({
 
 export function MenuSection({ label }: { label: string }) {
   return (
-    <div className="px-4 pt-3 pb-1.5 text-[10.5px] font-semibold tracking-widest text-text-faint uppercase">
+    <div className="px-4 pt-3 pb-1.5 text-2xs font-semibold tracking-widest text-text-faint uppercase">
       {label}
     </div>
   );
@@ -138,7 +138,7 @@ export function MenuItem({
       href={href}
       className={`
         mx-2 my-px flex items-center gap-2.5 ${padLeft} pr-3 py-1.5 rounded-md
-        text-[13.5px] transition-colors
+        text-base transition-colors
         ${isActive ? "font-medium" : "text-text-soft hover:bg-surface"}
       `}
       style={
@@ -154,7 +154,7 @@ export function MenuItem({
       <span className="truncate">{label}</span>
       {badge !== undefined && (
         <span
-          className="ml-auto text-[11px]"
+          className="ml-auto text-xs"
           style={{ color: isActive ? activeColor : "var(--text-faint)" }}
         >
           {badge}

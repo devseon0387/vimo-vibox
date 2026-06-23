@@ -98,7 +98,7 @@ export function StatusBar({
 
   return (
     <div
-      className="sticky bottom-0 left-0 right-0 z-30 mt-4 -mx-1 bg-white/95 backdrop-blur border border-border rounded-md px-3.5 py-1.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[11px] text-text-soft shadow-[0_-1px_3px_rgba(0,0,0,0.03)]"
+      className="sticky bottom-0 left-0 right-0 z-30 mt-4 -mx-1 bg-white/95 backdrop-blur border border-border rounded-md px-3.5 py-1.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 text-xs text-text-soft shadow-[0_-1px_3px_rgba(0,0,0,0.03)]"
       role="status"
       aria-live="polite"
     >
@@ -162,22 +162,22 @@ export function StatusBar({
 
       {/* Right: 단축키 힌트 — 키보드 없는 모바일에선 숨김 */}
       <span className="ml-auto hidden md:flex items-center gap-2 text-text-faint">
-        <kbd className="px-1.5 py-0.5 bg-surface border border-border rounded text-[10px] font-mono text-text-soft">
+        <kbd className="px-1.5 py-0.5 bg-surface border border-border rounded text-2xs font-mono text-text-soft">
           ↑↓
         </kbd>
         <span>이동</span>
         <span className="opacity-40">·</span>
-        <kbd className="px-1.5 py-0.5 bg-surface border border-border rounded text-[10px] font-mono text-text-soft">
+        <kbd className="px-1.5 py-0.5 bg-surface border border-border rounded text-2xs font-mono text-text-soft">
           Space
         </kbd>
         <span>미리보기</span>
         <span className="opacity-40">·</span>
-        <kbd className="px-1.5 py-0.5 bg-surface border border-border rounded text-[10px] font-mono text-text-soft">
+        <kbd className="px-1.5 py-0.5 bg-surface border border-border rounded text-2xs font-mono text-text-soft">
           ↵
         </kbd>
         <span>열기</span>
         <span className="opacity-40">·</span>
-        <kbd className="px-1.5 py-0.5 bg-surface border border-border rounded text-[10px] font-mono text-text-soft">
+        <kbd className="px-1.5 py-0.5 bg-surface border border-border rounded text-2xs font-mono text-text-soft">
           ⌫
         </kbd>
         <span>삭제</span>

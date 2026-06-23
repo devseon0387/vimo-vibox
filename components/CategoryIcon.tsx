@@ -42,7 +42,7 @@ export function CategoryBadge({
   const meta = getCategoryMeta(category);
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold whitespace-nowrap"
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold whitespace-nowrap"
       style={{ color: meta.color, background: meta.bgSoft }}
     >
       <CategoryIcon category={category} size={11} stroke={2.5} />

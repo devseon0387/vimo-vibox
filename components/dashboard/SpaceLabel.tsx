@@ -12,7 +12,7 @@ export function SpaceLabel({
   withText?: boolean;
 }) {
   const base = "inline-flex items-center gap-1 rounded font-bold tracking-tight";
-  const sizing = size === "sm" ? "px-1 py-0.5 text-[9.5px]" : "px-1.5 py-0.5 text-[10px]";
+  const sizing = size === "sm" ? "px-1 py-0.5 text-2xs" : "px-1.5 py-0.5 text-2xs";
   const style =
     space === "personal"
       ? { background: "var(--personal-soft)", color: "var(--personal-dark)" }

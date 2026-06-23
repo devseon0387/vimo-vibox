@@ -111,14 +111,14 @@ export function UsersAdmin({
     <>
       <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
         <div>
-          <h1 className="text-[22px] font-bold">사용자 관리</h1>
-          <p className="text-[12.5px] text-text-faint mt-1">
+          <h1 className="text-2xl font-bold">사용자 관리</h1>
+          <p className="text-sm text-text-faint mt-1">
             팀 멤버를 추가하고 역할과 비밀번호를 관리해요
           </p>
         </div>
         <button
           onClick={() => setAddOpen(true)}
-          className="bg-text text-white hover:bg-[#333] transition-colors px-3.5 py-2 rounded-md text-[13px] font-semibold flex items-center gap-1.5"
+          className="bg-text text-white hover:bg-[#333] transition-colors px-3.5 py-2 rounded-md text-base font-semibold flex items-center gap-1.5"
         >
           <UserPlus size={14} strokeWidth={2.5} />
           사용자 추가
@@ -128,29 +128,29 @@ export function UsersAdmin({
       {items.length === 0 ? (
         <div className="border border-dashed border-border rounded-lg p-12 text-center">
           <UsersIcon size={32} className="mx-auto text-text-faint mb-3" strokeWidth={1.5} />
-          <div className="text-[14px] text-text-muted">사용자가 없어요</div>
+          <div className="text-md text-text-muted">사용자가 없어요</div>
         </div>
       ) : (
         <div className="border border-border rounded-lg overflow-x-auto bg-white">
-          <table className="w-full min-w-[720px] text-[13px]">
+          <table className="w-full min-w-[720px] text-base">
             <thead className="bg-surface border-b border-border">
               <tr>
-                <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider">
+                <th className="text-left px-4 py-2.5 font-semibold text-xs text-text-soft uppercase tracking-wider">
                   아이디
                 </th>
-                <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider">
+                <th className="text-left px-4 py-2.5 font-semibold text-xs text-text-soft uppercase tracking-wider">
                   이름
                 </th>
-                <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider w-[90px]">
+                <th className="text-left px-4 py-2.5 font-semibold text-xs text-text-soft uppercase tracking-wider w-[90px]">
                   역할
                 </th>
-                <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider w-[100px]">
+                <th className="text-left px-4 py-2.5 font-semibold text-xs text-text-soft uppercase tracking-wider w-[100px]">
                   할당량
                 </th>
-                <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider w-[110px]">
+                <th className="text-left px-4 py-2.5 font-semibold text-xs text-text-soft uppercase tracking-wider w-[110px]">
                   가입
                 </th>
-                <th className="text-left px-4 py-2.5 font-semibold text-[11.5px] text-text-soft uppercase tracking-wider w-[140px]">
+                <th className="text-left px-4 py-2.5 font-semibold text-xs text-text-soft uppercase tracking-wider w-[140px]">
                   작업
                 </th>
               </tr>
@@ -168,7 +168,7 @@ export function UsersAdmin({
                     <td className="px-4 py-2.5 font-medium text-text">
                       {user.username}
                       {isMe && (
-                        <span className="ml-1.5 text-[11px] text-text-faint">(나)</span>
+                        <span className="ml-1.5 text-xs text-text-faint">(나)</span>
                       )}
                     </td>
                     <td className="px-4 py-2.5 text-text-soft">
@@ -176,11 +176,11 @@ export function UsersAdmin({
                     </td>
                     <td className="px-4 py-2.5">
                       {user.role === "admin" ? (
-                        <span className="inline-flex items-center gap-1 text-[12px] text-accent bg-accent-soft px-2 py-0.5 rounded whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 text-sm text-accent bg-accent-soft px-2 py-0.5 rounded whitespace-nowrap">
                           <Shield size={11} strokeWidth={2.2} /> 관리자
                         </span>
                       ) : (
-                        <span className="text-[12px] text-text-soft">멤버</span>
+                        <span className="text-sm text-text-soft">멤버</span>
                       )}
                     </td>
                     <td className="px-4 py-2.5">
@@ -196,7 +196,7 @@ export function UsersAdmin({
                         onError={(m) => toastError(m)}
                       />
                     </td>
-                    <td className="px-4 py-2.5 text-text-faint text-[12px]">
+                    <td className="px-4 py-2.5 text-text-faint text-sm">
                       {formatDate(user.createdAt)}
                     </td>
                     <td className="px-4 py-2.5">
@@ -320,7 +320,7 @@ function QuotaEditor({
           setEditing(true);
         }}
         disabled={disabled}
-        className="text-text-soft hover:text-accent hover:bg-hover px-1.5 py-0.5 rounded text-[13px] tabular-nums disabled:opacity-40"
+        className="text-text-soft hover:text-accent hover:bg-hover px-1.5 py-0.5 rounded text-base tabular-nums disabled:opacity-40"
         title="클릭해서 수정"
       >
         {value} GB
@@ -341,19 +341,19 @@ function QuotaEditor({
         autoFocus
         min={0}
         max={100000}
-        className="w-20 px-1.5 py-0.5 border border-accent rounded text-[13px] tabular-nums outline-none focus:ring-1 focus:ring-accent"
+        className="w-20 px-1.5 py-0.5 border border-accent rounded text-base tabular-nums outline-none focus:ring-1 focus:ring-accent"
       />
-      <span className="text-[11px] text-text-faint">GB</span>
+      <span className="text-xs text-text-faint">GB</span>
       <button
         onClick={save}
         disabled={disabled}
-        className="text-[11px] font-semibold text-white bg-accent hover:opacity-90 px-1.5 py-0.5 rounded disabled:opacity-40"
+        className="text-xs font-semibold text-white bg-accent hover:opacity-90 px-1.5 py-0.5 rounded disabled:opacity-40"
       >
         저장
       </button>
       <button
         onClick={() => setEditing(false)}
-        className="text-[11px] text-text-faint hover:text-text px-1"
+        className="text-xs text-text-faint hover:text-text px-1"
       >
         취소
       </button>
@@ -409,7 +409,7 @@ function AddUserModal({
     <Modal open onClose={onClose} title="사용자 추가" maxWidth="max-w-[440px]">
       <form onSubmit={submit} className="space-y-3 p-5">
         <div>
-          <label className="block text-[12px] font-semibold text-text-soft mb-1.5">
+          <label className="block text-sm font-semibold text-text-soft mb-1.5">
             아이디
           </label>
           <input
@@ -419,25 +419,25 @@ function AddUserModal({
             autoFocus
             placeholder="예: jin"
             pattern="[a-zA-Z0-9_\-]{2,30}"
-            className="w-full px-3 py-2 border border-border rounded-md text-[14px] outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
+            className="w-full px-3 py-2 border border-border rounded-md text-md outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
           />
-          <div className="text-[11px] text-text-faint mt-1">
+          <div className="text-xs text-text-faint mt-1">
             영소문자/숫자/_/- 만, 2~30자
           </div>
         </div>
         <div>
-          <label className="block text-[12px] font-semibold text-text-soft mb-1.5">
+          <label className="block text-sm font-semibold text-text-soft mb-1.5">
             이름 (선택)
           </label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="예: 진"
-            className="w-full px-3 py-2 border border-border rounded-md text-[14px] outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
+            className="w-full px-3 py-2 border border-border rounded-md text-md outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
           />
         </div>
         <div>
-          <label className="block text-[12px] font-semibold text-text-soft mb-1.5">
+          <label className="block text-sm font-semibold text-text-soft mb-1.5">
             임시 비밀번호
           </label>
           <input
@@ -447,14 +447,14 @@ function AddUserModal({
             minLength={6}
             type="text"
             placeholder="최소 6자"
-            className="w-full px-3 py-2 border border-border rounded-md text-[14px] outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
+            className="w-full px-3 py-2 border border-border rounded-md text-md outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
           />
-          <div className="text-[11px] text-text-faint mt-1">
+          <div className="text-xs text-text-faint mt-1">
             사용자에게 전달하고 로그인 후 변경하도록 안내하세요
           </div>
         </div>
         <div>
-          <label className="block text-[12px] font-semibold text-text-soft mb-1.5">
+          <label className="block text-sm font-semibold text-text-soft mb-1.5">
             역할
           </label>
           <div className="flex gap-2">
@@ -465,7 +465,7 @@ function AddUserModal({
                 checked={role === "member"}
                 onChange={() => setRole("member")}
               />
-              <span className="text-[13px]">멤버</span>
+              <span className="text-base">멤버</span>
             </label>
             <label className="flex-1 flex items-center gap-2 border border-border rounded-md px-3 py-2 cursor-pointer hover:border-border-hover">
               <input
@@ -474,7 +474,7 @@ function AddUserModal({
                 checked={role === "admin"}
                 onChange={() => setRole("admin")}
               />
-              <span className="text-[13px]">관리자</span>
+              <span className="text-base">관리자</span>
             </label>
           </div>
         </div>
@@ -482,14 +482,14 @@ function AddUserModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-[13px] font-medium text-text-muted hover:text-text hover:bg-hover rounded-md"
+            className="px-4 py-2 text-base font-medium text-text-muted hover:text-text hover:bg-hover rounded-md"
           >
             취소
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="px-4 py-2 text-[13px] font-semibold bg-text text-white hover:bg-[#333] disabled:opacity-60 rounded-md"
+            className="px-4 py-2 text-base font-semibold bg-text text-white hover:bg-[#333] disabled:opacity-60 rounded-md"
           >
             {submitting ? "추가 중..." : "추가"}
           </button>
@@ -541,7 +541,7 @@ function ResetPasswordModal({
     <Modal open onClose={onClose} title={`${user.username} 비밀번호 리셋`} maxWidth="max-w-[440px]">
       <form onSubmit={submit} className="space-y-3 p-5">
         <div>
-          <label className="block text-[12px] font-semibold text-text-soft mb-1.5">
+          <label className="block text-sm font-semibold text-text-soft mb-1.5">
             새 임시 비밀번호
           </label>
           <input
@@ -552,9 +552,9 @@ function ResetPasswordModal({
             type="text"
             autoFocus
             placeholder="최소 6자"
-            className="w-full px-3 py-2 border border-border rounded-md text-[14px] outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
+            className="w-full px-3 py-2 border border-border rounded-md text-md outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
           />
-          <div className="text-[11px] text-text-faint mt-1">
+          <div className="text-xs text-text-faint mt-1">
             사용자에게 전달하고 로그인 후 변경하도록 안내하세요
           </div>
         </div>
@@ -562,14 +562,14 @@ function ResetPasswordModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-[13px] font-medium text-text-muted hover:text-text hover:bg-hover rounded-md"
+            className="px-4 py-2 text-base font-medium text-text-muted hover:text-text hover:bg-hover rounded-md"
           >
             취소
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="px-4 py-2 text-[13px] font-semibold bg-text text-white hover:bg-[#333] disabled:opacity-60 rounded-md"
+            className="px-4 py-2 text-base font-semibold bg-text text-white hover:bg-[#333] disabled:opacity-60 rounded-md"
           >
             {submitting ? "변경 중..." : "리셋"}
           </button>

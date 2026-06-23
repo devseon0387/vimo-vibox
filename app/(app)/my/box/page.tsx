@@ -67,7 +67,7 @@ export default async function MyBoxPage({
       <PartnerContextPanel data={panelData} />
       <div className="flex-1 min-w-0 px-4 md:px-8 py-4 md:py-6 max-w-[1400px]">
       {/* 브레드크럼 — 상대경로(prefix 가림), 루트 = My Box */}
-      <div className="flex items-center gap-1.5 text-[12.5px] text-slate-500 mb-3 overflow-x-auto">
+      <div className="flex items-center gap-1.5 text-sm text-slate-500 mb-3 overflow-x-auto">
         <Package size={14} className="text-slate-400 shrink-0" strokeWidth={2} />
         <Link
           href="/my/box"
@@ -106,10 +106,10 @@ export default async function MyBoxPage({
 
       {/* 헤더 — 업로드·새 폴더 버튼은 FilesPane 의 ActionBar 가 제공 */}
       <div className="mb-4">
-        <h1 className="text-[22px] font-bold text-slate-900">
+        <h1 className="text-2xl font-bold text-slate-900">
           {segments.length === 0 ? "My Box" : segments[segments.length - 1]}
         </h1>
-        <div className="text-[11.5px] text-slate-400 mt-0.5">
+        <div className="text-xs text-slate-400 mt-0.5">
           {userName}님의 개인 드라이브
         </div>
       </div>

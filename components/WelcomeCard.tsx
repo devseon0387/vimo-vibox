@@ -35,11 +35,11 @@ export function WelcomeCard({ name }: { name?: string | null }) {
       >
         <X size={14} strokeWidth={2.2} />
       </button>
-      <div className="flex items-center gap-2 text-[11px] sm:text-[12px] font-bold text-accent uppercase tracking-wider mb-1">
+      <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-accent uppercase tracking-wider mb-1">
         <Sparkles size={13} strokeWidth={2.4} />
         Vibox 시작 가이드
       </div>
-      <h2 className="text-[16px] sm:text-[18px] font-bold text-text mb-3 pr-7">
+      <h2 className="text-lg sm:text-xl font-bold text-text mb-3 pr-7">
         반갑습니다{name ? `, ${name}님` : ""}
       </h2>
       <div className="grid sm:grid-cols-3 gap-2 sm:gap-3">
@@ -62,8 +62,8 @@ export function WelcomeCard({ name }: { name?: string | null }) {
           desc="언제든 ⌘K 로 파일·댓글·페이지 찾기"
         />
       </div>
-      <div className="hidden sm:block mt-3 text-[11.5px] text-text-faint">
-        Tip: 단축키는 <kbd className="font-mono bg-white border border-border rounded px-1 py-0.5 text-[10.5px]">?</kbd> 키로 언제든 확인.
+      <div className="hidden sm:block mt-3 text-xs text-text-faint">
+        Tip: 단축키는 <kbd className="font-mono bg-white border border-border rounded px-1 py-0.5 text-2xs">?</kbd> 키로 언제든 확인.
       </div>
     </div>
   );
@@ -82,15 +82,15 @@ function Step({
 }) {
   return (
     <div className="flex gap-2.5 bg-white/70 backdrop-blur border border-white rounded-lg p-2.5 sm:p-3">
-      <div className="shrink-0 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-accent text-white grid place-items-center text-[10px] sm:text-[11px] font-bold">
+      <div className="shrink-0 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-accent text-white grid place-items-center text-2xs sm:text-xs font-bold">
         {step}
       </div>
       <div className="min-w-0">
-        <div className="flex items-center gap-1.5 text-[12px] sm:text-[12.5px] font-semibold text-text mb-0.5">
+        <div className="flex items-center gap-1.5 text-sm sm:text-sm font-semibold text-text mb-0.5">
           <span className="text-accent">{icon}</span>
           {title}
         </div>
-        <div className="text-[11px] text-text-muted leading-snug">{desc}</div>
+        <div className="text-xs text-text-muted leading-snug">{desc}</div>
       </div>
     </div>
   );

@@ -64,7 +64,7 @@ export function ActivityFeed({ entries }: { entries: ActivityEntry[] }) {
             <button
               key={k}
               onClick={() => setFilter(k)}
-              className={`px-3 py-1 rounded-full text-[12px] font-medium border transition-colors flex items-center gap-1.5 ${
+              className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors flex items-center gap-1.5 ${
                 active
                   ? "bg-accent text-white border-accent"
                   : "bg-white text-text-soft border-border hover:bg-surface"
@@ -72,7 +72,7 @@ export function ActivityFeed({ entries }: { entries: ActivityEntry[] }) {
             >
               {meta && <meta.icon size={11} strokeWidth={2.2} />}
               <span>{k === "all" ? "전체" : meta?.label}</span>
-              <span className={`text-[10.5px] ${active ? "text-white/80" : "text-text-faint"}`}>
+              <span className={`text-2xs ${active ? "text-white/80" : "text-text-faint"}`}>
                 {counts[k]}
               </span>
             </button>
@@ -81,14 +81,14 @@ export function ActivityFeed({ entries }: { entries: ActivityEntry[] }) {
       </div>
 
       {visible.length === 0 ? (
-        <div className="border border-border rounded-xl bg-white px-6 py-16 text-center text-text-faint text-[13px]">
+        <div className="border border-border rounded-xl bg-white px-6 py-16 text-center text-text-faint text-base">
           기록된 활동이 없습니다.
         </div>
       ) : (
         <div className="space-y-6">
           {grouped.map(([day, items]) => (
             <div key={day}>
-              <div className="text-[11.5px] font-semibold text-text-faint uppercase tracking-widest mb-2">
+              <div className="text-xs font-semibold text-text-faint uppercase tracking-widest mb-2">
                 {dayLabel(day)} · {items.length}건
               </div>
               <div className="border border-border rounded-xl bg-white divide-y divide-border overflow-hidden">
@@ -103,23 +103,23 @@ export function ActivityFeed({ entries }: { entries: ActivityEntry[] }) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <span className={`text-[11px] font-semibold ${m.cls}`}>
+                          <span className={`text-xs font-semibold ${m.cls}`}>
                             {m.label}
                           </span>
                           {e.actorName && (
-                            <span className="text-[11.5px] text-text-soft">
+                            <span className="text-xs text-text-soft">
                               by {e.actorName}
                             </span>
                           )}
                           {e.meta && (
-                            <span className="text-[11px] text-text-faint">{e.meta}</span>
+                            <span className="text-xs text-text-faint">{e.meta}</span>
                           )}
                         </div>
-                        <div className="text-[12.5px] text-text font-mono truncate">
+                        <div className="text-sm text-text font-mono truncate">
                           {e.path}
                         </div>
                       </div>
-                      <div className="text-[11px] text-text-faint shrink-0">
+                      <div className="text-xs text-text-faint shrink-0">
                         {timeOnly(e.at)}
                       </div>
                     </div>
