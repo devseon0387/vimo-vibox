@@ -82,6 +82,33 @@
   --color-dash: var(--dash);
   --color-faint: var(--faint);
 
+  /* 시맨틱 색 매핑 (sky = My box·미리보기 / 비모 = brand) — :root엔 있었으나 미매핑이던 것 */
+  --color-personal: var(--personal);
+  --color-personal-soft: var(--personal-soft);
+  --color-personal-dark: var(--personal-dark);
+  --color-team: var(--team-color);
+  --color-team-soft: var(--team-soft);
+  --color-team-dark: var(--team-dark);
+
+  /* 타이포 스케일 (text-[Xpx] 16종 난립 → 8단계). text-2xs·text-md 는 신규,
+     나머지는 Tailwind 기본 덮어씀(네임드 사용 7곳뿐이라 안전). 마이그레이션 타깃. */
+  --text-2xs: 10px;
+  --text-2xs--line-height: 14px;
+  --text-xs: 11px;
+  --text-xs--line-height: 16px;
+  --text-sm: 12px;
+  --text-sm--line-height: 16px;
+  --text-base: 13px;
+  --text-base--line-height: 18px;
+  --text-md: 14px;
+  --text-md--line-height: 20px;
+  --text-lg: 16px;
+  --text-lg--line-height: 24px;
+  --text-xl: 18px;
+  --text-xl--line-height: 26px;
+  --text-2xl: 22px;
+  --text-2xl--line-height: 28px;
+
   --font-sans: var(--font-inter), var(--font-pretendard), -apple-system, sans-serif;
 }
 
