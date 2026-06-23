@@ -271,7 +271,7 @@ export function MyStatsClient({ name }: { name: string }) {
               </div>
             ) : (
               <div className="text-[12px] text-slate-400 italic mt-3">
-                반복되는 지적 없음 · 좋아요 👍
+                반복되는 지적 없음
               </div>
             )}
           </div>

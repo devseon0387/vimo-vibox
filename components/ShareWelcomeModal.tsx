@@ -49,7 +49,7 @@ export function ShareWelcomeModal({
             VIBOX 공유 링크
           </div>
           <h2 className="text-[20px] font-bold text-text mb-1">
-            반갑습니다 👋
+            반갑습니다
           </h2>
           <p className="text-[13px] text-text-muted leading-relaxed">
             영상을 시청하고{hasComments && (

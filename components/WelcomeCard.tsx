@@ -40,7 +40,7 @@ export function WelcomeCard({ name }: { name?: string | null }) {
         Vibox 시작 가이드
       </div>
       <h2 className="text-[16px] sm:text-[18px] font-bold text-text mb-3 pr-7">
-        반갑습니다{name ? `, ${name}님` : ""} 👋
+        반갑습니다{name ? `, ${name}님` : ""}
       </h2>
       <div className="grid sm:grid-cols-3 gap-2 sm:gap-3">
         <Step
