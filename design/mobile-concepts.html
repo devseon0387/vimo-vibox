@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 모바일 최적화 — 디자인 시안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root{
+    --bg:#fff;--surface:#fafafa;--surface2:#f7f7f7;--border:#ececec;--text:#111;--soft:#666;--faint:#999;--hover:#f0f0f0;
+    --accent:#e85008;--accent2:#F94000;--accent-soft:#fef0e8;--mybox:#52525b;--mybox-soft:#f4f4f5;
+    --ok:#16a34a;--warn:#d97706;--danger:#dc2626;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#e7eaee;color:var(--text);font-family:Pretendard,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .lucide{width:1em;height:1em;stroke-width:2;flex:none}
+  .page{max-width:1240px;margin:0 auto;padding:32px 22px 80px}
+  h1{font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .sub{color:var(--soft);font-size:13.5px;margin-top:8px;line-height:1.65;max-width:820px}
+  .princ{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}
+  .princ .p{font-size:11.5px;font-weight:600;color:var(--soft);background:#fff;border:1px solid var(--border);border-radius:999px;padding:5px 11px;display:inline-flex;gap:6px;align-items:center}
+  .princ .p .lucide{color:var(--accent);font-size:14px}
+  .row{display:flex;gap:30px;flex-wrap:wrap;margin-top:30px;justify-content:center}
+  .frame{display:flex;flex-direction:column;align-items:center;gap:11px}
+  .cap{font-size:13px;font-weight:700}
+  .cap small{display:block;font-weight:500;color:var(--faint);font-size:11px;margin-top:2px;max-width:300px;text-align:center}
+
+  /* phone */
+  .phone{width:330px;height:700px;background:#0c0c0e;border-radius:42px;padding:9px;box-shadow:0 2px 6px rgba(0,0,0,.12),0 22px 50px rgba(0,0,0,.18)}
+  .screen{width:100%;height:100%;border-radius:34px;overflow:hidden;background:#fff;display:flex;flex-direction:column;position:relative}
+  .sb{height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:11.5px;font-weight:700;flex:none;z-index:5}
+  .sb .dots{display:flex;gap:4px;align-items:center}
+  .sb .dots .lucide{font-size:13px}
+  .notch{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:90px;height:22px;background:#0c0c0e;border-radius:0 0 14px 14px;z-index:6}
+  .body{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+  .scroll{flex:1;overflow-y:auto;min-height:0}
+
+  /* app header (light) */
+  .ahead{display:flex;align-items:center;gap:9px;padding:6px 14px 10px;flex:none}
+  .ahead .logo{display:flex;align-items:center;gap:6px;font-weight:800;font-size:14px;letter-spacing:-.02em}
+  .ahead .logo .m{width:20px;height:20px;border-radius:5px;background:conic-gradient(from 200deg,#e85008,#f9a87a,#e85008);display:grid;place-items:center}
+  .ahead .logo .d{color:var(--accent)}
+  .ahead .sp{flex:1}
+  .ahead .ic{width:34px;height:34px;border-radius:999px;display:grid;place-items:center;color:var(--soft)}
+  .ahead .ic:active{background:var(--hover)}
+  .ahead .ic .lucide{font-size:19px}
+  .ahead .av{width:30px;height:30px;border-radius:999px;background:#3a3a3a;color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700}
+
+  .seclbl{font-size:11px;font-weight:800;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;padding:14px 16px 7px;display:flex;align-items:center;gap:7px}
+  .seclbl .dot{width:8px;height:8px;border-radius:99px}
+
+  /* hero card */
+  .hero{margin:4px 14px 2px;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .hero .cov{aspect-ratio:16/9;background:linear-gradient(120deg,#3730a3,#7c3aed,#db2777);position:relative}
+  .hero .cov .badge{position:absolute;top:9px;left:9px;background:rgba(0,0,0,.6);color:#fff;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:6px;display:inline-flex;gap:5px;align-items:center}
+  .hero .cov .play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:999px;background:rgba(20,20,25,.55);display:grid;place-items:center;color:#fff}
+  .hero .cov .play .lucide{font-size:20px;margin-left:2px}
+  .hero .meta{padding:11px 13px}
+  .hero .meta .t{font-size:14.5px;font-weight:800}
+  .hero .meta .s{font-size:11.5px;color:var(--soft);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .chip{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px}
+  .chip.fix{color:var(--danger);background:#fef2f2}
+  .chip.rev{color:var(--warn);background:#fffbeb}
+  .chip.ok{color:var(--ok);background:#f0fdf4}
+  .hero .cta{display:flex;gap:8px;padding:0 13px 13px}
+  .btn{flex:1;height:38px;border-radius:10px;font-size:13px;font-weight:700;display:grid;place-items:center;border:none}
+  .btn.pri{background:var(--accent);color:#fff}
+  .btn.sec{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+
+  /* list rows */
+  .lrow{display:flex;align-items:center;gap:11px;padding:9px 16px}
+  .lrow:active{background:var(--surface2)}
+  .lrow .th{width:52px;height:38px;border-radius:8px;background:#1a1a1a;position:relative;flex:none;overflow:hidden}
+  .lrow .th.fold{background:var(--surface2);display:grid;place-items:center}
+  .lrow .th.fold .lucide{font-size:20px;color:#9ca3af}
+  .lrow .th .pl{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.85)}
+  .lrow .th .pl .lucide{font-size:16px}
+  .lrow .th .tc{position:absolute;right:3px;bottom:3px;background:rgba(0,0,0,.7);color:#fff;font-size:8.5px;font-weight:600;border-radius:3px;padding:1px 3px}
+  .lrow .nm{flex:1;min-width:0}
+  .lrow .nm .n{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lrow .nm .m{font-size:11px;color:var(--faint);margin-top:1px}
+  .lrow .ch{color:#c4c4c4}
+  .lrow .ch .lucide{font-size:17px}
+  .lrow .badge2{font-size:9.5px;font-weight:700;color:#fff;border-radius:99px;min-width:16px;height:16px;padding:0 4px;display:grid;place-items:center}
+
+  /* bottom tab bar */
+  .tabs{flex:none;display:flex;border-top:1px solid var(--border);background:#fff;padding-bottom:6px}
+  .tabs .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 2px;color:var(--faint);font-size:9.5px;font-weight:600}
+  .tabs .tab .lucide{font-size:21px}
+  .tabs .tab.on{color:var(--text)}
+  .tabs .tab.on .lucide{color:var(--accent)}
+  .tabs .tab .nb{position:relative}
+  .tabs .tab .nb .d{position:absolute;top:-1px;right:-3px;width:7px;height:7px;border-radius:99px;background:var(--accent)}
+
+  /* review (dark) */
+  .rev .body{background:#0b0f17}
+  .rtop{display:flex;align-items:center;gap:9px;padding:5px 12px 8px;background:#fff;flex:none;border-bottom:1px solid var(--border)}
+  .rtop .bk{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--soft)}
+  .rtop .bk .lucide{font-size:19px}
+  .rtop .fn{flex:1;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rtop .vpin{font-size:10px;font-weight:800;color:var(--accent);background:var(--accent-soft);padding:2px 6px;border-radius:5px}
+  .rtop .ap{height:30px;padding:0 11px;border-radius:8px;background:var(--ok);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
+  .vid{position:relative;aspect-ratio:16/9;background:linear-gradient(115deg,#dc2626 0 16%,#16a34a 0 33%,#eab308 0 50%,#2563eb 0 66%,#db2777 0 83%,#06b6d4 0)}
+  .vid .sub{position:absolute;left:0;right:0;bottom:7px;text-align:center}
+  .vid .sub span{background:rgba(0,0,0,.6);color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:5px}
+  /* mobile control bar */
+  .mbar{background:#0b0f17;padding:7px 12px 8px;flex:none}
+  .mseek{position:relative;height:14px;display:flex;align-items:center}
+  .mseek .tk{position:absolute;left:0;right:0;height:4px;border-radius:99px;background:#334155}
+  .mseek .fl{position:absolute;left:0;height:4px;border-radius:99px;background:var(--accent2);width:32%}
+  .mseek .mk{position:absolute;top:50%;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:99px;background:#e85008;box-shadow:0 0 0 2px #0b0f17}
+  .mseek .mk.ai{background:#7c3aed}
+  .mseek .ph{position:absolute;left:32%;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:99px;background:#fff;box-shadow:0 0 0 2px #e85008}
+  .mrow{display:flex;align-items:center;gap:10px;margin-top:5px;color:#cbd5e1}
+  .mrow .pb{width:34px;height:34px;border-radius:999px;background:var(--accent);color:#fff;display:grid;place-items:center}
+  .mrow .pb .lucide{font-size:17px;margin-left:1px}
+  .mrow .ib{width:30px;height:30px;display:grid;place-items:center}
+  .mrow .ib .lucide{font-size:17px}
+  .mrow .t{font-size:11px;font-family:ui-monospace,monospace;color:#cbd5e1}
+  .mrow .sp{flex:1}
+  /* comments stacked */
+  .cwrap{flex:1;background:#fff;border-radius:14px 14px 0 0;margin-top:-6px;display:flex;flex-direction:column;min-height:0;position:relative;z-index:2}
+  .chd{display:flex;align-items:center;gap:8px;padding:11px 15px 8px;flex:none}
+  .chd .grip{position:absolute;top:5px;left:50%;transform:translateX(-50%);width:34px;height:4px;border-radius:99px;background:#e4e4e7}
+  .chd .ct{font-size:13px;font-weight:800}
+  .chd .sp{flex:1}
+  .chd .ic{color:var(--faint)}.chd .ic .lucide{font-size:16px}
+  .clist{flex:1;overflow-y:auto;min-height:0;padding:0 4px}
+  .citem{display:flex;gap:9px;padding:9px 12px;border-top:1px solid var(--border)}
+  .citem .av{width:24px;height:24px;border-radius:999px;color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;flex:none}
+  .citem .cc{flex:1;min-width:0}
+  .citem .ch1{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+  .citem .tcch{font-size:10px;font-weight:700;font-family:ui-monospace,monospace;padding:1px 5px;border-radius:5px;color:#fff}
+  .citem .who{font-size:11px;color:var(--faint)}
+  .citem .tx{font-size:13px;line-height:1.45}
+  /* compose */
+  .compose{flex:none;border-top:1px solid var(--border);padding:8px 12px;display:flex;align-items:center;gap:8px;background:#fff}
+  .compose .tcch{font-size:10.5px;font-weight:700;font-family:ui-monospace,monospace;background:var(--accent-soft);color:var(--accent);padding:3px 6px;border-radius:6px}
+  .compose .inp{flex:1;height:36px;border:1px solid var(--border);border-radius:999px;padding:0 13px;display:flex;align-items:center;font-size:12.5px;color:var(--faint)}
+  .compose .send{width:36px;height:36px;border-radius:999px;background:var(--accent);color:#fff;display:grid;place-items:center}
+  .compose .send .lucide{font-size:16px}
+
+  /* guest top */
+  .gtop{display:flex;align-items:center;gap:8px;padding:7px 13px;background:#fff;flex:none;border-bottom:1px solid var(--border)}
+  .gtop .logo{display:flex;align-items:center;gap:6px;font-weight:800;font-size:13px}
+  .gtop .logo .m{width:18px;height:18px;border-radius:4px;background:conic-gradient(from 200deg,#e85008,#f9a87a,#e85008)}
+  .gtop .logo .d{color:var(--accent)}
+  .gtop .fn{flex:1;font-size:12px;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .gtop .dl{height:30px;padding:0 10px;border-radius:8px;background:#111;color:#fff;font-size:11.5px;font-weight:700;display:flex;align-items:center;gap:5px}
+  .gtop .dl .lucide{font-size:14px}
+  .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;color:var(--faint);text-align:center;padding:20px}
+  .empty .lucide{font-size:30px;color:#cbd5e1}
+  .empty .e1{font-size:13px;font-weight:700;color:var(--soft)}
+  .empty .e2{font-size:11.5px}
+
+  .footnote{margin-top:46px;padding-top:18px;border-top:1px solid #d6dadf;color:var(--faint);font-size:12px;line-height:1.75;max-width:900px;margin-left:auto;margin-right:auto}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>비박스 모바일 최적화 — 디자인 시안</h1>
+  <p class="sub">데스크톱 레이아웃을 폰(좁은 1열)에 맞춰 재구성. 핵심 원칙: <b>하단 탭바 내비</b>, <b>검수 = 영상 고정 + 댓글 아래 스택 + 입력창 하단 고정</b>, <b>터치 타깃 ≥ 44px</b>, 깊은 폴더는 <b>드릴인</b>. 톤은 그대로(무채색 My box·주황 비모·이모지 금지).</p>
+  <div class="princ">
+    <span class="p"><i data-lucide="smartphone"></i>1열 스택</span>
+    <span class="p"><i data-lucide="panel-bottom"></i>하단 탭바</span>
+    <span class="p"><i data-lucide="message-square"></i>검수 댓글=하단 시트</span>
+    <span class="p"><i data-lucide="hand"></i>큰 터치 타깃</span>
+    <span class="p"><i data-lucide="ban"></i>이모지 금지·lucide</span>
+  </div>
+
+  <div class="row">
+    <!-- 1. 홈 -->
+    <div class="frame">
+      <div class="phone"><div class="notch"></div><div class="screen">
+        <div class="sb"><span>9:41</span><span class="dots"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span></div>
+        <div class="body">
+          <div class="ahead"><span class="logo"><span class="m"></span>vi<span class="d">.</span>box</span><span class="sp"></span>
+            <span class="ic"><span class="nb"><i data-lucide="bell"></i><span class="d" style="position:absolute;top:6px;right:7px;width:6px;height:6px;border-radius:99px;background:var(--accent)"></span></span></span>
+            <span class="av">서</span></div>
+          <div class="scroll">
+            <div class="seclbl">지금 할 일</div>
+            <div class="hero">
+              <div class="cov"><span class="badge"><i data-lucide="dot" style="font-size:14px"></i>미해결 2</span><span class="play"><i data-lucide="play"></i></span></div>
+              <div class="meta"><div class="t">성수카페 브랜딩 v3</div>
+                <div class="s"><span class="chip fix">수정요청 2</span><span>비모 · 마감 D-2</span></div></div>
+              <div class="cta"><button class="btn sec">새 버전</button><button class="btn pri">검수 열기</button></div>
+            </div>
+            <div class="seclbl"><span class="dot" style="background:var(--accent2)"></span>비모와의 작업</div>
+            <div class="lrow"><div class="th"><span class="pl"><i data-lucide="play"></i></span><span class="tc">00:48</span></div>
+              <div class="nm"><div class="n">그래놀라 광고_v2.mp4</div><div class="m">오늘 · 검수중</div></div><span class="chip rev">검수중</span></div>
+            <div class="seclbl"><span class="dot" style="background:var(--mybox)"></span>My box</div>
+            <div class="lrow"><div class="th fold"><i data-lucide="folder"></i></div><div class="nm"><div class="n">진행중_프로젝트</div><div class="m">폴더 3</div></div><span class="ch"><i data-lucide="chevron-right"></i></span></div>
+            <div class="lrow"><div class="th fold"><i data-lucide="folder"></i></div><div class="nm"><div class="n">촬영_원본</div><div class="m">폴더 2</div></div><span class="ch"><i data-lucide="chevron-right"></i></span></div>
+          </div>
+          <nav class="tabs">
+            <div class="tab on"><i data-lucide="home"></i>홈</div>
+            <div class="tab"><i data-lucide="hard-drive"></i>My box</div>
+            <div class="tab"><i data-lucide="handshake"></i>비모</div>
+            <div class="tab"><span class="nb"><i data-lucide="inbox"></i><span class="d"></span></span>검수함</div>
+            <div class="tab"><i data-lucide="menu"></i>더보기</div>
+          </nav>
+        </div>
+      </div></div>
+      <div class="cap">1 · 홈<small>적응형 히어로(가장 급한 1건) + 비모/My box 스택 · 하단 탭바</small></div>
+    </div>
+
+    <!-- 2. My box -->
+    <div class="frame">
+      <div class="phone"><div class="notch"></div><div class="screen">
+        <div class="sb"><span>9:41</span><span class="dots"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span></div>
+        <div class="body">
+          <div class="ahead"><span class="logo" style="font-size:16px">My box</span><span class="sp"></span>
+            <span class="ic"><i data-lucide="search"></i></span><span class="ic"><i data-lucide="folder-plus"></i></span></div>
+          <div class="lrow" style="padding-top:0;padding-bottom:8px;color:var(--soft);font-size:12.5px;gap:6px">
+            <i data-lucide="chevron-left" style="font-size:16px;color:var(--soft)"></i><b style="font-weight:700;color:var(--text)">진행중_프로젝트</b></div>
+          <div class="scroll">
+            <div class="lrow"><div class="th fold"><i data-lucide="folder"></i></div><div class="nm"><div class="n">성수카페_브랜딩</div><div class="m">항목 24</div></div><span class="ch"><i data-lucide="chevron-right"></i></span></div>
+            <div class="lrow"><div class="th fold"><i data-lucide="folder"></i></div><div class="nm"><div class="n">그래놀라_광고</div><div class="m">항목 11</div></div><span class="ch"><i data-lucide="chevron-right"></i></span></div>
+            <div class="lrow"><div class="th"><span class="pl"><i data-lucide="play"></i></span><span class="tc">01:02</span></div><div class="nm"><div class="n">메인편집_v3.mp4</div><div class="m">오늘 · 2.1GB</div></div><span class="ch"><i data-lucide="more-vertical"></i></span></div>
+            <div class="lrow"><div class="th"><span class="pl"><i data-lucide="play"></i></span><span class="tc">00:15</span></div><div class="nm"><div class="n">티저_15s.mp4</div><div class="m">오늘 · 320MB</div></div><span class="ch"><i data-lucide="more-vertical"></i></span></div>
+            <div class="lrow"><div class="th" style="background:#222;display:grid;place-items:center"><i data-lucide="music" style="color:#9ca3af;font-size:18px"></i></div><div class="nm"><div class="n">배경음악.wav</div><div class="m">어제 · 48MB</div></div><span class="ch"><i data-lucide="more-vertical"></i></span></div>
+          </div>
+          <nav class="tabs">
+            <div class="tab"><i data-lucide="home"></i>홈</div>
+            <div class="tab on"><i data-lucide="hard-drive"></i>My box</div>
+            <div class="tab"><i data-lucide="handshake"></i>비모</div>
+            <div class="tab"><span class="nb"><i data-lucide="inbox"></i><span class="d"></span></span>검수함</div>
+            <div class="tab"><i data-lucide="menu"></i>더보기</div>
+          </nav>
+        </div>
+      </div></div>
+      <div class="cap">2 · My box<small>폴더는 드릴인(← 뒤로) · 파일 행 리스트 · 데스크톱 폴더패널 대체</small></div>
+    </div>
+
+    <!-- 3. 영상 검수 -->
+    <div class="frame">
+      <div class="phone rev"><div class="notch"></div><div class="screen">
+        <div class="sb"><span>9:41</span><span class="dots"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span></div>
+        <div class="body">
+          <div class="rtop"><span class="bk"><i data-lucide="arrow-left"></i></span><span class="fn">브랜드필름_최종_v3.mp4</span><span class="vpin">v3</span><span class="ap">승인</span></div>
+          <div class="vid"><div class="sub"><span>여기 자막이 들어갑니다</span></div></div>
+          <div class="mbar">
+            <div class="mseek"><div class="tk"></div><div class="fl"></div><div class="mk" style="left:18%"></div><div class="mk ai" style="left:42%"></div><div class="mk" style="left:70%"></div><div class="ph"></div></div>
+            <div class="mrow"><span class="pb"><i data-lucide="play"></i></span><span class="t">00:14 / 00:48</span><span class="sp"></span><span class="ib"><i data-lucide="volume-2"></i></span><span class="ib"><i data-lucide="maximize"></i></span></div>
+          </div>
+          <div class="cwrap"><div class="grip"></div>
+            <div class="chd"><span class="ct">댓글 3</span><span class="chip fix" style="margin-left:2px">미해결 2</span><span class="sp"></span><span class="ic"><i data-lucide="arrow-up-narrow-wide"></i></span><span class="ic"><i data-lucide="eye"></i></span></div>
+            <div class="clist">
+              <div class="citem"><span class="av" style="background:#e85008">선</span><div class="cc"><div class="ch1"><span class="tcch" style="background:#e85008">00:14</span><span class="who">선영 · 매니저</span></div><div class="tx">자막 오타: '브랜드' → '브랜딩'으로 수정해주세요</div></div></div>
+              <div class="citem"><span class="av" style="background:#7c3aed">AI</span><div class="cc"><div class="ch1"><span class="tcch" style="background:#7c3aed">00:31</span><span class="who">AI 검수</span></div><div class="tx">자막 싱크가 0.3초 빠릅니다</div></div></div>
+              <div class="citem"><span class="av" style="background:#16a34a">김</span><div class="cc"><div class="ch1"><span class="tcch" style="background:#94a3b8">00:42</span><span class="who">김광고 · 클라이언트</span></div><div class="tx" style="color:var(--faint);text-decoration:line-through">이 컷 좋아요 (해결됨)</div></div></div>
+            </div>
+            <div class="compose"><span class="tcch">00:14</span><span class="inp">의견을 남겨주세요…</span><span class="send"><i data-lucide="send-horizontal"></i></span></div>
+          </div>
+        </div>
+      </div></div>
+      <div class="cap">3 · 영상 검수 ★<small>영상+컨트롤 고정 위 · 댓글 시트(드래그 핸들) 아래 · 입력창 하단 고정. 시크바 코멘트 마커 유지</small></div>
+    </div>
+
+    <!-- 4. 게스트 공유 -->
+    <div class="frame">
+      <div class="phone rev"><div class="notch"></div><div class="screen">
+        <div class="sb"><span>9:41</span><span class="dots"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span></div>
+        <div class="body">
+          <div class="gtop"><span class="logo"><span class="m"></span>vi<span class="d">.</span>box</span><span class="fn">브랜드필름_최종_v3</span><span class="dl"><i data-lucide="download"></i>받기</span></div>
+          <div class="vid"><div class="sub"><span>여기 자막이 들어갑니다</span></div></div>
+          <div class="mbar">
+            <div class="mseek"><div class="tk"></div><div class="fl"></div><div class="ph"></div></div>
+            <div class="mrow"><span class="pb"><i data-lucide="play"></i></span><span class="t">00:14 / 00:48</span><span class="sp"></span><span class="ib"><i data-lucide="volume-2"></i></span><span class="ib"><i data-lucide="maximize"></i></span></div>
+          </div>
+          <div class="cwrap"><div class="grip"></div>
+            <div class="chd"><span class="ct">의견</span><span class="sp"></span></div>
+            <div class="empty"><i data-lucide="message-square-plus"></i><div class="e1">시간 위에 의견을 남겨보세요</div><div class="e2">매니저가 그 위치를 정확히 보고 작업해요<br>회원가입 필요 없어요</div></div>
+            <div class="compose"><span class="tcch">00:14</span><span class="inp" style="display:flex;gap:8px"><span style="color:var(--faint)">이름</span></span><span class="inp">의견…</span><span class="send"><i data-lucide="send-horizontal"></i></span></div>
+          </div>
+        </div>
+      </div></div>
+      <div class="cap">4 · 게스트 공유(폰에서 검수)<small>로고+파일명+받기 · 같은 검수 레이아웃 · 입력창에 이름칸. 클라가 폰으로 검수하는 핵심 동선</small></div>
+    </div>
+  </div>
+
+  <div class="footnote">
+    핵심 적응 — <b>사이드바 → 하단 탭바</b>(홈·My box·비모·검수함·더보기). <b>My box 폴더패널(데스크톱 2번째 사이드바) → 드릴인 네비</b>(← 뒤로). <b>검수 뷰어: 우측 댓글패널 → 영상 아래 시트로 스택</b>(드래그 핸들로 펼침/접기, 입력창 하단 고정, 시크바 코멘트 마커 유지). 컨트롤바는 컴팩트(재생·시간·음소거·전체화면). 자막을 가려야 하면 전체화면=가로(landscape). 터치 타깃 ≥44px, 이모지 0·lucide.<br>
+    참고: 현재 코드도 일부 모바일 대응 존재(AppShell MobileTabBar·FeedbackModal 댓글패널 `w-full md:w-[372px]` 반응형). 이 시안은 그걸 일관된 모바일 비전으로 정리한 것.
+  </div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 게스트 모바일 — 롱폼 vs 숏폼</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root{--text:#111;--soft:#666;--faint:#999;--border:#ececec;--surface2:#f7f7f7;--accent:#e85008;--accent2:#F94000;--accent-soft:#fef0e8;--ok:#16a34a;--warn:#d97706;--danger:#dc2626;--hover:#f0f0f0}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#e7eaee;color:var(--text);font-family:Pretendard,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .lucide{width:1em;height:1em;stroke-width:2;flex:none}
+  .page{max-width:1180px;margin:0 auto;padding:32px 22px 80px}
+  h1{font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .sub{color:var(--soft);font-size:13.5px;margin-top:8px;line-height:1.65;max-width:830px}
+  .row{display:flex;gap:34px;flex-wrap:wrap;margin-top:30px;justify-content:center}
+  .frame{display:flex;flex-direction:column;align-items:center;gap:11px}
+  .cap{font-size:13px;font-weight:700;text-align:center}
+  .cap small{display:block;font-weight:500;color:var(--faint);font-size:11px;margin-top:3px;max-width:300px;text-align:center;line-height:1.5}
+  .cap .tg{font-size:10.5px;font-weight:700;color:var(--accent);background:#fff;border:1px solid #f6d9cd;border-radius:999px;padding:2px 8px;margin-left:5px}
+
+  .phone{width:328px;height:700px;background:#0c0c0e;border-radius:42px;padding:9px;box-shadow:0 2px 6px rgba(0,0,0,.12),0 22px 50px rgba(0,0,0,.18);position:relative}
+  .screen{width:100%;height:100%;border-radius:34px;overflow:hidden;background:#000;display:flex;flex-direction:column;position:relative}
+  .notch{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:90px;height:22px;background:#0c0c0e;border-radius:0 0 14px 14px;z-index:30}
+  .sb{height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:11.5px;font-weight:700;flex:none;z-index:20;color:#fff}
+  .sb.dark{color:#111}
+  .sb .dots{display:flex;gap:4px}.sb .dots .lucide{font-size:13px}
+
+  .glogo{display:flex;align-items:center;gap:6px;font-weight:800;font-size:13px}
+  .glogo .m{width:18px;height:18px;border-radius:4px;background:conic-gradient(from 200deg,#e85008,#f9a87a,#e85008)}
+  .glogo .d{color:var(--accent)}
+
+  /* ===== 롱폼 (가로 16:9) — 영상 위 + 댓글 아래 ===== */
+  .lf{background:#fff;display:flex;flex-direction:column;height:100%}
+  .lf .top{display:flex;align-items:center;gap:8px;padding:6px 12px 8px;background:#fff;border-bottom:1px solid var(--border);flex:none}
+  .lf .top .fn{flex:1;font-size:12px;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lf .top .dl{height:28px;padding:0 9px;border-radius:7px;background:#111;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;gap:4px}.lf .top .dl .lucide{font-size:13px}
+  .vid16{aspect-ratio:16/9;position:relative;background:linear-gradient(115deg,#dc2626 0 16%,#16a34a 0 33%,#eab308 0 50%,#2563eb 0 66%,#db2777 0 83%,#06b6d4 0)}
+  .vsub{position:absolute;left:0;right:0;bottom:6px;text-align:center}.vsub span{background:rgba(0,0,0,.6);color:#fff;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:5px}
+  .mbar{background:#0b0f17;padding:7px 12px 8px;flex:none}
+  .seek{position:relative;height:14px;display:flex;align-items:center}
+  .seek .tk{position:absolute;left:0;right:0;height:4px;border-radius:99px;background:#334155}
+  .seek .fl{position:absolute;left:0;height:4px;border-radius:99px;background:var(--accent2);width:34%}
+  .seek .mk{position:absolute;top:50%;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:99px;background:#e85008;box-shadow:0 0 0 2px #0b0f17}
+  .seek .mk.ai{background:#7c3aed}
+  .seek .ph{position:absolute;left:34%;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:99px;background:#fff;box-shadow:0 0 0 2px #e85008}
+  .crow{display:flex;align-items:center;gap:9px;margin-top:5px;color:#cbd5e1}
+  .crow .pb{width:32px;height:32px;border-radius:999px;background:var(--accent);color:#fff;display:grid;place-items:center}.crow .pb .lucide{font-size:16px;margin-left:1px}
+  .crow .ib{width:28px;height:28px;display:grid;place-items:center}.crow .ib .lucide{font-size:16px}
+  .crow .t{font-size:11px;font-family:ui-monospace,monospace}.crow .sp{flex:1}
+  .clist{flex:1;overflow-y:auto;background:#fff;min-height:0}
+  .chd{display:flex;align-items:center;gap:7px;padding:10px 14px 7px}
+  .chd .ct{font-size:13px;font-weight:800}.chd .sp{flex:1}
+  .citem{display:flex;gap:9px;padding:9px 13px;border-top:1px solid var(--border)}
+  .citem .av{width:23px;height:23px;border-radius:999px;color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;flex:none}
+  .citem .cc{flex:1;min-width:0}
+  .citem .ch1{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+  .tcch{font-size:10px;font-weight:700;font-family:ui-monospace,monospace;padding:1px 5px;border-radius:5px;color:#fff}
+  .citem .who{font-size:10.5px;color:var(--faint)}
+  .citem .tx{font-size:12.5px;line-height:1.45}
+  .compose{flex:none;border-top:1px solid var(--border);padding:8px 11px;display:flex;align-items:center;gap:7px;background:#fff}
+  .compose .tcch{background:var(--accent-soft);color:var(--accent)}
+  .compose .inp{flex:1;height:34px;border:1px solid var(--border);border-radius:999px;padding:0 12px;display:flex;align-items:center;font-size:12px;color:var(--faint);gap:7px}
+  .compose .nm{color:var(--faint)}
+  .compose .send{width:34px;height:34px;border-radius:999px;background:var(--accent);color:#fff;display:grid;place-items:center}.compose .send .lucide{font-size:15px}
+
+  /* ===== 숏폼 (세로 9:16) — 영상 몰입 + 오버레이 ===== */
+  .sf{position:relative;height:100%;background:#000}
+  .sfvid{position:absolute;inset:0;background:
+    linear-gradient(160deg,#0ea5e9,#7c3aed 40%,#db2777 70%,#ea580c);background-size:120% 120%}
+  .sfvid .ctr{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);color:rgba(255,255,255,.92);font-family:ui-monospace,monospace;font-size:24px;font-weight:700;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+  .scrim-t{position:absolute;top:0;left:0;right:0;height:130px;background:linear-gradient(to bottom,rgba(0,0,0,.55),transparent);z-index:2}
+  .scrim-b{position:absolute;bottom:0;left:0;right:0;height:260px;background:linear-gradient(to top,rgba(0,0,0,.7),transparent);z-index:2}
+  .sftop{position:absolute;top:30px;left:0;right:0;z-index:5;display:flex;align-items:center;gap:8px;padding:6px 14px;color:#fff}
+  .sftop .glogo{color:#fff}
+  .sftop .fn{flex:1;font-size:12px;color:rgba(255,255,255,.92);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sftop .dl{height:28px;padding:0 9px;border-radius:7px;background:rgba(255,255,255,.2);backdrop-filter:blur(4px);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;gap:4px}.sftop .dl .lucide{font-size:13px}
+  /* 우측 세로 액션 레일 (TikTok식) */
+  .rail{position:absolute;right:10px;bottom:150px;z-index:6;display:flex;flex-direction:column;gap:16px;align-items:center;color:#fff}
+  .rail .a{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+  .rail .a .ic{width:42px;height:42px;border-radius:999px;background:rgba(20,20,25,.4);backdrop-filter:blur(3px);display:grid;place-items:center}
+  .rail .a .ic .lucide{font-size:21px}
+  .rail .a .ic.cm{position:relative}
+  .rail .a .ic .nb{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;border-radius:99px;background:var(--accent);font-size:9px;display:grid;place-items:center;padding:0 4px}
+  .sfbot{position:absolute;bottom:0;left:0;right:0;z-index:5;padding:8px 14px 14px}
+  .sfseek{position:relative;height:14px;display:flex;align-items:center;margin-bottom:6px}
+  .sfseek .tk{position:absolute;left:0;right:0;height:4px;border-radius:99px;background:rgba(255,255,255,.3)}
+  .sfseek .fl{position:absolute;left:0;height:4px;border-radius:99px;background:var(--accent2);width:40%}
+  .sfseek .mk{position:absolute;top:50%;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:99px;background:#e85008;box-shadow:0 0 0 2px rgba(0,0,0,.4)}
+  .sfseek .mk.ai{background:#a855f7}
+  .sfseek .ph{position:absolute;left:40%;top:50%;transform:translate(-50%,-50%);width:13px;height:13px;border-radius:99px;background:#fff;box-shadow:0 0 0 2px #e85008}
+  .sfctr{display:flex;align-items:center;gap:9px;color:#fff;margin-bottom:9px}
+  .sfctr .pb{width:34px;height:34px;border-radius:999px;background:var(--accent);display:grid;place-items:center}.sfctr .pb .lucide{font-size:17px;margin-left:1px}
+  .sfctr .ib{width:28px;height:28px;display:grid;place-items:center}.sfctr .ib .lucide{font-size:16px}
+  .sfctr .t{font-size:11px;font-family:ui-monospace,monospace}.sfctr .sp{flex:1}
+  .sfcompose{display:flex;align-items:center;gap:8px}
+  .sfcompose .tcch{background:rgba(232,80,8,.9);color:#fff}
+  .sfcompose .inp{flex:1;height:38px;border-radius:999px;background:rgba(255,255,255,.16);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.25);padding:0 14px;display:flex;align-items:center;font-size:12.5px;color:rgba(255,255,255,.8)}
+  .sfcompose .send{width:38px;height:38px;border-radius:999px;background:var(--accent);color:#fff;display:grid;place-items:center}.sfcompose .send .lucide{font-size:16px}
+
+  /* 숏폼 댓글 시트 */
+  .sheet{position:absolute;left:0;right:0;bottom:0;height:62%;background:#fff;border-radius:18px 18px 0 0;z-index:10;display:flex;flex-direction:column;box-shadow:0 -8px 30px rgba(0,0,0,.3)}
+  .sheet .grip{width:36px;height:4px;border-radius:99px;background:#e4e4e7;margin:7px auto 2px}
+  .dim{position:absolute;inset:0;background:rgba(0,0,0,.35);z-index:8}
+  .sfminestablished{}
+
+  .footnote{margin-top:46px;padding-top:18px;border-top:1px solid #d6dadf;color:var(--faint);font-size:12px;line-height:1.75;max-width:900px;margin:46px auto 0}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>게스트(공유 링크) 모바일 — 롱폼 vs 숏폼</h1>
+  <p class="sub">영상 비율에 따라 레이아웃을 다르게. <b>롱폼(가로 16:9)</b> = 영상 작아서 위에 두고 댓글은 아래 스택. <b>숏폼(세로 9:16)</b> = 영상이 화면을 꽉 채우니 <b>영상 몰입 + 컨트롤/액션 오버레이</b>(릴스/틱톡식), 댓글은 <b>아래에서 올라오는 시트</b>로.</p>
+
+  <div class="row">
+    <!-- A. 롱폼 -->
+    <div class="frame">
+      <div class="phone"><div class="notch"></div><div class="screen lf">
+        <div class="sb dark"><span>9:41</span><span class="dots"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span></div>
+        <div class="top"><span class="glogo"><span class="m"></span>vi<span class="d">.</span>box</span><span class="fn">브랜드필름_최종_v3</span><span class="dl"><i data-lucide="download"></i>받기</span></div>
+        <div class="vid16"><div class="vsub"><span>여기 영상 자막이 들어갑니다</span></div></div>
+        <div class="mbar">
+          <div class="seek"><div class="tk"></div><div class="fl"></div><div class="mk" style="left:18%"></div><div class="mk ai" style="left:42%"></div><div class="ph"></div></div>
+          <div class="crow"><span class="pb"><i data-lucide="play"></i></span><span class="t">00:16 / 00:48</span><span class="sp"></span><span class="ib"><i data-lucide="volume-2"></i></span><span class="ib"><i data-lucide="maximize"></i></span></div>
+        </div>
+        <div class="clist">
+          <div class="chd"><span class="ct">의견 2</span><span class="sp"></span><i data-lucide="arrow-up-narrow-wide" style="font-size:16px;color:var(--faint)"></i></div>
+          <div class="citem"><span class="av" style="background:#16a34a">김</span><div class="cc"><div class="ch1"><span class="tcch" style="background:#e85008">00:16</span><span class="who">김광고</span></div><div class="tx">로고 더 크게 보였으면 좋겠어요</div></div></div>
+          <div class="citem"><span class="av" style="background:#16a34a">김</span><div class="cc"><div class="ch1"><span class="tcch" style="background:#e85008">00:31</span><span class="who">김광고</span></div><div class="tx">이 부분 자막 색을 흰색으로</div></div></div>
+        </div>
+        <div class="compose"><span class="tcch" style="font-size:10.5px;font-weight:700;font-family:ui-monospace,monospace;padding:3px 6px;border-radius:6px">00:16</span><span class="inp"><span class="nm">김광고</span><span>·</span>의견…</span><span class="send"><i data-lucide="send-horizontal"></i></span></div>
+      </div></div>
+      <div class="cap">A · 롱폼 (가로 16:9)<span class="tg">영상 위 / 댓글 아래</span><small>영상이 작아 아래 공간 충분 → 댓글 리스트 상시 + 입력 하단 고정</small></div>
+    </div>
+
+    <!-- B. 숏폼 몰입 -->
+    <div class="frame">
+      <div class="phone"><div class="notch"></div><div class="screen sf">
+        <div class="sfvid"><div class="ctr">00:18 · f=95</div></div>
+        <div class="scrim-t"></div><div class="scrim-b"></div>
+        <div class="sb"><span>9:41</span><span class="dots"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span></div>
+        <div class="sftop"><span class="glogo"><span class="m"></span>vi<span class="d">.</span>box</span><span class="fn">릴스_컷_세로_v2</span><span class="dl"><i data-lucide="download"></i>받기</span></div>
+        <div class="rail">
+          <div class="a"><span class="ic cm"><i data-lucide="message-square"></i><span class="nb">3</span></span>댓글</div>
+          <div class="a"><span class="ic"><i data-lucide="step-forward"></i></span>프레임</div>
+          <div class="a"><span class="ic"><i data-lucide="maximize"></i></span>전체</div>
+        </div>
+        <div class="sfbot">
+          <div class="sfseek"><div class="tk"></div><div class="fl"></div><div class="mk" style="left:22%"></div><div class="mk ai" style="left:55%"></div><div class="ph"></div></div>
+          <div class="sfctr"><span class="pb"><i data-lucide="pause"></i></span><span class="t">00:18 / 00:45</span><span class="sp"></span><span class="ib"><i data-lucide="volume-2"></i></span></div>
+          <div class="sfcompose"><span class="tcch" style="font-size:10.5px;font-weight:700;font-family:ui-monospace,monospace;padding:3px 6px;border-radius:6px">00:18</span><span class="inp">이 순간에 의견 남기기…</span><span class="send"><i data-lucide="send-horizontal"></i></span></div>
+        </div>
+      </div></div>
+      <div class="cap">B · 숏폼 몰입 (세로 9:16)<span class="tg">영상 풀 + 오버레이</span><small>영상이 화면 채움 → 컨트롤·우측 액션레일(댓글/프레임/전체) 오버레이. 무동작 시 페이드</small></div>
+    </div>
+
+    <!-- C. 숏폼 댓글 시트 -->
+    <div class="frame">
+      <div class="phone"><div class="notch"></div><div class="screen sf">
+        <div class="sfvid" style="filter:brightness(.85)"><div class="ctr" style="top:20%">00:18</div></div>
+        <div class="scrim-t"></div>
+        <div class="sb"><span>9:41</span><span class="dots"><i data-lucide="signal"></i><i data-lucide="wifi"></i><i data-lucide="battery-full"></i></span></div>
+        <div class="sftop"><span class="glogo"><span class="m"></span>vi<span class="d">.</span>box</span><span class="fn">릴스_컷_세로_v2</span><span class="dl"><i data-lucide="download"></i>받기</span></div>
+        <div class="dim"></div>
+        <div class="sheet">
+          <div class="grip"></div>
+          <div class="chd"><span class="ct">댓글 3</span><span class="tcch" style="background:#fef2f2;color:var(--danger);font-size:10px">미해결 2</span><span class="sp"></span><i data-lucide="x" style="font-size:17px;color:var(--faint)"></i></div>
+          <div class="clist" style="flex:1;border-top:1px solid var(--border)">
+            <div class="citem" style="border-top:none"><span class="av" style="background:#e85008">선</span><div class="cc"><div class="ch1"><span class="tcch" style="background:#e85008">00:14</span><span class="who">선영 · 매니저</span></div><div class="tx">인트로 0.5초 줄여주세요</div></div></div>
+            <div class="citem"><span class="av" style="background:#7c3aed">AI</span><div class="cc"><div class="ch1"><span class="tcch" style="background:#7c3aed">00:25</span><span class="who">AI 검수</span></div><div class="tx">자막 싱크 0.3초 빠름</div></div></div>
+            <div class="citem"><span class="av" style="background:#16a34a">김</span><div class="cc"><div class="ch1"><span class="tcch" style="background:#94a3b8">00:40</span><span class="who">김광고</span></div><div class="tx" style="color:var(--faint);text-decoration:line-through">컷 전환 좋아요</div></div></div>
+          </div>
+          <div class="compose"><span class="tcch" style="font-size:10.5px;font-weight:700;font-family:ui-monospace,monospace;padding:3px 6px;border-radius:6px">00:18</span><span class="inp"><span class="nm">이름</span><span>·</span>의견…</span><span class="send"><i data-lucide="send-horizontal"></i></span></div>
+        </div>
+      </div></div>
+      <div class="cap">C · 숏폼 댓글 시트<span class="tg">올라온 상태</span><small>댓글 탭 → 아래에서 시트가 영상의 ~62% 덮으며 올라옴. 영상은 위에서 계속 재생</small></div>
+    </div>
+  </div>
+
+  <div class="footnote">
+    핵심 차이 — <b>롱폼(16:9)</b>: 영상 위 고정 + 댓글 리스트 아래 상시 + 입력 하단. 데스크톱 좌우 2단을 세로로 접은 것. <b>숏폼(9:16)</b>: 영상이 화면을 채우니 <b>몰입(컨트롤·액션 오버레이, 무동작 페이드)</b> + 댓글은 <b>바텀 시트</b>(탭하면 올라오고 영상은 위에서 계속). 코멘트 마커는 두 경우 다 시크바에 유지. 자동 분기 = 업로드 영상의 가로:세로 비율로 판단. 톤·로고·이모지 금지 규칙 동일.
+  </div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>
