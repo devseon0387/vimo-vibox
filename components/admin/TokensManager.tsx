@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import type { Scope } from "@/lib/api-auth";
 import { humanError } from "@/lib/human-error";
+import { Badge } from "@/components/ui/Badge";
 
 export type TokenRow = {
   id: string;
@@ -334,9 +335,9 @@ function TokenRowItem({
         <div className="flex items-center gap-2 mb-1">
           <span className="text-md font-bold text-text truncate">{token.name}</span>
           {revoked && (
-            <span className="inline-flex items-center gap-1 text-2xs font-semibold px-1.5 py-px rounded bg-danger-soft text-danger">
-              <AlertTriangle size={9} /> 회수됨
-            </span>
+            <Badge tone="danger" size="sm" icon={AlertTriangle}>
+              회수됨
+            </Badge>
           )}
         </div>
         <div className="flex items-center gap-3 text-xs text-text-faint">

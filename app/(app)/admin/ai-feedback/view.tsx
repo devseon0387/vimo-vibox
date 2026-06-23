@@ -9,6 +9,7 @@ import {
   Download,
   Sparkles,
 } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
 
 type Item = {
   id: string;
@@ -226,13 +227,10 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
             {Object.entries(stats.byReason)
               .sort((a, b) => b[1] - a[1])
               .map(([tag, c]) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-700"
-                >
+                <Badge key={tag} tone="neutral" size="md">
                   {REASON_LABELS[tag] ?? tag}
                   <span className="font-bold text-slate-900">{c}</span>
-                </span>
+                </Badge>
               ))}
           </div>
         </div>
@@ -248,34 +246,25 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
           {filtered.map((it) => {
             const isGood = it.verdict === "good";
             const isBad = it.verdict === "bad";
+            const verdictTone = isGood ? "success" : isBad ? "danger" : "warning";
+            const VerdictIcon = isGood
+              ? ThumbsUp
+              : isBad
+                ? ThumbsDown
+                : CircleAlert;
             return (
               <div
                 key={it.id}
                 className="p-3 rounded-lg border border-slate-200 bg-white"
               >
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <span
-                    className={`inline-flex items-center gap-1 text-2xs font-bold px-1.5 py-0.5 rounded ${
-                      isGood
-                        ? "bg-emerald-50 text-emerald-700"
-                        : isBad
-                          ? "bg-rose-50 text-rose-700"
-                          : "bg-amber-50 text-amber-700"
-                    }`}
-                  >
-                    {isGood ? (
-                      <ThumbsUp size={10} strokeWidth={2.3} />
-                    ) : isBad ? (
-                      <ThumbsDown size={10} strokeWidth={2.3} />
-                    ) : (
-                      <CircleAlert size={10} strokeWidth={2.3} />
-                    )}
+                  <Badge tone={verdictTone} size="sm" icon={VerdictIcon}>
                     {it.reasonTag
                       ? REASON_LABELS[it.reasonTag] ?? it.reasonTag
                       : isGood
                         ? "정확"
                         : "부정확"}
-                  </span>
+                  </Badge>
                   <span className="font-mono text-2xs text-text-muted">
                     {formatTc(it.videoTimeMs)}
                   </span>

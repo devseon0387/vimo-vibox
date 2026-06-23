@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import type { DiskVolume, FolderListing, ZoneTag } from "@/lib/disks";
 import type { BackupStatus } from "@/lib/backup-status";
+import { Badge } from "@/components/ui/Badge";
 
 const ZONE_LABELS: Record<ZoneTag, string> = {
   rendering: "렌더링",
@@ -295,9 +296,9 @@ function VolumeCard({
               </span>
             )}
             {hostsReplica && (
-              <span className="inline-flex items-center gap-1 text-2xs font-semibold px-2 py-0.5 rounded-full bg-success-soft text-success tracking-wider uppercase">
-                <Database size={10} strokeWidth={2.4} /> DB 백업 호스트
-              </span>
+              <Badge tone="success" size="sm" icon={Database} className="rounded-full tracking-wider uppercase">
+                DB 백업 호스트
+              </Badge>
             )}
           </div>
         )}
@@ -357,9 +358,9 @@ function VolumeCard({
                   <Icon size={13} strokeWidth={2} className="shrink-0 opacity-80" />
                   <span className="truncate">{e.name}</span>
                   {e.zone && (
-                    <span className="text-2xs px-1.5 py-px rounded bg-accent-soft text-accent ml-auto font-sans tracking-wider uppercase">
+                    <Badge tone="accent" size="sm" className="ml-auto font-sans tracking-wider uppercase">
                       {ZONE_LABELS[e.zone]}
-                    </span>
+                    </Badge>
                   )}
                 </Wrapper>
               );

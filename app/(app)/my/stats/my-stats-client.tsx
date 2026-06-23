@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Badge } from "@/components/ui/Badge";
 
 type Stats = {
   period: { from: number; to: number; days: number };
@@ -334,9 +335,9 @@ function CardTitle({ title, tag }: { title: string; tag?: string }) {
     <h2 className="text-base font-bold text-slate-900 flex items-center gap-1.5">
       {title}
       {tag && (
-        <span className="text-2xs font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+        <Badge tone="neutral" size="sm">
           {tag}
-        </span>
+        </Badge>
       )}
     </h2>
   );
