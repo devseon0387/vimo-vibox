@@ -207,7 +207,7 @@ export function LibraryClient({
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-white bg-slate-900 rounded-md hover:bg-slate-700"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-text bg-white border border-border rounded-md hover:border-border-hover hover:bg-surface"
             >
               <UploadIcon size={13} strokeWidth={2.3} />
               업로드

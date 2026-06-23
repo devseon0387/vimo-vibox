@@ -81,7 +81,7 @@ export function ActionBar({
         <button
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="bg-text text-white hover:bg-[#333] disabled:opacity-60 transition-colors flex-1 md:flex-none px-3.5 py-2.5 md:py-2 rounded-md text-base font-semibold flex items-center justify-center md:justify-start gap-1.5"
+          className="bg-white border border-border text-text hover:border-border-hover hover:bg-surface disabled:opacity-60 transition-colors flex-1 md:flex-none px-3.5 py-2.5 md:py-2 rounded-md text-base font-semibold flex items-center justify-center md:justify-start gap-1.5"
         >
           <Upload size={14} strokeWidth={2.5} />
           업로드

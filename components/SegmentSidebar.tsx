@@ -158,12 +158,16 @@ export function SegmentSidebar({
         })}
       </div>
 
-      {/* 공간별 컬러 CTA — 활성 공간에 맞춰 라벨·색 전환 */}
+      {/* 업로드 CTA — 주황 primary로 통일. 단 홈 대시보드(/)에선 본문 적응형 히어로가
+          주황 primary라 CTA는 흰색으로 양보(화면당 주황 업로드 1개 원칙). */}
       {cta && (
         <Link
           href={cta.href}
-          className="mx-3 mb-2 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-white text-base font-semibold hover:opacity-90 transition-opacity"
-          style={{ background: cta.color }}
+          className={`mx-3 mb-2 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-base font-semibold transition-colors ${
+            pathname === "/"
+              ? "bg-white border border-border text-text hover:border-border-hover hover:bg-surface"
+              : "bg-accent text-white hover:bg-accent-hover"
+          }`}
         >
           <Upload size={14} strokeWidth={2.4} />
           {cta.label}
