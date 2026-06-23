@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WebCodecs 프록시 인코딩 PoC</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<style>
+  :root{--accent:#e85008;--accent-soft:#fef0e8;--text:#18181b;--soft:#555;--faint:#999;--border:#e6e6e8;--surface:#fafafa;--success:#16a34a;--success-soft:#f0fdf4;--danger:#dc2626;--danger-soft:#fef2f2;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#eceef1;color:var(--text);font-family:Pretendard,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:880px;margin:0 auto;padding:30px 22px 80px}
+  h1{font-size:21px;font-weight:800}
+  .sub{color:var(--soft);font-size:13px;margin-top:6px;line-height:1.6}
+  .card{background:#fff;border:1px solid var(--border);border-radius:13px;padding:18px;margin-top:16px}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  label{font-size:12px;font-weight:700;color:var(--soft)}
+  select,input[type=file]{font-family:Pretendard;font-size:13px}
+  select{border:1px solid var(--border);border-radius:8px;padding:6px 9px;background:#fff}
+  button{font-family:Pretendard;font-weight:700;font-size:13.5px;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:10px 18px;cursor:pointer}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .cap{font-size:12px;font-weight:700;border-radius:8px;padding:8px 12px;margin-top:12px;display:inline-flex;align-items:center;gap:6px}
+  .cap.ok{background:var(--success-soft);color:var(--success)}
+  .cap.no{background:var(--danger-soft);color:var(--danger)}
+  .metrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:14px}
+  .m{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px}
+  .m .k{font-size:10.5px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.03em}
+  .m .v{font-size:18px;font-weight:800;margin-top:3px}
+  .m .v small{font-size:11px;font-weight:600;color:var(--soft)}
+  .m.hl .v{color:var(--accent)}
+  .prog{height:8px;background:var(--surface);border-radius:99px;overflow:hidden;margin-top:14px}
+  .prog .f{height:100%;background:var(--accent);width:0;transition:width .2s}
+  .log{font-family:ui-monospace,monospace;font-size:11px;color:var(--soft);background:#1a1a1e;border-radius:9px;padding:12px;margin-top:12px;max-height:160px;overflow-y:auto;white-space:pre-wrap;line-height:1.5}
+  .log .e{color:#fca5a5}.log .s{color:#86efac}
+  video{width:100%;max-width:360px;border-radius:9px;background:#000;margin-top:10px}
+  .vids{display:flex;gap:14px;flex-wrap:wrap}
+  a.dl{display:inline-block;margin-top:10px;font-size:12.5px;font-weight:700;color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>WebCodecs 프록시 인코딩 PoC</h1>
+  <p class="sub">영상 선택 → 브라우저가 그 컴퓨터의 하드웨어로 720p 프록시 재인코딩 → 속도·크기·화질 측정. (업로드·서버 없음, 인코딩만)</p>
+
+  <div id="capbox"></div>
+
+  <div class="card">
+    <div class="row">
+      <input type="file" id="file" accept="video/*" />
+      <label>해상도</label>
+      <select id="res"><option value="720">720p</option><option value="540">540p</option><option value="480">480p</option><option value="1080">1080p</option></select>
+      <label>비트레이트</label>
+      <select id="br"><option value="3000000">3 Mbps</option><option value="2000000">2 Mbps</option><option value="4000000">4 Mbps</option><option value="1500000">1.5 Mbps</option></select>
+      <button id="go" disabled>변환 시작</button>
+    </div>
+    <div class="prog"><div class="f" id="bar"></div></div>
+    <div class="metrics" id="metrics"></div>
+    <div class="vids" id="vids"></div>
+    <div class="log" id="log"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mp4box@0.5.2/dist/mp4box.all.min.js"></script>
+<script>
+const $=(id)=>document.getElementById(id);
+const log=(m,c)=>{const el=$('log');el.innerHTML+=`<span class="${c||''}">${m}</span>\n`;el.scrollTop=el.scrollHeight;};
+const setMetrics=(o)=>{$('metrics').innerHTML=Object.entries(o).map(([k,v])=>`<div class="m ${/속도|절감/.test(k)?'hl':''}"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');};
+
+// 1) 능력 감지
+async function checkCaps(){
+  const hasVE = typeof VideoEncoder!=='undefined' && typeof VideoDecoder!=='undefined';
+  let h264=false, hw=false;
+  if(hasVE){
+    try{
+      const s = await VideoEncoder.isConfigSupported({codec:'avc1.42E01F',width:1280,height:720,bitrate:3e6,framerate:30,avc:{format:'avc'}});
+      h264 = !!s.supported;
+      const sh = await VideoEncoder.isConfigSupported({codec:'avc1.42E01F',width:1280,height:720,bitrate:3e6,framerate:30,hardwareAcceleration:'prefer-hardware',avc:{format:'avc'}});
+      hw = !!(sh.supported && sh.config && sh.config.hardwareAcceleration!=='no-preference');
+    }catch(e){}
+  }
+  const ok = hasVE && h264;
+  $('capbox').innerHTML = `<div class="cap ${ok?'ok':'no'}">${ok?'✓ WebCodecs + H.264 인코더 지원'+(hw?' · 하드웨어 가속 가능':' · (소프트웨어 폴백)'):'✗ 미지원 — 서버 폴백 필요'}</div>`;
+  $('go').disabled = !ok;
+  return {hasVE,h264,hw};
+}
+
+let inputFile=null;
+$('file').addEventListener('change',e=>{ inputFile=e.target.files[0]; $('go').disabled=!inputFile; });
+
+$('go').addEventListener('click',()=>{ if(inputFile) transcode(inputFile); });
+
+async function transcode(file){
+  $('go').disabled=true; $('log').innerHTML=''; $('vids').innerHTML=''; $('bar').style.width='0';
+  const targetH = parseInt($('res').value,10);
+  const bitrate = parseInt($('br').value,10);
+  log(`입력: ${file.name} · ${(file.size/1048576).toFixed(1)}MB`);
+
+  const buf = await file.arrayBuffer();
+  const t0 = performance.now();
+
+  // ---- 디먹스 (mp4box.js) ----
+  const inFile = MP4Box.createFile();
+  let track=null, totalSamples=0, srcW=0,srcH=0, durSec=0, fps=30;
+  const decodeChunks=[];
+  await new Promise((resolve,reject)=>{
+    inFile.onError = (e)=>reject(new Error('demux: '+e));
+    inFile.onReady = (info)=>{
+      track = info.videoTracks[0];
+      if(!track) return reject(new Error('비디오 트랙 없음'));
+      srcW=track.video.width; srcH=track.video.height;
+      durSec = track.duration/track.timescale;
+      totalSamples = track.nb_samples;
+      fps = Math.round(totalSamples/durSec)||30;
+      log(`원본: ${srcW}×${srcH} · ${durSec.toFixed(1)}s · ${totalSamples}프레임 · ~${fps}fps · ${track.codec}`);
+      inFile.setExtractionOptions(track.id,null,{nbSamples:Infinity});
+      inFile.start();
+    };
+    inFile.onSamples = (id,user,samples)=>{
+      for(const s of samples){
+        decodeChunks.push(new EncodedVideoChunk({
+          type: s.is_sync?'key':'delta',
+          timestamp: s.cts*1e6/track.timescale,
+          duration: s.duration*1e6/track.timescale,
+          data: s.data,
+        }));
+      }
+      if(decodeChunks.length>=totalSamples) resolve();
+    };
+    buf.fileStart=0; inFile.appendBuffer(buf); inFile.flush();
+  });
+
+  // avcC (디코더 description)
+  const trak = inFile.getTrackById(track.id);
+  let avcCdesc=null;
+  for(const e of trak.mdia.minf.stbl.stsd.entries){ if(e.avcC){ const ds=new DataStream(undefined,0,DataStream.BIG_ENDIAN); e.avcC.write(ds); avcCdesc=new Uint8Array(ds.buffer,8); break; } }
+
+  // ---- 타깃 크기 (짝수, 비율 유지) ----
+  const scale = targetH/srcH;
+  const tW = Math.round(srcW*scale/2)*2, tH = Math.round(targetH/2)*2;
+  log(`타깃: ${tW}×${tH} · ${(bitrate/1e6).toFixed(1)}Mbps`);
+
+  // ---- mux (출력) ----
+  const outFile = MP4Box.createFile();
+  let outTrackId=null;
+  const canvas = new OffscreenCanvas(tW,tH);
+  const ctx = canvas.getContext('2d');
+
+  // ---- 인코더 ----
+  let encoded=0;
+  const encoder = new VideoEncoder({
+    output:(chunk,meta)=>{
+      if(outTrackId===null && meta&&meta.decoderConfig&&meta.decoderConfig.description){
+        outTrackId = outFile.addTrack({timescale:1e6,width:tW,height:tH,avcDecoderConfigRecord:meta.decoderConfig.description});
+      }
+      const data=new ArrayBuffer(chunk.byteLength); chunk.copyTo(data);
+      outFile.addSample(outTrackId,data,{duration:chunk.duration||1e6/fps,dts:chunk.timestamp,cts:chunk.timestamp,is_sync:chunk.type==='key'});
+      encoded++;
+    },
+    error:(e)=>log('encoder: '+e.message,'e'),
+  });
+  encoder.configure({codec:'avc1.42E01F',width:tW,height:tH,bitrate,framerate:fps,avc:{format:'avc'},hardwareAcceleration:'prefer-hardware'});
+
+  // ---- 디코더 → 다운스케일 → 인코더 ----
+  let decoded=0, keyEvery=Math.max(1,Math.round(fps*2));
+  const decoder = new VideoDecoder({
+    output:(frame)=>{
+      ctx.drawImage(frame,0,0,tW,tH);
+      const vf=new VideoFrame(canvas,{timestamp:frame.timestamp,duration:frame.duration||1e6/fps});
+      encoder.encode(vf,{keyFrame: decoded%keyEvery===0});
+      vf.close(); frame.close();
+      decoded++;
+      if(decoded%15===0){ $('bar').style.width=(decoded/totalSamples*100)+'%'; }
+    },
+    error:(e)=>log('decoder: '+e.message,'e'),
+  });
+  decoder.configure({codec:track.codec,codedWidth:srcW,codedHeight:srcH,description:avcCdesc});
+
+  log('디코드→다운스케일→인코드 중…');
+  for(const ch of decodeChunks) decoder.decode(ch);
+  await decoder.flush();
+  await encoder.flush();
+  encoder.close(); decoder.close();
+  $('bar').style.width='100%';
+
+  // ---- 출력 MP4 ----
+  outFile.initializeSegmentation && outFile.initializeSegmentation();
+  const outBuf = outFile.getBuffer();
+  const t1 = performance.now();
+  const elapsed = (t1-t0)/1000;
+  const blob = new Blob([outBuf],{type:'video/mp4'});
+  const outMB = blob.size/1048576, inMB=file.size/1048576;
+  const speed = durSec/elapsed; // ×실시간
+
+  setMetrics({
+    '인코딩 시간': elapsed.toFixed(1)+'<small>s</small>',
+    '속도(×실시간)': speed.toFixed(2)+'<small>×</small>',
+    '입력 크기': inMB.toFixed(1)+'<small>MB</small>',
+    '출력 크기': outMB.toFixed(1)+'<small>MB</small>',
+    '크기 절감': inMB>0?((1-outMB/inMB)*100).toFixed(0)+'<small>%</small>':'-',
+    '프레임': decoded+'<small> / '+encoded+'</small>',
+  });
+  log(`완료 — ${elapsed.toFixed(1)}s · ${speed.toFixed(2)}×실시간 · ${inMB.toFixed(1)}→${outMB.toFixed(1)}MB`,'s');
+
+  // 미리보기 + 다운로드
+  const url=URL.createObjectURL(blob);
+  $('vids').innerHTML=`<div><div style="font-size:11px;font-weight:700;color:var(--soft);margin-bottom:4px">출력 프록시 (${tW}×${tH})</div><video src="${url}" controls muted></video></div>`;
+  const a=document.createElement('a'); a.className='dl'; a.href=url; a.download='proxy.mp4'; a.textContent='⬇ proxy.mp4 다운로드'; $('vids').appendChild(a);
+
+  // 결과를 자동화 검증용으로 노출
+  window.__pocResult={ok:true,elapsed,speed,inMB,outMB,decoded,encoded,tW,tH,durSec};
+  $('go').disabled=false;
+}
+
+checkCaps();
+</script>
+</body>
+</html>

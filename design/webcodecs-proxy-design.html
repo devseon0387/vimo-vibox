@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WebCodecs 브라우저 프록시 렌더링 — 설계</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root{
+    --surface:#fafafa;--surface-2:#f5f5f5;--border:#e6e6e8;--text:#18181b;--text-soft:#555;--text-faint:#999;
+    --accent:#e85008;--accent-soft:#fef0e8;--sky:#0369a1;--sky-soft:#e0f2fe;--success:#16a34a;--success-soft:#f0fdf4;
+    --warn:#b45309;--warn-soft:#fffbeb;--danger:#dc2626;--danger-soft:#fef2f2;--purple:#7c3aed;--purple-soft:#f5f3ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#eceef1;color:var(--text);font-family:Pretendard,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .lucide{width:1em;height:1em;stroke-width:2;flex:none}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 90px}
+  h1{font-size:23px;font-weight:800;letter-spacing:-.02em}
+  .lead{color:var(--text-soft);font-size:13.5px;margin-top:9px;line-height:1.65;max-width:850px}
+  .lead b{color:var(--text)}
+  .sec{margin-top:34px}
+  .sec h2{font-size:16px;font-weight:800;display:flex;align-items:center;gap:9px}
+  .sec h2 .b{width:24px;height:24px;border-radius:7px;background:var(--text);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:800}
+  .sec .d{font-size:12.5px;color:var(--text-soft);margin:6px 0 14px;line-height:1.6;max-width:840px}
+  .card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px}
+
+  /* 파이프라인 박스/화살표 */
+  .pipe{display:flex;align-items:stretch;gap:0;flex-wrap:wrap}
+  .node{flex:1;min-width:120px;border:1px solid var(--border);border-radius:10px;padding:11px 12px;background:#fff;text-align:center;position:relative}
+  .node .ic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;margin:0 auto 6px;color:#fff}
+  .node .ic .lucide{font-size:16px}
+  .node .t{font-size:12px;font-weight:800}
+  .node .s{font-size:10.5px;color:var(--text-faint);margin-top:2px;line-height:1.4}
+  .node.zone-client{background:var(--sky-soft);border-color:#bfe3f7}
+  .node.zone-server{background:var(--accent-soft);border-color:#f4cdb8}
+  .arr{display:flex;align-items:center;justify-content:center;padding:0 4px;color:var(--text-faint)}
+  .arr .lucide{font-size:18px}
+  .zonelabel{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:3px 8px;border-radius:5px;display:inline-flex;align-items:center;gap:5px;margin-bottom:8px}
+  .zonelabel.c{background:var(--sky-soft);color:var(--sky)}
+  .zonelabel.s{background:var(--accent-soft);color:var(--accent)}
+  .badcost{color:var(--danger);font-weight:700}
+  .goodcost{color:var(--success);font-weight:700}
+
+  .ba{display:grid;grid-template-columns:1fr;gap:14px}
+  .ba .row{border:1px solid var(--border);border-radius:12px;padding:14px;background:#fff}
+  .ba .row .h{font-size:12.5px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+  .ba .row .h .tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px}
+  .tag.now{background:var(--surface-2);color:var(--text-soft)}
+  .tag.new{background:var(--success-soft);color:var(--success)}
+
+  .stages{display:flex;flex-direction:column;gap:0}
+  .stage{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px dashed var(--border)}
+  .stage:last-child{border-bottom:none}
+  .stage .n{flex:none;width:26px;height:26px;border-radius:999px;background:var(--sky-soft);color:var(--sky);display:grid;place-items:center;font-size:12px;font-weight:800}
+  .stage .b{flex:1}
+  .stage .b .st{font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px}
+  .stage .b .st code{font-size:11px;background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--purple);font-weight:600}
+  .stage .b .sd{font-size:12px;color:var(--text-soft);margin-top:3px;line-height:1.5}
+  .stage .hw{font-size:9.5px;font-weight:800;color:var(--success);background:var(--success-soft);border-radius:4px;padding:2px 6px;flex:none}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top}
+  th{font-size:10.5px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:.04em}
+  td b{font-weight:700}
+  td .rec{font-size:10px;font-weight:800;color:var(--accent);background:var(--accent-soft);padding:1px 6px;border-radius:4px;margin-left:5px}
+
+  .poc{display:flex;flex-direction:column;gap:10px}
+  .poc .p{display:flex;gap:12px;align-items:flex-start}
+  .poc .p .n{flex:none;width:24px;height:24px;border-radius:7px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:800}
+  .poc .p .b{font-size:12.5px;line-height:1.55}
+  .poc .p .b b{font-weight:700}
+  .metrics{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .metrics .m{font-size:11px;font-weight:600;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:4px 10px;color:var(--text-soft)}
+
+  .risk{display:flex;flex-direction:column;gap:9px}
+  .risk .r{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.5}
+  .risk .r .lucide{font-size:15px;flex:none;margin-top:2px;color:var(--warn)}
+  .risk .r b{font-weight:700}
+  .risk .r .fix{color:var(--success);font-weight:600}
+
+  .foot{margin-top:38px;color:var(--text-faint);font-size:12px;line-height:1.7;border-top:1px solid #d9dce0;padding-top:16px}
+  .foot b{color:var(--text)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>WebCodecs 브라우저 프록시 렌더링 — 설계</h1>
+  <p class="lead">"올리는 사람 컴퓨터로 인코딩, 설치 0, 많은 사용자"를 만족하는 구조. 비싼 <b>재인코딩만 브라우저(WebCodecs 하드웨어 가속)</b>로 옮기고, 서버는 <b>싼 remux·서빙·폴백</b>만. 현재 서버가 쓰는 <code class="mono">h264_videotoolbox</code> 인코딩을 사용자 GPU로 분산하는 셈.</p>
+
+  <!-- 1. before/after -->
+  <div class="sec">
+    <h2><span class="b">1</span>현재 vs WebCodecs</h2>
+    <div class="d">현재는 인코딩이 8GB 맥미니/6코어 아이맥에 집중(병목). WebCodecs는 그 비용을 사용자 컴퓨터로 분산.</div>
+    <div class="ba">
+      <div class="row">
+        <div class="h"><span class="tag now">현재</span> 서버 집중 인코딩</div>
+        <div class="pipe">
+          <div class="node zone-client"><div class="ic" style="background:var(--sky)"><i data-lucide="upload"></i></div><div class="t">원본 업로드</div><div class="s">통째로 전송</div></div>
+          <div class="arr"><i data-lucide="arrow-right"></i></div>
+          <div class="node zone-server"><div class="ic" style="background:var(--danger)"><i data-lucide="cpu"></i></div><div class="t">서버 인코딩</div><div class="s badcost">h264_videotoolbox<br/>병목·대기</div></div>
+          <div class="arr"><i data-lucide="arrow-right"></i></div>
+          <div class="node zone-server"><div class="ic" style="background:var(--accent)"><i data-lucide="scissors"></i></div><div class="t">HLS 조각</div><div class="s">segment+m3u8</div></div>
+          <div class="arr"><i data-lucide="arrow-right"></i></div>
+          <div class="node zone-server"><div class="ic" style="background:var(--accent)"><i data-lucide="play"></i></div><div class="t">서빙</div><div class="s">/api/stream</div></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="h"><span class="tag new">WebCodecs</span> 사용자 분산 인코딩 + 서버는 가볍게</div>
+        <div class="pipe">
+          <div class="node zone-client"><div class="ic" style="background:var(--success)"><i data-lucide="cpu"></i></div><div class="t">브라우저 인코딩</div><div class="s goodcost">WebCodecs HW<br/>그 컴퓨터 GPU</div></div>
+          <div class="arr"><i data-lucide="arrow-right"></i></div>
+          <div class="node zone-client"><div class="ic" style="background:var(--sky)"><i data-lucide="upload"></i></div><div class="t">프록시 업로드</div><div class="s">작은 MP4 먼저<br/>(원본은 뒤에)</div></div>
+          <div class="arr"><i data-lucide="arrow-right"></i></div>
+          <div class="node zone-server"><div class="ic" style="background:var(--accent)"><i data-lucide="scissors"></i></div><div class="t">서버 remux</div><div class="s goodcost">-c copy<br/>재인코딩 X·거의 0</div></div>
+          <div class="arr"><i data-lucide="arrow-right"></i></div>
+          <div class="node zone-server"><div class="ic" style="background:var(--accent)"><i data-lucide="play"></i></div><div class="t">서빙</div><div class="s">기존 /api/stream 재사용</div></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <span class="zonelabel c"><i data-lucide="monitor"></i>클라이언트(브라우저)</span>
+      <span class="zonelabel s"><i data-lucide="server"></i>서버(맥미니)</span>
+    </div>
+  </div>
+
+  <!-- 2. 클라 파이프라인 -->
+  <div class="sec">
+    <h2><span class="b">2</span>브라우저 파이프라인 (WebCodecs)</h2>
+    <div class="d">파일 선택 → 디먹스 → 디코드 → 다운스케일 → 인코드 → mux → 업로드. 디코드·인코드가 <b>하드웨어 가속</b>(WASM 아님).</div>
+    <div class="card">
+      <div class="stages">
+        <div class="stage"><span class="n">1</span><div class="b"><div class="st">디먹스 <code>mp4box.js</code></div><div class="sd">업로드 파일(mp4/mov)을 스트리밍으로 파싱 → 인코딩된 비디오/오디오 청크. 파일 통째로 메모리에 안 올림.</div></div></div>
+        <div class="stage"><span class="n">2</span><div class="b"><div class="st">디코드 <code>VideoDecoder</code></div><div class="sd">WebCodecs로 프레임 복원.</div></div><span class="hw">HW 가속</span></div>
+        <div class="stage"><span class="n">3</span><div class="b"><div class="st">다운스케일 <code>OffscreenCanvas / VideoFrame</code></div><div class="sd">프록시 해상도로 축소(예: 720p). 검수용이라 원본 해상도 불필요.</div></div></div>
+        <div class="stage"><span class="n">4</span><div class="b"><div class="st">인코드 <code>VideoEncoder (H.264)</code></div><div class="sd">표준 프로필로 재인코딩(예: 720p·~3Mbps·H.264). 기기 GPU의 VideoToolbox/NVENC 사용.</div></div><span class="hw">HW 가속</span></div>
+        <div class="stage"><span class="n">5</span><div class="b"><div class="st">오디오 <code>AudioEncoder (AAC)</code></div><div class="sd">AAC로 인코드(원본이 AAC면 copy).</div></div></div>
+        <div class="stage"><span class="n">6</span><div class="b"><div class="st">mux <code>mp4box.js</code> → 작은 MP4(faststart)</div><div class="sd">단일 프록시 MP4 생성. HLS 조각은 서버가 싸게 함(브라우저 복잡도↓).</div></div></div>
+        <div class="stage"><span class="n">7</span><div class="b"><div class="st">업로드 — 프록시 먼저 / 원본 백그라운드</div><div class="sd">프록시(작음)를 먼저 올려 <b>검수 즉시 가능</b>, 원본(납품·아카이브)은 뒤에 천천히. 진행률 UI는 프레임 기준.</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 서버 -->
+  <div class="sec">
+    <h2><span class="b">3</span>서버 변경 (작음) + 폴백</h2>
+    <div class="card">
+      <table>
+        <tbody>
+          <tr><td style="width:30%"><b>프록시 수신 → remux</b></td><td><code class="mono">ffmpeg -i proxy.mp4 -c copy -f hls …</code> — 재인코딩 없음. 기존 fingerprint·HLS 저장·<code class="mono">/api/stream</code>·HlsVideo 그대로 재사용. <span class="rec">재활용</span></td></tr>
+          <tr><td><b>검증</b></td><td>프록시의 길이·해상도·코덱이 원본과 대략 맞는지 가벼운 sanity check(내부툴이라 가볍게). 원본 = source of truth.</td></tr>
+          <tr><td><b>폴백</b></td><td>브라우저가 WebCodecs/H.264 인코더 미지원이거나 실패 → 클라가 <b>원본만 업로드</b> → <b>서버가 기존 h264_videotoolbox 인코딩</b>(현재 경로 그대로). 코드 손 안 댐. <span class="rec">안전망</span></td></tr>
+          <tr><td><b>프로필 고정</b></td><td>720p·H.264 main·~3Mbps·AAC 등 한 프로필로 표준화 → 기기 달라도 일관된 프록시.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 4. 결정 -->
+  <div class="sec">
+    <h2><span class="b">4</span>핵심 결정</h2>
+    <div class="card">
+      <table>
+        <thead><tr><th>질문</th><th>답</th></tr></thead>
+        <tbody>
+          <tr><td>프록시 포맷</td><td><b>단일 MP4(faststart)</b> 추천 — 브라우저에서 HLS까지 만들면 복잡. 서버가 <code class="mono">-c copy</code>로 HLS 조각(거의 무료). 적응형 비트레이트 필요해지면 그때 다중 렌디션.</td></tr>
+          <tr><td>원본은?</td><td>여전히 업로드(납품·아카이브) — 단 <b>프록시 먼저, 원본 백그라운드</b>. 검수는 프록시로 즉시.</td></tr>
+          <tr><td>안 되는 브라우저</td><td><b>서버 폴백</b>(현재 경로). 커버리지 100% 유지.</td></tr>
+          <tr><td>비용</td><td>인코딩 <b>$0</b>(사용자 GPU). Mux·Cloudflare Stream 같은 분당 과금 회피 — 사람 많을수록 차이 큼.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 5. PoC -->
+  <div class="sec">
+    <h2><span class="b">5</span>PoC 계획 (먼저 검증할 것)</h2>
+    <div class="d">전면 통합 전에 <b>독립 페이지로 핵심 위험부터</b> 측정. "되는지/빠른지/지원되는지"를 먼저.</div>
+    <div class="card poc">
+      <div class="p"><span class="n">1</span><div class="b"><b>독립 PoC 페이지</b> — 파일 선택 → WebCodecs 디코드→다운스케일→인코드→mux MP4 → 다운로드. (업로드·통합 없이 인코딩만)</div></div>
+      <div class="p"><span class="n">2</span><div class="b"><b>측정</b> — 핵심 지표로 갈지말지 판단<div class="metrics"><span class="m">인코딩 속도 ×실시간(예: 5분 영상 1분 내?)</span><span class="m">출력 크기</span><span class="m">화질(검수 충분?)</span><span class="m">메모리(2GB도 OK?)</span><span class="m">브라우저 커버리지</span></div></div></div>
+      <div class="p"><span class="n">3</span><div class="b"><b>통합</b> — 좋으면 업로드 플로우에 끼움: 능력 감지 → WebCodecs 인코딩 → 프록시 먼저 업로드 → 서버 remux. 폴백 경로 유지.</div></div>
+      <div class="p"><span class="n">4</span><div class="b"><b>서버 remux</b> — <code class="mono">generateHLS</code>에 "이미 인코딩된 입력은 <code>-c copy</code>" 분기 추가(작음).</div></div>
+    </div>
+  </div>
+
+  <!-- 6. 리스크 -->
+  <div class="sec">
+    <h2><span class="b">6</span>리스크 & 대응</h2>
+    <div class="card risk">
+      <div class="r"><i data-lucide="alert-triangle"></i><div><b>브라우저 지원</b> — Chrome·Edge·Safari 16.4+는 OK, Firefox 최근/부분, 구형 X. <span class="fix">→ 능력 감지 후 서버 폴백.</span></div></div>
+      <div class="r"><i data-lucide="alert-triangle"></i><div><b>H.264 인코더 가용성</b> — WebCodecs는 있어도 특정 코덱 인코더는 기기마다 다를 수 있음. <span class="fix">→ <code class="mono">VideoEncoder.isConfigSupported()</code>로 사전 확인, 안 되면 폴백.</span></div></div>
+      <div class="r"><i data-lucide="alert-triangle"></i><div><b>구현 난이도</b> — 디먹스+mux(mp4box.js)에 WebCodecs config(avcC) 연결이 손이 감. <span class="fix">→ PoC로 먼저 검증, 데모·레퍼런스 존재.</span></div></div>
+      <div class="r"><i data-lucide="alert-triangle"></i><div><b>편집 중 경합</b> — 업로더가 편집 중이면 GPU 경합. <span class="fix">→ 업로드=대기시간이라 대체로 OK, HW 인코딩은 가벼움. 우선순위 낮게.</span></div></div>
+      <div class="r"><i data-lucide="alert-triangle"></i><div><b>모바일/저사양 업로더</b> — 느릴 수 있음. <span class="fix">→ 폴백 또는 능력 감지로 서버 처리.</span></div></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    한 줄 — <b>비싼 재인코딩만 브라우저 WebCodecs(HW)로 → 사용자 GPU에 분산(설치 0·비용 0·스케일), 서버는 remux/서빙/폴백만.</b> 현재 <code class="mono">h264_videotoolbox</code>·HLS·<code class="mono">/api/stream</code> 인프라 대부분 재사용. 다음 = <b>PoC 페이지로 속도·화질·커버리지 측정</b> 후 갈지 결정.
+  </div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>
