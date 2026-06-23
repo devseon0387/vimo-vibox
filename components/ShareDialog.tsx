@@ -24,7 +24,6 @@ export function ShareDialog({
   const [step, setStep] = useState<Step>("configure");
   const [mode, setMode] = useState<Mode>("preview");
   const [includeFeedback, setIncludeFeedback] = useState(false);
-  const [expiresInDays, setExpiresInDays] = useState<number>(7);
   const [creating, setCreating] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -35,7 +34,6 @@ export function ShareDialog({
     setStep("configure");
     setMode("preview");
     setIncludeFeedback(false);
-    setExpiresInDays(7);
     setToken(null);
     setCopied(false);
     setError(null);
@@ -54,7 +52,6 @@ export function ShareDialog({
           path: entry.path,
           ...(entry.isFolder ? {} : { mode }),
           ...(!entry.isFolder && mode === "full" ? { includeFeedback } : {}),
-          expiresInDays: expiresInDays > 0 ? expiresInDays : null,
         }),
       });
       const body = await res.json();
@@ -187,32 +184,6 @@ export function ShareDialog({
                 </div>
               </button>
             )}
-
-            <div className="mb-5">
-              <label className="block text-[12px] font-semibold text-text-soft mb-2">
-                만료 기간
-              </label>
-              <div className="flex gap-2 flex-wrap">
-                {[
-                  { v: 1, l: "1일" },
-                  { v: 7, l: "7일" },
-                  { v: 30, l: "30일" },
-                  { v: 0, l: "무기한" },
-                ].map((o) => (
-                  <button
-                    key={o.v}
-                    onClick={() => setExpiresInDays(o.v)}
-                    className={`px-3 py-1.5 rounded-md text-[12.5px] font-medium border transition-colors ${
-                      expiresInDays === o.v
-                        ? "bg-text text-white border-text"
-                        : "bg-white text-text-muted border-border hover:border-border-hover"
-                    }`}
-                  >
-                    {o.l}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {error && (
               <div className="text-[12px] text-danger mb-3">{error}</div>

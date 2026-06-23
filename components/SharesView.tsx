@@ -53,25 +53,6 @@ function formatRelative(ms: number): string {
   return `${date.getFullYear()}. ${date.getMonth() + 1}. ${date.getDate()}`;
 }
 
-function expiryText(expiresAt: number | null): {
-  text: string;
-  tone: "ok" | "warn" | "expired";
-} {
-  if (!expiresAt) return { text: "만료 없음", tone: "ok" };
-  const diff = expiresAt - Date.now();
-  if (diff <= 0) return { text: "만료됨", tone: "expired" };
-  const day = 24 * 60 * 60 * 1000;
-  if (diff < day)
-    return {
-      text: `${Math.ceil(diff / (60 * 60 * 1000))}시간 뒤`,
-      tone: "warn",
-    };
-  return {
-    text: `${Math.ceil(diff / day)}일 뒤`,
-    tone: diff < 3 * day ? "warn" : "ok",
-  };
-}
-
 export function SharesView({ items }: { items: ShareRow[] }) {
   const router = useRouter();
   const { confirm, dialog } = useConfirm();
@@ -224,7 +205,6 @@ export function SharesView({ items }: { items: ShareRow[] }) {
       ) : (
         <div className="space-y-2.5">
           {items.map((item) => {
-            const exp = expiryText(item.expiresAt);
             const isOpen = expanded.has(item.id);
             const multi = item.paths.length > 1;
             const displayTitle =
@@ -292,18 +272,6 @@ export function SharesView({ items }: { items: ShareRow[] }) {
                   </div>
 
                   <div className="flex items-center gap-3 shrink-0 text-[11.5px] text-text-soft">
-                    <span
-                      className={
-                        exp.tone === "expired"
-                          ? "text-danger font-semibold"
-                          : exp.tone === "warn"
-                            ? "text-warning"
-                            : ""
-                      }
-                      title="만료"
-                    >
-                      {exp.text}
-                    </span>
                     <span title="다운로드 횟수">
                       {item.downloadCount}회
                     </span>

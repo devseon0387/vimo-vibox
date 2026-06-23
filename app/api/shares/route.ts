@@ -111,10 +111,8 @@ export async function POST(req: NextRequest) {
   const token = generateToken();
   // 비번 기능 제거 — 새 링크는 항상 비번 없음 (기존 passwordHash 가진 레거시 링크는 호환 유지)
   const passwordHash = null;
-  const expiresAt =
-    typeof body?.expiresInDays === "number" && body.expiresInDays > 0
-      ? new Date(Date.now() + body.expiresInDays * 24 * 60 * 60 * 1000)
-      : null;
+  // 만료 기능 제거 — 공유 링크는 항상 영구(만료 없음). 레거시 expiresInDays 입력은 무시.
+  const expiresAt = null;
 
   const isMulti = rawPaths.length > 1;
   const primaryPath = rawPaths[0];

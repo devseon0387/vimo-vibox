@@ -213,16 +213,6 @@ export function SharePageClient({
           <h1 className="text-[13px] font-semibold text-slate-700 truncate min-w-0 flex-1">
             {title}
           </h1>
-          {expiresAt && (
-            <span className="hidden md:inline text-[11px] text-slate-400 whitespace-nowrap">
-              만료{" "}
-              {new Date(expiresAt).toLocaleDateString("ko-KR", {
-                year: "2-digit",
-                month: "short",
-                day: "numeric",
-              })}
-            </span>
-          )}
           {allowDownload && (
             <button
               onClick={download}
