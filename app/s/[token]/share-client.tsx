@@ -219,13 +219,14 @@ export function SharePageClient({
       </header>
       <div className="flex-1 flex items-center justify-center p-4 bg-slate-100">
         {activeFile.kind === "video" && (
-          <div className="w-full max-w-[1400px] aspect-video bg-black rounded-lg overflow-hidden shadow-md">
+          <div className="w-full max-w-[1400px] h-[calc(100vh-100px)] bg-black rounded-lg overflow-hidden shadow-md flex flex-col">
             <HlsVideo
               key={activeFile.path}
               filePath={activeFile.path}
               fallbackSrc={fileUrl!}
               shareToken={token}
-              className="w-full h-full"
+              chrome="custom"
+              className="flex-1 min-h-0 w-full"
             />
           </div>
         )}

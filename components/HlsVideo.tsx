@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { attachHls } from "@/lib/hls-client";
 import { directStreamBase } from "@/lib/media-route";
+import { PreviewControls } from "./PreviewControls";
 
 /**
  * HLS 자동 감지 비디오 플레이어.
@@ -18,6 +19,7 @@ export function HlsVideo({
   className = "",
   controls = true,
   preload = "metadata",
+  chrome = "native",
 }: {
   filePath: string;
   fallbackSrc: string;
@@ -25,8 +27,11 @@ export function HlsVideo({
   className?: string;
   controls?: boolean;
   preload?: "none" | "metadata" | "auto";
+  /** native = 브라우저 기본 컨트롤, custom = 검수 뷰어와 동일한 커스텀 컨트롤 바 */
+  chrome?: "native" | "custom";
 }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const shellRef = useRef<HTMLDivElement>(null);
   const [manifestUrl, setManifestUrl] = useState<string | null>(null);
   const [encoding, setEncoding] = useState<{ progress: number } | null>(null);
 
@@ -159,6 +164,42 @@ export function HlsVideo({
     };
   }, [shareToken, filePath, manifestUrl]);
 
+  const badge = encoding && (
+    <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-amber-500/90 text-black px-2.5 py-1 rounded text-[11px] font-bold inline-flex items-center gap-1.5 z-10">
+      <span className="inline-block w-2 h-2 rounded-full bg-amber-200 animate-pulse" />
+      스트리밍 최적화 중 {encoding.progress}%
+    </div>
+  );
+
+  // 커스텀 크롬 — 검수 뷰어와 동일 디자인(영상 + 어두운 컨트롤 바 아래)
+  if (chrome === "custom") {
+    return (
+      <div ref={shellRef} className={`relative flex flex-col bg-black ${className}`}>
+        <div className="relative flex-1 min-h-0">
+          <video
+            ref={ref}
+            src={manifestUrl ? undefined : fallbackSrc}
+            preload={preload}
+            playsInline
+            onClick={() => {
+              const v = ref.current;
+              if (!v) return;
+              if (v.paused) v.play().catch(() => {});
+              else v.pause();
+            }}
+            className="w-full h-full object-contain bg-black"
+          />
+          {badge}
+        </div>
+        <PreviewControls
+          videoRef={ref}
+          shellRef={shellRef}
+          hasHls={!!manifestUrl}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full h-full">
       <video
@@ -168,12 +209,7 @@ export function HlsVideo({
         preload={preload}
         className={className}
       />
-      {encoding && (
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-amber-500/90 text-black px-2.5 py-1 rounded text-[11px] font-bold inline-flex items-center gap-1.5 z-10">
-          <span className="inline-block w-2 h-2 rounded-full bg-amber-200 animate-pulse" />
-          스트리밍 최적화 중 {encoding.progress}%
-        </div>
-      )}
+      {badge}
     </div>
   );
 }

@@ -269,12 +269,13 @@ function FileViewer({
         onClick={(e) => e.stopPropagation()}
       >
         {entry.kind === "video" && (
-          <div className="w-full max-w-[1200px] aspect-video bg-black rounded-lg overflow-hidden">
+          <div className="w-full max-w-[1200px] h-[calc(100vh-110px)] bg-black rounded-lg overflow-hidden flex flex-col">
             <HlsVideo
               filePath={entry.path}
               fallbackSrc={url}
               shareToken={token}
-              className="w-full h-full"
+              chrome="custom"
+              className="flex-1 min-h-0 w-full"
             />
           </div>
         )}
