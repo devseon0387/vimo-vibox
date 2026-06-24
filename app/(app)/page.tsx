@@ -1,6 +1,5 @@
 import { getCurrentSession } from "@/lib/auth/session";
 import { PartnerHome } from "@/components/PartnerHome";
-import { ManagerHome } from "@/components/ManagerHome";
 import { NewCommentsCard } from "@/components/dashboard/NewCommentsCard";
 import { ShareActivityCard } from "@/components/dashboard/ShareActivityCard";
 import { InboxCard } from "@/components/dashboard/InboxCard";
@@ -13,10 +12,10 @@ import {
 } from "@/lib/dashboard/queries";
 
 /**
- * 홈 = 업로더 중심 Dashboard.
- * - partner(외부 편집자): PartnerHome — 두 공간(납품/보관함) 탭, 검수·받은편지함 없음.
- * - admin/member(매니저): ManagerHome — PartnerHome과 같은 디자인 언어(두 공간 탭 +
- *   슬림 업로드 + 상태 파일 리스트 + 드릴인) + 매니저 오버사이트(코멘트·공유·받은편지함) 하단.
+ * 홈 = 업로더 중심 Dashboard. 파트너·매니저 모두 동일한 PartnerHome
+ * (히어로 + 즐겨찾기 + 드라이브 리스트/그리드)을 사용 — 디자인 통일.
+ * - partner(외부 편집자): 홈만 (오버사이트 없음).
+ * - admin/member(매니저): 같은 홈 + 오버사이트(검수 코멘트·공유 활동·받은편지함)를 oversight 슬롯 맨 아래에.
  */
 export const dynamic = "force-dynamic";
 
@@ -52,21 +51,23 @@ export default async function HomePage() {
     ]);
 
   return (
-    <ManagerHome
+    <PartnerHome
       userName={userName}
       personalSummary={personalData}
       recentFiles={recentFiles}
-      newCommentsCount={newComments.length}
-      pendingCount={inboxItems.length}
-    >
-      {/* 매니저 오버사이트 — 검수 코멘트 · 공유 활동 · 받은편지함 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <NewCommentsCard comments={newComments} />
-        <ShareActivityCard shares={shareActivity} />
-      </div>
-      <div className="mt-4">
-        <InboxCard items={inboxItems} />
-      </div>
-    </ManagerHome>
+      teamLabel="비모 프로젝트"
+      oversight={
+        <>
+          {/* 매니저 오버사이트 — 검수 코멘트 · 공유 활동 · 받은편지함 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <NewCommentsCard comments={newComments} />
+            <ShareActivityCard shares={shareActivity} />
+          </div>
+          <div className="mt-4">
+            <InboxCard items={inboxItems} />
+          </div>
+        </>
+      }
+    />
   );
 }

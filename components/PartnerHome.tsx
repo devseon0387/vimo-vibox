@@ -82,7 +82,7 @@ function verOf(name: string): string | null {
   const m = name.match(/v(\d+)/i);
   return m ? `v${m[1]}` : null;
 }
-function Hero({ f }: { f: MyRecentFile }) {
+function Hero({ f, teamLabel }: { f: MyRecentFile; teamLabel: string }) {
   const isTeam = f.space === "team";
   const ver = verOf(f.filename);
   const s = isTeam ? teamFileStatus(f) : null;
@@ -116,7 +116,7 @@ function Hero({ f }: { f: MyRecentFile }) {
               <>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/vimo-mark.svg" alt="" style={{ width: 13, height: "auto" }} />
-                <b className="text-text-soft font-semibold">비모와의 작업</b>
+                <b className="text-text-soft font-semibold">{teamLabel}</b>
               </>
             ) : (
               <>
@@ -473,10 +473,16 @@ export function PartnerHome({
   userName,
   personalSummary,
   recentFiles,
+  teamLabel = "비모와의 작업",
+  oversight,
 }: {
   userName: string;
   personalSummary: PersonalSummary;
   recentFiles: MyRecentFile[];
+  /** 히어로의 팀 파일 라벨 — 파트너="비모와의 작업"(기본), 매니저="비모 프로젝트" */
+  teamLabel?: string;
+  /** 매니저 오버사이트(검수 코멘트·공유 활동·받은편지함) — 있으면 홈 맨 아래에 렌더. 파트너=없음 */
+  oversight?: ReactNode;
 }) {
   const [favs, setFavs] = useState<Set<string>>(new Set());
   const [view, setView] = useState<"list" | "grid">("list");
@@ -613,7 +619,7 @@ export function PartnerHome({
       </div>
 
       <div className="px-4 md:px-8 py-5 mx-auto w-full max-w-[940px] flex flex-col gap-5">
-        {heroFile && <Hero f={heroFile} />}
+        {heroFile && <Hero f={heroFile} teamLabel={teamLabel} />}
 
         {/* My box 헤더 + 리스트/그리드 토글 */}
         <div>
@@ -722,6 +728,11 @@ export function PartnerHome({
             </div>
           </div>
         </div>
+
+        {/* 매니저 오버사이트 — 검수 코멘트 · 공유 활동 · 받은편지함 (파트너 홈엔 없음) */}
+        {oversight && (
+          <div className="mt-1 pt-6 border-t border-border">{oversight}</div>
+        )}
       </div>
     </div>
   );

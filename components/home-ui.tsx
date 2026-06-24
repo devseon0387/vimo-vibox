@@ -11,9 +11,8 @@ import {
 import type { MyRecentFile } from "@/lib/dashboard/queries";
 
 /**
- * 홈(PartnerHome·ManagerHome) 공용 UI 헬퍼.
- * 두 홈이 같은 디자인 언어(슬림 업로드 바·상태 배지 파일 리스트·드릴인 링크)를
- * 공유하므로 단일 소스로 둔다.
+ * 홈(PartnerHome — 파트너·매니저 공용) UI 헬퍼.
+ * 상태 배지·포맷 유틸 등 단일 소스. (구 ManagerHome 통합으로 일부 헬퍼는 미사용일 수 있음)
  */
 
 export function formatBytes(b: number): string {
