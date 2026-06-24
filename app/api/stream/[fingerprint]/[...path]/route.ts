@@ -9,7 +9,7 @@ import { hlsAssets, shareLinks } from "@/lib/db/schema";
 import { getCurrentSession } from "@/lib/auth/session";
 import { canAccessFile } from "@/lib/auth/access";
 import { getHLSDir } from "@/lib/fs/hls";
-import { resolveAllowedPaths } from "@/lib/share/paths";
+import { isPathInShare } from "@/lib/share/paths";
 import { logTraffic } from "@/lib/traffic";
 import { corsHeaders, preflight } from "@/lib/auth/cors";
 
@@ -79,8 +79,8 @@ export async function GET(
     if (link) {
       const expired = link.expiresAt && link.expiresAt.getTime() < Date.now();
       if (!expired) {
-        const allowedPaths = resolveAllowedPaths(link);
-        if (allowedPaths.includes(asset.filePath)) {
+        // NFC 정규화 매칭(isPathInShare) — 한글 파일명 HLS 세그먼트가 거짓 403 되던 문제 차단
+        if (isPathInShare(link, asset.filePath)) {
           authorized = true;
         }
       }

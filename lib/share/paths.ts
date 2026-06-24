@@ -20,6 +20,27 @@ export function resolveAllowedPaths(link: ShareLink): string[] {
 }
 
 /**
+ * 게스트가 요청한 경로(p)를, 허용 경로 목록에서 유니코드 정규화(NFC) 일치하는 "정본" 경로로 해석.
+ * 일치가 없으면 fallback(보통 link.filePath)로 떨어진다.
+ *
+ * 왜 필요한가: macOS 파일명은 NFD인데 저장된 경로(link.paths)는 NFC일 수 있어, 정규화 없이
+ * `allowedPaths.includes(p)` 로 비교하면 한글 다중파일 공유에서 동일 파일인데도 빗나가
+ * 코멘트가 엉뚱한 파일(link.filePath)에 붙는다. isPathInShare 와 동일한 NFC 규칙을 코멘트
+ * 라우트에도 적용하기 위한 헬퍼. 일치 시 "저장된 정본 경로"를 돌려줘 DB 경로 표기를 일관화한다.
+ * (folder 공유의 자식 경로는 allowedPaths 에 열거되지 않아 fallback — 기존 동작과 동일, 무회귀.)
+ */
+export function resolveRequestedPath(
+  allowedPaths: string[],
+  requested: string | null | undefined,
+  fallback: string,
+): string {
+  if (!requested) return fallback;
+  const reqNorm = requested.normalize("NFC");
+  const match = allowedPaths.find((p) => p.normalize("NFC") === reqNorm);
+  return match ?? fallback;
+}
+
+/**
  * 받는 사람이 요청한 경로가 이 공유 링크에서 접근 허용되는지 (보안 경계).
  * - folder 공유: 공유 폴더(link.filePath) 자기 자신 또는 그 하위 경로만 허용.
  *   normalize 로 `..` 정규화 후 prefix 검사 → 공유 폴더 밖 탈출 차단.

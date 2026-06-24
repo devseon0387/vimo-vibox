@@ -7,6 +7,8 @@ import { isPathInShare } from "@/lib/share/paths";
 import type { Category, Kind } from "@/lib/comments/detect";
 
 const VALID_CATEGORIES: Category[] = ["txt", "cut", "col", "aud", "mtn", "etc"];
+// kind 토글로 변경 가능한 값은 feedback/praise 뿐. 'approve'(버전 승인)는 생성 시점에만 부여되는
+// 합성 kind라, PATCH 로 일반 코멘트를 approve 로 재분류하는 건 의도적으로 제외한다(승인은 body.approve 경로).
 const VALID_KINDS: Kind[] = ["feedback", "praise"];
 
 // PATCH /api/comments/[id]

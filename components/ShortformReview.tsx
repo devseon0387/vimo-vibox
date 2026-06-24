@@ -52,11 +52,13 @@ function formatTc(ms: number): string {
   return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
+// 검수 뷰어(FeedbackModal.statusOf)와 동일 규칙·색으로 결속 — 같은 코멘트가 뷰어마다 다른
+// 색/분류(AI 판별 방식·보라 색조)로 보이지 않게. 미해결=주황 · AI=보라 · 좋아요=녹색 · 해결=회색(우선).
 function markerColor(c: CommentRow): string {
+  // 우선순위까지 FeedbackModal.statusOf와 동일하게: 해결 > 좋아요 > AI > 미해결(accent).
   if (c.resolvedAt) return "#94a3b8";
-  if (c.authorId !== "guest" && /ai|에이아이|자동/i.test(c.authorName))
-    return "#a855f7";
   if (c.kind === "praise") return "#16a34a";
+  if (c.authorId === "ai-reviewer") return "#7c3aed";
   return "#e85008";
 }
 
@@ -260,16 +262,19 @@ export function ShortformReview({
     const onHide = () => {
       if (document.visibilityState === "hidden") send(true);
     };
+    const onPageHide = () => send(true);
     v.addEventListener("play", onPlay);
     v.addEventListener("timeupdate", onTime);
     v.addEventListener("pause", onPause);
     document.addEventListener("visibilitychange", onHide);
-    window.addEventListener("pagehide", () => send(true));
+    window.addEventListener("pagehide", onPageHide);
     return () => {
       v.removeEventListener("play", onPlay);
       v.removeEventListener("timeupdate", onTime);
       v.removeEventListener("pause", onPause);
       document.removeEventListener("visibilitychange", onHide);
+      // pagehide 도 반드시 해제 — 익명 핸들러였던 과거엔 누수돼 effect 재실행·언마운트마다 쌓였다
+      window.removeEventListener("pagehide", onPageHide);
     };
   }, [token, filePath]);
 
@@ -421,6 +426,13 @@ export function ShortformReview({
     return () => clearTimeout(t);
   }, [toast]);
 
+  // guestName prop이 마운트 이후(localStorage 복원 등) 도착하면 이름 입력칸은 숨겨지는데(needName=false)
+  // name(state)은 빈 채로 남아 전송 버튼이 영구 비활성된다 — 비어 있을 때만 prop 으로 동기화.
+  useEffect(() => {
+    if (guestName.trim() && !name.trim()) setName(guestName);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guestName]);
+
   const pct = durMs > 0 ? (curMs / durMs) * 100 : 0;
   const paused = !playing;
   const needName = !guestName.trim();
@@ -542,7 +554,7 @@ export function ShortformReview({
                   key={c.id}
                   className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full"
                   style={{
-                    left: `${(c.videoTimeMs / durMs) * 100}%`,
+                    left: `${Math.min(100, Math.max(0, (c.videoTimeMs / durMs) * 100))}%`,
                     background: markerColor(c),
                     boxShadow: "0 0 0 2px rgba(0,0,0,.4)",
                   }}

@@ -1,6 +1,6 @@
 import path from "node:path";
 import fs from "node:fs/promises";
-import { and, desc, eq, gte, inArray, sql, isNull } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, ne, sql, isNull } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   users,
@@ -63,7 +63,9 @@ export async function getMyRecentFiles(userId: string, limit = 12): Promise<MyRe
       count: sql<number>`count(*)`.as("count"),
     })
     .from(comments)
-    .where(inArray(comments.filePath, paths))
+    // 합성 'approve'(버전 승인) 코멘트는 사용자에게 보이는 코멘트가 아니므로 카운트에서 제외
+    // (FeedbackModal 목록도 kind!=='approve'를 걸러 표시 — 홈 배지 숫자 정합).
+    .where(and(inArray(comments.filePath, paths), ne(comments.kind, "approve")))
     .groupBy(comments.filePath);
   const commentMap = new Map(cmtRows.map((r) => [r.filePath, Number(r.count)]));
 
@@ -397,6 +399,7 @@ export async function getPartnerPanelData(userId: string): Promise<PartnerPanelD
       .select({ filePath: shareLinks.filePath, title: shareLinks.title, token: shareLinks.token })
       .from(shareLinks)
       .where(and(eq(shareLinks.createdBy, userId), isNull(shareLinks.revokedAt)))
+      .orderBy(desc(shareLinks.createdAt))
       .limit(24);
     out.shares = rows.map((r) => ({
       name: r.title || (r.filePath.split("/").pop() ?? r.filePath),
