@@ -212,6 +212,16 @@ export function SegmentSidebar({
           </button>
         </form>
       </div>
+
+      {/* 버전 — 왼쪽 하단, 비박스 브랜드 오른쪽 (ERP 톤: {브랜드} {버전} · {날짜}) */}
+      <div className="border-t border-[#f0ece9] px-4 py-2 flex items-baseline gap-1.5">
+        <span className="text-2xs font-bold tracking-wide text-text-soft">
+          vi<span className="text-accent">.box</span>
+        </span>
+        <span className="text-2xs font-medium text-text-faint tabular-nums">
+          {APP_VERSION} · {APP_LAST_UPDATED}
+        </span>
+      </div>
     </div>
   );
 }
