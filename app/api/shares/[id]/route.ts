@@ -70,7 +70,10 @@ export async function PATCH(
   } = {};
   if (body.mode === "preview" || body.mode === "full") {
     setValues.mode = body.mode;
-    // 명시 없으면 full=댓글 허용, preview=댓글 끔
+    // 업로드 직후 공유 패널에선 mode 토글이 곧 댓글 컨트롤(검수=full=댓글 허용 / 미리보기=preview=끔)이라,
+    // mode 만 와도 allowComments 를 mode 기준 기본값으로 따라가게 한다(현 UI 의도).
+    // ⚠️ 댓글 허용을 mode 와 독립적으로 제어하려면 allowComments 를 "명시" 전송할 것 — 그 경우
+    //    mode 기본값 대신 명시값을 따르므로, 명시 설정이 mode 토글로 덮어써지지 않는다.
     setValues.allowComments =
       typeof body.allowComments === "boolean"
         ? body.allowComments

@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db/client";
 import { comments, clientVideos, shareLinks } from "@/lib/db/schema";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
-import { resolveAllowedPaths } from "@/lib/share/paths";
+import { resolveAllowedPaths, resolveRequestedPath } from "@/lib/share/paths";
 
 // 공유 링크 검증 helper
 async function verifyShare(
@@ -51,7 +51,8 @@ export async function GET(
     return NextResponse.json({ error: check.error }, { status: check.status });
   }
   const { link, allowedPaths } = check;
-  const filePath = p && allowedPaths.includes(p) ? p : link.filePath;
+  // NFC 정규화 매칭 — 한글 파일명 NFD/NFC 불일치로 코멘트가 엉뚱한 파일에 붙던 문제 차단
+  const filePath = resolveRequestedPath(allowedPaths, p, link.filePath);
 
   // 클라이언트 뷰에 보일 댓글:
   //  - visibility='client' 이면서 "이 공유 링크(토큰)에 속한" 것만 (share_token = 현재 token)
@@ -184,10 +185,12 @@ export async function POST(
     return NextResponse.json({ error: "comments not allowed" }, { status: 403 });
   }
 
-  const filePath =
-    body.path && allowedPaths.includes(String(body.path))
-      ? String(body.path)
-      : link.filePath;
+  // NFC 정규화 매칭 (GET 과 동일) — 한글 파일명에서 코멘트가 엉뚱한 파일에 저장되던 문제 차단
+  const filePath = resolveRequestedPath(
+    allowedPaths,
+    body.path != null ? String(body.path) : null,
+    link.filePath,
+  );
 
   const videoTimeMs =
     typeof body.videoTimeMs === "number" && body.videoTimeMs >= 0

@@ -468,7 +468,9 @@ export function FeedbackModal({
       cancelled = true;
       if (pollTimer) clearTimeout(pollTimer);
     };
-  }, [filePath, shareContext]);
+    // reloadNonce: "다시 시도" 시 manifest 를 새로 lookup → (null→url 전이로) attachHls 가 재실행돼
+    // HLS 재생도 복구된다. 이게 없으면 retry 는 src(=프록시 모드에선 undefined) 만 건드려 무동작.
+  }, [filePath, shareContext, reloadNonce]);
 
   // hls.js 어태치 — manifestUrl 준비되면 vidRef에 붙임 (원본 화질 모드면 미사용)
   useEffect(() => {

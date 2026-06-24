@@ -4,7 +4,7 @@ import { db } from "@/lib/db/client";
 import { hlsAssets, encodingJobs, shareLinks } from "@/lib/db/schema";
 import { getCurrentSession } from "@/lib/auth/session";
 import { canAccessFile } from "@/lib/auth/access";
-import { resolveAllowedPaths } from "@/lib/share/paths";
+import { isPathInShare } from "@/lib/share/paths";
 
 /**
  * GET /api/stream/lookup?path=/foo.mp4[&token=...]
@@ -36,8 +36,8 @@ export async function GET(req: NextRequest) {
     if (link) {
       const expired = link.expiresAt && link.expiresAt.getTime() < Date.now();
       if (!expired) {
-        const allowed = resolveAllowedPaths(link);
-        if (allowed.includes(filePath)) authorized = true;
+        // NFC 정규화 매칭(isPathInShare) — 한글 파일명 HLS lookup 이 거짓 미인증 되던 문제 차단
+        if (isPathInShare(link, filePath)) authorized = true;
       }
     }
   } else {

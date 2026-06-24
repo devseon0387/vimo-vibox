@@ -84,10 +84,12 @@ export async function POST(
 
   let added = 0;
   for (const p of toAdd) {
-    // Phase 1: UNIQUE(client_id, file_path) 도입 → 동시요청 race 시 위 존재검사를 둘 다 통과해
-    // 한쪽이 unique 위반으로 throw 할 수 있다. onConflictDoNothing 으로 멱등하게 흡수(추가형·안전).
-    // 마이그 미적용 상태(유니크 인덱스 없음)에서도 onConflict 는 no-op 으로 동작해 기존 흐름 보존.
-    await db
+    // 동시요청 race 로 위 존재검사를 둘 다 통과해도 UNIQUE(client_id, file_path)가 중복을 흡수한다.
+    // ⚠️ onConflict 의 'target' 은 PG에서 해당 컬럼들의 유니크 인덱스를 "요구"한다
+    //    (idx_client_videos_unique — schema.ts + drizzle-pg/0001). 그 인덱스가 없으면 no-op 이 아니라
+    //    42P10 으로 throw 하므로, 이 기능 배포 전 0001 마이그레이션이 대상 DB에 반드시 적용돼 있어야 한다.
+    // returning() 으로 실제 삽입 여부를 확인 — 충돌로 스킵된 행은 added 카운트에 넣지 않는다.
+    const ins = await db
       .insert(clientVideos)
       .values({
         id: randomUUID(),
@@ -99,8 +101,9 @@ export async function POST(
       })
       .onConflictDoNothing({
         target: [clientVideos.clientId, clientVideos.filePath],
-      });
-    added++;
+      })
+      .returning({ id: clientVideos.id });
+    if (ins.length > 0) added++;
   }
   return NextResponse.json({
     ok: true,

@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db/client";
 import { shareLinks } from "@/lib/db/schema";
-import { resolveAllowedPaths } from "@/lib/share/paths";
+import { resolveAllowedPaths, isPathInShare, resolveRequestedPath } from "@/lib/share/paths";
 import {
   getFrameThumbPath,
   getThumbPath,
@@ -53,10 +53,11 @@ export async function GET(
   // p 지정되면 검증, 아니면 첫 영상 파일로 폴백 (OG image 호출 시나리오)
   let p: string;
   if (pParam) {
-    if (!allowedPaths.includes(pParam)) {
+    // NFC 정규화 매칭(isPathInShare) — 한글 파일명 썸네일이 거짓 403 되던 문제 차단
+    if (!isPathInShare(link, pParam)) {
       return new Response("not allowed", { status: 403 });
     }
-    p = pParam;
+    p = resolveRequestedPath(allowedPaths, pParam, pParam); // 저장 정본 경로로 정규화
   } else {
     const firstVideo = allowedPaths.find((x) => isVideoPath(x));
     if (!firstVideo) return new Response("no video", { status: 404 });

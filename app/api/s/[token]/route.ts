@@ -7,7 +7,7 @@ import { db } from "@/lib/db/client";
 import { shareLinks } from "@/lib/db/schema";
 import { resolveSafePath, statPath } from "@/lib/fs/storage";
 import { streamWithTrafficLog } from "@/lib/traffic";
-import { resolveAllowedPaths, isPathInShare } from "@/lib/share/paths";
+import { resolveAllowedPaths, isPathInShare, resolveRequestedPath } from "@/lib/share/paths";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import mime from "../../download/mime";
 
@@ -67,10 +67,8 @@ export async function GET(
     targetPath = requestedPath;
   } else {
     const allowedPaths = resolveAllowedPaths(link);
-    targetPath =
-      requestedPath && allowedPaths.includes(requestedPath)
-        ? requestedPath
-        : link.filePath;
+    // NFC 정규화 매칭 — 한글 파일명에서 요청 파일이 빗나가 첫 파일로 폴백되던 문제 차단(코멘트 라우트와 동일)
+    targetPath = resolveRequestedPath(allowedPaths, requestedPath, link.filePath);
   }
 
   // 다운로드 요청인데 다운로드 금지된 경우 차단

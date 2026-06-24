@@ -255,23 +255,40 @@ function shareDefaultMode(): "preview" | "full" {
   }
 }
 
+// 업로드 항목별 자동 생성된 공유 링크를 모듈 스코프에 캐시(entry.id 기준).
+// UploadSharePanel 이 네비게이션·router.refresh 로 리마운트되면 컴포넌트 ref(createdRef)는
+// 리셋돼 같은 항목에 링크를 "또" 만든다 → 캐시로 중복 생성 차단 + 리마운트 시 상태 복원.
+type AutoShare = {
+  id: string;
+  token: string;
+  mode: "preview" | "full";
+  allowDownload: boolean;
+};
+const autoShareCache = new Map<string, AutoShare>();
+
 function UploadSharePanel({ entry }: { entry: UploadEntry }) {
   const filePath = useMemo(() => {
     const base = entry.targetPath.replace(/\/+$/, "");
     return `${base}/${entry.files[0]?.name ?? ""}`;
   }, [entry.targetPath, entry.files]);
 
-  const [phase, setPhase] = useState<"creating" | "ready" | "error">("creating");
-  const [share, setShare] = useState<{ id: string; token: string } | null>(null);
-  const [mode, setMode] = useState<"preview" | "full">("preview");
-  const [allowDownload, setAllowDownload] = useState(true);
+  const cached = autoShareCache.get(entry.id);
+  const [phase, setPhase] = useState<"creating" | "ready" | "error">(
+    cached ? "ready" : "creating",
+  );
+  const [share, setShare] = useState<{ id: string; token: string } | null>(
+    cached ? { id: cached.id, token: cached.token } : null,
+  );
+  const [mode, setMode] = useState<"preview" | "full">(cached?.mode ?? "preview");
+  const [allowDownload, setAllowDownload] = useState(cached?.allowDownload ?? true);
   const [copied, setCopied] = useState(false);
   const createdRef = useRef(false);
 
-  // 완료 시 공유 링크 1회 자동 생성 (기본 미리보기)
+  // 완료 시 공유 링크 1회 자동 생성 (기본 미리보기). 이미 캐시에 있으면(리마운트) 재생성하지 않음.
   useEffect(() => {
     if (createdRef.current) return;
     createdRef.current = true;
+    if (autoShareCache.has(entry.id)) return; // 리마운트 — 위 useState 초기값으로 이미 복원됨
     const initial = shareDefaultMode();
     setMode(initial);
     void (async () => {
@@ -286,6 +303,12 @@ function UploadSharePanel({ entry }: { entry: UploadEntry }) {
           setPhase("error");
           return;
         }
+        autoShareCache.set(entry.id, {
+          id: body.id,
+          token: body.token,
+          mode: initial,
+          allowDownload: true,
+        });
         setShare({ id: body.id, token: body.token });
         setPhase("ready");
       } catch {
@@ -316,6 +339,8 @@ function UploadSharePanel({ entry }: { entry: UploadEntry }) {
   const changeMode = (m: "preview" | "full") => {
     if (m === mode) return;
     setMode(m);
+    const c = autoShareCache.get(entry.id);
+    if (c) autoShareCache.set(entry.id, { ...c, mode: m });
     try {
       localStorage.setItem("vibox.shareDefaultMode", m);
     } catch {}
@@ -324,6 +349,8 @@ function UploadSharePanel({ entry }: { entry: UploadEntry }) {
   const toggleDownload = () => {
     const v = !allowDownload;
     setAllowDownload(v);
+    const c = autoShareCache.get(entry.id);
+    if (c) autoShareCache.set(entry.id, { ...c, allowDownload: v });
     void patch({ allowDownload: v });
   };
   const copy = async () => {

@@ -98,13 +98,17 @@ export function SharePageClient({
       if (v.videoWidth && v.videoHeight)
         setPortrait(v.videoHeight > v.videoWidth);
     };
+    // 메타데이터 로드 실패(코덱·일시적 5xx 등) 시 3초 검은 화면을 기다리지 말고 즉시 표준(가로)으로 폴백
+    const onError = () => setPortrait((p) => (p === null ? false : p));
     v.addEventListener("loadedmetadata", onMeta);
+    v.addEventListener("error", onError);
     v.src = `/api/s/${token}?p=${encodeURIComponent(af.path)}`;
-    // 메타데이터 못 읽으면 3초 후 표준(가로)으로 폴백
+    // 메타데이터 못 읽으면 3초 후 표준(가로)으로 폴백 (onError 가 먼저 잡으면 그쪽이 우선)
     const fb = setTimeout(() => setPortrait((p) => (p === null ? false : p)), 3000);
     return () => {
       clearTimeout(fb);
       v.removeEventListener("loadedmetadata", onMeta);
+      v.removeEventListener("error", onError);
       v.removeAttribute("src");
       v.load();
     };
