@@ -48,8 +48,13 @@ export const fileUploads = pgTable("file_uploads", {
   episodeId: text("episode_id"),
   projectId: text("project_id"),
   partnerId: text("partner_id"),
+  // dedup(콘텐츠 주소): 업로드 완료 시 전체 SHA256 + 크기 기록. 같은 hash+size면 물리 1벌만 두고
+  // 하드링크로 공유(원본 바이트 보존 = "올린 그대로 돌려준다" 유지). nullable — 백필 전/레거시 행은 NULL.
+  contentHash: text("content_hash"),
+  fileSize: big("file_size"),
 }, (t) => [
   index("idx_file_uploads_uploader").on(t.uploadedBy),
+  index("idx_file_uploads_content_hash").on(t.contentHash),
 ]);
 
 export const comments = pgTable("comments", {

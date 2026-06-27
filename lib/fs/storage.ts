@@ -2,6 +2,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { createReadStream } from "node:fs";
 import type { Stats } from "node:fs";
+import { createHash, randomUUID } from "node:crypto";
 
 /**
  * 스토리지 영역(Zone).
@@ -381,8 +382,10 @@ export function getChunkPath(fileId: string, index: number): string {
   return path.join(getUploadTempDir(fileId), chunkFilename(index));
 }
 
-/** 청크들을 순서대로 합쳐 최종 파일로 이동. 결과 FileEntry 반환. */
-export async function finalizeChunkUpload(fileId: string): Promise<FileEntry> {
+/** 청크들을 순서대로 합쳐 최종 파일로 이동. 결과 FileEntry(+contentHash) 반환. */
+export async function finalizeChunkUpload(
+  fileId: string,
+): Promise<FileEntry & { contentHash: string }> {
   const meta = await getChunkSession(fileId);
   if (!meta) throw new Error("no upload session");
 
@@ -448,11 +451,14 @@ export async function finalizeChunkUpload(fileId: string): Promise<FileEntry> {
   const { createReadStream: crs, createWriteStream: cws } = await import("node:fs");
   const writeStream = cws(finalAbs);
   writeStream.setMaxListeners(Infinity);
+  // dedup: 병합하며 전체 SHA256 동시 계산 (이미 읽는 청크를 tap — 추가 read I/O 0).
+  const hash = createHash("sha256");
   try {
     for (const part of partFiles) {
       await new Promise<void>((resolve, reject) => {
         const reader = crs(path.join(tempDir, part));
         reader.once("error", reject);
+        reader.on("data", (chunk) => hash.update(chunk));
         reader.once("end", resolve);
         reader.pipe(writeStream, { end: false });
       });
@@ -491,7 +497,41 @@ export async function finalizeChunkUpload(fileId: string): Promise<FileEntry> {
     size: stat.size,
     modifiedAt: stat.mtimeMs,
     kind: detectKindExport(finalName, false),
+    contentHash: hash.digest("hex"),
   };
+}
+
+/**
+ * dedup: targetRel 파일을 sourceRel 의 물리 데이터에 하드링크로 연결(같은 내용 확인된 경우만 호출).
+ * 원본 바이트 보존(읽으면 그대로) — 디스크만 1벌. 원자적: source→tmp 하드링크 후 rename 으로 target 대체.
+ * 실패(다른 볼륨 EXDEV·source 없음 등)면 무변경(원본 그대로 유지). 반환 bytes = 회수 용량.
+ */
+export async function dedupeHardlink(
+  targetRel: string,
+  sourceRel: string,
+): Promise<{ deduped: boolean; bytes: number }> {
+  const absTarget = resolveSafePath(targetRel);
+  const absSource = resolveSafePath(sourceRel);
+  if (absTarget === absSource) return { deduped: false, bytes: 0 };
+  let s: Stats, t: Stats;
+  try {
+    s = await fs.stat(absSource);
+    t = await fs.stat(absTarget);
+  } catch {
+    return { deduped: false, bytes: 0 }; // 한쪽이라도 없으면(DB 불일치 등) dedup 안 함
+  }
+  if (!s.isFile() || !t.isFile() || s.size !== t.size) return { deduped: false, bytes: 0 };
+  if (s.dev !== t.dev) return { deduped: false, bytes: 0 }; // 다른 볼륨 → 하드링크 불가
+  if (s.ino === t.ino) return { deduped: false, bytes: 0 }; // 이미 같은 inode(하드링크됨)
+  const tmp = `${absTarget}.dedup-${randomUUID()}.tmp`;
+  try {
+    await fs.link(absSource, tmp); // source inode 에 새 링크
+    await fs.rename(tmp, absTarget); // 원자적 교체(target 옛 데이터는 마지막 ref면 해제)
+    return { deduped: true, bytes: t.size };
+  } catch {
+    await fs.rm(tmp, { force: true }).catch(() => {});
+    return { deduped: false, bytes: 0 };
+  }
 }
 
 export async function abortChunkUpload(fileId: string): Promise<void> {
