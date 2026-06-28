@@ -13,6 +13,7 @@ import {
   Eye,
   Sparkles,
   Code2,
+  Cloud,
 } from "lucide-react";
 import { MenuSection, MenuItem } from "./MenuShell";
 
@@ -30,6 +31,7 @@ export function AdminMenu() {
       <MenuItem href="/admin/stats" icon={BarChart3} label="통계" matchPrefix="/admin/stats" />
       <MenuItem href="/admin/disks" icon={HardDrive} label="디스크" matchPrefix="/admin/disks" />
       <MenuItem href="/admin/storage" icon={HardDrive} label="저장소 점검" matchPrefix="/admin/storage" />
+      <MenuItem href="/admin/r2" icon={Cloud} label="R2 캐시" matchPrefix="/admin/r2" />
       <MenuItem href="/trash" icon={Trash2} label="휴지통 관리" matchExact />
       <MenuItem href="/admin/activity" icon={ClipboardList} label="활동 로그" matchPrefix="/admin/activity" />
 
