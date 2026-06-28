@@ -13,6 +13,7 @@ import { db } from "@/lib/db/client";
 import { fileUploads } from "@/lib/db/schema";
 import { logTraffic } from "@/lib/traffic";
 import { enqueue as enqueueHLS } from "@/lib/encoding/queue";
+import { cacheVideo } from "@/lib/r2-replicate";
 import { invalidateDirSizeCache } from "../init/route";
 import { personalOwnerOf } from "@/lib/fs/storage";
 
@@ -133,6 +134,9 @@ export async function POST(req: NextRequest) {
       enqueueHLS(saved.path).catch(() => {
         /* 큐 등록 실패는 응답 막지 않음 */
       });
+      // R2 "가장 빠른 다운로드 경로": 영상 업로드 완료 시 즉시 R2 적재(비동기·실패 무해).
+      // 10GB(~9.5GB 안전캡) 넘길 것 같으면 오래된 것부터 축출 + 3일 TTL (cacheVideo 내부).
+      void cacheVideo(saved.path);
     }
 
     return Response.json(

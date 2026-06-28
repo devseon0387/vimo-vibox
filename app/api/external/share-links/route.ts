@@ -25,7 +25,6 @@ import { fileUploads, shareLinks } from "@/lib/db/schema";
 import { getCurrentSession } from "@/lib/auth/session";
 import { canAccessFile } from "@/lib/auth/access";
 import { corsHeaders, preflight } from "@/lib/auth/cors";
-import { cacheVideo, isVideoPath } from "@/lib/r2-replicate";
 
 export async function OPTIONS(req: NextRequest) {
   return preflight(req.headers.get("origin"));
@@ -147,13 +146,6 @@ export async function POST(req: NextRequest) {
     passwordHash: null,     // 비밀번호는 호출자가 별도 PATCH로 설정
     downloadCount: 0,
   });
-
-  // R2 "가장 빠른 다운로드 경로": 다운로드 허용 영상이면 R2 적재(비동기·예측축출·실패 무해).
-  if (allowDownload) {
-    for (const p of paths) {
-      if (isVideoPath(p)) void cacheVideo(p, token);
-    }
-  }
 
   console.log(
     `[share-link] created token=${token.slice(0, 8)}… by=${session.username ?? session.sub} ` +

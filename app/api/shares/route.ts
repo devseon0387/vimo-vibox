@@ -7,7 +7,6 @@ import { getCurrentSession } from "@/lib/auth/session";
 import { canAccessFile } from "@/lib/auth/access";
 import { statPath } from "@/lib/fs/storage";
 import { isPathInShare } from "@/lib/share/paths";
-import { cacheVideo, isVideoPath } from "@/lib/r2-replicate";
 
 function generateToken() {
   return randomBytes(16).toString("base64url");
@@ -147,15 +146,6 @@ export async function POST(req: NextRequest) {
     expiresAt,
     passwordHash,
   });
-
-  // R2 "가장 빠른 다운로드 경로": 다운로드 허용 영상 공유면 R2 에 적재(비동기·fire-and-forget).
-  // 예산(≤~9.5GB)·TTL(3일) 예측 축출은 cacheVideo 내부. 실패해도 M2 가 서빙하므로 무해.
-  // 폴더 공유의 rawPaths 는 폴더 경로라 isVideoPath 가 걸러냄(파일 공유의 영상만 적재).
-  if (allowDownload) {
-    for (const p of rawPaths) {
-      if (isVideoPath(p)) void cacheVideo(p, token);
-    }
-  }
 
   return NextResponse.json({ ok: true, token, id: shareId, mode });
 }
