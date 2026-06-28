@@ -43,6 +43,13 @@ PROTECTED_EXCLUDES=(
   # 운영 머신에서만 관리하는 config (덮어쓰기 금지)
   --exclude 'litestream.yml'
   --exclude 'scripts/com.vibox.*.plist'
+  # 운영 현장 핫픽스 백업·롤백 잔재 (배포로 삭제/churn 금지)
+  --exclude '*.bak*'
+  --exclude '.dedup-rollback/'
+  # 디자인 시안 HTML — 런타임 무관, 로컬 전용 (prod 동기화 불필요)
+  --exclude 'design/'
+  # 빌드 산출물 (원격 npm run build 가 재생성)
+  --exclude 'tsconfig.tsbuildinfo'
 )
 
 # -------- ROLLBACK --------
