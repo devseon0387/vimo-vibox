@@ -48,7 +48,7 @@ function pathLabel(p: string): string {
   if (p.startsWith("/library")) return "자료실" + p.slice(8);
   if (p.startsWith("/personal/")) {
     const rest = p.split("/").slice(3).join("/");
-    return "내 박스" + (rest ? "/" + rest : "");
+    return "My box" + (rest ? "/" + rest : "");
   }
   return "렌더링" + p;
 }
@@ -85,7 +85,7 @@ export function GlobalUploadDock() {
   })();
 
   return (
-    <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 w-[min(92vw,380px)] z-40">
+    <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom)+12px)] right-4 md:bottom-6 md:right-6 w-[min(92vw,380px)] z-40">
       <div className="bg-white border border-border rounded-lg shadow-xl overflow-hidden">
         {/* Header */}
         <button

@@ -237,7 +237,7 @@ export function InsightsView({
                     className="border border-border rounded-lg overflow-hidden bg-white"
                   >
                     <div
-                      className="px-4 py-2.5 flex items-center gap-2.5 border-b border-border-soft"
+                      className="px-4 py-2.5 flex items-center gap-2.5 border-b border-border"
                       style={{ background: meta.bgSoft }}
                     >
                       <CategoryIconBox category={p.category} size={26} />
@@ -277,7 +277,7 @@ export function InsightsView({
                         )}
                       </div>
                     </div>
-                    <ul className="divide-y divide-border-soft">
+                    <ul className="divide-y divide-border">
                       {p.recent.slice(0, 3).map((r) => (
                         <li
                           key={r.id}

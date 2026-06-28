@@ -126,6 +126,7 @@ export function StatusBar({
           <span className="hidden sm:block w-px h-3 bg-border" />
           <span className="flex items-center gap-1.5">
             <span
+              title={health.litestreamOk ? "정상" : "실패"}
               className={`w-1.5 h-1.5 rounded-full ${health.litestreamOk ? "bg-success" : "bg-danger"}`}
             />
             <span>Litestream</span>
@@ -136,6 +137,7 @@ export function StatusBar({
           {health.diskPct !== null && (
             <span className="flex items-center gap-1.5">
               <span
+                title={health.diskPct >= 90 ? "위험" : health.diskPct >= 75 ? "주의" : "정상"}
                 className={`w-1.5 h-1.5 rounded-full ${
                   health.diskPct >= 90
                     ? "bg-danger"
@@ -150,6 +152,7 @@ export function StatusBar({
           {health.mirrorText && (
             <span className="flex items-center gap-1.5">
               <span
+                title={health.mirrorWarn ? "주의" : "정상"}
                 className={`w-1.5 h-1.5 rounded-full ${
                   health.mirrorWarn ? "bg-amber-500" : "bg-success"
                 }`}

@@ -133,7 +133,7 @@ export function ClientsList() {
             <button
               onClick={create}
               disabled={creating || !name.trim()}
-              className="bg-accent text-white hover:bg-accent/90 disabled:opacity-50 px-3 py-1.5 rounded-md text-base font-semibold"
+              className="bg-accent text-white hover:bg-accent-hover disabled:opacity-50 px-3 py-1.5 rounded-md text-base font-semibold"
             >
               {creating ? "추가 중…" : "추가"}
             </button>

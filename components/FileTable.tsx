@@ -719,7 +719,7 @@ function FileRow({
       className={`border-b border-[#f5f5f5] hover:bg-surface cursor-pointer transition-colors select-none ${
         deleting ? "opacity-40" : ""
       } ${isSelected ? "bg-accent-soft hover:bg-accent-soft" : ""} ${
-        isFocused ? "shadow-[inset_3px_0_0_0_var(--accent,_#3b82f6)] bg-accent-soft/40" : ""
+        isFocused ? "ring-2 ring-inset ring-accent bg-accent-soft/40" : ""
       } ${dropHover ? "ring-2 ring-inset ring-accent bg-accent-soft" : ""}`}
     >
       <td className="px-3 py-2.5 w-[36px]">

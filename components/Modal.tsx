@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { X } from "lucide-react";
 
 const EXIT_MS = 200;
@@ -20,6 +20,9 @@ export function Modal({
 }) {
   const [mounted, setMounted] = useState(open);
   const [exiting, setExiting] = useState(false);
+  const titleId = useId();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const lastFocusedRef = useRef<HTMLElement | null>(null);
 
   // open 변화 감지: open=true → 즉시 mount, open=false → exit 후 unmount
   useEffect(() => {
@@ -50,6 +53,44 @@ export function Modal({
     };
   }, [mounted, onClose]);
 
+  // 초기 포커스 + 포커스 트랩 + 닫힐 때 트리거로 복귀
+  useEffect(() => {
+    if (!mounted || exiting) return;
+    lastFocusedRef.current = document.activeElement as HTMLElement | null;
+    const panel = panelRef.current;
+    if (!panel) return;
+    const focusable = () =>
+      Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+    (focusable()[0] ?? panel).focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      const items = focusable();
+      if (items.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || !panel.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (active === last || !panel.contains(active))) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    panel.addEventListener("keydown", onKey);
+    return () => {
+      panel.removeEventListener("keydown", onKey);
+      lastFocusedRef.current?.focus?.();
+    };
+  }, [mounted, exiting]);
+
   if (!mounted) return null;
 
   return (
@@ -64,7 +105,12 @@ export function Modal({
         }}
       />
       <div
-        className={`relative bg-white rounded-xl shadow-2xl w-full ${maxWidth} max-h-full overflow-hidden flex flex-col`}
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        tabIndex={-1}
+        className={`relative bg-white rounded-xl shadow-2xl w-full ${maxWidth} max-h-full overflow-hidden flex flex-col outline-none`}
         style={{
           animation: exiting
             ? "dialog-out 200ms cubic-bezier(0.4, 0, 1, 1) both"
@@ -73,7 +119,7 @@ export function Modal({
       >
         {title && (
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-border">
-            <div className="text-md font-bold text-text truncate">{title}</div>
+            <div id={titleId} className="text-md font-bold text-text truncate">{title}</div>
             <button
               onClick={onClose}
               className="p-1 rounded hover:bg-hover text-text-soft hover:text-text transition-colors shrink-0"

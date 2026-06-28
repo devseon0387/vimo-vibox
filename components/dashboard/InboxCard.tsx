@@ -13,7 +13,7 @@ function relativeTime(ms: number): string {
 /** 매니저(admin/member) 한정 — 검수 대기 영상 목록. */
 export function InboxCard({ items }: { items: InboxItem[] }) {
   return (
-    <div className="border border-border rounded-xl p-4" style={{ background: "linear-gradient(to right, #fff, #fafafa)" }}>
+    <div className="border border-border rounded-xl p-4 bg-white">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-base font-bold flex items-center gap-2">
           <Inbox size={16} strokeWidth={2.2} className="text-text-soft" />
@@ -25,7 +25,6 @@ export function InboxCard({ items }: { items: InboxItem[] }) {
             <Users size={10} strokeWidth={2.4} />
             비모
           </span>
-          <span className="text-xs font-medium text-text-faint">매니저</span>
         </h3>
         <Link
           href="/inbox"
@@ -36,7 +35,7 @@ export function InboxCard({ items }: { items: InboxItem[] }) {
       </div>
       {items.length === 0 ? (
         <div className="text-sm text-text-faint py-3 text-center">
-          검수 대기 영상 없음 — 깔끔!
+          검수 대기 영상이 없어요
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
@@ -46,7 +45,7 @@ export function InboxCard({ items }: { items: InboxItem[] }) {
               href={`/vimo-box?path=${encodeURIComponent(it.path)}`}
               className="flex items-center gap-2 p-2 rounded bg-surface hover:bg-white hover:border-border-hover border border-transparent transition"
             >
-              <Film size={14} strokeWidth={2} className="text-violet-500 shrink-0" />
+              <Film size={14} strokeWidth={2} className="text-text-faint shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="truncate">
                   <strong>{it.uploadedByName}</strong> · {it.filename}

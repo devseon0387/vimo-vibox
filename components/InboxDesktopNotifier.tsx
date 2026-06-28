@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Bell, BellOff } from "lucide-react";
 
 /**
  * 받은편지함 카운트 변화 감지 → 데스크탑 알림 (Notification API).
@@ -126,10 +127,18 @@ export function NotifyToggle() {
   return (
     <button
       onClick={toggle}
-      className="text-2xs text-text-faint hover:text-text-soft px-2 py-0.5 rounded hover:bg-hover transition-colors"
+      className="inline-flex items-center gap-1 text-2xs text-text-faint hover:text-text-soft px-2 py-0.5 rounded hover:bg-hover transition-colors"
       title={enabled ? "데스크탑 알림 켜짐" : "받은편지함 새 항목 데스크탑 알림"}
     >
-      {enabled ? "🔔 알림 ON" : "🔕 알림 OFF"}
+      {enabled ? (
+        <>
+          <Bell size={12} /> 알림 ON
+        </>
+      ) : (
+        <>
+          <BellOff size={12} /> 알림 OFF
+        </>
+      )}
     </button>
   );
 }

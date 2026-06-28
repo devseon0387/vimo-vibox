@@ -8,7 +8,6 @@ import {
   HardDrive,
   Share2,
   Trash2,
-  Clock,
   Star,
   Handshake,
   Film,
@@ -221,7 +220,6 @@ export function PartnerSidebar({
           라이브러리
         </div>
         {item(active === "shares", "/shares", "공유", { icon: Share2 })}
-        {item(false, "/", "최근", { icon: Clock })}
         {item(active === "trash", "/trash", "휴지통", { icon: Trash2 })}
       </nav>
 

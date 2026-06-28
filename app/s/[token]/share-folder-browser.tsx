@@ -38,11 +38,11 @@ function fmtSize(b: number): string {
 
 function KindIcon({ e }: { e: Entry }) {
   if (e.isFolder) return <Folder size={18} className="text-accent shrink-0" />;
-  if (e.kind === "video") return <Film size={18} className="text-slate-400 shrink-0" />;
-  if (e.kind === "image") return <ImageIcon size={18} className="text-slate-400 shrink-0" />;
-  if (e.kind === "audio") return <Music size={18} className="text-slate-400 shrink-0" />;
-  if (e.kind === "doc") return <FileText size={18} className="text-slate-400 shrink-0" />;
-  return <FileIcon size={18} className="text-slate-400 shrink-0" />;
+  if (e.kind === "video") return <Film size={18} className="text-text-faint shrink-0" />;
+  if (e.kind === "image") return <ImageIcon size={18} className="text-text-faint shrink-0" />;
+  if (e.kind === "audio") return <Music size={18} className="text-text-faint shrink-0" />;
+  if (e.kind === "doc") return <FileText size={18} className="text-text-faint shrink-0" />;
+  return <FileIcon size={18} className="text-text-faint shrink-0" />;
 }
 
 export function ShareFolderBrowser({
@@ -92,11 +92,11 @@ export function ShareFolderBrowser({
 
   if (expired) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center px-4 bg-surface">
         <div className="w-full max-w-[420px] text-center flex flex-col items-center">
           <AlertTriangle size={44} className="text-amber-500 mb-4" strokeWidth={1.8} />
-          <h1 className="text-[20px] font-bold mb-2 text-slate-900">링크가 만료되었습니다</h1>
-          <p className="text-base text-slate-500">
+          <h1 className="text-[20px] font-bold mb-2 text-text">링크가 만료되었습니다</h1>
+          <p className="text-base text-text-muted">
             파일을 공유한 분에게 새 링크를 요청하세요.
           </p>
         </div>
@@ -121,35 +121,35 @@ export function ShareFolderBrowser({
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="border-b border-slate-200 bg-white sticky top-0 z-10">
+    <div className="min-h-screen bg-surface flex flex-col">
+      <header className="border-b border-border bg-white sticky top-0 z-10">
         <div className="flex items-center gap-3 px-4 py-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="" className="shrink-0 w-6 h-6 object-contain" />
-          <span className="shrink-0 text-base font-extrabold tracking-tight text-slate-900">
+          <span className="shrink-0 text-base font-extrabold tracking-tight text-text">
             vi<span className="text-accent">.</span>box
           </span>
-          <div className="h-4 w-px bg-slate-200" />
-          <h1 className="text-base font-semibold text-slate-700 truncate min-w-0 flex-1">
+          <div className="h-4 w-px bg-surface-2" />
+          <h1 className="text-base font-semibold text-text-soft truncate min-w-0 flex-1">
             {title}
           </h1>
         </div>
-        <div className="flex items-center gap-1 px-4 pb-2 text-sm text-slate-500 overflow-x-auto">
+        <div className="flex items-center gap-1 px-4 pb-2 text-sm text-text-muted overflow-x-auto">
           <button
             onClick={() => setCwd(root)}
-            className="hover:text-slate-900 shrink-0 font-medium"
+            className="hover:text-text shrink-0 font-medium"
           >
             {title}
           </button>
           {segs.map((s, i) => (
             <span key={i} className="flex items-center gap-1 shrink-0">
-              <ChevronRight size={12} className="text-slate-300" />
+              <ChevronRight size={12} className="text-text-placeholder" />
               {i === segs.length - 1 ? (
-                <span className="text-slate-900 font-medium truncate max-w-[160px]">{s}</span>
+                <span className="text-text font-medium truncate max-w-[160px]">{s}</span>
               ) : (
                 <button
                   onClick={() => setCwd(crumbTo(i))}
-                  className="hover:text-slate-900 truncate max-w-[120px]"
+                  className="hover:text-text truncate max-w-[120px]"
                 >
                   {s}
                 </button>
@@ -161,33 +161,33 @@ export function ShareFolderBrowser({
 
       <div className="flex-1 px-3 md:px-4 py-3 max-w-[1100px] w-full mx-auto">
         {loading ? (
-          <div className="text-center text-base text-slate-400 py-16">불러오는 중…</div>
+          <div className="text-center text-base text-text-faint py-16">불러오는 중…</div>
         ) : sorted.length === 0 ? (
-          <div className="text-center text-base text-slate-400 py-16">빈 폴더예요</div>
+          <div className="text-center text-base text-text-faint py-16">빈 폴더예요</div>
         ) : (
           <ul className="grid gap-1">
             {sorted.map((e) => (
               <li key={e.path}>
-                <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white border border-slate-200 hover:border-slate-300 transition-colors">
+                <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white border border-border hover:border-border-hover transition-colors">
                   <button
                     onClick={() => (e.isFolder ? setCwd(e.path) : setViewer(e))}
                     className="flex items-center gap-3 min-w-0 flex-1 text-left"
                   >
                     <KindIcon e={e} />
-                    <span className="truncate text-base text-slate-800">{e.name}</span>
+                    <span className="truncate text-base text-text">{e.name}</span>
                     {!e.isFolder && e.size > 0 && (
-                      <span className="ml-auto text-xs text-slate-400 shrink-0">
+                      <span className="ml-auto text-xs text-text-faint shrink-0">
                         {fmtSize(e.size)}
                       </span>
                     )}
                     {e.isFolder && (
-                      <ChevronRight size={15} className="ml-auto text-slate-300 shrink-0" />
+                      <ChevronRight size={15} className="ml-auto text-text-placeholder shrink-0" />
                     )}
                   </button>
                   {!e.isFolder && allowDownload && (
                     <a
                       href={fileUrl(e.path, true)}
-                      className="shrink-0 text-slate-400 hover:text-slate-900 p-1"
+                      className="shrink-0 text-text-faint hover:text-text p-1"
                       aria-label="다운로드"
                       download
                     >
@@ -293,12 +293,12 @@ function FileViewer({
         )}
         {!["video", "image", "audio"].includes(entry.kind) && !isPdf && (
           <div className="bg-white p-12 text-center rounded-xl">
-            <div className="text-base text-slate-600 mb-3">이 파일은 미리볼 수 없어요</div>
+            <div className="text-base text-text-muted mb-3">이 파일은 미리볼 수 없어요</div>
             {allowDownload && (
               <a
                 href={`${url}&download=1`}
                 download
-                className="inline-flex items-center gap-1.5 bg-slate-900 text-white px-3 py-1.5 rounded-md text-sm font-semibold"
+                className="inline-flex items-center gap-1.5 bg-text text-white px-3 py-1.5 rounded-md text-sm font-semibold"
               >
                 <Download size={14} /> 다운로드
               </a>

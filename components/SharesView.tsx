@@ -84,15 +84,15 @@ export function SharesView({ items }: { items: ShareRow[] }) {
   const revoke = async (item: ShareRow) => {
     const filename = item.title ?? basename(item.filePath);
     const ok = await confirm({
-      title: "공유 링크 취소",
+      title: "공유 링크 해제",
       message: (
         <>
           <span className="font-semibold text-text">{filename}</span>
-          {" "}링크를 취소할까요?
+          {" "}링크를 해제할까요?
           <br />이 링크로는 더 이상 접근할 수 없게 돼요.
         </>
       ),
-      confirmLabel: "취소하기",
+      confirmLabel: "링크 해제",
       variant: "danger",
     });
     if (!ok) return;
@@ -104,7 +104,7 @@ export function SharesView({ items }: { items: ShareRow[] }) {
         toastError(humanError(body.error ?? res.statusText, "share"));
         return;
       }
-      success("링크가 취소됐어요");
+      success("링크가 해제됐어요");
       router.refresh();
     } finally {
       setBusy(null);

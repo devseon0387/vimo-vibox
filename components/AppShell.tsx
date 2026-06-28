@@ -97,8 +97,6 @@ export function AppShell({
             className="p-2 relative rounded hover:bg-hover text-text"
           >
             <Bell size={19} strokeWidth={2.1} />
-            {/* unread dot — 추후 실제 카운트 hook 으로 교체 */}
-            <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-accent" />
           </Link>
           <button
             onClick={() => setSearchOpen((v) => !v)}
@@ -161,7 +159,7 @@ function MobileTabBar({ pathname }: { pathname: string }) {
     { key: "home", href: "/", label: "홈", Icon: LayoutDashboard },
     { key: "mybox", href: "/my/box", label: "My box", Icon: Package, tint: "#0ea5e9" },
     { key: "team", href: "/team", label: "비모", Icon: Users, tint: "#e85008" },
-    { key: "activity", href: "/inbox", label: "활동", Icon: Activity, showDot: true },
+    { key: "activity", href: "/inbox", label: "활동", Icon: Activity },
   ];
   return (
     <nav

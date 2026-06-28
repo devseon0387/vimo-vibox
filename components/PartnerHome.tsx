@@ -15,12 +15,10 @@ import {
   History,
   MessageSquare,
   Share2,
-  Download,
   Star,
   Check,
   ChevronUp,
   ChevronDown,
-  Ellipsis,
   List as ListIcon,
   LayoutGrid,
   type LucideIcon,
@@ -310,18 +308,6 @@ function DriveRow({
         >
           <Star size={16} className={fav ? "fill-accent" : ""} />
         </button>
-        <button type="button" aria-label="다운로드" onClick={(e) => e.preventDefault()}
-          className="ract w-7 h-7 rounded-md grid place-items-center" style={{ color: "var(--faint)" }}>
-          <Download size={16} />
-        </button>
-        <button type="button" aria-label="공유" onClick={(e) => e.preventDefault()}
-          className="ract w-7 h-7 rounded-md grid place-items-center" style={{ color: "var(--faint)" }}>
-          <Share2 size={16} />
-        </button>
-        <button type="button" aria-label="더보기" onClick={(e) => e.preventDefault()}
-          className="ract more w-7 h-7 rounded-md grid place-items-center" style={{ color: "var(--faint)" }}>
-          <Ellipsis size={16} />
-        </button>
       </span>
     </Link>
   );
@@ -392,10 +378,6 @@ function GridCard({
       <div className="gmeta flex items-center gap-1.5" style={{ padding: "9px 11px" }}>
         <span className="gn truncate flex-1 text-sm font-bold">{f.filename}</span>
         <span className="gc text-2xs" style={{ color: "var(--faint)" }}>{kindLabel(f.filename)}</span>
-        <button type="button" aria-label="더보기" onClick={(e) => e.preventDefault()}
-          className="more-b grid place-items-center" style={{ color: "var(--faint)" }}>
-          <Ellipsis size={15} />
-        </button>
       </div>
     </Link>
   );
@@ -612,7 +594,7 @@ export function PartnerHome({
           <Link href="/?focus=search" className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-2 text-text-faint text-sm hover:bg-hover transition-colors">
             <Search size={14} strokeWidth={2} /> 검색
           </Link>
-          <Link href="/team?upload=1" className="inline-flex items-center gap-1.5 text-sm font-semibold text-white px-3.5 py-2 rounded-lg" style={{ background: "var(--accent)" }}>
+          <Link href="/team?upload=1" className="inline-flex items-center gap-1.5 text-sm font-semibold text-text px-3.5 py-2 rounded-lg border border-border bg-white hover:bg-hover transition-colors">
             <Upload size={15} strokeWidth={2.2} /> 업로드
           </Link>
         </div>

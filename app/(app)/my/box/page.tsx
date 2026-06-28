@@ -67,11 +67,11 @@ export default async function MyBoxPage({
       <PartnerContextPanel data={panelData} />
       <div className="flex-1 min-w-0 px-4 md:px-8 py-4 md:py-6 max-w-[1400px]">
       {/* 브레드크럼 — 상대경로(prefix 가림), 루트 = My Box */}
-      <div className="flex items-center gap-1.5 text-sm text-slate-500 mb-3 overflow-x-auto">
-        <Package size={14} className="text-slate-400 shrink-0" strokeWidth={2} />
+      <div className="flex items-center gap-1.5 text-sm text-text-muted mb-3 overflow-x-auto">
+        <Package size={14} className="text-text-faint shrink-0" strokeWidth={2} />
         <Link
           href="/my/box"
-          className="hover:text-slate-900 transition-colors shrink-0"
+          className="hover:text-text transition-colors shrink-0"
         >
           My Box
         </Link>
@@ -84,17 +84,17 @@ export default async function MyBoxPage({
             <span key={i} className="flex items-center gap-1.5 shrink-0">
               <ChevronRight
                 size={13}
-                className="text-slate-300"
+                className="text-text-placeholder"
                 strokeWidth={2}
               />
               {isLast ? (
-                <span className="text-slate-900 font-medium truncate max-w-[200px]">
+                <span className="text-text font-medium truncate max-w-[200px]">
                   {seg}
                 </span>
               ) : (
                 <Link
                   href={href}
-                  className="hover:text-slate-900 transition-colors truncate max-w-[120px]"
+                  className="hover:text-text transition-colors truncate max-w-[120px]"
                 >
                   {seg}
                 </Link>
@@ -106,10 +106,10 @@ export default async function MyBoxPage({
 
       {/* 헤더 — 업로드·새 폴더 버튼은 FilesPane 의 ActionBar 가 제공 */}
       <div className="mb-4">
-        <h1 className="text-2xl font-bold text-slate-900">
+        <h1 className="text-2xl font-bold text-text">
           {segments.length === 0 ? "My Box" : segments[segments.length - 1]}
         </h1>
-        <div className="text-xs text-slate-400 mt-0.5">
+        <div className="text-xs text-text-faint mt-0.5">
           {userName}님의 개인 드라이브
         </div>
       </div>

@@ -154,10 +154,10 @@ export function SharePageClient({
           className="text-amber-500 mb-4"
           strokeWidth={1.8}
         />
-        <h1 className="text-[20px] font-bold mb-2 text-slate-900">
+        <h1 className="text-[20px] font-bold mb-2 text-text">
           링크가 만료되었습니다
         </h1>
-        <p className="text-base text-slate-500 mb-6">
+        <p className="text-base text-text-muted mb-6">
           이 공유 링크는 더 이상 사용할 수 없습니다.
           <br />
           파일을 공유한 분에게 새 링크를 요청하세요.
@@ -205,22 +205,22 @@ export function SharePageClient({
   // 프리뷰 모드 또는 비디오 아닌 경우
   return (
     <>
-      <div className="min-h-screen bg-slate-50 flex flex-col">
-        <header className="border-b border-slate-200 bg-white">
+      <div className="min-h-screen bg-surface flex flex-col">
+        <header className="border-b border-border bg-white">
         <div className="flex items-center gap-3 px-4 py-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="" className="shrink-0 w-6 h-6 object-contain" />
-          <span className="shrink-0 text-base font-extrabold tracking-tight text-slate-900">
+          <span className="shrink-0 text-base font-extrabold tracking-tight text-text">
             vi<span className="text-accent">.</span>box
           </span>
-          <div className="h-4 w-px bg-slate-200" />
-          <h1 className="text-base font-semibold text-slate-700 truncate min-w-0 flex-1">
+          <div className="h-4 w-px bg-surface-2" />
+          <h1 className="text-base font-semibold text-text-soft truncate min-w-0 flex-1">
             {title}
           </h1>
           {allowDownload && (
             <button
               onClick={download}
-              className="shrink-0 bg-slate-900 text-white hover:bg-slate-700 px-2.5 sm:px-3 py-1.5 rounded-md text-sm font-semibold inline-flex items-center gap-1.5 min-h-[36px]"
+              className="shrink-0 bg-text text-white hover:bg-[#333] px-2.5 sm:px-3 py-1.5 rounded-md text-sm font-semibold inline-flex items-center gap-1.5 min-h-[36px]"
               aria-label="다운로드"
             >
               <Download size={14} strokeWidth={2.3} />
@@ -239,20 +239,20 @@ export function SharePageClient({
                   onClick={() => setActiveIdx(i)}
                   className={`shrink-0 px-2.5 py-1 rounded-md text-xs font-semibold inline-flex items-center gap-1.5 ${
                     isActive
-                      ? "bg-slate-900 text-white"
-                      : "bg-white border border-slate-200 text-slate-600 hover:border-slate-400"
+                      ? "bg-text text-white"
+                      : "bg-white border border-border text-text-muted hover:border-border-hover"
                   }`}
                 >
                   <span
                     className={`font-mono text-2xs px-1 rounded ${
-                      isActive ? "bg-white/20" : "bg-slate-100 text-slate-500"
+                      isActive ? "bg-white/20" : "bg-hover text-text-muted"
                     }`}
                   >
                     V{i + 1}
                   </span>
                   <span className="truncate max-w-[180px]">{f.name}</span>
                   {isLatest && !isActive && (
-                    <span className="text-2xs font-bold text-emerald-600 bg-emerald-50 px-1 rounded">
+                    <span className="text-2xs font-bold text-success bg-success-soft px-1 rounded">
                       NEW
                     </span>
                   )}
@@ -262,7 +262,7 @@ export function SharePageClient({
           </div>
         )}
       </header>
-      <div className="flex-1 flex items-center justify-center p-4 bg-slate-100">
+      <div className="flex-1 flex items-center justify-center p-4 bg-hover">
         {activeFile.kind === "video" && (
           <div className="w-full max-w-[1400px] h-[calc(100vh-100px)] bg-black rounded-lg overflow-hidden shadow-md flex flex-col">
             <HlsVideo
@@ -297,10 +297,10 @@ export function SharePageClient({
         )}
         {activeFile.kind === "other" && (
           <div className="bg-white p-12 text-center rounded-xl shadow-md">
-            <div className="text-base text-slate-600 mb-1">
+            <div className="text-base text-text-muted mb-1">
               이 파일은 브라우저에서 미리볼 수 없습니다
             </div>
-            <div className="text-sm text-slate-400">
+            <div className="text-sm text-text-faint">
               위 다운로드 버튼을 눌러주세요
             </div>
           </div>
@@ -313,7 +313,7 @@ export function SharePageClient({
 
 function CenteredNarrow({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-surface">
       <div className="w-full max-w-[420px] text-center flex flex-col items-center">
         {children}
       </div>

@@ -22,6 +22,9 @@ import {
 import { startUpload } from "@/lib/upload";
 import type { FileEntry } from "@/lib/fs/storage";
 import { useToast } from "@/components/Toast";
+import { FileTableSkeleton } from "@/components/Skeleton";
+import { useConfirm } from "@/components/ConfirmDialog";
+import { usePrompt } from "@/components/PromptDialog";
 import { humanError } from "@/lib/human-error";
 
 function formatBytes(n: number): string {
@@ -38,8 +41,8 @@ function iconFor(entry: FileEntry) {
     image: <FileImage size={18} className="text-emerald-500" strokeWidth={2} />,
     audio: <FileAudio size={18} className="text-sky-500" strokeWidth={2} />,
     zip: <FileArchive size={18} className="text-rose-500" strokeWidth={2} />,
-    doc: <FileText size={18} className="text-slate-500" strokeWidth={2} />,
-    other: <FileIcon size={18} className="text-slate-400" strokeWidth={2} />,
+    doc: <FileText size={18} className="text-text-muted" strokeWidth={2} />,
+    other: <FileIcon size={18} className="text-text-faint" strokeWidth={2} />,
   };
   return m[entry.kind as keyof typeof m] ?? m.other;
 }
@@ -55,6 +58,8 @@ export function LibraryClient({
   const searchParams = useSearchParams();
   const toast = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { confirm, dialog: confirmDialog } = useConfirm();
+  const { promptInput, dialog: promptDialog } = usePrompt();
 
   const currentPath = searchParams.get("path") ?? initialPath;
   const [entries, setEntries] = useState<FileEntry[]>([]);
@@ -104,7 +109,11 @@ export function LibraryClient({
   };
 
   const onNewFolder = async () => {
-    const name = window.prompt("새 폴더 이름");
+    const name = await promptInput({
+      title: "새 폴더",
+      placeholder: "폴더 이름",
+      confirmLabel: "만들기",
+    });
     if (!name) return;
     const r = await fetch("/api/library/files", {
       method: "POST",
@@ -121,7 +130,18 @@ export function LibraryClient({
   };
 
   const onDelete = async (entry: FileEntry) => {
-    if (!window.confirm(`"${entry.name}"을 휴지통으로 이동할까요?`)) return;
+    const ok = await confirm({
+      title: "휴지통으로 이동",
+      message: (
+        <>
+          <span className="font-semibold text-text">{entry.name}</span>
+          {" "}을 휴지통으로 이동할까요?
+        </>
+      ),
+      confirmLabel: "이동",
+      variant: "danger",
+    });
+    if (!ok) return;
     const r = await fetch(
       `/api/library/files?path=${encodeURIComponent(entry.path)}`,
       { method: "DELETE" },
@@ -152,11 +172,11 @@ export function LibraryClient({
 
   return (
     <div className="px-4 md:px-8 py-4 md:py-6 max-w-[1400px]">
-      <div className="flex items-center gap-1.5 text-sm text-slate-500 mb-3 overflow-x-auto">
-        <BookOpen size={14} className="text-slate-400 shrink-0" strokeWidth={2} />
+      <div className="flex items-center gap-1.5 text-sm text-text-muted mb-3 overflow-x-auto">
+        <BookOpen size={14} className="text-text-faint shrink-0" strokeWidth={2} />
         <Link
           href="/vimo-box/library"
-          className="hover:text-slate-900 transition-colors shrink-0"
+          className="hover:text-text transition-colors shrink-0"
         >
           자료실
         </Link>
@@ -167,15 +187,15 @@ export function LibraryClient({
           const isLast = i === segments.length - 1;
           return (
             <span key={i} className="flex items-center gap-1.5 shrink-0">
-              <ChevronRight size={13} className="text-slate-300" strokeWidth={2} />
+              <ChevronRight size={13} className="text-text-placeholder" strokeWidth={2} />
               {isLast ? (
-                <span className="text-slate-900 font-medium truncate max-w-[200px]">
+                <span className="text-text font-medium truncate max-w-[200px]">
                   {seg}
                 </span>
               ) : (
                 <Link
                   href={href}
-                  className="hover:text-slate-900 transition-colors truncate max-w-[120px]"
+                  className="hover:text-text transition-colors truncate max-w-[120px]"
                 >
                   {seg}
                 </Link>
@@ -187,10 +207,10 @@ export function LibraryClient({
 
       <div className="flex items-start md:items-center justify-between gap-3 flex-col md:flex-row mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-text">
             {segments.length === 0 ? "자료실" : segments[segments.length - 1]}
           </h1>
-          <div className="text-xs text-slate-400 mt-0.5">
+          <div className="text-xs text-text-faint mt-0.5">
             팀 공용 레퍼런스·템플릿·자산
             {!isStaff && " · 읽기 전용"}
           </div>
@@ -200,7 +220,7 @@ export function LibraryClient({
           <div className="flex items-center gap-2">
             <button
               onClick={onNewFolder}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-text-soft bg-white border border-border rounded-md hover:bg-surface"
             >
               <FolderPlus size={13} strokeWidth={2.2} />
               새 폴더
@@ -245,37 +265,35 @@ export function LibraryClient({
       )}
 
       {loading ? (
-        <div className="bg-white border border-slate-200 rounded-lg p-12 text-center text-base text-slate-400">
-          불러오는 중…
-        </div>
+        <FileTableSkeleton />
       ) : entries.length === 0 ? (
-        <div className="bg-white border border-dashed border-slate-300 rounded-lg p-12 text-center">
+        <div className="bg-white border border-dashed border-border rounded-lg p-12 text-center">
           <BookOpen
             size={32}
-            className="text-slate-300 mx-auto mb-3"
+            className="text-text-placeholder mx-auto mb-3"
             strokeWidth={1.5}
           />
-          <div className="text-md text-slate-500 mb-1">
+          <div className="text-md text-text-muted mb-1">
             아직 자료가 없어요
           </div>
-          <div className="text-sm text-slate-400">
+          <div className="text-sm text-text-faint">
             {isStaff
               ? "레퍼런스·템플릿·브랜드 자산을 올려봐요"
               : "팀에서 자료가 추가되면 여기에 보여요"}
           </div>
         </div>
       ) : (
-        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+        <div className="bg-white border border-border rounded-lg overflow-hidden">
           <table className="w-full text-base">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-surface border-b border-border">
               <tr>
-                <th className="px-4 py-2.5 text-left font-semibold text-slate-700">
+                <th className="px-4 py-2.5 text-left font-semibold text-text-soft">
                   이름
                 </th>
-                <th className="px-4 py-2.5 text-right font-semibold text-slate-700 w-[100px]">
+                <th className="px-4 py-2.5 text-right font-semibold text-text-soft w-[100px]">
                   크기
                 </th>
-                <th className="px-4 py-2.5 text-right font-semibold text-slate-700 w-[140px]">
+                <th className="px-4 py-2.5 text-right font-semibold text-text-soft w-[140px]">
                   수정
                 </th>
                 <th className="px-4 py-2.5 w-[80px]"></th>
@@ -285,7 +303,7 @@ export function LibraryClient({
               {entries.map((e) => (
                 <tr
                   key={e.path}
-                  className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50"
+                  className="border-b border-border last:border-b-0 hover:bg-surface"
                 >
                   <td className="px-4 py-2">
                     <button
@@ -293,15 +311,15 @@ export function LibraryClient({
                       className="inline-flex items-center gap-2 text-left w-full"
                     >
                       <span className="shrink-0">{iconFor(e)}</span>
-                      <span className="text-slate-900 font-medium truncate">
+                      <span className="text-text font-medium truncate">
                         {e.name}
                       </span>
                     </button>
                   </td>
-                  <td className="px-4 py-2 text-right text-slate-500 tabular-nums">
+                  <td className="px-4 py-2 text-right text-text-muted tabular-nums">
                     {e.isFolder ? "—" : formatBytes(e.size)}
                   </td>
-                  <td className="px-4 py-2 text-right text-slate-500 tabular-nums">
+                  <td className="px-4 py-2 text-right text-text-muted tabular-nums">
                     {new Date(e.modifiedAt).toLocaleDateString("ko-KR", {
                       month: "2-digit",
                       day: "2-digit",
@@ -312,7 +330,7 @@ export function LibraryClient({
                       {!e.isFolder && (
                         <button
                           onClick={() => onClickEntry(e)}
-                          className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded"
+                          className="p-1 text-text-faint hover:text-text hover:bg-hover rounded"
                           title="다운로드"
                         >
                           <Download size={13} strokeWidth={2.2} />
@@ -321,7 +339,7 @@ export function LibraryClient({
                       {isStaff && (
                         <button
                           onClick={() => onDelete(e)}
-                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded"
+                          className="p-1 text-text-faint hover:text-danger hover:bg-danger-soft rounded"
                           title="삭제"
                         >
                           <Trash2 size={13} strokeWidth={2.2} />
@@ -335,6 +353,8 @@ export function LibraryClient({
           </table>
         </div>
       )}
+      {confirmDialog}
+      {promptDialog}
     </div>
   );
 }

@@ -288,8 +288,16 @@ export function NoteEditor({
 
       {/* 하단 푸터 */}
       <div className="px-6 py-3 border-t border-border bg-white flex items-center gap-3">
-        <div className="text-sm text-text-faint">
-          {mode === "preview" ? "👁 미리보기 — 발행 시 이 모습 그대로" : "✏️ 편집 모드"}
+        <div className="text-sm text-text-faint inline-flex items-center gap-1.5">
+          {mode === "preview" ? (
+            <>
+              <Eye size={14} /> 미리보기 — 발행 시 이 모습 그대로
+            </>
+          ) : (
+            <>
+              <Pencil size={14} /> 편집 모드
+            </>
+          )}
         </div>
         <div className="ml-auto flex gap-2">
           <button

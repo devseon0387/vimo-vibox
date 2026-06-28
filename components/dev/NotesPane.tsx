@@ -260,7 +260,7 @@ export function NotesPane({
                   onClick={() => selectNote(n.id)}
                   className={`block w-full text-left px-5 py-3.5 border-b border-border ${
                     sel
-                      ? "bg-accent-soft border-l-[3px] border-l-accent pl-[17px]"
+                      ? "bg-accent-soft"
                       : "hover:bg-surface"
                   }`}
                 >

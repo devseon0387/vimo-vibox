@@ -107,7 +107,13 @@ export function MoveDialog({
           failed++;
         }
       }
-      const destLabel = relPath === "/" ? "루트로" : `${relPath}으로`;
+      const josa = (w: string) => {
+        const c = w.charCodeAt(w.length - 1);
+        if (c < 0xac00 || c > 0xd7a3) return "로";
+        const jong = (c - 0xac00) % 28;
+        return jong === 0 || jong === 8 ? "로" : "으로";
+      };
+      const destLabel = relPath === "/" ? "최상위로" : `${relPath}${josa(relPath)}`;
       if (failed === 0) {
         toast.success(
           isMulti ? (

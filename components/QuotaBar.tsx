@@ -14,26 +14,26 @@ function formatBytes(n: number): string {
 export function QuotaBar({ usage }: { usage: PersonalUsage }) {
   const pct = Math.min(1, usage.pct) * 100;
   const pctTone =
-    pct >= 95 ? "bg-rose-500" : pct >= 85 ? "bg-amber-500" : "bg-sky-500";
+    pct >= 95 ? "bg-danger" : pct >= 85 ? "bg-amber-500" : "bg-sky-500";
 
   return (
-    <div className="mb-4 bg-white border border-slate-200 rounded-lg px-4 py-3">
+    <div className="mb-4 bg-white border border-border rounded-lg px-4 py-3">
       <div className="flex items-center justify-between text-xs mb-1.5">
-        <span className="text-slate-500">
+        <span className="text-text-muted">
           사용{" "}
-          <span className="font-semibold text-slate-900 tabular-nums">
+          <span className="font-semibold text-text tabular-nums">
             {formatBytes(usage.usedBytes)}
           </span>
-          <span className="text-slate-400"> / {formatBytes(usage.quotaBytes)}</span>
-          <span className="text-slate-400"> · {usage.fileCount}개 파일</span>
+          <span className="text-text-faint"> / {formatBytes(usage.quotaBytes)}</span>
+          <span className="text-text-faint"> · {usage.fileCount}개 파일</span>
         </span>
         <span
-          className={`font-bold tabular-nums ${pct >= 95 ? "text-rose-600" : pct >= 85 ? "text-amber-600" : "text-slate-700"}`}
+          className={`font-bold tabular-nums ${pct >= 95 ? "text-danger" : pct >= 85 ? "text-amber-600" : "text-text-soft"}`}
         >
           {pct.toFixed(1)}%
         </span>
       </div>
-      <div className="relative h-1.5 bg-slate-100 rounded-full overflow-hidden">
+      <div className="relative h-1.5 bg-hover rounded-full overflow-hidden">
         <div
           className={`absolute inset-y-0 left-0 ${pctTone} transition-all`}
           style={{ width: `${pct.toFixed(1)}%` }}

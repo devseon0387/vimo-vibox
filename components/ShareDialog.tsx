@@ -223,7 +223,7 @@ export function ShareDialog({
 
             <button
               onClick={onClose}
-              className="w-full bg-accent text-white hover:bg-accent-hover py-2.5 rounded-md text-md font-semibold"
+              className="w-full bg-text text-white hover:bg-[#333] py-2.5 rounded-md text-md font-semibold"
             >
               닫기
             </button>

@@ -193,7 +193,7 @@ function RoleBadge({
     admin: { label: "관리", cls: "bg-purple-100 text-purple-700" },
     member: { label: "매니저", cls: "bg-purple-100 text-purple-700" },
     partner: { label: "파트너", cls: "bg-slate-200 text-slate-700" },
-    guest: { label: "클라", cls: "bg-amber-100 text-amber-700" },
+    guest: { label: "클라이언트", cls: "bg-amber-100 text-amber-700" },
   } as const;
   const c = map[role];
   if (!c) return null;
@@ -1311,7 +1311,7 @@ export function FeedbackModal({
           ),
         );
         const okCount = results.filter((r) => r.ok).length;
-        if (okCount > 0) success(`${okCount}건 클라에게 공개`);
+        if (okCount > 0) success(`${okCount}건 클라이언트에게 공개`);
         if (okCount < ids.length)
           toastError(`${ids.length - okCount}건 공개 실패`);
         await fetchComments();
@@ -2223,13 +2223,13 @@ export function FeedbackModal({
                         </button>
                       )}
                       {scanJob.status === "done" && (
-                        <span className="text-2xs font-semibold">
-                          ✓ {scanJob.issuesFound ?? 0}건
+                        <span className="inline-flex items-center gap-1 text-2xs font-semibold">
+                          <Check size={12} strokeWidth={3} /> {scanJob.issuesFound ?? 0}건
                         </span>
                       )}
                       {scanJob.status === "failed" && (
-                        <span className="text-2xs font-semibold">
-                          ✗ 실패
+                        <span className="inline-flex items-center gap-1 text-2xs font-semibold">
+                          <X size={12} strokeWidth={3} /> 실패
                         </span>
                       )}
                     </div>
@@ -2336,7 +2336,7 @@ export function FeedbackModal({
                           <span className="flex-1">
                             내부 댓글{" "}
                             <span className="font-bold">{internalCount}건</span>
-                            이 아직 클라에게 비공개
+                            이 아직 클라이언트에게 비공개
                           </span>
                           <button
                             onClick={() => {
@@ -2353,7 +2353,7 @@ export function FeedbackModal({
                             }}
                             className="inline-flex items-center gap-1 text-xs font-bold bg-sky-600 text-white hover:bg-sky-700 px-2 py-0.5 rounded"
                           >
-                            모두 클라공개
+                            모두 클라이언트 공개
                           </button>
                         </div>
                       );
@@ -3342,7 +3342,7 @@ function CommentItem({
             {!isPending && isClientVisible && (
               <span className="inline-flex items-center gap-1 text-2xs font-bold px-1.5 py-0.5 rounded bg-sky-100 text-sky-700">
                 <Eye size={9} strokeWidth={2.5} />
-                클라에게 공개
+                클라이언트에게 공개
               </span>
             )}
             {isStaff && hasModerated && (
@@ -3398,10 +3398,10 @@ function CommentItem({
                     ? "bg-sky-600 text-white border-sky-600 hover:bg-sky-700"
                     : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
                 }`}
-                title={isClientVisible ? "클라공개 해제" : "클라에게 보이기"}
+                title={isClientVisible ? "클라이언트 공개 해제" : "클라이언트에게 표시"}
               >
                 <Eye size={10} strokeWidth={2.5} />
-                {isClientVisible ? "공개중" : "클라공개"}
+                {isClientVisible ? "공개중" : "클라이언트 공개"}
               </button>
             </div>
           )}
@@ -4717,7 +4717,7 @@ function AnnotationPopover({
                 )}
                 {!anno.ocrLoading && anno.original && (
                   <span className="inline-flex items-center gap-1 text-2xs text-amber-600 font-normal">
-                    ✓ 자동 인식됨
+                    <Check size={11} strokeWidth={3} /> 자동 인식됨
                   </span>
                 )}
               </label>

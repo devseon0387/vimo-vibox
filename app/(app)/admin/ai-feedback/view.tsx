@@ -156,7 +156,7 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
         <div className="flex items-center gap-2">
           <button
             onClick={copyForClaude}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded border border-slate-200 bg-white hover:bg-slate-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded border border-border bg-white hover:bg-surface"
             title="요약 markdown 으로 클립보드 복사 — Claude 에 붙여넣기"
           >
             <Copy size={12} strokeWidth={2.3} />
@@ -164,7 +164,7 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
           </button>
           <button
             onClick={exportJson}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded bg-slate-900 text-white hover:bg-slate-800"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded bg-text text-white hover:bg-[#333]"
           >
             <Download size={12} strokeWidth={2.3} />
             JSON 내보내기
@@ -176,36 +176,36 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-5">
         <button
           onClick={() => setFilter("all")}
-          className={`text-left p-3 rounded-lg border bg-white ${filter === "all" ? "border-slate-900" : "border-slate-200"}`}
+          className={`text-left p-3 rounded-lg border bg-white ${filter === "all" ? "border-slate-900" : "border-border"}`}
         >
           <div className="text-xs text-text-muted">전체</div>
           <div className="text-2xl font-bold">{stats.total}</div>
         </button>
         <button
           onClick={() => setFilter("good")}
-          className={`text-left p-3 rounded-lg border bg-white ${filter === "good" ? "border-emerald-600" : "border-slate-200"}`}
+          className={`text-left p-3 rounded-lg border bg-white ${filter === "good" ? "border-emerald-600" : "border-border"}`}
         >
           <div className="text-xs text-text-muted inline-flex items-center gap-1">
-            <ThumbsUp size={10} className="text-emerald-600" />
+            <ThumbsUp size={10} className="text-success" />
             정확
           </div>
-          <div className="text-2xl font-bold text-emerald-700">
+          <div className="text-2xl font-bold text-success">
             {stats.good}
           </div>
         </button>
         <button
           onClick={() => setFilter("bad")}
-          className={`text-left p-3 rounded-lg border bg-white ${filter === "bad" ? "border-rose-600" : "border-slate-200"}`}
+          className={`text-left p-3 rounded-lg border bg-white ${filter === "bad" ? "border-rose-600" : "border-border"}`}
         >
           <div className="text-xs text-text-muted inline-flex items-center gap-1">
-            <ThumbsDown size={10} className="text-rose-600" />
+            <ThumbsDown size={10} className="text-danger" />
             부정확
           </div>
-          <div className="text-2xl font-bold text-rose-700">{stats.bad}</div>
+          <div className="text-2xl font-bold text-danger">{stats.bad}</div>
         </button>
         <button
           onClick={() => setFilter("partial")}
-          className={`text-left p-3 rounded-lg border bg-white ${filter === "partial" ? "border-amber-600" : "border-slate-200"}`}
+          className={`text-left p-3 rounded-lg border bg-white ${filter === "partial" ? "border-amber-600" : "border-border"}`}
         >
           <div className="text-xs text-text-muted inline-flex items-center gap-1">
             <CircleAlert size={10} className="text-amber-600" />
@@ -219,7 +219,7 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
 
       {/* 사유 분포 */}
       {Object.keys(stats.byReason).length > 0 && (
-        <div className="mb-5 p-3 rounded-lg border border-slate-200 bg-white">
+        <div className="mb-5 p-3 rounded-lg border border-border bg-white">
           <div className="text-xs font-bold text-text-muted mb-1.5">
             부정확 사유 분포
           </div>
@@ -229,7 +229,7 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
               .map(([tag, c]) => (
                 <Badge key={tag} tone="neutral" size="md">
                   {REASON_LABELS[tag] ?? tag}
-                  <span className="font-bold text-slate-900">{c}</span>
+                  <span className="font-bold text-text">{c}</span>
                 </Badge>
               ))}
           </div>
@@ -238,7 +238,7 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
 
       {/* 리스트 */}
       {filtered.length === 0 ? (
-        <div className="border-2 border-dashed border-slate-200 rounded-xl p-12 text-center bg-white">
+        <div className="border-2 border-dashed border-border rounded-xl p-12 text-center bg-white">
           <div className="text-base text-text-muted">아직 피드백이 없습니다</div>
         </div>
       ) : (
@@ -255,7 +255,7 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
             return (
               <div
                 key={it.id}
-                className="p-3 rounded-lg border border-slate-200 bg-white"
+                className="p-3 rounded-lg border border-border bg-white"
               >
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <Badge tone={verdictTone} size="sm" icon={VerdictIcon}>
@@ -268,7 +268,7 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
                   <span className="font-mono text-2xs text-text-muted">
                     {formatTc(it.videoTimeMs)}
                   </span>
-                  <span className="text-xs text-slate-600 truncate flex-1">
+                  <span className="text-xs text-text-muted truncate flex-1">
                     {it.filePath}
                   </span>
                   <span className="text-2xs text-text-muted">
@@ -276,9 +276,9 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
                   </span>
                 </div>
                 {(it.aiOcrWrong || it.aiSuggestion) && (
-                  <div className="text-sm font-medium text-slate-900 mb-1">
+                  <div className="text-sm font-medium text-text mb-1">
                     “{it.aiOcrWrong ?? "?"}”{" "}
-                    <span className="text-slate-300 mx-0.5">→</span>{" "}
+                    <span className="text-text-placeholder mx-0.5">→</span>{" "}
                     <span className="text-orange-600">
                       “{it.aiSuggestion ?? "?"}”
                     </span>
@@ -288,7 +288,7 @@ export function AiFeedbackAdminView({ items }: { items: Item[] }) {
                   <div className="text-xs text-text-muted">{it.aiBody}</div>
                 )}
                 {it.note && (
-                  <div className="mt-1.5 p-1.5 bg-slate-50 rounded text-sm text-slate-700">
+                  <div className="mt-1.5 p-1.5 bg-surface rounded text-sm text-text-soft">
                     “{it.note}”
                   </div>
                 )}

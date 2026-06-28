@@ -9,8 +9,8 @@
   --text: #111111;
   --text-muted: #555555;
   --text-soft: #666666;
-  --text-faint: #999999;
-  --text-placeholder: #a3a3a3;
+  --text-faint: #6b6b6b;
+  --text-placeholder: #767676;
   --accent: #e85008;          /* 비박스 브랜드 오렌지 (logo) */
   --accent-hover: #c8430a;
   --accent-soft: #fef0e8;
@@ -44,7 +44,7 @@
   --line2: #e3e3e3;
   --sel: #ebebeb;
   --dash: #d6d6d6;
-  --faint: #9a9a9a;
+  --faint: #6b6b6b;
 }
 
 @theme inline {
@@ -57,6 +57,7 @@
   --color-text-muted: var(--text-muted);
   --color-text-soft: var(--text-soft);
   --color-text-faint: var(--text-faint);
+  --color-text-placeholder: var(--text-placeholder);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
@@ -460,6 +461,14 @@ html {
 .gcard .gck, .gcard .gstar, .gcard .more-b { opacity: 0; pointer-events: none; transition: opacity .12s; }
 .gcard:hover .gck, .gcard:hover .gstar, .gcard:hover .more-b { opacity: 1; pointer-events: auto; }
 .gcard .gstar.on, .gcard .gck.on { opacity: 1; pointer-events: auto; }
+/* 터치(hover 없는) 기기 — hover 전용 컨트롤 상시 노출 (선택·즐겨찾기·더보기) */
+@media (hover: none) {
+  .dgrid .ck,
+  .fcard .fstar,
+  .gcard .gck,
+  .gcard .gstar,
+  .gcard .more-b { opacity: 1; pointer-events: auto; }
+}
 
 @media (max-width: 820px) {
   /* 모바일 4트랙: [체크 20][이름 1fr][크기 72][trail 96], 수정일 숨김 */

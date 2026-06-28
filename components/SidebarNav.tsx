@@ -100,12 +100,6 @@ function NavRow({
           : "text-text-muted hover:bg-hover hover:text-text"
       }`}
     >
-      {isActive && (
-        <span
-          className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-md bg-accent"
-          aria-hidden
-        />
-      )}
       <Icon size={15} strokeWidth={isActive ? 2.5 : 2} />
       <span className="flex-1 truncate">{item.label}</span>
       {typeof inboxCount === "number" && inboxCount > 0 && (

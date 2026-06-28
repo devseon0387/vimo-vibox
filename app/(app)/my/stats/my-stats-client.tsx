@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
+import { AlertTriangle } from "lucide-react";
 
 type Stats = {
   period: { from: number; to: number; days: number };
@@ -82,14 +83,14 @@ export function MyStatsClient({ name }: { name: string }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 grid place-items-center text-base text-slate-400">
+      <div className="min-h-screen bg-surface grid place-items-center text-base text-text-faint">
         불러오는 중…
       </div>
     );
   }
   if (!stats) {
     return (
-      <div className="min-h-screen bg-slate-50 grid place-items-center text-base text-slate-400">
+      <div className="min-h-screen bg-surface grid place-items-center text-base text-text-faint">
         데이터를 불러오지 못했어요
       </div>
     );
@@ -105,15 +106,15 @@ export function MyStatsClient({ name }: { name: string }) {
   const praiseDelta = deltaLabel(kpi.praise, kpi.praisePrev, "건");
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-surface">
       <div className="max-w-[1100px] mx-auto px-6 py-8">
-        <div className="text-xs text-slate-500 tracking-wide mb-1">
+        <div className="text-xs text-text-muted tracking-wide mb-1">
           VIBOX · 내 기록
         </div>
-        <h1 className="text-[20px] font-extrabold text-slate-900 mb-0.5">
+        <h1 className="text-[20px] font-extrabold text-text mb-0.5">
           내 작업 기록
         </h1>
-        <div className="text-sm text-slate-500 mb-6">
+        <div className="text-sm text-text-muted mb-6">
           {name} · 지난 {period.days}일 ({formatDate(period.from)} ~{" "}
           {formatDate(period.to)})
         </div>
@@ -149,7 +150,7 @@ export function MyStatsClient({ name }: { name: string }) {
 
         {/* 카테고리 분포 + 전월 추세 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-          <div className="md:col-span-2 bg-white border border-slate-200 rounded-lg p-5">
+          <div className="md:col-span-2 bg-white border border-border rounded-lg p-5">
             <CardTitle
               title="받은 피드백 분포"
               tag={`${kpi.feedback}건 (수정 요청)`}
@@ -167,19 +168,19 @@ export function MyStatsClient({ name }: { name: string }) {
                     key={c.category}
                     className="grid grid-cols-[80px_1fr_40px_52px] gap-2.5 items-center text-sm"
                   >
-                    <span className="font-semibold text-slate-900">
+                    <span className="font-semibold text-text">
                       {c.label}
                     </span>
-                    <span className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <span className="h-1.5 bg-hover rounded-full overflow-hidden">
                       <span
                         className="block h-full bg-slate-700 rounded-full"
                         style={{ width: `${widthPct}%` }}
                       />
                     </span>
-                    <span className="text-right tabular-nums text-slate-500">
+                    <span className="text-right tabular-nums text-text-muted">
                       {c.count}
                     </span>
-                    <span className="text-right font-semibold tabular-nums text-slate-900">
+                    <span className="text-right font-semibold tabular-nums text-text">
                       {pct}%
                     </span>
                   </div>
@@ -188,7 +189,7 @@ export function MyStatsClient({ name }: { name: string }) {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-lg p-5">
+          <div className="bg-white border border-border rounded-lg p-5">
             <CardTitle title="전월 대비 추세" />
             <div className="flex flex-col mt-3">
               {categories.map((c) => {
@@ -198,19 +199,19 @@ export function MyStatsClient({ name }: { name: string }) {
                   diff === 0 ? "flat" : diff > 0 ? "up" : "down";
                 const dirColor =
                   dir === "down"
-                    ? "text-emerald-600"
+                    ? "text-success"
                     : dir === "up"
-                      ? "text-rose-600"
-                      : "text-slate-400";
+                      ? "text-danger"
+                      : "text-text-faint";
                 return (
                   <div
                     key={c.category}
-                    className="flex justify-between items-center text-sm py-2 border-b border-slate-100 last:border-b-0"
+                    className="flex justify-between items-center text-sm py-2 border-b border-border last:border-b-0"
                   >
-                    <span className="font-semibold text-slate-900">
+                    <span className="font-semibold text-text">
                       {c.label}
                     </span>
-                    <span className="text-slate-400 tabular-nums">
+                    <span className="text-text-faint tabular-nums">
                       {c.prev} → {c.count}
                     </span>
                     <span
@@ -229,13 +230,13 @@ export function MyStatsClient({ name }: { name: string }) {
 
         {/* 칭찬 + 반복 지적 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="md:col-span-2 bg-white border border-slate-200 rounded-lg p-5">
+          <div className="md:col-span-2 bg-white border border-border rounded-lg p-5">
             <CardTitle
               title="받은 칭찬"
               tag={`최근 ${praiseList.length}건`}
             />
             {praiseList.length === 0 ? (
-              <div className="text-sm text-slate-400 italic mt-3">
+              <div className="text-sm text-text-faint italic mt-3">
                 아직 받은 칭찬이 없어요
               </div>
             ) : (
@@ -243,12 +244,12 @@ export function MyStatsClient({ name }: { name: string }) {
                 {praiseList.map((p, i) => (
                   <div
                     key={i}
-                    className="px-3 py-2.5 bg-fuchsia-50 border-l-[3px] border-fuchsia-500 rounded"
+                    className="px-3 py-2.5 bg-accent-soft rounded"
                   >
-                    <div className="text-sm text-slate-900 font-medium">
+                    <div className="text-sm text-text font-medium">
                       &ldquo;{p.body}&rdquo;
                     </div>
-                    <div className="text-2xs text-fuchsia-800 mt-1">
+                    <div className="text-2xs text-accent mt-1">
                       {p.fromName || "익명"} · {p.filePath.split("/").pop()} ·{" "}
                       {formatShortDate(p.createdAt)}
                     </div>
@@ -258,12 +259,12 @@ export function MyStatsClient({ name }: { name: string }) {
             )}
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-lg p-5">
+          <div className="bg-white border border-border rounded-lg p-5">
             <CardTitle title="반복되는 지적" />
             {repeatWarning ? (
               <div className="mt-3 px-3.5 py-3 bg-amber-50 border border-amber-200 rounded-md text-sm">
                 <div className="font-bold text-amber-700 flex items-center gap-1.5">
-                  ⚠ &ldquo;{repeatWarning.keyword}&rdquo;
+                  <AlertTriangle size={14} /> &ldquo;{repeatWarning.keyword}&rdquo;
                 </div>
                 <div className="text-amber-800 mt-1">
                   최근 {period.days}일 {repeatWarning.count}건 이상 지적됐어요.
@@ -271,14 +272,14 @@ export function MyStatsClient({ name }: { name: string }) {
                 </div>
               </div>
             ) : (
-              <div className="text-sm text-slate-400 italic mt-3">
+              <div className="text-sm text-text-faint italic mt-3">
                 반복되는 지적 없음
               </div>
             )}
           </div>
         </div>
 
-        <div className="text-2xs text-slate-400 text-center mt-6">
+        <div className="text-2xs text-text-faint text-center mt-6">
           이 페이지는 본인에게만 보여요 · 실시간 반영
         </div>
       </div>
@@ -308,18 +309,18 @@ function KpiCard({
     : delta.dir === "down";
   const color =
     good
-      ? "text-emerald-600"
+      ? "text-success"
       : bad
-        ? "text-rose-600"
-        : "text-slate-400";
+        ? "text-danger"
+        : "text-text-faint";
   return (
-    <div className="bg-white border border-slate-200 rounded-lg px-4 py-3.5">
-      <div className="text-2xs font-bold tracking-widest text-slate-400 uppercase">
+    <div className="bg-white border border-border rounded-lg px-4 py-3.5">
+      <div className="text-2xs font-bold tracking-widest text-text-faint uppercase">
         {label}
       </div>
       <div className="text-[24px] font-extrabold tabular-nums mt-0.5">
         {value}
-        <span className="text-sm text-slate-400 font-semibold ml-1">
+        <span className="text-sm text-text-faint font-semibold ml-1">
           {unit}
         </span>
       </div>
@@ -332,7 +333,7 @@ function KpiCard({
 
 function CardTitle({ title, tag }: { title: string; tag?: string }) {
   return (
-    <h2 className="text-base font-bold text-slate-900 flex items-center gap-1.5">
+    <h2 className="text-base font-bold text-text flex items-center gap-1.5">
       {title}
       {tag && (
         <Badge tone="neutral" size="sm">

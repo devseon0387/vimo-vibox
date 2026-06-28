@@ -769,16 +769,16 @@ function HealthCard({
   children: React.ReactNode;
 }) {
   const toneStyles = {
-    ok: "bg-emerald-50 border-emerald-200",
+    ok: "bg-success-soft border-emerald-200",
     warn: "bg-amber-50 border-amber-200",
-    bad: "bg-rose-50 border-rose-200",
+    bad: "bg-danger-soft border-rose-200",
     muted: "bg-surface border-border",
   };
   const badgeStyles = {
-    ok: "bg-emerald-600 text-white",
+    ok: "bg-success text-white",
     warn: "bg-amber-500 text-white",
-    bad: "bg-rose-600 text-white",
-    muted: "bg-slate-200 text-slate-700",
+    bad: "bg-danger text-white",
+    muted: "bg-surface-2 text-text-soft",
   };
   const StatusIcon =
     statusTone === "ok"
@@ -864,14 +864,14 @@ function SmartRow({ smart: s }: { smart: HealthSnapshot["smart"][number] }) {
   }[s.tier];
   const statusStyle = (() => {
     if (!s.connected)
-      return { color: "text-slate-400", icon: "✕", label: "미연결" };
+      return { color: "text-text-faint", icon: "✕", label: "미연결" };
     if (s.status === "Verified")
-      return { color: "text-emerald-700", icon: "✓", label: "정상" };
+      return { color: "text-success", icon: "✓", label: "정상" };
     if (s.status === "Failing")
-      return { color: "text-rose-600", icon: "⚠", label: "고장 징후" };
+      return { color: "text-danger", icon: "⚠", label: "고장 징후" };
     if (s.status === "Not Supported")
-      return { color: "text-slate-500", icon: "—", label: "미지원" };
-    return { color: "text-slate-500", icon: "?", label: "알 수 없음" };
+      return { color: "text-text-muted", icon: "—", label: "미지원" };
+    return { color: "text-text-muted", icon: "?", label: "알 수 없음" };
   })();
   return (
     <div className="flex items-center gap-2">
@@ -1073,7 +1073,7 @@ function LitestreamCard({
         <div>
           프로세스:{" "}
           <span
-            className={`font-semibold ${litestream.processAlive ? "text-emerald-700" : "text-rose-600"}`}
+            className={`font-semibold ${litestream.processAlive ? "text-success" : "text-danger"}`}
           >
             {litestream.processAlive ? "live" : "down"}
           </span>
@@ -1143,7 +1143,7 @@ function VolumeCard({
     <div
       className={`rounded-lg border bg-white p-3 ${
         !mounted
-          ? "border-rose-200 bg-rose-50"
+          ? "border-rose-200 bg-danger-soft"
           : warnPct === "bad"
             ? "border-rose-200"
             : warnPct === "warn"
@@ -1162,7 +1162,7 @@ function VolumeCard({
           </span>
         </div>
         {!mounted && (
-          <span className="text-2xs font-bold text-rose-600 inline-flex items-center gap-0.5">
+          <span className="text-2xs font-bold text-danger inline-flex items-center gap-0.5">
             <XCircle size={9} strokeWidth={2.5} />
             연결 끊김
           </span>
@@ -1194,7 +1194,7 @@ function VolumeCard({
             <span
               className={`font-bold ${
                 warnPct === "bad"
-                  ? "text-rose-600"
+                  ? "text-danger"
                   : warnPct === "warn"
                     ? "text-amber-600"
                     : "text-text"
@@ -1258,7 +1258,7 @@ function MirrorCard({ mirror }: { mirror: HealthSnapshot["mirror"] }) {
           launchd:{" "}
           <span
             className={`font-semibold ${
-              mirror.launchdLoaded ? "text-emerald-700" : "text-amber-700"
+              mirror.launchdLoaded ? "text-success" : "text-amber-700"
             }`}
           >
             {mirror.launchdLoaded ? "등록됨" : "미등록"}
@@ -1561,7 +1561,7 @@ function LiveCard({ bytesPerSec }: { bytesPerSec: number }) {
     <div
       className={`rounded-lg border px-4 py-3 ${
         isHot
-          ? "bg-rose-50 border-rose-200 text-rose-700"
+          ? "bg-danger-soft border-rose-200 text-danger"
           : "bg-surface border-border text-text"
       }`}
     >
@@ -1708,9 +1708,9 @@ function SummaryCard({
 }) {
   const accentColors = {
     blue: "bg-blue-50 text-blue-700 border-blue-200",
-    green: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    green: "bg-success-soft text-success border-emerald-200",
     violet: "bg-violet-50 text-violet-700 border-violet-200",
-    slate: "bg-slate-50 text-slate-700 border-slate-200",
+    slate: "bg-surface text-text-soft border-border",
   };
   return (
     <div className={`rounded-lg border px-4 py-3 ${accentColors[accent]}`}>
@@ -1963,7 +1963,7 @@ function EncodingCard({
           <span className="text-text-faint">·</span>
           <span>
             완료{" "}
-            <span className="font-semibold text-emerald-700 tabular-nums">
+            <span className="font-semibold text-success tabular-nums">
               {encoding.doneCount}
             </span>
           </span>
@@ -1972,7 +1972,7 @@ function EncodingCard({
               <span className="text-text-faint">·</span>
               <span>
                 실패{" "}
-                <span className="font-semibold text-rose-600 tabular-nums">
+                <span className="font-semibold text-danger tabular-nums">
                   {encoding.failedCount}
                 </span>
               </span>
@@ -2001,7 +2001,7 @@ function EncodingCard({
                 >
                   {j.filePath.replace(/^\//, "")}
                 </span>
-                <div className="w-16 h-1.5 bg-slate-200 rounded overflow-hidden shrink-0">
+                <div className="w-16 h-1.5 bg-surface-2 rounded overflow-hidden shrink-0">
                   <div
                     className="h-full bg-sky-500 transition-[width]"
                     style={{ width: `${j.progress}%` }}
@@ -2016,7 +2016,7 @@ function EncodingCard({
         )}
         {encoding.recentFailed.length > 0 && (
           <div className="space-y-1 pt-1 border-t border-border/40 mt-1">
-            <div className="text-2xs font-semibold text-rose-600">
+            <div className="text-2xs font-semibold text-danger">
               최근 실패
             </div>
             {encoding.recentFailed.slice(0, 3).map((f) => (
