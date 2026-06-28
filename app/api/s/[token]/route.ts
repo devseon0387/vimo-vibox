@@ -6,9 +6,10 @@ import fs from "node:fs";
 import { db } from "@/lib/db/client";
 import { shareLinks } from "@/lib/db/schema";
 import { resolveSafePath, statPath } from "@/lib/fs/storage";
-import { streamWithTrafficLog } from "@/lib/traffic";
+import { streamWithTrafficLog, logTraffic } from "@/lib/traffic";
 import { resolveAllowedPaths, isPathInShare, resolveRequestedPath } from "@/lib/share/paths";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { getCachedR2, presignGet, r2Enabled } from "@/lib/r2";
 import mime from "../../download/mime";
 
 // timing 균일화용 더미 hash (bcrypt cost 10) — 토큰 missing / 비번 틀림 응답시간 평준화
@@ -100,6 +101,23 @@ export async function GET(
     .catch(() => {});
 
   const filename = path.basename(abs);
+
+  // ── R2 "가장 빠른 다운로드 경로" ──
+  // 이 파일이 R2 에 올라가 있으면 거기서 직접 받게 302 (CF 엣지, 외부 클라 빠름).
+  // 공유 링크 URL 은 이 토큰 그대로 — 서버가 R2↔M2 를 투명 전환하므로 3일 뒤 축출돼도 링크 불변.
+  // download=1(원본 다운로드)만 R2 로; 인라인 재생/Range/HLS 는 아래 M2 스트리밍 유지.
+  if (isDownload && r2Enabled()) {
+    const cached = await getCachedR2(targetPath);
+    if (cached) {
+      // R2 직배는 M2 가 바이트를 못 보므로 알려진 크기로 트래픽 통계만 남김.
+      logTraffic({ path: targetPath, source: "share", shareToken: token, bytes: size });
+      const signed = presignGet(cached.key, { downloadName: filename, expiresSec: 1800 });
+      const res = NextResponse.redirect(signed, 302);
+      res.headers.set("Cache-Control", "no-store"); // presigned 만료·축출 반영 위해 캐시 금지
+      return res;
+    }
+  }
+
   const encodedName = encodeURIComponent(filename);
   const contentType = mime(filename);
   const disposition = isDownload ? "attachment" : "inline";

@@ -162,6 +162,21 @@ export const trafficLog = pgTable("traffic_log", {
 export type TrafficLog = typeof trafficLog.$inferSelect;
 export type NewTrafficLog = typeof trafficLog.$inferInsert;
 
+// R2 "가장 빠른 다운로드 경로" — 외부 공유된 최신 영상만 R2에 두고 거기서 직배.
+// 정본은 항상 M2 디스크. 이 테이블 = 현재 R2에 올라가 있는 객체 목록(예산·TTL 축출 기준).
+// 행 존재 = R2에 있음. 없으면 /api/s 가 M2 로 폴백. cached_at = 3일 TTL + 오래된 것부터 축출.
+export const r2Cache = pgTable("r2_cache", {
+  path: text("path").primaryKey(),          // storage 경로(/a/b.mp4) — /api/s 의 targetPath 와 동일 키
+  r2Key: text("r2_key").notNull(),           // R2 object key (앞 슬래시 제거형)
+  bytes: big("bytes").notNull(),             // 객체 크기(예산 합산용)
+  shareToken: text("share_token"),           // 적재를 유발한 공유 토큰(참고)
+  cachedAt: ts("cached_at").notNull().$defaultFn(() => new Date()),
+}, (t) => [
+  index("idx_r2_cache_cached_at").on(t.cachedAt),
+]);
+export type R2CacheRow = typeof r2Cache.$inferSelect;
+export type NewR2CacheRow = typeof r2Cache.$inferInsert;
+
 export const encodingJobs = pgTable("encoding_jobs", {
   id: text("id").primaryKey(),
   filePath: text("file_path").notNull(),
