@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, FolderPlus, FolderUp } from "lucide-react";
 import { usePrompt } from "./PromptDialog";
@@ -27,6 +27,15 @@ export function ActionBar({
   const folderInputRef = useRef<HTMLInputElement | null>(null);
   const { promptInput, dialog } = usePrompt();
   const toast = useToast();
+
+  // ?upload=1 (카드·홈 올리기 버튼) 진입 시 파일 선택 자동 오픈 (2026-06-28)
+  useEffect(() => {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("upload") === "1") {
+      inputRef.current?.click();
+      router.replace(window.location.pathname);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleFiles = (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0) return;

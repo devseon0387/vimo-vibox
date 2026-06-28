@@ -54,8 +54,8 @@ function withSecurityHeaders(res: NextResponse): NextResponse {
     "Content-Security-Policy",
     [
       "default-src 'self'",
-      "img-src 'self' data: blob:",
-      "media-src 'self' blob:",
+      "img-src 'self' data: blob: https://u1.vibox.cloud:8443 https://u2.vibox.cloud:8443 https://u1.vibox.cloud:18443 https://u2.vibox.cloud:18443",
+      "media-src 'self' blob: https://u1.vibox.cloud:8443 https://u2.vibox.cloud:8443 https://u1.vibox.cloud:18443 https://u2.vibox.cloud:18443",
       "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
       "font-src 'self' https://cdn.jsdelivr.net data:",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",

@@ -131,7 +131,7 @@ export async function GET(
         });
       }
       const chunkSize = end - start + 1;
-      const ns = fs.createReadStream(abs, { start, end, highWaterMark: 16 << 20 });
+      const ns = fs.createReadStream(abs, { start, end, highWaterMark: 4 << 20 });
       const webStream = streamWithTrafficLog(ns, {
         path: targetPath,
         source: "share",
@@ -152,7 +152,7 @@ export async function GET(
     }
   }
 
-  const ns = fs.createReadStream(abs, { highWaterMark: 16 << 20 });
+  const ns = fs.createReadStream(abs, { highWaterMark: 4 << 20 });
   const webStream = streamWithTrafficLog(ns, {
     path: targetPath,
     source: "share",

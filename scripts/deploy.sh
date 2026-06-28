@@ -6,15 +6,18 @@ set -euo pipefail
 #   ./scripts/deploy.sh             # 배포 (코드만 — DB는 Baseon에서 관리)
 #   ./scripts/deploy.sh --rollback  # 직전 배포 코드로 복원
 #
-# 2026-05-02 — 운영 머신을 iMac → Mac mini로 이전. SSH alias `macmini` 필요.
+# 2026-05-02 — 운영 머신을 iMac → Mac mini(M1)로 이전.
 # 2026-06-13 — DB가 SQLite(_data/vibox.db) → Baseon PostgreSQL(맥미니)로 이전됨.
+# 2026-06-28 — M1 → M2 맥미니 컷오버. 운영 메인 = M2.
+#   SSH alias `m2` = main_server@100.126.132.21(Tailscale), 경로 /Users/main_server/vibox.
+#   (옛 M1 alias `macmini`=100.82.129.59 는 이제 PG standby/폴백 — 여기로 배포하면 안 됨.)
 #   런타임은 DATABASE_URL(postgres)만 사용한다. 배포는 코드 rsync + 빌드 + 재시작만 수행하고
 #   DB는 건드리지 않는다: 스키마 = drizzle-kit push + 수동 DDL(baseon_admin), 백업 = Baseon 암호화 백업/스트리밍 복제.
 #   (예전 _data/vibox.db 는 런타임 미사용 stale 파일 — 마이그레이션/백업 단계 제거됨.)
 
-REMOTE_HOST="${VIBOX_DEPLOY_HOST:-macmini}"
-REMOTE_PATH="${VIBOX_DEPLOY_PATH:-/Users/vimo_server/vibox}"
-ROLLBACK_DIR="${VIBOX_ROLLBACK_DIR:-/Users/vimo_server/vibox-rollback}"
+REMOTE_HOST="${VIBOX_DEPLOY_HOST:-m2}"
+REMOTE_PATH="${VIBOX_DEPLOY_PATH:-/Users/main_server/vibox}"
+ROLLBACK_DIR="${VIBOX_ROLLBACK_DIR:-/Users/main_server/vibox-rollback}"
 LAUNCHD_LABEL="${VIBOX_LAUNCHD_LABEL:-cloud.vibox.app}"
 LOCAL_PATH="$(cd "$(dirname "$0")/.." && pwd)"
 TS="$(date +%Y%m%d-%H%M%S)"

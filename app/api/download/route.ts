@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
         });
       }
       const chunkSize = end - start + 1;
-      const nodeStream = fs.createReadStream(abs, { start, end, highWaterMark: 16 << 20 });
+      const nodeStream = fs.createReadStream(abs, { start, end, highWaterMark: 4 << 20 });
       const webStream = streamWithTrafficLog(nodeStream, {
         path: rel,
         source: "download",
@@ -93,7 +93,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const nodeStream = fs.createReadStream(abs, { highWaterMark: 16 << 20 });
+  const nodeStream = fs.createReadStream(abs, { highWaterMark: 4 << 20 });
   const webStream = streamWithTrafficLog(nodeStream, {
     path: rel,
     source: "download",

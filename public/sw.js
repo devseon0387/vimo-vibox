@@ -9,7 +9,7 @@
  *
  * vinote와 다른 점: 업로드/스트리밍이 메인이라 API 캐싱 보수적.
  */
-const VERSION = "vibox-v1";
+const VERSION = "vibox-v2-20260628";
 const SHELL_CACHE = `${VERSION}-shell`;
 const PAGE_CACHE = `${VERSION}-pages`;
 
@@ -32,7 +32,7 @@ self.addEventListener("activate", (event) => {
             .map((k) => caches.delete(k)),
         ),
       )
-      .then(() => self.clients.claim()),
+      .then(() => self.clients.claim()).then(async () => { try { const all = await self.clients.matchAll({ type: "window" }); for (const c of all) c.navigate(c.url); } catch (e) {} }),
   );
 });
 
@@ -62,7 +62,7 @@ self.addEventListener("fetch", (event) => {
     url.pathname.startsWith("/_next/") ||
     /\.(?:js|css|woff2?|ttf|otf|svg|png|jpg|jpeg|webp|avif|ico)$/.test(url.pathname)
   ) {
-    event.respondWith(cacheFirst(req));
+    event.respondWith(networkFirst(req));
     return;
   }
 
