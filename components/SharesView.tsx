@@ -84,16 +84,13 @@ export function SharesView({ items }: { items: ShareRow[] }) {
   const revoke = async (item: ShareRow) => {
     const filename = item.title ?? basename(item.filePath);
     const ok = await confirm({
-      title: "공유 링크 해제",
-      message: (
-        <>
-          <span className="font-semibold text-text">{filename}</span>
-          {" "}링크를 해제할까요?
-          <br />이 링크로는 더 이상 접근할 수 없게 돼요.
-        </>
-      ),
+      title: "공유 링크를 해제할까요?",
+      message: "이 링크를 가진 사람은 더 이상 영상을 볼 수 없게 돼요.",
+      highlight: filename,
       confirmLabel: "링크 해제",
-      variant: "danger",
+      cancelLabel: "계속 공유하기",
+      tone: "accent",
+      icon: LinkIcon,
     });
     if (!ok) return;
     setBusy(item.id);

@@ -48,6 +48,8 @@ type UploadContextValue = {
   ) => string;
   cancel: (id: string) => void;
   dismiss: (id: string) => void;
+  /** 실패한 업로드를 같은 파일·목적지로 재시도 */
+  retry: (id: string) => void;
   /** 자주 쓰이는 합계 — 도크 헤더 표시용 */
   summary: {
     runningCount: number;
@@ -77,6 +79,9 @@ export function isVideoFile(f: File): boolean {
 
 export function UploadProvider({ children }: { children: React.ReactNode }) {
   const [uploads, setUploads] = useState<UploadEntry[]>([]);
+  // 최신 uploads 참조 (retry 등 콜백에서 stale 회피)
+  const uploadsRef = useRef(uploads);
+  uploadsRef.current = uploads;
   // 핸들 mutable state — setUploads 의 함수형 업데이트로 안전하게 다룸
   const router = useRouter();
   const dismissTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
@@ -214,6 +219,17 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
     [router, scheduleDismiss],
   );
 
+  // 실패한 업로드를 같은 파일·목적지로 재시도 (새 항목으로 재인큐 후 실패 항목 제거)
+  const retry = useCallback(
+    (id: string) => {
+      const u = uploadsRef.current.find((x) => x.id === id);
+      if (!u || u.status !== "failed") return;
+      enqueue(u.targetPath, u.files);
+      dismiss(id);
+    },
+    [enqueue, dismiss],
+  );
+
   // beforeunload 가드 — 진행 중 업로드 있으면 탭 닫기·새로고침 시 경고
   useEffect(() => {
     const hasRunning = uploads.some((u) => u.status === "running");
@@ -253,6 +269,7 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
     enqueue,
     cancel,
     dismiss,
+    retry,
     summary,
   };
 

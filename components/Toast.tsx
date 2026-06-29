@@ -47,7 +47,7 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 
 const DEFAULT_SHOW_MS = 3000;
 const ACTION_SHOW_MS = 5000; // 되돌리기 등 액션 있을 때
-const EXIT_MS = 280; // toast-out 키프레임 길이와 일치
+const EXIT_MS = 240; // toast-out 키프레임 길이와 일치
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([]);
@@ -147,8 +147,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             style={{
               transformOrigin: "center bottom",
               animation: t.exiting
-                ? "toast-out 280ms cubic-bezier(0.32, 0, 0.67, 0) both"
-                : "toast-in 580ms cubic-bezier(0.5, 1.6, 0.4, 1) both",
+                ? "toast-out 240ms cubic-bezier(0.4, 0, 0.6, 1) both"
+                : "toast-in 360ms cubic-bezier(0.21, 1.02, 0.73, 1) both",
             }}
             role="status"
           >

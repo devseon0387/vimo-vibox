@@ -1135,10 +1135,12 @@ export function FeedbackModal({
   const handleApproveVersion = async () => {
     if (decisionPending || versionApproved || !entry) return;
     const ok = await confirm({
-      title: "이 버전을 승인할까요?",
+      title: "이 영상을 승인할까요?",
       message:
-        "승인하면 파트너에게 ‘승인됨’으로 표시됩니다. 더 고칠 게 있으면 대신 수정 요청을 남기세요.",
+        "승인하면 파트너에게 ‘승인됨’으로 표시돼요. 더 고칠 게 있으면 대신 수정 요청을 남기세요.",
       confirmLabel: "승인",
+      tone: "success",
+      icon: CheckCircle2,
     });
     if (!ok) return;
     setDecisionPending(true);

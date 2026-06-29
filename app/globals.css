@@ -115,28 +115,22 @@
 
 /* 애니메이션 키프레임 — @layer base로 tree-shaking 방지 */
 @layer base {
-  /* Squish & Pop — 풍선처럼 부풀어 올라옴 */
+  /* Sonner풍 — 상승 + 미세 스케일 (절제된 등장/퇴장) */
   @keyframes toast-in {
-    0%   { opacity: 0; transform: translateY(40px) scale(0.3); }
-    50%  { opacity: 1; transform: translateY(-6px) scale(1.1, 0.92); }
-    70%  { transform: translateY(2px) scale(0.96, 1.04); }
-    100% { transform: translateY(0) scale(1); }
+    from { opacity: 0; transform: translateY(14px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
   }
 
   @keyframes toast-out {
-    0%   {
+    from {
       opacity: 1;
-      transform: scale(1);
+      transform: translateY(0) scale(1);
       max-height: 80px;
       margin-top: 8px;
     }
-    20%  {
-      opacity: 1;
-      transform: scale(1.05, 0.95);
-    }
-    100% {
+    to {
       opacity: 0;
-      transform: translateY(20px) scale(0.6);
+      transform: translateY(6px) scale(0.96);
       max-height: 0;
       margin-top: 0;
     }

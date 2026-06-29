@@ -86,17 +86,14 @@ export function TrashView({
 
   const onPermanentDelete = async (item: TrashRow) => {
     const ok = await confirm({
-      title: "영구 삭제",
-      message: (
-        <>
-          <span className="font-semibold text-text">{item.name}</span>
-          {item.isFolder ? " 폴더와 그 안의 파일이" : " 파일이"} 영구 삭제됩니다.
-          <br />
-          이 작업은 되돌릴 수 없습니다.
-        </>
-      ),
+      title: "영구 삭제할까요?",
+      message: item.isFolder
+        ? "이 폴더와 그 안의 파일이 완전히 사라져요. 되돌릴 수 없어요."
+        : "이 파일이 완전히 사라져요. 되돌릴 수 없어요.",
+      highlight: item.name,
       confirmLabel: "영구 삭제",
-      variant: "danger",
+      tone: "danger",
+      icon: Trash2,
     });
     if (!ok) return;
     setBusy(item.id);
@@ -120,15 +117,12 @@ export function TrashView({
 
   const onEmptyAll = async () => {
     const ok = await confirm({
-      title: "휴지통 비우기",
-      message: (
-        <>
-          모든 휴지통 항목({items.length}개)이 영구 삭제됩니다.
-          <br />이 작업은 되돌릴 수 없습니다.
-        </>
-      ),
+      title: "휴지통을 비울까요?",
+      message: "휴지통 안의 모든 파일이 완전히 사라져요. 되돌릴 수 없어요.",
+      highlight: `파일 ${items.length}개`,
       confirmLabel: "전부 비우기",
-      variant: "danger",
+      tone: "danger",
+      icon: Trash2,
     });
     if (!ok) return;
     const res = await fetch("/api/trash", { method: "DELETE" });

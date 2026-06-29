@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Modal } from "./Modal";
 import { Copy, Check, Link as LinkIcon, Eye, MessageSquare } from "lucide-react";
 import type { FileEntry } from "@/lib/fs/storage";
 import { humanError } from "@/lib/human-error";
@@ -37,9 +36,23 @@ export function ShareDialog({
     setToken(null);
     setCopied(false);
     setError(null);
-  }, [open, entry?.path]);
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", handler);
+      document.body.style.overflow = "";
+    };
+  }, [open, entry?.path, onClose]);
 
-  if (!entry) return null;
+  if (!open || !entry) return null;
+
+  const isFolder = entry.isFolder;
 
   const create = async () => {
     setCreating(true);
@@ -50,8 +63,8 @@ export function ShareDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           path: entry.path,
-          ...(entry.isFolder ? {} : { mode }),
-          ...(!entry.isFolder && mode === "full" ? { includeFeedback } : {}),
+          ...(isFolder ? {} : { mode }),
+          ...(!isFolder && mode === "full" ? { includeFeedback } : {}),
         }),
       });
       const body = await res.json();
@@ -73,163 +86,358 @@ export function ShareDialog({
 
   const copyUrl = async () => {
     if (!shareUrl) return;
-    await navigator.clipboard.writeText(shareUrl);
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+    } catch {}
     setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    setTimeout(() => setCopied(false), 1600);
   };
 
+  const shareNote = isFolder
+    ? "폴더 공유"
+    : mode === "preview"
+      ? "미리보기로 공유"
+      : "피드백 받기";
+
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={
-        <span className="flex items-center gap-2">
-          <LinkIcon size={15} strokeWidth={2.2} />
-          공유 링크 만들기
-        </span>
-      }
-      maxWidth="max-w-md"
-    >
-      <div className="p-6">
-        <div className="text-sm text-text-faint mb-1">{entry.isFolder ? "폴더" : "파일"}</div>
-        <div className="text-md font-semibold text-text mb-6 truncate">
-          {entry.name}
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/40"
+        onClick={onClose}
+        style={{ animation: "backdrop-in 180ms ease-out both" }}
+      />
+
+      {/* 포근한 카드 */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="relative bg-white w-full overflow-hidden"
+        style={{
+          maxWidth: 340,
+          borderRadius: 26,
+          boxShadow:
+            "0 24px 60px -12px rgba(17,17,17,.22),0 4px 12px rgba(17,17,17,.06)",
+          padding: "28px 24px 22px",
+          textAlign: "center",
+          animation: "dialog-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both",
+        }}
+      >
+        {/* 동심원 — 설정=주황 링크 / 완료=초록 체크 */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 13 }}>
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: "50%",
+              background: step === "ready" ? "#ecfdf3" : "#fef0e8",
+              display: "grid",
+              placeItems: "center",
+              animation:
+                step === "ready"
+                  ? "dialog-in 380ms cubic-bezier(0.16,1,0.3,1) both"
+                  : undefined,
+            }}
+          >
+            <div
+              style={{
+                width: 46,
+                height: 46,
+                borderRadius: "50%",
+                background: "#fff",
+                display: "grid",
+                placeItems: "center",
+                boxShadow: `0 2px 8px ${
+                  step === "ready" ? "rgba(22,163,74,.14)" : "rgba(232,80,8,.14)"
+                }`,
+              }}
+            >
+              {step === "ready" ? (
+                <Check size={24} strokeWidth={2.6} color="#16a34a" />
+              ) : (
+                <LinkIcon size={23} strokeWidth={2.1} color="#e85008" />
+              )}
+            </div>
+          </div>
         </div>
 
+        <h3
+          style={{
+            margin: "0 0 4px",
+            fontSize: 18,
+            fontWeight: 800,
+            color: "#18181b",
+            letterSpacing: "-.01em",
+          }}
+        >
+          {step === "ready" ? "공유 링크가 준비됐어요" : "공유 링크 만들기"}
+        </h3>
+        <p
+          className="truncate"
+          style={{ margin: "0 0 16px", fontSize: 13, color: "#888" }}
+        >
+          {entry.name}
+          {step === "ready" ? ` · ${shareNote}` : ""}
+        </p>
+
+        {/* ===== 설정 ===== */}
         {step === "configure" && (
           <>
-            {entry.isFolder ? (
-              <div className="mb-5 text-sm text-text-muted leading-relaxed bg-surface border border-border rounded-md p-3">
-                받는 사람이 이 폴더 안의 파일을 탐색하고 다운로드할 수 있어요.
-                폴더에 파일을 추가하면 공유에도 자동 반영됩니다.
+            {isFolder ? (
+              <div
+                style={{
+                  textAlign: "left",
+                  fontSize: 12.5,
+                  lineHeight: 1.6,
+                  color: "#71717a",
+                  background: "#fafafa",
+                  border: "1px solid #ececec",
+                  borderRadius: 14,
+                  padding: "12px 14px",
+                  marginBottom: 18,
+                }}
+              >
+                받는 사람이 이 폴더 안의 파일을 탐색하고 다운로드할 수 있어요. 폴더에
+                파일을 추가하면 공유에도 자동 반영됩니다.
               </div>
             ) : (
-            <div className="mb-5">
-              <label className="block text-sm font-semibold text-text-soft mb-2">
-                모드
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => setMode("preview")}
-                  className={`flex items-start gap-2 p-2.5 rounded-md border text-left transition-colors ${
-                    mode === "preview"
-                      ? "border-text bg-surface"
-                      : "border-border hover:border-border-hover bg-white"
-                  }`}
-                >
-                  <Eye
-                    size={14}
-                    strokeWidth={2}
-                    className={`mt-0.5 shrink-0 ${mode === "preview" ? "text-text" : "text-text-muted"}`}
-                  />
-                  <div>
-                    <div className="text-sm font-semibold text-text">
-                      보기 전용
-                    </div>
-                    <div className="text-2xs text-text-muted mt-0.5 leading-snug">
-                      클라가 영상만 시청. 댓글·피드백 없음
-                    </div>
-                  </div>
-                </button>
-                <button
-                  onClick={() => setMode("full")}
-                  className={`flex items-start gap-2 p-2.5 rounded-md border text-left transition-colors ${
-                    mode === "full"
-                      ? "border-text bg-surface"
-                      : "border-border hover:border-border-hover bg-white"
-                  }`}
-                >
-                  <MessageSquare
-                    size={14}
-                    strokeWidth={2}
-                    className={`mt-0.5 shrink-0 ${mode === "full" ? "text-text" : "text-text-muted"}`}
-                  />
-                  <div>
-                    <div className="text-sm font-semibold text-text">
-                      피드백 받기
-                    </div>
-                    <div className="text-2xs text-text-muted mt-0.5 leading-snug">
-                      클라가 시간 위에 댓글·주석 달 수 있음
-                    </div>
-                  </div>
-                </button>
-              </div>
-            </div>
-            )}
-
-            {!entry.isFolder && mode === "full" && (
-              <button
-                type="button"
-                onClick={() => setIncludeFeedback((v) => !v)}
-                className={`w-full flex items-start gap-2.5 p-3 mb-5 rounded-md border text-left transition-colors ${
-                  includeFeedback
-                    ? "border-accent bg-accent-soft"
-                    : "border-border hover:border-border-hover bg-white"
-                }`}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                  textAlign: "left",
+                  marginBottom: includeFeedback || mode === "full" ? 12 : 18,
+                }}
               >
-                <span
-                  className={`mt-px shrink-0 w-4 h-4 rounded grid place-items-center border transition-colors ${
-                    includeFeedback ? "bg-accent border-accent" : "border-border bg-white"
-                  }`}
-                >
-                  {includeFeedback && <Check size={11} strokeWidth={3} className="text-white" />}
-                </span>
-                <div>
-                  <div className="text-sm font-semibold text-text">
-                    내가 남긴 피드백도 함께 보이기
-                  </div>
-                  <div className="text-2xs text-text-muted mt-0.5 leading-snug">
-                    이 파일에 팀이 남긴 타임라인 피드백을 받는 사람도 봅니다 · 링크에서만 보이고 끄면 다시 숨겨져요
-                  </div>
-                </div>
-              </button>
+                <ModeRow
+                  active={mode === "preview"}
+                  icon={<Eye size={16} strokeWidth={2} color={mode === "preview" ? "#e85008" : "#777"} />}
+                  title="보기 전용"
+                  desc="영상만 시청 · 댓글·피드백 없음"
+                  onClick={() => setMode("preview")}
+                />
+                <ModeRow
+                  active={mode === "full"}
+                  icon={<MessageSquare size={16} strokeWidth={2} color={mode === "full" ? "#e85008" : "#777"} />}
+                  title="피드백 받기"
+                  desc="시간 위에 댓글·주석 가능"
+                  onClick={() => setMode("full")}
+                />
+
+                {mode === "full" && (
+                  <button
+                    type="button"
+                    onClick={() => setIncludeFeedback((v) => !v)}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: 10,
+                      textAlign: "left",
+                      padding: "11px 13px",
+                      borderRadius: 14,
+                      border: `1.5px solid ${includeFeedback ? "#e85008" : "transparent"}`,
+                      background: includeFeedback ? "#fffaf6" : "#fafafa",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <span
+                      style={{
+                        marginTop: 1,
+                        flex: "none",
+                        width: 16,
+                        height: 16,
+                        borderRadius: 5,
+                        display: "grid",
+                        placeItems: "center",
+                        background: includeFeedback ? "#e85008" : "#fff",
+                        border: `1px solid ${includeFeedback ? "#e85008" : "#d4d4d8"}`,
+                      }}
+                    >
+                      {includeFeedback && (
+                        <Check size={11} strokeWidth={3} color="#fff" />
+                      )}
+                    </span>
+                    <span style={{ fontSize: 12.5, fontWeight: 600, color: "#111", lineHeight: 1.45 }}>
+                      내가 남긴 피드백도 함께 보이기
+                    </span>
+                  </button>
+                )}
+              </div>
             )}
 
             {error && (
-              <div className="text-sm text-danger mb-3">{error}</div>
+              <div style={{ fontSize: 13, color: "#dc2626", marginBottom: 12 }}>
+                {error}
+              </div>
             )}
 
-            <button
-              onClick={create}
-              disabled={creating}
-              className="w-full bg-text text-white hover:bg-[#333] disabled:opacity-60 py-2.5 rounded-md text-md font-semibold"
-            >
-              {creating ? "생성 중..." : "공유 링크 생성"}
-            </button>
+            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+              <button
+                onClick={create}
+                disabled={creating}
+                className="transition-[filter] hover:brightness-95 disabled:opacity-60"
+                style={{
+                  width: "100%",
+                  padding: 14,
+                  fontSize: 15,
+                  fontWeight: 700,
+                  color: "#fff",
+                  background: "#e85008",
+                  border: "none",
+                  borderRadius: 15,
+                  cursor: "pointer",
+                  boxShadow: "0 4px 12px rgba(232,80,8,.22)",
+                }}
+              >
+                {creating ? "만드는 중…" : "링크 만들기"}
+              </button>
+              <button
+                onClick={onClose}
+                className="transition-colors hover:bg-[#f0f0f0]"
+                style={{
+                  width: "100%",
+                  padding: 13,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "#555",
+                  background: "#fafafa",
+                  border: "none",
+                  borderRadius: 15,
+                  cursor: "pointer",
+                }}
+              >
+                취소
+              </button>
+            </div>
           </>
         )}
 
+        {/* ===== 완료 (A) ===== */}
         {step === "ready" && token && (
           <>
-            <div className="flex items-center gap-1.5 text-sm text-success font-semibold mb-3">
-              <Check size={14} strokeWidth={2.6} />
-              링크가 만들어졌습니다
-            </div>
-
-            <div className="bg-surface border border-border rounded-md p-3 mb-3">
-              <div className="flex items-center gap-2">
-                <div className="flex-1 text-sm font-mono text-text break-all">
-                  {shareUrl}
-                </div>
-                <button
-                  onClick={copyUrl}
-                  title="복사"
-                  className="shrink-0 p-2 rounded hover:bg-hover text-text-soft hover:text-accent"
-                >
-                  {copied ? <Check size={14} className="text-success" /> : <Copy size={14} />}
-                </button>
-              </div>
-            </div>
-
-            <button
-              onClick={onClose}
-              className="w-full bg-text text-white hover:bg-[#333] py-2.5 rounded-md text-md font-semibold"
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 9,
+                border: "1px solid #ececec",
+                borderRadius: 12,
+                padding: "10px 12px",
+                marginBottom: 18,
+                textAlign: "left",
+              }}
             >
-              닫기
-            </button>
+              <LinkIcon size={14} strokeWidth={2} color="#a1a1aa" style={{ flex: "none" }} />
+              <span
+                className="truncate"
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  fontSize: 12.5,
+                  color: "#52525b",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {shareUrl.replace(/^https?:\/\//, "")}
+              </span>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+              <button
+                onClick={copyUrl}
+                className="transition-[filter] hover:brightness-95"
+                style={{
+                  width: "100%",
+                  padding: 14,
+                  fontSize: 15,
+                  fontWeight: 700,
+                  color: "#fff",
+                  background: copied ? "#16a34a" : "#e85008",
+                  border: "none",
+                  borderRadius: 15,
+                  cursor: "pointer",
+                  boxShadow: `0 4px 12px ${copied ? "rgba(22,163,74,.22)" : "rgba(232,80,8,.22)"}`,
+                }}
+              >
+                {copied ? "복사됨" : "링크 복사"}
+              </button>
+              <a
+                href={shareUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="transition-colors hover:bg-[#f0f0f0]"
+                style={{
+                  width: "100%",
+                  padding: 13,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "#555",
+                  background: "#fafafa",
+                  border: "none",
+                  borderRadius: 15,
+                  cursor: "pointer",
+                  textDecoration: "none",
+                  display: "block",
+                }}
+              >
+                열기
+              </a>
+            </div>
           </>
         )}
       </div>
-    </Modal>
+    </div>
+  );
+}
+
+function ModeRow({
+  active,
+  icon,
+  title,
+  desc,
+  onClick,
+}: {
+  active: boolean;
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        padding: "11px 13px",
+        borderRadius: 14,
+        border: `1.5px solid ${active ? "#e85008" : "transparent"}`,
+        background: active ? "#fffaf6" : "#fafafa",
+        cursor: "pointer",
+        textAlign: "left",
+      }}
+    >
+      <span style={{ flex: "none" }}>{icon}</span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span
+          style={{
+            display: "block",
+            fontSize: 13.5,
+            fontWeight: active ? 700 : 600,
+            color: "#111",
+          }}
+        >
+          {title}
+        </span>
+        <span style={{ display: "block", fontSize: 11.5, color: "#888", marginTop: 1 }}>
+          {desc}
+        </span>
+      </span>
+      {active && (
+        <Check size={16} strokeWidth={2.4} color="#e85008" style={{ flex: "none" }} />
+      )}
+    </button>
   );
 }

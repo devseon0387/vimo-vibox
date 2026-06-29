@@ -1,7 +1,7 @@
 "use client";
 
-import { Modal } from "./Modal";
-import { AlertTriangle, FilePlus2, Replace, MinusCircle } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { AlertTriangle } from "lucide-react";
 import type { ConflictMode } from "@/lib/upload";
 
 export function ConflictDialog({
@@ -15,105 +15,196 @@ export function ConflictDialog({
   onChoose: (mode: ConflictMode) => void;
   onCancel: () => void;
 }) {
-  return (
-    <Modal
-      open={open}
-      onClose={onCancel}
-      title={
-        <span className="flex items-center gap-2">
-          <AlertTriangle size={15} strokeWidth={2.2} className="text-amber-500" />
-          이미 같은 이름의 파일이 있어요
-        </span>
+  const primaryRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onCancel();
       }
-      maxWidth="max-w-md"
-    >
-      <div className="p-5 space-y-4">
-        <div className="text-base text-text-muted">
-          업로드하려는 폴더 안에{" "}
-          <span className="font-semibold text-text">{conflicts.length}개</span>{" "}
-          파일이 이미 존재합니다. 어떻게 처리할까요?
-        </div>
+    };
+    window.addEventListener("keydown", handler);
+    setTimeout(() => primaryRef.current?.focus(), 30);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", handler);
+      document.body.style.overflow = "";
+    };
+  }, [open, onCancel]);
 
-        <div className="bg-surface border border-border rounded-md max-h-[140px] overflow-y-auto p-2 space-y-0.5">
-          {conflicts.slice(0, 20).map((p) => (
+  if (!open) return null;
+
+  const n = conflicts.length;
+  const firstName = conflicts[0]?.split("/").pop() ?? "";
+  const chipText = n > 1 ? `${firstName} 외 ${n - 1}개` : firstName;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/40"
+        onClick={onCancel}
+        style={{ animation: "backdrop-in 180ms ease-out both" }}
+      />
+
+      {/* 포근한 충돌 카드 */}
+      <div
+        role="alertdialog"
+        aria-modal="true"
+        className="relative bg-white w-full overflow-hidden"
+        style={{
+          maxWidth: 340,
+          borderRadius: 26,
+          boxShadow:
+            "0 24px 60px -12px rgba(17,17,17,.22),0 4px 12px rgba(17,17,17,.06)",
+          padding: "30px 24px 22px",
+          textAlign: "center",
+          animation: "dialog-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both",
+        }}
+      >
+        {/* 동심원 아이콘 (amber) */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+          <div
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: "50%",
+              background: "#fef3c7",
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
             <div
-              key={p}
-              className="font-mono text-xs text-text-faint truncate"
-              title={p}
+              style={{
+                width: 58,
+                height: 58,
+                borderRadius: "50%",
+                background: "#fff",
+                display: "grid",
+                placeItems: "center",
+                boxShadow: "0 2px 8px rgba(217,119,6,.16)",
+              }}
             >
-              {p.split("/").pop()}
+              <AlertTriangle size={28} strokeWidth={2.1} color="#d97706" />
             </div>
-          ))}
-          {conflicts.length > 20 && (
-            <div className="text-xs text-text-faint italic pt-1">
-              … 외 {conflicts.length - 20}개
-            </div>
-          )}
+          </div>
         </div>
 
-        <div className="space-y-2">
+        <h3
+          style={{
+            margin: "0 0 10px",
+            fontSize: 19,
+            fontWeight: 800,
+            color: "#111",
+            letterSpacing: "-.01em",
+          }}
+        >
+          {n > 1 ? `같은 이름이 ${n}개 있어요` : "같은 이름의 파일이 있어요"}
+        </h3>
+
+        <p
+          style={{
+            margin: "0 0 18px",
+            fontSize: 14,
+            lineHeight: 1.65,
+            color: "#555",
+          }}
+        >
+          이미 올라간 파일과 이름이 겹쳐요.
+          <br />
+          어떻게 할지 골라 주세요.
+        </p>
+
+        {firstName && (
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              maxWidth: "100%",
+              background: "#fef3c7",
+              borderRadius: 14,
+              padding: "10px 14px",
+              marginBottom: 22,
+              boxSizing: "border-box",
+            }}
+            title={conflicts.join("\n")}
+          >
+            <span
+              style={{
+                fontFamily:
+                  "ui-monospace, SFMono-Regular, Menlo, monospace",
+                fontSize: 12.5,
+                fontWeight: 600,
+                color: "#111",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {chipText}
+            </span>
+          </div>
+        )}
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           <button
+            ref={primaryRef}
             onClick={() => onChoose("autonumber")}
-            className="w-full flex items-start gap-3 px-3 py-2.5 rounded-md border border-border hover:border-accent hover:bg-accent-soft/30 text-left transition-colors"
+            className="transition-[filter] hover:brightness-95"
+            style={{
+              width: "100%",
+              padding: 14,
+              fontSize: 15,
+              fontWeight: 700,
+              color: "#fff",
+              border: "none",
+              borderRadius: 15,
+              cursor: "pointer",
+              background: "#e85008",
+              boxShadow: "0 4px 12px rgba(232,80,8,.22)",
+            }}
           >
-            <FilePlus2
-              size={16}
-              strokeWidth={2}
-              className="text-text-soft mt-0.5 shrink-0"
-            />
-            <div>
-              <div className="text-base font-semibold text-text">
-                자동 번호 매기기
-              </div>
-              <div className="text-xs text-text-faint">
-                새 파일은 <span className="font-mono">name (1).mp4</span> 처럼 번호가
-                붙어요. 기존 파일은 그대로
-              </div>
-            </div>
-          </button>
-          <button
-            onClick={() => onChoose("overwrite")}
-            className="w-full flex items-start gap-3 px-3 py-2.5 rounded-md border border-border hover:border-rose-400 hover:bg-rose-50 text-left transition-colors"
-          >
-            <Replace
-              size={16}
-              strokeWidth={2}
-              className="text-rose-500 mt-0.5 shrink-0"
-            />
-            <div>
-              <div className="text-base font-semibold text-text">덮어쓰기</div>
-              <div className="text-xs text-text-faint">
-                기존 파일이 새 파일로 교체돼요. 되돌릴 수 없음
-              </div>
-            </div>
+            번호 붙여서 둘 다 보관
           </button>
           <button
             onClick={() => onChoose("skip")}
-            className="w-full flex items-start gap-3 px-3 py-2.5 rounded-md border border-border hover:border-border-hover hover:bg-hover text-left transition-colors"
+            className="transition-colors hover:bg-[#f0f0f0]"
+            style={{
+              width: "100%",
+              padding: 13,
+              fontSize: 14,
+              fontWeight: 600,
+              color: "#555",
+              background: "#fafafa",
+              border: "none",
+              borderRadius: 15,
+              cursor: "pointer",
+            }}
           >
-            <MinusCircle
-              size={16}
-              strokeWidth={2}
-              className="text-text-soft mt-0.5 shrink-0"
-            />
-            <div>
-              <div className="text-base font-semibold text-text">건너뛰기</div>
-              <div className="text-xs text-text-faint">
-                충돌 파일은 업로드 안 함. 새로운 파일만 올라감
-              </div>
-            </div>
+            겹치는 건 건너뛰기
           </button>
-        </div>
-
-        <div className="flex justify-end pt-1">
           <button
-            onClick={onCancel}
-            className="px-4 py-1.5 text-base text-text-muted hover:text-text"
+            onClick={() => onChoose("overwrite")}
+            className="transition-colors hover:bg-[#fef2f2]"
+            style={{
+              width: "100%",
+              padding: 10,
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#dc2626",
+              background: "transparent",
+              border: "none",
+              borderRadius: 12,
+              cursor: "pointer",
+            }}
           >
-            취소
+            덮어쓰기 (되돌릴 수 없어요)
           </button>
         </div>
       </div>
-    </Modal>
+    </div>
   );
 }

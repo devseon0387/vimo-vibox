@@ -1,22 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import {
-  Upload,
   ChevronDown,
   ChevronUp,
   X,
   Check,
-  AlertCircle,
-  MinusCircle,
-  Loader2,
-  Link2,
   Copy,
-  Eye,
-  MessageSquare,
-  Download,
-  ExternalLink,
+  RotateCw,
 } from "lucide-react";
 import { useUpload, isVideoFile, type UploadEntry } from "@/lib/upload-store";
 import { humanError } from "@/lib/human-error";
@@ -33,107 +24,69 @@ function formatBytes(b: number): string {
   return `${n < 10 ? n.toFixed(1) : Math.round(n)} ${units[i]}`;
 }
 
-function statusIcon(status: UploadEntry["status"]) {
-  if (status === "running")
-    return <Loader2 size={14} strokeWidth={2.2} className="text-accent animate-spin" />;
-  if (status === "done")
-    return <Check size={14} strokeWidth={2.5} className="text-emerald-600" />;
-  if (status === "failed")
-    return <AlertCircle size={14} strokeWidth={2.2} className="text-rose-600" />;
-  return <MinusCircle size={14} strokeWidth={2.2} className="text-text-faint" />;
-}
-
-function pathLabel(p: string): string {
-  if (p === "/" || p === "") return "렌더링";
-  if (p.startsWith("/library")) return "자료실" + p.slice(8);
-  if (p.startsWith("/personal/")) {
-    const rest = p.split("/").slice(3).join("/");
-    return "My box" + (rest ? "/" + rest : "");
-  }
-  return "렌더링" + p;
-}
-
-function pathHref(p: string): string {
-  if (p === "/" || p === "") return "/";
-  if (p.startsWith("/library")) {
-    const sub = p.slice(8);
-    return `/vimo-box/library${sub ? `?path=${encodeURIComponent(sub)}` : ""}`;
-  }
-  if (p.startsWith("/personal/")) {
-    return "/my/box";
-  }
-  return `/?path=${encodeURIComponent(p)}`;
-}
+const RING_C = 100.5; // 2 * PI * 16
 
 export function GlobalUploadDock() {
-  const { uploads, summary, cancel, dismiss } = useUpload();
+  const { uploads, summary, cancel, dismiss, retry } = useUpload();
   const [expanded, setExpanded] = useState(true);
 
   if (uploads.length === 0) return null;
+
+  const single = uploads.length === 1;
 
   const headerLabel = (() => {
     if (summary.runningCount === 0) {
       const done = uploads.filter((u) => u.status === "done").length;
       const failed = uploads.filter((u) => u.status === "failed").length;
-      const cancelled = uploads.filter((u) => u.status === "cancelled").length;
       if (failed > 0) return `${failed}개 실패`;
       if (done > 0) return `${done}개 완료`;
-      if (cancelled > 0) return `${cancelled}개 취소됨`;
       return "완료";
     }
     return `업로드 ${summary.runningCount}건`;
   })();
 
   return (
-    <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom)+12px)] right-4 md:bottom-6 md:right-6 w-[min(92vw,380px)] z-40">
-      <div className="bg-white border border-border rounded-lg shadow-xl overflow-hidden">
-        {/* Header */}
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="w-full flex items-center gap-2.5 px-4 py-3 border-b border-border hover:bg-surface transition-colors"
-        >
-          {summary.runningCount > 0 ? (
-            <Loader2 size={15} strokeWidth={2.2} className="text-accent animate-spin" />
-          ) : (
-            <Upload size={14} strokeWidth={2.2} className="text-text-soft" />
-          )}
-          <div className="flex-1 text-left min-w-0">
-            <div className="text-base font-bold text-text truncate">{headerLabel}</div>
-            {summary.runningCount > 0 && summary.total > 0 && (
-              <div className="text-xs text-text-faint mono tabular-nums truncate">
-                {formatBytes(summary.sent)} / {formatBytes(summary.total)} ·{" "}
-                {Math.round(summary.pct)}%
-              </div>
-            )}
-          </div>
-          <span className="shrink-0 text-text-soft">
-            {expanded ? (
-              <ChevronDown size={15} strokeWidth={2.2} />
-            ) : (
-              <ChevronUp size={15} strokeWidth={2.2} />
-            )}
-          </span>
-        </button>
-
-        {/* 진행률 바 (헤더 바로 아래) */}
-        {summary.runningCount > 0 && (
-          <div className="h-1 bg-surface">
-            <div
-              className="h-full bg-accent transition-[width] duration-300"
-              style={{ width: `${summary.pct}%` }}
-            />
-          </div>
+    <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom)+12px)] right-4 md:bottom-6 md:right-6 w-[min(92vw,344px)] z-40">
+      <div
+        className="bg-white border border-[#efefef] overflow-hidden"
+        style={{
+          borderRadius: 16,
+          boxShadow:
+            "0 1px 3px rgba(0,0,0,.05),0 16px 36px -16px rgba(0,0,0,.24)",
+        }}
+      >
+        {/* 헤더 — 여러 건일 때만 */}
+        {!single && (
+          <>
+            <button
+              onClick={() => setExpanded((v) => !v)}
+              className="w-full flex items-center gap-2.5 px-4 py-3 hover:bg-[#fafafa] transition-colors"
+            >
+              <span className="flex-1 text-left text-sm font-bold text-[#18181b] truncate">
+                {headerLabel}
+              </span>
+              {summary.runningCount > 0 && summary.total > 0 && (
+                <span className="text-2xs text-[#a1a1aa] tabular-nums">
+                  {Math.round(summary.pct)}%
+                </span>
+              )}
+              <span className="shrink-0 text-[#a1a1aa]">
+                {expanded ? <ChevronDown size={15} /> : <ChevronUp size={15} />}
+              </span>
+            </button>
+            <div className="h-px bg-[#f4f4f4]" />
+          </>
         )}
 
-        {/* Expanded list */}
-        {expanded && (
-          <div className="max-h-[40vh] overflow-y-auto divide-y divide-[#f5f5f5]">
+        {(single || expanded) && (
+          <div className="divide-y divide-[#f5f5f5]">
             {uploads.map((u) => (
               <UploadRow
                 key={u.id}
                 entry={u}
                 onCancel={() => cancel(u.id)}
                 onDismiss={() => dismiss(u.id)}
+                onRetry={() => retry(u.id)}
               />
             ))}
           </div>
@@ -147,10 +100,12 @@ function UploadRow({
   entry,
   onCancel,
   onDismiss,
+  onRetry,
 }: {
   entry: UploadEntry;
   onCancel: () => void;
   onDismiss: () => void;
+  onRetry: () => void;
 }) {
   const pct = entry.total > 0 ? Math.min(100, (entry.sent / entry.total) * 100) : 0;
   const elapsed = (Date.now() - entry.startedAt) / 1000;
@@ -159,114 +114,153 @@ function UploadRow({
 
   const firstName = entry.files[0]?.name ?? "";
   const moreCount = entry.fileCount - 1;
+  const name = firstName + (moreCount > 0 ? ` 외 ${moreCount}개` : "");
+
+  const st = entry.status;
+  const isVid = entry.files[0] ? isVideoFile(entry.files[0]) : false;
+
+  const ringPct = st === "done" ? 100 : pct;
+  const ringOffset = RING_C * (1 - Math.min(1, ringPct / 100));
+  const ringColor =
+    st === "failed"
+      ? "#dc2626"
+      : st === "done"
+        ? "#16a34a"
+        : st === "cancelled"
+          ? "#a1a1aa"
+          : "#e85008";
+  const tileBg =
+    st === "failed"
+      ? "#fef2f2"
+      : st === "done"
+        ? "#ecfdf3"
+        : st === "cancelled"
+          ? "#f4f4f5"
+          : "#fdf1ea";
 
   return (
-    <div className="px-4 py-3">
-      <div className="flex items-start gap-2.5">
-        <span className="mt-0.5 shrink-0">{statusIcon(entry.status)}</span>
-        <div className="flex-1 min-w-0">
-          <div className="text-sm text-text truncate font-medium">
-            {firstName}
-            {moreCount > 0 && (
-              <span className="text-text-soft font-normal"> 외 {moreCount}개</span>
-            )}
-          </div>
-          <div className="text-xs text-text-faint truncate flex items-center gap-1">
-            <span>→</span>
-            <Link
-              href={pathHref(entry.targetPath)}
-              className="hover:text-accent truncate"
-              title={entry.targetPath}
-            >
-              {pathLabel(entry.targetPath)}
-            </Link>
-          </div>
+    <div className="group flex items-center gap-[13px] px-4 py-[15px]">
+      {/* 링 타일 */}
+      <div className="relative shrink-0" style={{ width: 46, height: 46 }}>
+        <svg
+          width="46"
+          height="46"
+          viewBox="0 0 36 36"
+          className="absolute inset-0"
+        >
+          {st !== "done" && (
+            <circle
+              cx="18"
+              cy="18"
+              r="16"
+              fill="none"
+              stroke="#f0f0f0"
+              strokeWidth="2.5"
+            />
+          )}
+          <circle
+            cx="18"
+            cy="18"
+            r="16"
+            fill="none"
+            stroke={ringColor}
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeDasharray={RING_C}
+            strokeDashoffset={ringOffset}
+            transform="rotate(-90 18 18)"
+            style={{ transition: "stroke-dashoffset .3s ease" }}
+          />
+        </svg>
+        <div
+          className="absolute grid place-items-center rounded-full"
+          style={{ inset: 5, background: tileBg }}
+        >
+          {st === "done" ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+          ) : st === "failed" ? (
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 9v4" /><path d="M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+            </svg>
+          ) : isVid ? (
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={ringColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m22 8-6 4 6 4V8Z" /><rect width="14" height="12" x="2" y="6" rx="2" />
+            </svg>
+          ) : (
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={ringColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5z" /><path d="M14 2v6h6" />
+            </svg>
+          )}
         </div>
-        {entry.status === "running" ? (
+      </div>
+
+      {/* 본문 */}
+      <div className="flex-1 min-w-0">
+        <div className="truncate text-sm font-semibold text-[#18181b]">
+          {name}
+        </div>
+        <div
+          className="text-2xs mt-[3px] tabular-nums truncate"
+          style={{ color: st === "failed" ? "#dc2626" : "#a1a1aa" }}
+          title={st === "failed" ? humanError(entry.error ?? "", "upload") : undefined}
+        >
+          {st === "running" &&
+            `${formatBytes(entry.sent)} / ${formatBytes(entry.total)} · ${formatBytes(speed)}/s${
+              pct < 100 && speed > 0 ? ` · ${Math.ceil(remaining)}초 남음` : ""
+            }`}
+          {st === "done" && (isVid ? "올림 · 미리보기로 공유됨" : "올림")}
+          {st === "failed" && `업로드 실패 · ${humanError(entry.error ?? "", "upload")}`}
+          {st === "cancelled" && "취소됨"}
+        </div>
+      </div>
+
+      {/* 우측 액션 */}
+      {st === "running" && (
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="tabular-nums text-xs font-bold text-[#52525b]">
+            {Math.round(pct)}%
+          </span>
           <button
             onClick={onCancel}
             title="취소"
-            className="shrink-0 p-1 rounded hover:bg-danger-soft text-text-soft hover:text-danger"
+            className="opacity-0 group-hover:opacity-100 transition-opacity w-[26px] h-[26px] grid place-items-center rounded-md text-[#a1a1aa] hover:bg-[#f4f4f5] hover:text-[#71717a]"
           >
-            <X size={13} strokeWidth={2.2} />
+            <X size={14} strokeWidth={2.2} />
           </button>
-        ) : (
-          <button
-            onClick={onDismiss}
-            title="알림 닫기"
-            className="shrink-0 p-1 rounded hover:bg-hover text-text-soft hover:text-text"
-          >
-            <X size={13} strokeWidth={2.2} />
-          </button>
-        )}
-      </div>
-
-      {entry.status === "running" && (
-        <>
-          <div className="h-1 bg-surface rounded-full overflow-hidden mt-2 mb-1.5">
-            <div
-              className="h-full bg-accent transition-[width] duration-300"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-          <div className="flex justify-between items-center text-2xs text-text-faint mono tabular-nums">
-            <span>
-              {formatBytes(entry.sent)} / {formatBytes(entry.total)}
-            </span>
-            <span>
-              {pct.toFixed(0)}%
-              {speed > 0 && pct < 100 && (
-                <>
-                  {" · "}
-                  {formatBytes(speed)}/s · {Math.ceil(remaining)}초
-                </>
-              )}
-            </span>
-          </div>
-        </>
-      )}
-
-      {entry.status === "failed" && entry.error && (
-        <div
-          className="mt-1 text-xs text-rose-600 truncate"
-          title={humanError(entry.error, "upload")}
-        >
-          {humanError(entry.error, "upload")}
         </div>
       )}
 
-      {/* 완료된 단일 영상 → 공유 링크 자동 생성 + 인라인 패널 */}
-      {entry.status === "done" &&
-        entry.fileCount === 1 &&
-        entry.files[0] &&
-        isVideoFile(entry.files[0]) && <UploadSharePanel entry={entry} />}
+      {st === "failed" && (
+        <button
+          onClick={onRetry}
+          className="shrink-0 inline-flex items-center gap-[5px] text-xs font-bold text-[#e85008] bg-[#fdf1ea] rounded-[9px] px-[11px] py-[7px] hover:brightness-95 transition-[filter]"
+        >
+          <RotateCw size={13} strokeWidth={2.2} />
+          재시도
+        </button>
+      )}
+
+      {st === "done" && isVid && <DoneShare entry={entry} />}
+      {st === "done" && !isVid && (
+        <button
+          onClick={onDismiss}
+          title="닫기"
+          className="shrink-0 w-[26px] h-[26px] grid place-items-center rounded-md text-[#a1a1aa] hover:bg-[#f4f4f5] hover:text-[#71717a]"
+        >
+          <X size={14} strokeWidth={2.2} />
+        </button>
+      )}
     </div>
   );
 }
 
-/** 업로드 직후 공유 모드 기본값 — 미리보기. 마지막 선택을 기억. */
-function shareDefaultMode(): "preview" | "full" {
-  try {
-    return localStorage.getItem("vibox.shareDefaultMode") === "full"
-      ? "full"
-      : "preview";
-  } catch {
-    return "preview";
-  }
-}
+// 업로드된 단일 영상에 자동 생성된 공유 링크 — 컴포넌트 리마운트 시 중복 생성 차단용 캐시.
+const autoShareCache = new Map<string, { id: string; token: string }>();
 
-// 업로드 항목별 자동 생성된 공유 링크를 모듈 스코프에 캐시(entry.id 기준).
-// UploadSharePanel 이 네비게이션·router.refresh 로 리마운트되면 컴포넌트 ref(createdRef)는
-// 리셋돼 같은 항목에 링크를 "또" 만든다 → 캐시로 중복 생성 차단 + 리마운트 시 상태 복원.
-type AutoShare = {
-  id: string;
-  token: string;
-  mode: "preview" | "full";
-  allowDownload: boolean;
-};
-const autoShareCache = new Map<string, AutoShare>();
-
-function UploadSharePanel({ entry }: { entry: UploadEntry }) {
+/** 완료된 단일 영상 → 미리보기 공유 링크 자동 생성 + "링크 복사" 칩 (완료 2). */
+function DoneShare({ entry }: { entry: UploadEntry }) {
   const filePath = useMemo(() => {
     const base = entry.targetPath.replace(/\/+$/, "");
     return `${base}/${entry.files[0]?.name ?? ""}`;
@@ -276,40 +270,28 @@ function UploadSharePanel({ entry }: { entry: UploadEntry }) {
   const [phase, setPhase] = useState<"creating" | "ready" | "error">(
     cached ? "ready" : "creating",
   );
-  const [share, setShare] = useState<{ id: string; token: string } | null>(
-    cached ? { id: cached.id, token: cached.token } : null,
-  );
-  const [mode, setMode] = useState<"preview" | "full">(cached?.mode ?? "preview");
-  const [allowDownload, setAllowDownload] = useState(cached?.allowDownload ?? true);
+  const [token, setToken] = useState<string | null>(cached?.token ?? null);
   const [copied, setCopied] = useState(false);
   const createdRef = useRef(false);
 
-  // 완료 시 공유 링크 1회 자동 생성 (기본 미리보기). 이미 캐시에 있으면(리마운트) 재생성하지 않음.
   useEffect(() => {
     if (createdRef.current) return;
     createdRef.current = true;
-    if (autoShareCache.has(entry.id)) return; // 리마운트 — 위 useState 초기값으로 이미 복원됨
-    const initial = shareDefaultMode();
-    setMode(initial);
+    if (autoShareCache.has(entry.id)) return; // 리마운트 — 위 초기값으로 복원됨
     void (async () => {
       try {
         const res = await fetch("/api/shares", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path: filePath, mode: initial }),
+          body: JSON.stringify({ path: filePath, mode: "preview" }),
         });
         const body = await res.json().catch(() => ({}));
         if (!res.ok || !body?.token || !body?.id) {
           setPhase("error");
           return;
         }
-        autoShareCache.set(entry.id, {
-          id: body.id,
-          token: body.token,
-          mode: initial,
-          allowDownload: true,
-        });
-        setShare({ id: body.id, token: body.token });
+        autoShareCache.set(entry.id, { id: body.id, token: body.token });
+        setToken(body.token);
         setPhase("ready");
       } catch {
         setPhase("error");
@@ -318,45 +300,11 @@ function UploadSharePanel({ entry }: { entry: UploadEntry }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const origin =
-    typeof window !== "undefined" ? window.location.origin : "";
-  const host =
-    typeof window !== "undefined" ? window.location.host : "vibox.cloud";
-  const shareUrl = share ? `${origin}/s/${share.token}` : "";
-  const shortUrl = share ? `${host}/s/${share.token}` : "";
-
-  const patch = async (changes: Record<string, unknown>) => {
-    if (!share) return;
-    try {
-      await fetch(`/api/shares/${share.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(changes),
-      });
-    } catch {}
-  };
-
-  const changeMode = (m: "preview" | "full") => {
-    if (m === mode) return;
-    setMode(m);
-    const c = autoShareCache.get(entry.id);
-    if (c) autoShareCache.set(entry.id, { ...c, mode: m });
-    try {
-      localStorage.setItem("vibox.shareDefaultMode", m);
-    } catch {}
-    void patch({ mode: m });
-  };
-  const toggleDownload = () => {
-    const v = !allowDownload;
-    setAllowDownload(v);
-    const c = autoShareCache.get(entry.id);
-    if (c) autoShareCache.set(entry.id, { ...c, allowDownload: v });
-    void patch({ allowDownload: v });
-  };
   const copy = async () => {
-    if (!shareUrl) return;
+    if (!token) return;
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(`${origin}/s/${token}`);
     } catch {}
     setCopied(true);
     setTimeout(() => setCopied(false), 1600);
@@ -364,95 +312,22 @@ function UploadSharePanel({ entry }: { entry: UploadEntry }) {
 
   if (phase === "creating") {
     return (
-      <div className="mt-2.5 pt-2.5 border-t border-dashed border-border flex items-center gap-2 text-xs text-text-faint">
-        <Loader2 size={13} strokeWidth={2.2} className="animate-spin text-accent" />
-        공유 링크 만드는 중…
-      </div>
+      <span className="shrink-0 text-2xs text-[#a1a1aa]">링크 준비 중…</span>
     );
   }
-  if (phase === "error" || !share) {
-    return (
-      <div className="mt-2.5 pt-2.5 border-t border-dashed border-border flex items-center gap-2 text-xs text-rose-600">
-        <AlertCircle size={13} strokeWidth={2.2} />
-        공유 링크 생성에 실패했어요
-      </div>
-    );
-  }
+  if (phase === "error" || !token) return null;
 
   return (
-    <div className="mt-2.5 pt-2.5 border-t border-dashed border-border flex flex-col gap-2">
-      {/* 링크 바 — 전체 클릭 = 복사 */}
-      <button
-        onClick={copy}
-        className="w-full flex items-center gap-2 border border-border rounded-[9px] bg-white px-3 py-2 hover:bg-surface hover:border-border-hover transition-colors"
-      >
-        <Link2 size={13} strokeWidth={2.2} className="text-text-faint shrink-0" />
-        <span className="flex-1 min-w-0 text-left text-xs text-text-soft truncate mono">
-          {shortUrl}
-        </span>
-        <span
-          className={`shrink-0 inline-flex items-center gap-1 text-xs font-bold ${
-            copied ? "text-emerald-600" : "text-accent"
-          }`}
-        >
-          {copied ? (
-            <Check size={13} strokeWidth={2.5} />
-          ) : (
-            <Copy size={13} strokeWidth={2.2} />
-          )}
-          {copied ? "복사됨" : "복사"}
-        </span>
-      </button>
-
-      {/* 모드(활성=주황) + 다운로드 허용 + 열기 */}
-      <div className="flex items-center gap-2">
-        <div className="flex bg-surface border border-border rounded-lg p-0.5">
-          <button
-            onClick={() => changeMode("full")}
-            className={`px-2.5 py-1 rounded-md text-xs font-bold inline-flex items-center gap-1 transition-colors ${
-              mode === "full"
-                ? "bg-white text-accent shadow-sm"
-                : "text-text-faint hover:text-text-soft"
-            }`}
-          >
-            <MessageSquare size={12} strokeWidth={2.2} />
-            검수
-          </button>
-          <button
-            onClick={() => changeMode("preview")}
-            className={`px-2.5 py-1 rounded-md text-xs font-bold inline-flex items-center gap-1 transition-colors ${
-              mode === "preview"
-                ? "bg-white text-accent shadow-sm"
-                : "text-text-faint hover:text-text-soft"
-            }`}
-          >
-            <Eye size={12} strokeWidth={2.2} />
-            미리보기
-          </button>
-        </div>
-        <div className="flex-1" />
-        <button
-          onClick={toggleDownload}
-          title={allowDownload ? "다운로드 허용됨" : "다운로드 꺼짐"}
-          aria-pressed={allowDownload}
-          className={`w-[30px] h-[30px] rounded-md grid place-items-center transition-colors ${
-            allowDownload
-              ? "text-accent"
-              : "text-text-faint hover:bg-surface hover:text-text-soft"
-          }`}
-        >
-          <Download size={15} strokeWidth={2} />
-        </button>
-        <a
-          href={shareUrl}
-          target="_blank"
-          rel="noreferrer"
-          title="새 탭에서 열기"
-          className="w-[30px] h-[30px] rounded-md grid place-items-center text-text-faint hover:bg-surface hover:text-text-soft transition-colors"
-        >
-          <ExternalLink size={15} strokeWidth={2} />
-        </a>
-      </div>
-    </div>
+    <button
+      onClick={copy}
+      className="shrink-0 inline-flex items-center gap-[5px] text-xs font-bold rounded-[9px] px-[11px] py-[7px] transition-[filter] hover:brightness-95"
+      style={{
+        color: copied ? "#16a34a" : "#e85008",
+        background: copied ? "#ecfdf3" : "#fdf1ea",
+      }}
+    >
+      {copied ? <Check size={13} strokeWidth={2.5} /> : <Copy size={13} strokeWidth={2.2} />}
+      {copied ? "복사됨" : "링크 복사"}
+    </button>
   );
 }
