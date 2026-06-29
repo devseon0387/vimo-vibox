@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>업로드 독 공유 패널 — 4개 레이아웃 시안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root{
+    --surface:#fafafa;--surface2:#f4f4f5;--border:#ececec;--border-hover:#dcdcdc;
+    --text:#18181b;--text-soft:#52525b;--text-faint:#9b9ba3;
+    --accent:#e85008;--accent-soft:#fef0e8;
+    --emerald:#059669;--sky:#0369a1;--sky-soft:#e0f2fe;--amber:#b45309;--amber-soft:#fffbeb;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#e9ebee;color:var(--text);font-family:Pretendard,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .lucide{width:1em;height:1em;stroke-width:2;flex:none}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .page{max-width:1060px;margin:0 auto;padding:30px 24px 80px}
+  h1{font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .lead{color:var(--text-soft);font-size:13.5px;margin-top:8px;line-height:1.6;max-width:820px}
+  .lead b{color:var(--text)}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:26px;margin-top:28px;justify-items:center}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}}
+  .col{display:flex;flex-direction:column;gap:11px;align-items:center}
+  .lbl{font-size:13px;font-weight:800;text-align:center}
+  .lbl .v{font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:2px 8px;margin-left:5px}
+  .sublbl{font-size:11.5px;color:var(--text-faint);text-align:center;max-width:300px;line-height:1.5;margin-top:-5px}
+
+  /* 실제 독 폭/스타일 */
+  .dock{width:340px;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 36px rgba(0,0,0,.13);overflow:hidden}
+  .item{padding:12px 14px}
+  .irow{display:flex;align-items:flex-start;gap:10px}
+  .irow .st{margin-top:1px;color:var(--emerald)}.irow .st .lucide{font-size:15px}
+  .irow .nm{flex:1;min-width:0}
+  .irow .nm .n{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .irow .nm .sub{font-size:11px;color:var(--text-faint);margin-top:1px}
+  .irow .x{color:var(--text-faint)}.irow .x .lucide{font-size:15px}
+
+  .share{margin-top:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px}
+
+  /* 공통 컴포넌트 */
+  .pill{flex:1;min-width:0;display:flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:7px 10px}
+  .pill .lucide{font-size:13px;color:var(--text-faint)}
+  .pill .u{flex:1;min-width:0;font-size:11.5px;color:var(--text-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .copy{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--accent);color:#fff;border:none;font-family:Pretendard;font-size:12px;font-weight:700;border-radius:8px;cursor:pointer}
+  .seg{display:flex;background:#fff;border:1px solid var(--border);border-radius:8px;padding:2px}
+  .seg button{flex:1;border:none;background:none;font-family:Pretendard;font-size:11.5px;font-weight:700;color:var(--text-soft);padding:6px 8px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;gap:5px;cursor:pointer}
+  .seg button .lucide{font-size:13px}
+  .seg button.on{background:var(--sky-soft);color:var(--sky)}
+  .seg button.on.prev{background:var(--surface2);color:var(--text)}
+  .iconbtn{flex:none;width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:#fff;display:grid;place-items:center;color:var(--text-soft);cursor:pointer}
+  .iconbtn.acc{background:var(--accent);border-color:var(--accent);color:#fff}
+  .iconbtn .lucide{font-size:15px}
+  .sec{display:flex;align-items:center;gap:9px;font-size:10.5px;font-weight:600;color:var(--text-soft)}
+  .sec .chk{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+  .sec .chk .box{width:14px;height:14px;border-radius:4px;background:var(--accent);display:grid;place-items:center;color:#fff}
+  .sec .chk .box .lucide{font-size:10px}
+  .sec .sp{flex:1}
+  .sec a{color:var(--text-soft);text-decoration:none;display:inline-flex;align-items:center;gap:3px;cursor:pointer}
+  .sec a .lucide{font-size:12px}
+  .hint{font-size:10.5px;color:var(--text-faint);line-height:1.4}
+
+  .foot{margin-top:34px;color:var(--text-faint);font-size:12px;line-height:1.7;border-top:1px solid #d9dce0;padding-top:16px;max-width:860px}
+  .foot b{color:var(--text)}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>업로드 독 공유 패널 — 레이아웃 4안</h1>
+  <p class="lead">기존에 모드 토글 옆 힌트가 폭 부족으로 <b>두 줄로 깨지던 문제</b>를 해결 — 각 요소를 full-width 행으로 분리하거나 압축. 실제 독 폭(340px)에서 <b>줄바꿈 없이</b> 깔끔하게. 4가지 배치 철학:</p>
+
+  <div class="grid">
+
+    <!-- 1) 풀폭 스택 -->
+    <div class="col">
+      <div class="dock">
+        <div class="item">
+          <div class="irow">
+            <span class="st"><i data-lucide="check"></i></span>
+            <div class="nm"><div class="n">그래놀라_광고_v2.mp4</div><div class="sub">00:48 · 1.2GB</div></div>
+            <span class="x"><i data-lucide="x"></i></span>
+          </div>
+          <div class="share" style="display:flex;flex-direction:column;gap:9px">
+            <div class="seg"><button class="on"><i data-lucide="message-square"></i>검수</button><button><i data-lucide="eye"></i>미리보기</button></div>
+            <div class="hint" style="margin-top:-3px">클라이언트가 영상 위에 의견을 남길 수 있어요</div>
+            <span class="pill"><i data-lucide="link"></i><span class="u">vibox.cloud/s/g7k2ab</span></span>
+            <button class="copy" style="width:100%;height:38px"><i data-lucide="copy"></i>링크 복사</button>
+            <div class="sec"><span class="chk"><span class="box"><i data-lucide="check"></i></span>다운로드 허용</span><span class="sp"></span><a><i data-lucide="qr-code"></i>QR</a><a><i data-lucide="external-link"></i>열기</a></div>
+          </div>
+        </div>
+      </div>
+      <div class="lbl">1 · 풀폭 스택</div>
+      <div class="sublbl">모든 요소를 한 줄씩 full-width로. 가장 또렷·여유, 살짝 세로로 김</div>
+    </div>
+
+    <!-- 2) 복사 우선 -->
+    <div class="col">
+      <div class="dock">
+        <div class="item">
+          <div class="irow">
+            <span class="st"><i data-lucide="check"></i></span>
+            <div class="nm"><div class="n">그래놀라_광고_v2.mp4</div><div class="sub">00:48 · 1.2GB</div></div>
+            <span class="x"><i data-lucide="x"></i></span>
+          </div>
+          <div class="share" style="display:flex;flex-direction:column;gap:9px">
+            <button class="copy" style="width:100%;height:42px;font-size:13px"><i data-lucide="link"></i>검수 링크 복사</button>
+            <div class="pill" style="border:none;background:none;padding:0 2px;justify-content:center"><span class="u mono" style="flex:none;text-align:center;color:var(--text-faint)">vibox.cloud/s/g7k2ab</span></div>
+            <div class="sec" style="padding-top:8px;border-top:1px solid var(--border)">
+              <button class="seg" style="padding:0;border:none;background:none;display:inline-flex;width:auto"><span style="font-size:11px;font-weight:700;color:var(--sky);background:var(--sky-soft);padding:4px 9px;border-radius:7px;display:inline-flex;align-items:center;gap:4px"><i data-lucide="message-square" style="font-size:12px"></i>검수<i data-lucide="chevron-down" style="font-size:12px"></i></span></button>
+              <span class="sp"></span>
+              <span class="chk"><span class="box"><i data-lucide="check"></i></span>다운로드</span>
+              <a><i data-lucide="external-link"></i>열기</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="lbl">2 · 복사 우선<span class="v">액션 강조</span></div>
+      <div class="sublbl">큰 복사 버튼이 주인공. URL은 보조, 모드는 작은 드롭다운 칩. "바로 보내기"에 최적</div>
+    </div>
+
+    <!-- 3) 한 줄 압축 -->
+    <div class="col">
+      <div class="dock">
+        <div class="item">
+          <div class="irow">
+            <span class="st"><i data-lucide="check"></i></span>
+            <div class="nm"><div class="n">그래놀라_광고_v2.mp4</div><div class="sub">00:48 · 1.2GB</div></div>
+            <span class="x"><i data-lucide="x"></i></span>
+          </div>
+          <div class="share" style="display:flex;flex-direction:column;gap:9px">
+            <div style="display:flex;gap:7px;align-items:center">
+              <span class="pill"><i data-lucide="link"></i><span class="u">vibox.cloud/s/g7k2ab</span></span>
+              <button class="iconbtn acc" title="복사"><i data-lucide="copy"></i></button>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div class="seg" style="flex:1"><button class="on"><i data-lucide="message-square"></i>검수</button><button><i data-lucide="eye"></i>미리보기</button></div>
+              <button class="iconbtn" title="다운로드 허용"><i data-lucide="download"></i></button>
+              <button class="iconbtn" title="열기"><i data-lucide="external-link"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="lbl">3 · 한 줄 압축<span class="v">컴팩트</span></div>
+      <div class="sublbl">링크+아이콘복사(1행) · 모드+보조아이콘(1행). 가장 낮은 높이, 빽빽하지 않게</div>
+    </div>
+
+    <!-- 4) 모드 셀렉트 -->
+    <div class="col">
+      <div class="dock">
+        <div class="item">
+          <div class="irow">
+            <span class="st"><i data-lucide="check"></i></span>
+            <div class="nm"><div class="n">그래놀라_광고_v2.mp4</div><div class="sub">00:48 · 1.2GB</div></div>
+            <span class="x"><i data-lucide="x"></i></span>
+          </div>
+          <div class="share" style="display:flex;flex-direction:column;gap:9px">
+            <button style="width:100%;display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px 11px;cursor:pointer;font-family:Pretendard;text-align:left">
+              <span style="width:26px;height:26px;border-radius:7px;background:var(--sky-soft);color:var(--sky);display:grid;place-items:center;flex:none"><i data-lucide="message-square" style="font-size:14px"></i></span>
+              <span style="flex:1;min-width:0"><span style="display:block;font-size:12px;font-weight:700;color:var(--text)">검수 모드</span><span style="display:block;font-size:10.5px;color:var(--text-faint)">클라이언트가 의견을 남길 수 있어요</span></span>
+              <i data-lucide="chevron-down" style="font-size:16px;color:var(--text-faint)"></i>
+            </button>
+            <div style="display:flex;gap:7px;align-items:center">
+              <span class="pill"><i data-lucide="link"></i><span class="u">vibox.cloud/s/g7k2ab</span></span>
+              <button class="copy" style="height:36px;padding:0 13px"><i data-lucide="copy"></i>복사</button>
+            </div>
+            <div class="sec"><span class="chk"><span class="box"><i data-lucide="check"></i></span>다운로드 허용</span><span class="sp"></span><a><i data-lucide="external-link"></i>열기</a></div>
+          </div>
+        </div>
+      </div>
+      <div class="lbl">4 · 모드 셀렉트</div>
+      <div class="sublbl">모드를 설명까지 보이는 full-width 셀렉트로. 처음 쓰는 사람도 모드 뜻이 명확</div>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    네 가지 다 <b>340px 독 폭에서 줄바꿈 없음</b> — URL은 truncate, 버튼/세그는 full-width 또는 아이콘으로 압축. 성격: <b>1 풀폭</b>=또렷하지만 김 · <b>2 복사우선</b>=보내기 액션 강조(추천 후보) · <b>3 압축</b>=최소 높이 · <b>4 셀렉트</b>=모드 설명 친절. 톤=실제 독 그대로(주황 면적 최소, 검수=sky, emerald 완료, lucide·이모지 금지).
+  </div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

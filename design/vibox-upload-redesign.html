@@ -1,0 +1,158 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>vibox 업로드 창 — C(정제 행) 변형</title>
+<style>
+:root{--bg:#f4f4f5;--ink:#18181b;--mut:#71717a;--faint:#a1a1aa;--line:#eee;--accent:#e85008;--soft:#fdf1ea;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo",sans-serif}
+.tnum{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.tr{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 20px 90px}
+.top{padding:8px 0 14px;border-bottom:1px solid #e4e4e7;margin-bottom:22px}
+.top h1{font-size:18px;margin:0 0 5px}
+.top .sub{font-size:12.5px;color:var(--mut)}
+.row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.vcard{flex:1 1 320px;min-width:300px;max-width:352px;display:flex;flex-direction:column}
+.vh{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.vbadge{font-size:11px;font-weight:800;color:#fff;background:var(--accent);border-radius:6px;padding:3px 9px;letter-spacing:.02em}
+.vbadge.base{background:#52525b}
+.vname{font-size:12.5px;color:var(--mut);font-weight:600;flex:1}
+.rp{flex:none;background:#e4e4e7;color:#52525b;border:none;border-radius:7px;width:30px;height:26px;font-size:11px;cursor:pointer}
+.stage{position:relative;display:flex;align-items:center;justify-content:center;min-height:230px;border-radius:14px;background:repeating-conic-gradient(#e7e7e9 0% 25%,#efeff1 0% 50%) 0/18px 18px;padding:26px}
+.panel{position:relative;z-index:2}
+.cardbase{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.05),0 16px 36px -16px rgba(0,0,0,.24);font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif}
+.bar{height:3px;background:#f0f0f0;overflow:hidden}
+.bar.rd{border-radius:99px}
+.bar > i{display:block;height:100%;background:var(--accent);transform-origin:left}
+.bar.rd > i{border-radius:99px}
+.tile{width:40px;height:40px;border-radius:11px;background:var(--soft);display:grid;place-items:center;flex:none}
+.vid{stroke:#e85008}
+.rat{font-size:12.5px;color:#444;margin-top:12px;line-height:1.55}
+.chg{margin:8px 0 0;padding-left:16px}
+.chg li{font-size:12px;color:#666;margin:2.5px 0;line-height:1.45}
+@keyframes dialog-in{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+</style></head><body><div class="wrap">
+<div class="top">
+  <h1>업로드 창 — C(정제 행) 변형</h1>
+  <div class="sub">2026-06-29 · C 골격(타입 타일 + 가로 행 + 녹인 진행) 유지 · 진행 표현·% 위치·취소·완료를 달리한 변형 6 · 속도·용량·%·남은시간 유지 · ▶ 재생</div>
+</div>
+
+<div class="row">
+
+  <!-- C1 기준 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge base">C 기준</span><span class="vname">바닥 가로 진행 (원안)</span><button class="rp" onclick="replay(this)">▶</button></div>
+    <div class="stage"><div class="panel" data-anim="dialog-in 280ms cubic-bezier(.16,1,.3,1) both"><div class="cardbase" style="width:316px;border-radius:14px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:12px;padding:15px 16px 14px;">
+        <span class="tile"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" class="vid" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg></span>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;"><span class="tr" style="flex:1;min-width:0;font-size:13.5px;font-weight:600;color:#18181b;">브랜드필름_v3.mp4</span><span class="tnum" style="font-size:12px;font-weight:700;color:#e85008;">64%</span></div>
+          <div class="tnum" style="font-size:11.5px;color:#a1a1aa;margin-top:3px;">64 / 124 MB · 8.0 MB/s · 7초 남음</div>
+        </div>
+      </div>
+      <div class="bar"><i style="width:64%"></i></div>
+    </div></div></div>
+    <div class="rat">원안 — 타입 타일 + 한 줄 정보 + 카드 바닥 풀폭 진행. 아래 변형들과 비교 기준.</div>
+  </div>
+
+  <!-- C2 링 타일 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge">C2</span><span class="vname">링 타일 — 아이콘에 진행 링</span><button class="rp" onclick="replay(this)">▶</button></div>
+    <div class="stage"><div class="panel" data-anim="dialog-in 280ms cubic-bezier(.16,1,.3,1) both"><div class="cardbase" style="width:316px;border-radius:14px;padding:15px 16px;">
+      <div style="display:flex;align-items:center;gap:13px;">
+        <div style="position:relative;width:46px;height:46px;flex:none;">
+          <svg width="46" height="46" viewBox="0 0 36 36" style="position:absolute;inset:0;"><circle cx="18" cy="18" r="16" fill="none" stroke="#f0f0f0" stroke-width="2.5"/><circle cx="18" cy="18" r="16" fill="none" stroke="#e85008" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="100.5" stroke-dashoffset="36.2" transform="rotate(-90 18 18)"/></svg>
+          <div style="position:absolute;inset:5px;border-radius:50%;background:#fdf1ea;display:grid;place-items:center;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" class="vid" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg></div>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;"><span class="tr" style="flex:1;min-width:0;font-size:13.5px;font-weight:600;color:#18181b;">브랜드필름_v3.mp4</span><span class="tnum" style="font-size:12px;font-weight:700;color:#52525b;">64%</span></div>
+          <div class="tnum" style="font-size:11.5px;color:#a1a1aa;margin-top:3px;">64 / 124 MB · 8.0 MB/s · 7초 남음</div>
+        </div>
+      </div>
+    </div></div></div>
+    <div class="rat">진행을 막대가 아니라 <b>타입 아이콘을 감싸는 링</b>으로. 막대가 사라져 한 줄로 더 단정하고, 아이콘 = 진행 지표가 되는 변형.</div>
+    <ul class="chg"><li>바닥 진행바 제거 → 46px 링이 40px 타일을 감쌈</li><li>% 는 우측 중립색 숫자로(링이 색을 가지므로 텍스트는 차분)</li><li>한 줄 높이로 가장 컴팩트</li></ul>
+  </div>
+
+  <!-- C3 인라인 바 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge">C3</span><span class="vname">인라인 바 — 본문 안 진행선</span><button class="rp" onclick="replay(this)">▶</button></div>
+    <div class="stage"><div class="panel" data-anim="dialog-in 280ms cubic-bezier(.16,1,.3,1) both"><div class="cardbase" style="width:316px;border-radius:14px;padding:15px 16px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="tile"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" class="vid" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg></span>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;"><span class="tr" style="flex:1;min-width:0;font-size:13.5px;font-weight:600;color:#18181b;">브랜드필름_v3.mp4</span><span class="tnum" style="font-size:12px;font-weight:700;color:#e85008;">64%</span></div>
+          <div class="bar rd" style="margin:9px 0 6px;"><i style="width:64%"></i></div>
+          <div class="tnum" style="font-size:11px;color:#a1a1aa;">64 / 124 MB · 8.0 MB/s · 7초 남음</div>
+        </div>
+      </div>
+    </div></div></div>
+    <div class="rat">진행선을 카드 가장자리 대신 <b>아이콘 옆 본문 안</b>에 둠 — 파일명 바로 아래에서 진행이 읽혀 시선 이동이 짧은 변형.</div>
+    <ul class="chg"><li>진행바를 텍스트 블록 안으로(파일명 ↔ 수치 사이), 라운드 처리</li><li>아이콘·% 위치는 기준과 동일, 정보 묶음만 재배치</li><li>카드 패딩이 진행바를 감싸 더 "한 덩어리"로</li></ul>
+  </div>
+
+  <!-- C4 취소 가능 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge">C4</span><span class="vname">취소 가능 — 우측 X (기능형)</span><button class="rp" onclick="replay(this)">▶</button></div>
+    <div class="stage"><div class="panel" data-anim="dialog-in 280ms cubic-bezier(.16,1,.3,1) both"><div class="cardbase" style="width:316px;border-radius:14px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 12px 13px 16px;">
+        <span class="tile"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" class="vid" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg></span>
+        <div style="flex:1;min-width:0;">
+          <div class="tr" style="font-size:13.5px;font-weight:600;color:#18181b;">브랜드필름_v3.mp4</div>
+          <div class="tnum" style="font-size:11.5px;color:#a1a1aa;margin-top:3px;">64% · 64 / 124 MB · 8.0 MB/s · 7초</div>
+        </div>
+        <button style="width:30px;height:30px;border-radius:8px;border:none;background:#f4f4f5;display:grid;place-items:center;flex:none;cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#71717a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </div>
+      <div class="bar"><i style="width:64%"></i></div>
+    </div></div></div>
+    <div class="rat">실제 동작을 담은 변형 — 우측 취소(X) 버튼 상시. %·용량·속도·남은시간을 한 줄에 모으고, 진행은 바닥 바로. 가장 기능적.</div>
+    <ul class="chg"><li>우측에 취소 버튼(연한 회색 버튼) 추가 — 업로드 중 중단</li><li>% 를 수치 줄 맨 앞으로 합쳐 한 줄 정리</li><li>실패 시 이 자리에 "재시도", 완료 시 "복사"로 교체 가능</li></ul>
+  </div>
+
+  <!-- C5 % 강조 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge">C5</span><span class="vname">% 강조 — 우측 큰 퍼센트</span><button class="rp" onclick="replay(this)">▶</button></div>
+    <div class="stage"><div class="panel" data-anim="dialog-in 280ms cubic-bezier(.16,1,.3,1) both"><div class="cardbase" style="width:316px;border-radius:14px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px 13px;">
+        <span class="tile"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" class="vid" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg></span>
+        <div style="flex:1;min-width:0;">
+          <div class="tr" style="font-size:13.5px;font-weight:600;color:#18181b;">브랜드필름_v3.mp4</div>
+          <div class="tnum" style="font-size:11.5px;color:#a1a1aa;margin-top:3px;">64 / 124 MB · 8.0 MB/s · 7초 남음</div>
+        </div>
+        <span class="tnum" style="font-size:21px;font-weight:800;color:#18181b;letter-spacing:-.02em;flex:none;">64<span style="font-size:12px;color:#c4c4c8;">%</span></span>
+      </div>
+      <div class="bar"><i style="width:64%"></i></div>
+    </div></div></div>
+    <div class="rat">우측 % 를 크게 키워 진행을 한눈에 — 행 구조는 유지하되 숫자가 앵커가 되는 변형. B(큰 숫자)의 자신감을 행에 접목.</div>
+    <ul class="chg"><li>% 를 21px 굵게 우측 정렬(% 기호는 작고 옅게)</li><li>파일명·수치는 좌측, 타입 타일 유지</li><li>진행 바닥 바 + 큰 % 의 이중 표시로 가독성↑</li></ul>
+  </div>
+
+  <!-- C6 완료 → 공유 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge">C6</span><span class="vname">완료 → 공유 (C 행의 완료 상태)</span><button class="rp" onclick="replay(this)">▶</button></div>
+    <div class="stage"><div class="panel" data-anim="dialog-in 280ms cubic-bezier(.16,1,.3,1) both"><div class="cardbase" style="width:316px;border-radius:14px;padding:15px 16px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="width:40px;height:40px;border-radius:11px;background:#ecfdf3;display:grid;place-items:center;flex:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <div style="flex:1;min-width:0;">
+          <div class="tr" style="font-size:13.5px;font-weight:600;color:#18181b;">브랜드필름_v3.mp4</div>
+          <div class="tnum" style="font-size:11.5px;color:#a1a1aa;margin-top:3px;">올림 · 248 MB · 성수 카페</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px;border:1px solid #ececec;border-radius:10px;padding:8px 11px;margin-top:13px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.4"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.4"/></svg>
+        <span class="tr tnum" style="flex:1;min-width:0;font-size:12px;color:#52525b;">vibox.cloud/s/a9f2c</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#e85008;flex:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="13" height="13" x="9" y="9" rx="2"/><path d="M5 15c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h8c1.1 0 2 .9 2 2"/></svg>복사</span>
+      </div>
+    </div></div></div>
+    <div class="rat">C 행이 끝났을 때의 모습 — 타입 타일이 성공 체크로 바뀌고, 그 아래 공유 링크 바가 펼쳐짐. 진행 중(C1~C5) → 완료가 같은 행 골격으로 이어짐.</div>
+    <ul class="chg"><li>타입 타일 → 성공 체크 타일, 수치 줄 → "올림 · 용량 · 목적지"</li><li>아래로 공유 링크 바(복사) 펼침 — 업로드 끝=전달 시작</li><li>C1~C5 어느 진행 안을 골라도 완료는 이 형태로 통일</li></ul>
+  </div>
+
+</div>
+
+<footer style="margin-top:26px;color:var(--faint);font-size:12px;text-align:center">C(정제 행) 골격 유지 · 진행 표현(바닥/링/인라인) · 취소/% 강조/완료 변형. 무채색 chrome · 단일 액센트 · tabular 숫자. 채택 시 GlobalUploadDock.tsx(단일 파일) 반영. — showcase #13</footer>
+</div>
+<script>
+function play(el){const a=el.getAttribute('data-anim');if(!a)return;el.style.animation='none';void el.offsetWidth;el.style.animation=a;el.querySelectorAll('.bar > i').forEach(b=>{b.style.animation='none';void b.offsetWidth;b.style.animation='grow 800ms cubic-bezier(.16,1,.3,1) both';});}
+function replay(btn){btn.closest('.vcard').querySelectorAll('[data-anim]').forEach(play);}
+window.addEventListener('load',()=>{const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.querySelectorAll('[data-anim]').forEach(play);io.unobserve(e.target);}})},{threshold:.25});document.querySelectorAll('.vcard').forEach(s=>io.observe(s));});
+</script>
+</body></html>

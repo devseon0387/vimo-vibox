@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 컨트롤 바 — 코멘트 네비 좌우</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --accent:#e85008; --acc-ink:#c2410c; --ai:#8b5cf6;
+    --s200:#e2e8f0; --s400:#94a3b8; --s500:#64748b; --s700:#334155; --s900:#0f172a;
+    --page:#e9eaec; --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif; --sh2:0 14px 40px rgba(15,23,42,.18);
+    --bar:#0b0f17; --barline:#1e293b; --trk:#334155; --buf:#475569;
+    --txt:#cbd5e1; --dim:#64748b; --bright:#f1f5f9; --resolved:#64748b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);background:var(--page);color:var(--s900);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h2,h3,p{margin:0} button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  svg.lucide{width:1em;height:1em;stroke-width:2;flex:none;vertical-align:-.14em}
+  .wrap{max-width:1080px;margin:0 auto;padding:30px 22px 120px}
+  .intro h1{font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .intro p{color:var(--s500);font-size:13px;margin-top:8px;line-height:1.65;max-width:900px}.intro b{color:var(--s700)}
+  .jump{position:sticky;top:0;z-index:50;background:rgba(233,234,236,.92);backdrop-filter:blur(8px);margin:18px -22px 0;padding:11px 22px;border-bottom:1px solid var(--s200);display:flex;gap:7px;flex-wrap:wrap}
+  .jump a{font-size:12px;font-weight:700;color:var(--s500);text-decoration:none;padding:6px 12px;border-radius:8px}.jump a:hover{background:#fff}.jump a.on{background:var(--s900);color:#fff}
+  .jump a b{color:var(--s400);margin-right:5px}.jump a.on b{color:rgba(255,255,255,.5)}
+  .lbl{display:flex;align-items:baseline;gap:11px;margin:30px 0 12px}
+  .lbl .n{font-size:12px;font-weight:800;color:#fff;background:var(--accent);width:22px;height:22px;border-radius:7px;display:grid;place-items:center;flex:none;transform:translateY(3px)}
+  .lbl h2{font-size:16.5px;font-weight:800;letter-spacing:-.01em}.lbl p{font-size:12.5px;color:var(--s400)}
+
+  .stage{border-radius:13px;overflow:hidden;box-shadow:var(--sh2);background:#000;display:flex;flex-direction:column}
+  .video{position:relative;height:300px;background:linear-gradient(125deg,#0d4d4a 0%,#1f6f5c 36%,#c2683a 76%,#e85008 100%)}
+  .video .pbtn{position:absolute;inset:0;margin:auto;width:72px;height:72px;border-radius:50%;background:rgba(11,15,23,.55);backdrop-filter:blur(3px);border:1px solid rgba(255,255,255,.18);display:grid;place-items:center}.video .pbtn svg{width:27px;height:27px;color:#fff;fill:#fff;margin-left:4px}
+  .video .anno{position:absolute;top:13px;right:13px;font-size:11.5px;font-weight:600;color:#fff;background:rgba(0,0,0,.42);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:6px 11px;display:inline-flex;align-items:center;gap:6px}.video .anno svg{width:13px;height:13px}
+  .video .speed{position:absolute;top:13px;left:13px;font-size:11px;font-weight:800;color:#fff;background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.16);border-radius:7px;padding:4px 9px;font-family:ui-monospace,monospace}
+  .video .sub{position:absolute;left:0;right:0;bottom:16px;text-align:center;color:#fff;font-size:16px;font-weight:600;text-shadow:0 1px 5px rgba(0,0,0,.9)}
+
+  .bar{background:var(--bar);border-top:1px solid var(--barline);padding:10px 16px 11px}
+  .seek{position:relative;flex:1;height:18px;display:flex;align-items:center;cursor:pointer}
+  .seek .trk{position:absolute;left:0;right:0;height:6px;border-radius:3px;background:var(--trk)}
+  .seek .buf{position:absolute;left:0;height:6px;width:52%;border-radius:3px;background:var(--buf)}
+  .seek .fil{position:absolute;left:0;height:6px;width:34%;border-radius:3px;background:var(--accent)}
+  .seek .range{position:absolute;left:48%;width:10%;height:6px;border-radius:3px;background:rgba(232,80,8,.32);border:1px solid rgba(232,80,8,.55)}
+  .seek .range:before,.seek .range:after{content:"";position:absolute;top:-2px;bottom:-2px;width:3px;border-radius:2px;background:var(--accent)}.seek .range:before{left:-1px}.seek .range:after{right:-1px}
+  .seek .mk{position:absolute;top:50%;transform:translate(-50%,-50%);width:11px;height:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2.5px var(--bar),0 1px 3px rgba(0,0,0,.6);z-index:2}
+  .seek .mk.ai{background:var(--ai)}.seek .mk.done{background:var(--resolved);display:grid;place-items:center}.seek .mk.done svg{width:7px;height:7px;color:#0b0f17}
+  .seek .head{position:absolute;top:50%;left:34%;transform:translate(-50%,-50%);width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px var(--accent),0 1px 5px rgba(0,0,0,.6);z-index:3}
+  .tc{font-family:ui-monospace,SFMono-Regular,monospace;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--txt)}.tc.dur{color:var(--dim)}
+
+  .r1{display:flex;align-items:center;gap:12px}
+  .r2{display:flex;align-items:center;gap:10px;margin-top:9px}
+  .ico{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;color:var(--txt)}.ico:hover{background:rgba(255,255,255,.08);color:var(--bright)}.ico svg{width:19px;height:19px}
+  .play{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;box-shadow:0 4px 14px rgba(232,80,8,.4)}.play svg{width:22px;height:22px;fill:currentColor}
+  .grp{display:flex;align-items:center;gap:3px}
+  .div{width:1px;height:24px;background:var(--barline);margin:0 5px}
+  .sp{flex:1}
+  .util{display:flex;align-items:center;gap:3px}
+  .util .spd{height:34px;padding:0 10px;border-radius:9px;font-size:12px;font-weight:700;font-family:ui-monospace,monospace;color:var(--txt)}.util .spd:hover{background:rgba(255,255,255,.08)}
+  .util .ico{color:var(--dim)}.util .ico:hover{color:var(--bright)}
+
+  /* 코멘트 네비 — 좌우, 미해결 비-히어로(중성) */
+  .nav{display:flex;align-items:center}
+  .nav .arw{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--txt)}.nav .arw:hover{background:rgba(255,255,255,.1);color:#fff}.nav .arw svg{width:18px;height:18px}
+  /* 1 아이콘형: ◀ 말풍선(작은 카운트) ▶ */
+  .nav1 .cm{position:relative;width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--txt)}.nav1 .cm svg{width:18px;height:18px}
+  .nav1 .cm .bdg{position:absolute;top:3px;right:2px;min-width:13px;height:13px;padding:0 3px;border-radius:7px;background:var(--accent);color:#fff;font-size:8.5px;font-weight:800;display:grid;place-items:center;line-height:1}
+  /* 2 라벨형: ◀ 이전 코멘트 · 다음 코멘트 ▶ */
+  .nav2 .lb{height:34px;padding:0 11px;border-radius:9px;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--txt)}.nav2 .lb:hover{background:rgba(255,255,255,.08);color:#fff}.nav2 .lb svg{width:15px;height:15px}
+  .nav2 .cn{font-size:11.5px;color:var(--dim);margin:0 4px;font-weight:600}
+  /* 3 점프형(무카운터): 코멘트 ◀ ▶ */
+  .nav3 .tag{font-size:11.5px;color:var(--dim);font-weight:700;margin-right:3px;display:inline-flex;align-items:center;gap:5px}.nav3 .tag svg{width:14px;height:14px}
+
+  .foot{margin-top:40px;font-size:12px;color:var(--s400);text-align:center;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="intro">
+    <h1>코멘트 네비 — 좌/우로, 미해결은 비-히어로</h1>
+    <p>코멘트 이전/다음을 <b>좌우(◀▶) 버튼</b>으로 바꾸고, "미해결"을 큰 포컬로 만들지 않았습니다. <b>미해결 정보는 시크바의 주황 마커</b>가 담당하고, 바의 카운트는 작게 또는 없앴습니다. 나머지(프레임 스텝·유틸·해결 숨기기·영상 아래·어두운 톤)는 동일. 차이는 코멘트 네비 표현 3가지뿐.</p>
+  </div>
+  <nav class="jump" id="jump">
+    <a href="#a"><b>1</b>아이콘형</a>
+    <a href="#b"><b>2</b>라벨형</a>
+    <a href="#c"><b>3</b>점프형(무카운터)</a>
+  </nav>
+
+  <!-- 1 아이콘형 -->
+  <div class="lbl" id="a"><span class="n">1</span><div><h2>아이콘형 — ◀ 말풍선 ▶</h2></div><p style="margin-top:5px">좌우 화살표 사이에 코멘트 아이콘. 미해결 수는 아이콘 위 작은 배지로만(주인공 아님)</p></div>
+  <div class="stage"><div class="video" data-stage></div>
+    <div class="bar">
+      <div class="r1"><span class="tc">0:36</span><div class="seek" data-seek></div><span class="tc dur">1:48</span></div>
+      <div class="r2">
+        <div class="grp"><button class="ico" title="−1프레임 (←)"><svg data-lucide="step-back"></svg></button><button class="play"><svg data-lucide="play"></svg></button><button class="ico" title="+1프레임 (→)"><svg data-lucide="step-forward"></svg></button></div>
+        <div class="div"></div>
+        <div class="nav nav1">
+          <button class="arw" title="이전 코멘트 (←)"><svg data-lucide="chevron-left"></svg></button>
+          <button class="cm" title="코멘트"><svg data-lucide="message-square"></svg><span class="bdg">2</span></button>
+          <button class="arw" title="다음 코멘트 (→)"><svg data-lucide="chevron-right"></svg></button>
+        </div>
+        <div class="sp"></div>
+        <div class="util"><button class="spd">1x</button><button class="ico" title="음소거"><svg data-lucide="volume-2"></svg></button><button class="ico" title="전체화면"><svg data-lucide="maximize"></svg></button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2 라벨형 -->
+  <div class="lbl" id="b"><span class="n">2</span><div><h2>라벨형 — ◀ 이전 코멘트 · 다음 코멘트 ▶</h2></div><p style="margin-top:5px">텍스트로 명확하게. 가운데 작은 회색 카운트(3) — 강조 아님</p></div>
+  <div class="stage"><div class="video" data-stage></div>
+    <div class="bar">
+      <div class="r1"><span class="tc">0:36</span><div class="seek" data-seek></div><span class="tc dur">1:48</span></div>
+      <div class="r2">
+        <div class="grp"><button class="ico" title="−1프레임 (←)"><svg data-lucide="step-back"></svg></button><button class="play"><svg data-lucide="play"></svg></button><button class="ico" title="+1프레임 (→)"><svg data-lucide="step-forward"></svg></button></div>
+        <div class="div"></div>
+        <div class="nav nav2">
+          <button class="lb" title="이전 코멘트 (←)"><svg data-lucide="chevron-left"></svg>이전 코멘트</button>
+          <span class="cn">3</span>
+          <button class="lb" title="다음 코멘트 (→)">다음 코멘트<svg data-lucide="chevron-right"></svg></button>
+        </div>
+        <div class="sp"></div>
+        <div class="util"><button class="spd">1x</button><button class="ico" title="음소거"><svg data-lucide="volume-2"></svg></button><button class="ico" title="전체화면"><svg data-lucide="maximize"></svg></button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 점프형 무카운터 -->
+  <div class="lbl" id="c"><span class="n">3</span><div><h2>점프형 — 코멘트 ◀ ▶ (카운트 없음)</h2></div><p style="margin-top:5px">"코멘트" 라벨 + 좌우 화살표만. 미해결 수는 아예 안 띄우고 시크바 마커로만</p></div>
+  <div class="stage"><div class="video" data-stage></div>
+    <div class="bar">
+      <div class="r1"><span class="tc">0:36</span><div class="seek" data-seek></div><span class="tc dur">1:48</span></div>
+      <div class="r2">
+        <div class="grp"><button class="ico" title="−1프레임 (←)"><svg data-lucide="step-back"></svg></button><button class="play"><svg data-lucide="play"></svg></button><button class="ico" title="+1프레임 (→)"><svg data-lucide="step-forward"></svg></button></div>
+        <div class="div"></div>
+        <div class="nav nav3">
+          <span class="tag"><svg data-lucide="message-square"></svg>코멘트</span>
+          <button class="arw" title="이전 코멘트 (←)"><svg data-lucide="chevron-left"></svg></button>
+          <button class="arw" title="다음 코멘트 (→)"><svg data-lucide="chevron-right"></svg></button>
+        </div>
+        <div class="sp"></div>
+        <div class="util"><button class="spd">1x</button><button class="ico" title="음소거"><svg data-lucide="volume-2"></svg></button><button class="ico" title="전체화면"><svg data-lucide="maximize"></svg></button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">코멘트 네비 = 좌/우 · 미해결은 시크바 마커가 담당(바에선 비-히어로) · CC 제거 · 영상 아래·어두운 톤<br>코멘트 네비 표현(1 아이콘 / 2 라벨 / 3 무카운터) 중 끌리는 걸 알려주세요</div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  const STAGE = `<div class="speed">1x</div><div class="anno"><svg data-lucide="pen-line"></svg>주석</div><div class="pbtn"><svg data-lucide="play"></svg></div><div class="sub">우리의 하루는 한 잔의 커피에서 시작된다</div>`;
+  const SEEK = `<div class="trk"></div><div class="buf"></div><div class="fil"></div><div class="range" title="구간 코멘트"></div><span class="mk" style="left:7%" title="박매니저 · 미해결"></span><span class="mk ai" style="left:39%" title="AI 자막검수"></span><span class="mk done" style="left:69%" title="해결됨"><svg data-lucide="check"></svg></span><span class="head"></span>`;
+  document.querySelectorAll('[data-stage]').forEach(e=>e.innerHTML=STAGE);
+  document.querySelectorAll('[data-seek]').forEach(e=>e.innerHTML=SEEK);
+  if(window.lucide) lucide.createIcons();
+  const links=[...document.querySelectorAll('.jump a')];const map={};links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('on'));map[e.target.id]?.classList.add('on');}})},{rootMargin:'-42% 0px -52% 0px'});
+  ['a','b','c'].forEach(id=>{const el=document.getElementById(id);if(el)io.observe(el);});
+</script>
+</body>
+</html>

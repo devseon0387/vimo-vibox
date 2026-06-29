@@ -106,6 +106,9 @@
   .catchips{display:flex;gap:11px;margin-top:9px}.catchip{font-size:10.5px;color:#737373;display:inline-flex;align-items:center;gap:4px;font-weight:600}.catchip svg{width:12px;height:12px}
   .reqbox{font-size:12px;color:#6a4a35;background:var(--req);border-radius:10px;padding:10px 12px;margin-top:11px;line-height:1.5;display:flex;gap:9px}.reqbox .ava{width:21px;height:21px;border-radius:50%;background:linear-gradient(135deg,#8a6fb0,#6d5a9c);color:#fff;font-size:9px;font-weight:700;display:grid;place-items:center;flex:none}
   .hmeta{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--faint);margin-top:10px;flex-wrap:wrap}.hmeta .sep{color:#d4d4d4}.hmeta svg{width:12px;height:12px}
+  .countchips{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .cchip{font-size:11.5px;font-weight:600;color:var(--soft);border:1px solid var(--line2);border-radius:999px;padding:5px 12px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.cchip svg{width:13px;height:13px;color:var(--faint)}.cchip b{color:var(--text);font-weight:700;margin-left:1px}
+  .cchip.dl{color:var(--vimo-ink);border-color:var(--vimo-line);background:var(--vimo-soft)}.cchip.dl svg{color:var(--vimo)}
   .act{margin-top:auto;padding-top:15px;display:flex;align-items:center;gap:9px}
   .btn{font-size:12.5px;font-weight:600;border-radius:10px;padding:9px 14px;display:inline-flex;align-items:center;gap:7px}.btn svg{width:15px;height:15px}
   .btn.pv{background:var(--vimo);color:#fff}.btn.pv:hover{background:#d4490a}.btn.pb{background:var(--mybox);color:#fff}.btn.g{background:#fff;border:1px solid var(--line2);color:var(--text)}.btn.g:hover{background:var(--surf)}
@@ -122,6 +125,7 @@
   .pfoot{display:flex;align-items:center;justify-content:space-between;padding:12px 15px 14px;margin-top:12px;border-top:1px solid var(--hair)}
   .pcard.dim{opacity:.62}
   .pdash{background:var(--surf);border:1px dashed var(--dash);border-radius:16px;display:grid;place-items:center;min-height:188px;color:var(--faint);text-align:center}.pdash svg{width:25px;height:25px}.pdash .l{font-size:12.5px;font-weight:600;margin-top:9px}
+  .mybox-row{display:flex;align-items:center;gap:11px;background:#fff;border:1px solid var(--line2);border-radius:12px;padding:13px 16px;cursor:pointer}.mybox-row:hover{box-shadow:var(--sh2)}.mybox-row .mbt{font-size:13.5px;font-weight:800}.mybox-row .mbs{font-size:11.5px;color:var(--faint)}.mybox-row .mbgo{margin-left:auto;font-size:12px;font-weight:600;color:var(--faint)}
 
   /* 폴더 헤더/트랙 */
   .ddhead{background:#fff;border-bottom:1px solid var(--line);padding:15px 22px;flex:none}
@@ -227,8 +231,8 @@
   <main class="main">
     <div class="tbar">
       <div class="hi">안녕하세요, 서준님</div>
-      <div class="sr" onclick="openPalette()"><svg data-lucide="search"></svg> 프로젝트·영상·코멘트 검색 <span class="kbd">⌘K</span></div>
-      <button class="icobtn" id="bell" onclick="toggleNotif(event)"><svg data-lucide="bell"></svg><span class="badge" id="bellDot"></span></button>
+      <div class="sr" onclick="toast('검색은 곧 추가됩니다')"><svg data-lucide="search"></svg> 검색</div>
+      <button class="icobtn" id="bell" onclick="toggleNotif(event)"><svg data-lucide="bell"></svg></button>
       <button class="up v" onclick="demoUpload('ok')"><svg data-lucide="upload"></svg> 업로드</button>
     </div>
     <div class="scroll"><div class="body" id="main"></div></div>
@@ -347,7 +351,7 @@ function sidebarHTML(){
     <div class="nav" data-nav="mybox" onclick="toast('My box (데모 생략)')"><svg data-lucide="hard-drive"></svg> My box</div>
     <div class="lbl">라이브러리</div>
     <div class="nav" data-nav="shares" onclick="toast('공유 링크 관리 (로드맵 Phase 2)')"><svg data-lucide="share-2"></svg> 공유</div>
-    <div class="nav" data-nav="trash" onclick="go('trash')"><svg data-lucide="trash-2"></svg> 휴지통</div>
+    <div class="nav" data-nav="more" onclick="toast('더보기 — 휴지통·공유 링크·설정은 여기로 (나중에)')"><svg data-lucide="ellipsis"></svg> 더보기</div>
     <div class="sb-foot"><div class="m">V</div><div class="w">비박스</div></div>`;
 }
 
@@ -374,6 +378,7 @@ function thumbHTML(seed, grad, opts={}){
   </div>`;
 }
 function statusChip(s,label){ return `<span class="st ${cls[s]}"><svg data-lucide="${SIC[s]}"></svg>${label}</span>`; }
+function countChip(s,label){ const ic = s==='fix'?'pen-line':SIC[s]; const html=(label||'').replace(/(\d+)\s*$/,'<b>$1</b>'); return `<span class="cchip"><svg data-lucide="${ic}"></svg>${html}</span>`; }
 function cmtBadge(o,t){ if(!t) return ''; const c=o>0?'on':'done'; return `<span class="cbadge ${c}"><svg data-lucide="message-square"></svg>미해결 ${o}<span class="sl">/${t}</span></span>`; }
 function togglePin(k){ PROJECTS[k].pinned=!PROJECTS[k].pinned; const on=PROJECTS[k].pinned; render(); toast(on?PROJECTS[k].name+' 즐겨찾기에 고정':'고정 해제'); }
 
@@ -381,18 +386,16 @@ function togglePin(k){ PROJECTS[k].pinned=!PROJECTS[k].pinned; const on=PROJECTS
 function homeHTML(){
   const h=PROJECTS[HERO.pkey], hv=h.videos[HERO.vIdx], ver=hv.versions[0];
   const pins=ORDER.filter(k=>PROJECTS[k].pinned), rest=ORDER.filter(k=>!PROJECTS[k].pinned);
-  const pinBlock = pins.length ? `<div class="ghead pin"><svg data-lucide="star"></svg> 고정</div><div class="pgrid" style="margin-bottom:16px">${pins.map(projectCard).join('')}</div>` : '';
-  const restBlock = `<div class="ghead"><svg data-lucide="folders"></svg> 진행 중</div><div class="pgrid">${rest.map(projectCard).join('')}<div class="pdash" onclick="toast('새 작업은 비모가 열어줘요')"><div><svg data-lucide="inbox"></svg><div class="l">새 작업은 비모가<br>열어줍니다</div></div></div></div>`;
+  const ordered=[...pins,...rest];
+  const gridBlock = `<div class="pgrid">${ordered.map(projectCard).join('')}<div class="pdash" onclick="toast('새 작업은 비모가 열어줘요')"><div><svg data-lucide="inbox"></svg><div class="l">새 작업은 비모가<br>열어줍니다</div></div></div></div>`;
   return `
   <div class="todohead"><svg data-lucide="target"></svg> 지금 할 일 <span class="wait" onclick="toast('검수 대기 큐 (로드맵 Phase 1)')">처리 대기 2건</span></div>
   <div class="hero" onclick="go('folder','${HERO.pkey}')">
-    ${thumbHTML(hv.thumb, hv.grad, { tr:`<span class="cchip"><svg data-lucide="layers"></svg>이 프로젝트 영상 ${h.vcount}</span>`, bl:`<span class="verbadge">${ver.v}</span><span class="dur">${ver.dur}</span>`, br:`<span class="res">4K</span>` })}
+    ${thumbHTML(hv.thumb, hv.grad, { bl:`<span class="verbadge">${ver.v}</span><span class="dur">${ver.dur}</span>` })}
     <div class="info">
       <div class="crumb"><span class="vmk sm">V</span> <span class="clink" onclick="event.stopPropagation();go('folder','${HERO.pkey}')">${h.name} <span class="mono">${h.id}</span></span> <svg data-lucide="chevron-right" class="sep"></svg> 완성본 <svg data-lucide="chevron-right" class="sep"></svg> <b>${hv.name}</b></div>
-      <h3>${hv.name} ${ver.v} ${statusChip(hv.status,hv.statusLabel)}</h3>
-      <div class="catchips">${hv.cats.map(c=>`<span class="catchip"><svg data-lucide="${c.i}"></svg>${c.t}</span>`).join('')}</div>
-      <div class="reqbox"><span class="ava">박</span><span>${ver.note} — 박매니저</span></div>
-      <div class="hmeta"><span class="dl due"><svg data-lucide="clock"></svg>${h.deadline} 마감</span><span class="sep">·</span>${cmtBadge(hv.cmt.open,hv.cmt.total)}<span class="sep">·</span>${ver.v} 업로드 ${ver.when}</div>
+      <h3>${hv.name} ${ver.v}</h3>
+      <div class="countchips">${countChip(hv.status,hv.statusLabel)}<span class="cchip dl"><svg data-lucide="clock"></svg>마감 ${h.dday}</span></div>
       <div class="act">
         <button class="btn pv" onclick="event.stopPropagation();demoUpload('ok')"><svg data-lucide="upload"></svg>새 버전(v4) 올리기</button>
         <button class="btn g" onclick="event.stopPropagation();openModal('${HERO.pkey}',0,0)"><svg data-lucide="message-square"></svg>코멘트 보기</button>
@@ -402,25 +405,13 @@ function homeHTML(){
   </div>
   <div class="sec">
     <div class="seclbl"><span class="vmk sm">V</span><span class="t">비모와의 작업</span><span class="sum">진행 중 프로젝트 ${ORDER.length}</span></div>
-    ${pinBlock}${restBlock}
+    ${gridBlock}
   </div>
-  <div class="sec">
-    <div class="seclbl box"><svg data-lucide="hard-drive" class="hd"></svg><span class="t">My box</span><span class="sum">내 폴더 · 공유 중 4</span></div>
-    <div class="pgrid">
-      <div class="pcard" onclick="toast('포트폴리오 폴더')">
-        ${thumbHTML('vibox-portfolio-reel','c3',{cls:'pcover',tl:`<span class="fchip"><svg data-lucide="folder"></svg></span>`,bl:`<span class="cchip"><svg data-lucide="film"></svg>영상 5</span>`})}
-        <div class="ptitle"><svg data-lucide="hard-drive" style="width:16px;height:16px;color:var(--mybox)"></svg>포트폴리오</div>
-        <div class="pmeta"><span class="it"><svg data-lucide="film"></svg>영상 5</span><span class="sep">·</span><span class="it"><svg data-lucide="image"></svg>이미지 3</span><span class="end mono">8개 항목</span></div>
-        <div class="pfoot"><span class="st share"><svg data-lucide="share-2"></svg>공유 중</span><span class="dl">3시간 전 코멘트</span></div>
-      </div>
-      <div class="pcard" onclick="toast('촬영본 모음 폴더')">
-        ${thumbHTML('vibox-bts-shoot','c5',{cls:'pcover',tl:`<span class="fchip"><svg data-lucide="folder"></svg></span>`,bl:`<span class="cchip"><svg data-lucide="film"></svg>원본 18</span>`,play:false})}
-        <div class="ptitle"><svg data-lucide="hard-drive" style="width:16px;height:16px;color:var(--mybox)"></svg>촬영본 모음</div>
-        <div class="pmeta"><span class="it"><svg data-lucide="film"></svg>원본 18</span><span class="sep">·</span>112GB<span class="end mono">23개 항목</span></div>
-        <div class="pfoot"><span class="st prog"><svg data-lucide="folder"></svg>보관</span><span class="dl">어제</span></div>
-      </div>
-      <div class="pdash" onclick="toast('새 폴더 / 업로드')"><div><svg data-lucide="folder-plus" style="color:var(--mybox)"></svg><div class="l">새 폴더 / 업로드</div></div></div>
-    </div>
+  <div class="mybox-row" onclick="toast('My box — 내 보관함 (포트폴리오·촬영본 모음)')">
+    <svg data-lucide="hard-drive" style="width:17px;height:17px;color:var(--mybox)"></svg>
+    <span class="mbt">My box</span>
+    <span class="mbs">내 폴더 2 · 공유 중 4</span>
+    <span class="mbgo">열기 →</span>
   </div>`;
 }
 
@@ -428,36 +419,26 @@ function projectCard(k){
   const p=PROJECTS[k];
   return `<div class="pcard ${p.dim?'dim':''}" onclick="go('folder','${k}')">
     <button class="pinbtn ${p.pinned?'on':''}" title="즐겨찾기" onclick="event.stopPropagation();togglePin('${k}')"><svg data-lucide="star"></svg></button>
-    ${thumbHTML(p.cover, p.grad, { cls:'pcover', tl:`<span class="fchip"><svg data-lucide="folder"></svg></span>`, bl:`<span class="cchip"><svg data-lucide="film"></svg>영상 ${p.vcount}</span>` })}
+    ${thumbHTML(p.cover, p.grad, { cls:'pcover', bl:`<span class="cchip"><svg data-lucide="film"></svg>영상 ${p.vcount}</span>` })}
     <div class="ptitle"><span class="vmk sm">V</span>${p.name} <span class="id mono">${p.id}</span></div>
-    <div class="pmeta">${p.metaFull.split(' · ').slice(0,3).map((m,i)=>`${i?'<span class="sep">·</span>':''}<span class="it"><svg data-lucide="${['check-circle-2','film','git-branch'][i]}"></svg>${m}</span>`).join('')}<span class="end mono">${p.items}</span></div>
+    <div class="pmeta"><span class="it"><svg data-lucide="check-circle-2"></svg>완성본 ${p.metaFull.split(' · ')[0].replace('완성본 ','')}</span><span class="sep">·</span><span class="it"><svg data-lucide="git-branch"></svg>최신 ${p.latest}</span></div>
     <div class="pfoot">${statusChip(p.status,p.statusLabel)}<span class="dl ${p.due?'due':''}">${p.due?'<svg data-lucide=\'clock\'></svg>':''}${p.deadline}</span></div>
   </div>`;
 }
 
 function homePanel(){
   const up = ORDER.filter(k=>PROJECTS[k].dday!=='완료');
-  return `<div class="panel-h"><svg data-lucide="house" style="color:var(--vimo)"></svg> 바로가기</div>
-  <div class="psec"><svg data-lucide="calendar-clock"></svg> 다가오는 마감</div>
+  return `<div class="panel-h"><svg data-lucide="calendar-clock" style="color:var(--vimo)"></svg> 다가오는 마감</div>
   ${up.map(k=>{const p=PROJECTS[k];return `<div class="dlrow" onclick="go('folder','${k}')"><svg data-lucide="clock"></svg><span class="nm">${p.name}</span><span class="dday ${p.due?'urgent':''}">${p.dday}</span></div>`}).join('')}
-  <div class="psec"><svg data-lucide="folder"></svg> 비모 프로젝트</div>
-  ${ORDER.map(k=>{const p=PROJECTS[k];return `<div class="pf ${p.pinned?'star':'v'}" onclick="go('folder','${k}')"><svg data-lucide="${p.pinned?'star':'folder'}"></svg><span class="nm">${p.name}</span><span class="c mono">${p.latest}</span></div>`}).join('')}
-  <div class="psec"><svg data-lucide="hard-drive"></svg> My box 폴더</div>
-  <div class="pf b" onclick="toast('포트폴리오')"><svg data-lucide="folder"></svg><span class="nm">포트폴리오</span><span class="c">8</span></div>
-  <div class="pf b" onclick="toast('촬영본 모음')"><svg data-lucide="folder"></svg><span class="nm">촬영본 모음</span><span class="c">23</span></div>`;
+  <div class="psec" style="margin-top:14px"><svg data-lucide="info"></svg> 마감 임박순으로 모았어요</div>`;
 }
 
 /* ---- 온보딩(빈 상태) ---- */
 function onboardHTML(){
   return `<div class="owrap">
-    <h2>비박스에 오신 걸 환영해요, 서준님</h2>
-    <p class="sub">비모가 작업을 열면 여기 맨 위에 나타나요. 그동안 내 작업물을 정리해 두세요.</p>
-    <div class="ostep">
-      <div class="ostepcard"><div class="num">1</div><svg data-lucide="upload"></svg><div class="l">작업물 업로드</div></div>
-      <div class="ostepcard"><div class="num">2</div><svg data-lucide="share-2"></svg><div class="l">폴더로 공유</div></div>
-      <div class="ostepcard"><div class="num">3</div><svg data-lucide="message-square"></svg><div class="l">피드백 받기</div></div>
-    </div>
-    <div class="dropzone" id="dz" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over');demoUpload('ok')">
+    <h2>곧 비모가 작업을 엽니다, 서준님</h2>
+    <p class="sub">작업이 열리면 여기 맨 위 '지금 할 일'에 나타나요. 그동안 올려둘 게 있으면 여기에.</p>
+    <div class="dropzone" id="dz" style="margin-top:20px" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over');demoUpload('ok')">
       <div class="ic"><svg data-lucide="upload-cloud"></svg></div>
       <div class="t1">여기로 파일을 끌어다 놓으세요</div>
       <div class="t2">촬영본·편집본·레퍼런스를 올려 시작하세요</div>
@@ -552,7 +533,7 @@ function openModal(k,vi,ri){
       </div>
       <div class="ctrl">
         <div class="seek"><i></i><span class="mk" style="left:24%" title="0:42" onclick="toast('0:42로 이동')"></span><span class="mk" style="left:62%" title="1:15" onclick="toast('1:15로 이동')"></span></div>
-        <div class="ctrlrow"><button onclick="toast('재생 (데모)')"><svg data-lucide="play"></svg></button><button title="이전 프레임"><svg data-lucide="chevron-left"></svg></button><button title="다음 프레임"><svg data-lucide="chevron-right"></svg></button><span class="t">0:42 / ${ver.dur}</span><button class="sp"><svg data-lucide="volume-2"></svg></button><button><svg data-lucide="settings"></svg></button><button><svg data-lucide="maximize"></svg></button></div>
+        <div class="ctrlrow"><button onclick="toast('재생 (데모)')"><svg data-lucide="play"></svg></button><span class="t">0:42 / ${ver.dur}</span><button class="sp"><svg data-lucide="volume-2"></svg></button><button><svg data-lucide="maximize"></svg></button></div>
       </div>
     </div>
     <div class="side">
@@ -581,15 +562,12 @@ function toggleCmtFilter(k,vi,ri){ cmtFilter=!cmtFilter; openModal(k,vi,ri); }
 
 /* ---- 알림 ---- */
 function notifHTML(){
-  const unread=NOTIFS.filter(n=>n.unread).length;
-  return `<div class="nhd">알림 ${unread?`<span style="color:var(--vimo)">${unread}</span>`:''}<button class="read" onclick="markAllRead()">모두 읽음</button></div>
-  <div class="nlist">${NOTIFS.map((n,i)=>`<div class="nrow ${n.unread?'unread':''}" onclick="hitNotif(${i})"><span class="ni ${n.ic}"><svg data-lucide="${SIC[n.ic]||'message-square'}"></svg></span><div><div class="nt">${n.t}</div><div class="nd">${n.d}</div><div class="nw">${n.w}</div></div></div>`).join('')}</div>
-  <div class="nfoot">지난 알림 모두 보기</div>`;
+  return `<div class="nhd">알림</div>
+  <div class="nlist">${NOTIFS.map((n,i)=>`<div class="nrow" onclick="hitNotif(${i})"><span class="ni" style="background:var(--surf2);color:var(--soft)"><svg data-lucide="${SIC[n.ic]||'message-square'}"></svg></span><div><div class="nt">${n.t}</div><div class="nd">${n.d}</div><div class="nw">${n.w}</div></div></div>`).join('')}</div>`;
 }
 function toggleNotif(e){ e&&e.stopPropagation(); const p=document.getElementById('notifPanel'); if(p.classList.contains('show')){closeNotif();return;} p.innerHTML=notifHTML(); p.classList.add('show'); if(window.lucide)lucide.createIcons(); }
 function closeNotif(){ document.getElementById('notifPanel').classList.remove('show'); }
-function markAllRead(){ NOTIFS.forEach(n=>n.unread=false); document.getElementById('bellDot').style.display='none'; toggleNotif(); toggleNotif(); closeNotif(); toast('모든 알림을 읽음 처리'); }
-function hitNotif(i){ NOTIFS[i].unread=false; if(!NOTIFS.some(n=>n.unread))document.getElementById('bellDot').style.display='none'; closeNotif(); NOTIFS[i].act(); }
+function hitNotif(i){ closeNotif(); NOTIFS[i].act(); }
 document.addEventListener('mousedown',e=>{ const p=document.getElementById('notifPanel'); if(p.classList.contains('show')&&!p.contains(e.target)&&e.target.closest('#bell')===null) closeNotif(); });
 
 /* ---- 검색 팔레트 ---- */
@@ -615,7 +593,7 @@ function presultHTML(it,i){ return `<div class="presult" data-i="${i}" onclick="
 function updateSel(){ document.querySelectorAll('#pal .presult[data-i]').forEach(e=>e.classList.toggle('sel', +e.dataset.i===palSel)); }
 function hitPal(i){ const it=palItems[i]; closePalette(); if(it) it.act(); }
 function palKey(e){ if(e.key==='ArrowDown'){e.preventDefault();palSel=Math.min(palSel+1,palItems.length-1);updateSel();} else if(e.key==='ArrowUp'){e.preventDefault();palSel=Math.max(palSel-1,0);updateSel();} else if(e.key==='Enter'){e.preventDefault();hitPal(palSel);} }
-document.addEventListener('keydown',e=>{ if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();openPalette();} if(e.key==='Escape'){closePalette();closeModal();closeNotif();} });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){closeModal();closeNotif();} });
 
 /* ---- 업로드 도크 ---- */
 let upTimer=null;

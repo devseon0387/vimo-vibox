@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>vibox 검수 뷰어 재설계 — 시안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --accent:#e85008; --accent-soft:#fef0e8; --ink:#1c1917; --soft:#57534e; --faint:#8a847e;
+    --line:#ececec; --line2:#f4f2f0; --bg:#f4f3f1; --panel:#fff;
+    --vid:#0b0d11; --bar:#14171d; --bar2:#1c2027; --barline:#2a2f38; --bartext:#cfd3da;
+    --green:#16a34a; --slate:#94a3b8; --purple:#7c3aed;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px 96px}
+  header{padding:50px 0 26px;border-bottom:1px solid var(--line)}
+  .kicker{font-size:12.5px;font-weight:800;letter-spacing:.12em;color:var(--accent);text-transform:uppercase}
+  h1{font-size:31px;font-weight:800;letter-spacing:-.02em;margin:9px 0 8px}
+  .sub{font-size:15.5px;color:var(--soft);max-width:780px}
+  /* principle row */
+  .princ{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:24px}
+  @media(max-width:820px){.princ{grid-template-columns:1fr 1fr}}
+  .pr{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 15px}
+  .pr .n{font-size:11px;font-weight:800;color:var(--accent)}
+  .pr .t{font-size:13.5px;font-weight:800;margin:3px 0 2px}
+  .pr .d{font-size:12px;color:var(--soft)}
+  /* problem callout */
+  .prob{margin-top:18px;background:#fff5f3;border:1px solid #f6d4cb;border-radius:12px;padding:14px 16px;font-size:13.5px;color:#8a3a26}
+  .prob b{color:#a8330f}
+  /* section */
+  .concept{padding:40px 0;border-bottom:1px solid var(--line2)}
+  .ch{display:flex;align-items:baseline;gap:11px;margin-bottom:4px;flex-wrap:wrap}
+  .ch .tag{font-size:12.5px;font-weight:800;color:#fff;background:var(--accent);border-radius:7px;padding:4px 11px}
+  .ch h2{font-size:21px;font-weight:800;letter-spacing:-.01em}
+  .ch .one{font-size:13.5px;color:var(--faint);font-weight:600}
+  .clead{font-size:13.5px;color:var(--soft);margin:2px 0 16px;max-width:820px}
+  .clead b{color:var(--ink)}
+  /* ===== mock viewer ===== */
+  .viewer{display:flex;border:1px solid #d8d4d0;border-radius:14px;overflow:hidden;box-shadow:0 10px 34px rgba(0,0,0,.10);background:#000;height:480px}
+  .viewer.tall{height:520px}
+  .topbar{position:absolute;top:0;left:0;right:0;height:42px;display:flex;align-items:center;gap:10px;padding:0 14px;
+    background:linear-gradient(#0d0f13,#0d0f13ee);z-index:5;font-size:12.5px;color:#aeb4be}
+  .topbar .crumb b{color:#e7e9ec;font-weight:700}
+  .topbar .sp{flex:1}
+  .topbar .btn{font-size:12px;font-weight:700;border-radius:7px;padding:6px 11px;border:1px solid #2a2f38;color:#cfd3da}
+  .topbar .btn.req{color:#ffb38f;border-color:#5a3322}
+  .topbar .btn.ok{background:var(--green);color:#fff;border:none}
+  /* stage */
+  .stage{position:relative;flex:1;background:var(--vid);display:flex;flex-direction:column;min-width:0}
+  .frame{flex:1;position:relative;overflow:hidden;display:grid;place-items:center}
+  .frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.96}
+  .frame::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.18),transparent 22%,transparent 78%,rgba(0,0,0,.28))}
+  /* clean play affordance (only-when-paused, subtle) */
+  .playp{position:relative;z-index:2;width:58px;height:58px;border-radius:50%;background:rgba(0,0,0,.32);
+    backdrop-filter:blur(2px);display:grid;place-items:center;color:#fff;opacity:.92}
+  .playp svg{margin-left:3px}
+  /* tiny clean timecode (bottom-left, unobtrusive) */
+  .tc{position:absolute;left:12px;bottom:12px;z-index:3;font:600 12px/1 'SFMono-Regular',ui-monospace,monospace;
+    color:#fff;background:rgba(0,0,0,.42);padding:5px 8px;border-radius:6px;letter-spacing:.02em}
+  /* control bar — clean, 2 rows, grouped, BELOW the frame (영상 안 가림) */
+  .ctrl{background:var(--bar);border-top:1px solid var(--barline);padding:9px 14px 11px;flex:none}
+  .seek{display:flex;align-items:center;gap:11px;margin-bottom:9px}
+  .seek .t{font:600 11.5px/1 'SFMono-Regular',ui-monospace,monospace;color:#9aa1ac;flex:none}
+  .track{position:relative;flex:1;height:6px;border-radius:99px;background:#323844}
+  .track .fill{position:absolute;left:0;top:0;bottom:0;width:32%;background:#e8a87a;border-radius:99px}
+  .track .ph{position:absolute;left:32%;top:50%;transform:translate(-50%,-50%);width:13px;height:13px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px var(--accent)}
+  .track .mk{position:absolute;top:50%;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:50%;box-shadow:0 0 0 2px rgba(0,0,0,.5)}
+  .row{display:flex;align-items:center;gap:8px}
+  .grp{display:flex;align-items:center;gap:3px}
+  .grp.sep{padding-left:11px;margin-left:5px;border-left:1px solid var(--barline)}
+  .ic{width:31px;height:31px;border-radius:8px;display:grid;place-items:center;color:var(--bartext)}
+  .ic:hover{background:#252b34}
+  .ic.play{width:38px;height:38px;border-radius:50%;background:var(--accent);color:#fff}
+  .ic.lbl{width:auto;padding:0 9px;font:700 12px/1 'Pretendard';gap:5px}
+  .badge2{min-width:15px;height:15px;padding:0 4px;border-radius:99px;background:var(--accent);color:#fff;font:800 9.5px/15px 'Pretendard';text-align:center;margin-left:-3px}
+  .spacer{flex:1}
+  .ic .mono{font:600 11px/1 'SFMono-Regular',monospace}
+  svg{display:block}
+  /* ===== comment panel ===== */
+  .panel{width:340px;flex:none;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column}
+  .panel.slim{width:264px}
+  .phead{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--line2)}
+  .phead .ti{font-size:14px;font-weight:800}
+  .phead .ti b{color:var(--accent)}
+  .phead .sp{flex:1}
+  .phead .pic{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;color:var(--faint)}
+  .phead .pic:hover{background:var(--bg)}
+  .clist{flex:1;overflow:hidden;padding:2px 0}
+  .cm{display:flex;gap:9px;padding:11px 14px;border-bottom:1px solid var(--line2)}
+  .cm .rs{width:18px;height:18px;border-radius:50%;border:1.6px solid #cfcbc6;flex:none;margin-top:1px}
+  .cm.done .rs{border-color:var(--green);background:var(--green)}
+  .cm .bd{min-width:0;flex:1}
+  .cm .tcchip{font:700 10.5px/1 'SFMono-Regular',monospace;color:#fff;background:var(--accent);padding:3px 6px;border-radius:5px}
+  .cm.ai .tcchip{background:var(--purple)} .cm.done .tcchip{background:var(--slate)}
+  .cm .txt{font-size:13.5px;color:var(--ink);margin:6px 0 5px;line-height:1.45}
+  .cm.done .txt{color:var(--faint);text-decoration:line-through}
+  .cm .mt{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--faint)}
+  .cm .av{width:17px;height:17px;border-radius:50%;background:#e7c3b2;color:#a8430a;font:800 8.5px/17px 'Pretendard';text-align:center}
+  /* compose — wide, simple */
+  .compose{border-top:1px solid var(--line);padding:10px 12px}
+  .compose .seg{display:inline-flex;background:var(--bg);border-radius:8px;padding:2px;margin-bottom:8px;font-size:11.5px;font-weight:700}
+  .compose .seg span{padding:4px 11px;border-radius:6px;color:var(--faint)}
+  .compose .seg span.on{background:#fff;color:var(--accent);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+  .compose .ibox{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:11px;padding:7px 8px 7px 11px;background:#fff}
+  .compose .ibox:focus-within{border-color:var(--accent)}
+  .compose .tcc{font:700 10.5px/1 'SFMono-Regular',monospace;color:var(--accent);background:var(--accent-soft);padding:4px 7px;border-radius:6px;flex:none}
+  .compose .ibox .ph{flex:1;font-size:13.5px;color:var(--faint)}
+  .compose .snd{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;flex:none}
+  /* slim rail variant */
+  .rail{width:54px;flex:none;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding-top:10px;gap:9px}
+  .rail .rdot{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font:700 9px/1 'SFMono-Regular',monospace;color:#fff;background:var(--accent)}
+  .rail .rdot.ai{background:var(--purple)} .rail .rdot.done{background:var(--slate)}
+  .rail .rmore{margin-top:auto;margin-bottom:12px;font-size:10px;color:var(--faint);writing-mode:vertical-rl;font-weight:700}
+  /* notes under each */
+  .fixes{margin-top:14px;display:flex;flex-wrap:wrap;gap:7px}
+  .fixes span{font-size:12px;font-weight:600;background:#fff;border:1px solid var(--line);border-radius:8px;padding:5px 10px;color:var(--soft)}
+  .fixes span b{color:var(--green);font-weight:800}
+  .rel{position:relative}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">vibox · 검수 뷰어 재설계 시안</div>
+    <h1>영상이 주인공이 되도록 — 검수 뷰어 다시 짜기</h1>
+    <p class="sub">기능은 다 있지만 <b>영상 위에 블럭이 올라타고 밀집</b>해 쓰기 불편한 현재를, “영상은 깨끗하게 · 도구는 비켜서 · 코멘트는 차분하게”로 재설계한 방향 3안.</p>
+    <div class="prob"><b>현재 문제</b> &nbsp;① 타임코드/프레임 박스·재생·주석 버튼이 <b>영상 위를 가림</b> &nbsp;② 컨트롤 바 아이콘 밀집 &nbsp;③ 코멘트 패널 공지 배너·배지 과밀 &nbsp;④ 입력칸 비좁음</div>
+    <div class="princ">
+      <div class="pr"><div class="n">원칙 1</div><div class="t">영상 위 클린</div><div class="d">타임코드·프레임·주석을 영상에서 컨트롤 바로 이동. 영상엔 마커만(타임라인).</div></div>
+      <div class="pr"><div class="n">원칙 2</div><div class="t">컨트롤 정리</div><div class="d">시크바 한 줄 + 버튼 한 줄, 그룹 사이 여백. 핵심(재생·프레임·코멘트)만 크게.</div></div>
+      <div class="pr"><div class="n">원칙 3</div><div class="t">코멘트 차분</div><div class="d">공지 배너→인라인 자물쇠, 배지 정리, 본문 우선·메타는 작게.</div></div>
+      <div class="pr"><div class="n">원칙 4</div><div class="t">입력 넓게</div><div class="d">패널 폭 가득 쓰는 입력 + 작은 모드 토글 + 타임코드칩.</div></div>
+    </div>
+  </header>
+
+  <!-- A -->
+  <section class="concept">
+    <div class="ch"><span class="tag">A안</span><h2>정돈형 — 지금 구조 그대로, 전부 깔끔하게</h2><span class="one">변화 최소 · 즉시 체감 · 안전</span></div>
+    <p class="clead">레이아웃(영상+컨트롤 | 코멘트 패널)은 유지하되 <b>영상 위 블럭을 모두 걷어내고</b> 컨트롤·패널·입력을 정리. 가장 빠르게 “쓸 만해지는” 안.</p>
+    <div class="viewer">
+      <div class="stage rel">
+        <div class="topbar"><span class="crumb">team / <b>demo_10s</b> · v3</span><span class="sp"></span><span class="btn req">수정 요청</span><span class="btn ok">승인</span></div>
+        <div class="frame">
+          <img src="https://picsum.photos/seed/vibox-review-a/720/420" alt="" />
+          <div class="playp"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
+          <div class="tc">00:03 / 00:10</div>
+        </div>
+        <div class="ctrl">
+          <div class="seek">
+            <span class="t">00:03</span>
+            <div class="track"><div class="fill"></div>
+              <span class="mk" style="left:8%;background:var(--accent)"></span>
+              <span class="mk" style="left:42%;background:var(--green)"></span>
+              <span class="mk" style="left:70%;background:var(--accent)"></span>
+              <div class="ph"></div></div>
+            <span class="t">00:10</span>
+          </div>
+          <div class="row">
+            <div class="grp">
+              <div class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></div>
+              <div class="ic play"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
+              <div class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg></div>
+            </div>
+            <div class="grp sep">
+              <div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 6l-6 6 6 6"/></svg></div>
+              <div class="ic lbl"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4L3 21l1.1-9A8.4 8.4 0 1 1 21 11.5z"/></svg>2<span class="badge2">미해결</span></div>
+              <div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></div>
+            </div>
+            <div class="spacer"></div>
+            <div class="grp sep">
+              <div class="ic"><span class="mono">1x</span></div>
+              <div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9z"/></svg></div>
+              <div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7-3-3-7 7v3z"/><path d="M14 6l4 4"/></svg></div>
+              <div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="phead"><span class="ti">미해결 <b>2</b></span><span class="sp"></span>
+          <div class="pic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M7 12h10M10 18h4"/></svg></div>
+          <div class="pic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>
+        </div>
+        <div class="clist">
+          <div class="cm"><div class="rs"></div><div class="bd"><span class="tcchip">00:00</span><div class="txt">인트로 색감이 자기네요. 한 단계 따뜻하게 부탁드려요.</div><div class="mt"><span class="av">S</span> SEON · 방금</div></div></div>
+          <div class="cm done"><div class="rs"></div><div class="bd"><span class="tcchip">00:04</span><div class="txt">이 전환 정말 깔끔하고 좋네요. 이대로 가요.</div><div class="mt"><span class="av">S</span> SEON · 2분 전</div></div></div>
+          <div class="cm"><div class="rs"></div><div class="bd"><span class="tcchip">00:07</span><div class="txt">자막 오타: ‘브렌드’ → ‘브랜드’</div><div class="mt"><span class="av">S</span> SEON · 5분 전</div></div></div>
+        </div>
+        <div class="compose">
+          <div class="seg"><span class="on">수정 요청</span><span>좋아요</span></div>
+          <div class="ibox"><span class="tcc">00:03</span><span class="ph">이 순간에 의견 남기기…</span><div class="snd"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3l18 9-18 9 4-9z"/></svg></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="fixes"><span><b>해결</b> 영상 위 큰 타임코드 박스 제거 → 작은 클린 표기</span><span><b>해결</b> 주석·프레임 → 컨트롤 바로</span><span><b>해결</b> 컨트롤 2행+그룹 여백</span><span><b>해결</b> 공지 배너 → 자물쇠 아이콘</span><span><b>해결</b> 입력 폭 가득</span></div>
+  </section>
+
+  <!-- B -->
+  <section class="concept">
+    <div class="ch"><span class="tag">B안</span><h2>몰입형 — 영상 풀폭, UI는 필요할 때만</h2><span class="one">보는 데 집중 · 코멘트 패널 접기</span></div>
+    <p class="clead">영상을 <b>최대로 크게</b>. 재생 중엔 컨트롤·코멘트가 사라지고(깨끗), <b>정지/호버 시 등장</b>. 코멘트 패널은 토글로 접어 영상에 몰입. “재생=깨끗”을 데스크톱에도.</p>
+    <div class="viewer tall">
+      <div class="stage rel">
+        <div class="topbar"><span class="crumb">team / <b>demo_10s</b> · v3</span><span class="sp"></span>
+          <div class="pic" style="color:#cfd3da"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></div>
+          <span class="btn req">수정 요청</span><span class="btn ok">승인</span>
+        </div>
+        <div class="frame">
+          <img src="https://picsum.photos/seed/vibox-review-b/760/440" alt="" />
+          <div class="tc">00:03 / 00:10 · f95</div>
+        </div>
+        <!-- controls as a clean bottom overlay (appears on pause/hover) -->
+        <div class="ctrl" style="background:linear-gradient(transparent,#0c0e12 36%);position:absolute;left:0;right:0;bottom:0;border-top:none;padding-top:30px">
+          <div class="seek">
+            <span class="t">00:03</span>
+            <div class="track"><div class="fill"></div>
+              <span class="mk" style="left:8%;background:var(--accent)"></span>
+              <span class="mk" style="left:42%;background:var(--green)"></span>
+              <span class="mk" style="left:70%;background:var(--accent)"></span>
+              <div class="ph"></div></div>
+            <span class="t">00:10</span>
+          </div>
+          <div class="row">
+            <div class="grp">
+              <div class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></div>
+              <div class="ic play"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
+              <div class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg></div>
+            </div>
+            <div class="grp sep">
+              <div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 6l-6 6 6 6"/></svg></div>
+              <div class="ic lbl"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4L3 21l1.1-9A8.4 8.4 0 1 1 21 11.5z"/></svg>2</div>
+              <div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></div>
+            </div>
+            <div class="spacer"></div>
+            <div class="grp sep">
+              <div class="ic"><span class="mono">1x</span></div>
+              <div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9z"/></svg></div>
+              <div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7-3-3-7 7v3z"/><path d="M14 6l4 4"/></svg></div>
+              <!-- panel toggle -->
+              <div class="ic" style="background:#252b34"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg></div>
+              <div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel slim">
+        <div class="phead"><span class="ti">미해결 <b>2</b></span><span class="sp"></span>
+          <div class="pic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+        </div>
+        <div class="clist">
+          <div class="cm"><div class="rs"></div><div class="bd"><span class="tcchip">00:00</span><div class="txt">인트로 색감이 자기네요. 한 단계 따뜻하게.</div><div class="mt"><span class="av">S</span> 방금</div></div></div>
+          <div class="cm done"><div class="rs"></div><div class="bd"><span class="tcchip">00:04</span><div class="txt">이 전환 깔끔하고 좋네요.</div><div class="mt"><span class="av">S</span> 2분 전</div></div></div>
+          <div class="cm"><div class="rs"></div><div class="bd"><span class="tcchip">00:07</span><div class="txt">자막 오타: ‘브렌드’ → ‘브랜드’</div><div class="mt"><span class="av">S</span> 5분 전</div></div></div>
+        </div>
+        <div class="compose">
+          <div class="ibox"><span class="tcc">00:03</span><span class="ph">의견 남기기…</span><div class="snd"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3l18 9-18 9 4-9z"/></svg></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="fixes"><span><b>해결</b> 영상 최대 크기</span><span><b>해결</b> 재생 중 컨트롤 자동 숨김(깨끗)</span><span><b>해결</b> 패널 접기로 몰입</span><span><b>해결</b> 정지 시에만 컨트롤·코멘트 등장</span></div>
+  </section>
+
+  <!-- C -->
+  <section class="concept" style="border-bottom:none">
+    <div class="ch"><span class="tag">C안</span><h2>슬림 레일 — 영상 크게 + 얇은 코멘트 레일</h2><span class="one">영상 최대 + 코멘트는 타임라인처럼 옆에</span></div>
+    <p class="clead">영상은 크게, 코멘트는 우측 <b>얇은 레일</b>에 타임코드 점으로. 점을 누르면 그 코멘트가 펼쳐짐. 코멘트가 많아도 영상이 안 좁아짐.</p>
+    <div class="viewer">
+      <div class="stage rel">
+        <div class="topbar"><span class="crumb">team / <b>demo_10s</b> · v3</span><span class="sp"></span><span class="btn req">수정 요청</span><span class="btn ok">승인</span></div>
+        <div class="frame">
+          <img src="https://picsum.photos/seed/vibox-review-c/780/430" alt="" />
+          <div class="playp"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
+          <div class="tc">00:03 / 00:10</div>
+        </div>
+        <div class="ctrl">
+          <div class="seek">
+            <span class="t">00:03</span>
+            <div class="track"><div class="fill"></div>
+              <span class="mk" style="left:8%;background:var(--accent)"></span>
+              <span class="mk" style="left:42%;background:var(--green)"></span>
+              <span class="mk" style="left:70%;background:var(--accent)"></span>
+              <div class="ph"></div></div>
+            <span class="t">00:10</span>
+          </div>
+          <div class="row">
+            <div class="grp">
+              <div class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></div>
+              <div class="ic play"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
+              <div class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg></div>
+            </div>
+            <div class="grp sep">
+              <div class="ic lbl"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4L3 21l1.1-9A8.4 8.4 0 1 1 21 11.5z"/></svg>코멘트 3</div>
+            </div>
+            <div class="spacer"></div>
+            <div class="grp sep">
+              <div class="ic"><span class="mono">1x</span></div>
+              <div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9z"/></svg></div>
+              <div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- expanded one comment over the rail -->
+      <div class="panel slim" style="width:236px">
+        <div class="phead"><span class="ti">00:07 코멘트</span><span class="sp"></span><div class="pic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg></div></div>
+        <div class="clist"><div class="cm"><div class="rs"></div><div class="bd"><span class="tcchip">00:07</span><div class="txt">자막 오타: ‘브렌드’ → ‘브랜드’</div><div class="mt"><span class="av">S</span> SEON · 5분 전</div></div></div></div>
+        <div class="compose"><div class="ibox"><span class="tcc">00:03</span><span class="ph">의견 남기기…</span><div class="snd"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3l18 9-18 9 4-9z"/></svg></div></div></div>
+      </div>
+      <div class="rail">
+        <div class="rdot">00</div>
+        <div class="rdot done">04</div>
+        <div class="rdot">07</div>
+        <div class="rmore">타임라인</div>
+      </div>
+    </div>
+    <div class="fixes"><span><b>해결</b> 영상이 코멘트 많아도 안 좁아짐</span><span><b>해결</b> 코멘트=타임코드 점, 필요할 때만 펼침</span><span><b>해결</b> 영상 위 클린 유지</span></div>
+  </section>
+
+  <div style="padding:30px 0;color:var(--faint);font-size:12.5px">
+    셋 다 공통: 영상 위 큰 블럭 제거 · 컨트롤 2행+그룹 · 코멘트 본문 우선 · 입력 넓게. &nbsp;방향 고르면 실제 <code style="font-family:monospace;background:#eee;padding:1px 5px;border-radius:4px">FeedbackModal.tsx</code>에 반영합니다. &nbsp;(시안 데이터는 demo_10s 검수 기준, picsum 임시 프레임)
+  </div>
+</div>
+</body>
+</html>

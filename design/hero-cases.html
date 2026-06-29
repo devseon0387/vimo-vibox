@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 · 히어로(카운트 칩) — 비모 있음/없음 경우의 수</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --vimo:#e85008; --vimo-ink:#c2410c; --vimo-soft:#fef0e8; --vimo-line:#fbd9c4;
+    --mybox:#f97316; --mybox-soft:#fff3ea; --mybox-line:#fed7aa;
+    --text:#171717; --muted:#5f5f5f; --soft:#525252; --faint:#9a9a9a;
+    --page:#f5f5f5; --surf:#fafafa; --line:#ececec; --line2:#e3e3e3; --hair:#f1f1f1;
+    --ok-bg:#f0fdf4; --ok-fg:#16a34a; --warn:#c2410c;
+    --sh:0 1px 3px rgba(0,0,0,.06); --sh2:0 4px 14px rgba(0,0,0,.08);
+    --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);background:#e9e9e9;color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h2,h3,h4,p{margin:0} svg.lucide{width:1em;height:1em;stroke-width:1.9;flex:none;vertical-align:-.14em}
+  .tnum{font-variant-numeric:tabular-nums}.mono{font-variant-numeric:tabular-nums}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:34px 24px 90px}
+  .intro h1{font-size:23px;font-weight:800;letter-spacing:-.02em}
+  .intro p{color:var(--muted);font-size:13.5px;margin-top:9px;line-height:1.65;max-width:860px}
+  .intro .diag{margin-top:13px;background:#fff;border:1px solid var(--line2);border-radius:12px;padding:13px 16px;font-size:12.5px;color:var(--soft);line-height:1.65}
+  .intro .diag b{color:var(--vimo-ink)}
+
+  .vhead{display:flex;align-items:flex-end;gap:12px;margin:38px 0 6px}
+  .vhead .tag{font-size:11px;font-weight:800;color:#fff;border-radius:7px;padding:4px 10px;white-space:nowrap}
+  .vhead .tag.v{background:var(--vimo)} .vhead .tag.b{background:var(--mybox)} .vhead .tag.q{background:#8a8a8a}
+  .vhead .ttl{font-size:16px;font-weight:800}.vhead .ttl em{font-style:normal;color:var(--vimo)}
+  .vhead .lede{font-size:12px;color:var(--faint);margin-top:2px}
+  .ctx{font-size:11.5px;color:var(--soft);background:#fff;border:1px solid var(--line2);border-radius:10px;padding:9px 13px;margin:9px 0 12px;line-height:1.55}.ctx b{color:var(--text)}
+
+  /* 히어로 공통 */
+  .hero{display:grid;grid-template-columns:300px 1fr;background:#fff;border:1px solid var(--vimo-line);border-radius:16px;overflow:hidden;box-shadow:var(--sh)}
+  .hero.b{border-color:var(--mybox-line)} .hero.calm{border-color:var(--line2)}
+  .th{position:relative;min-height:206px;background:linear-gradient(135deg,#7c3a1d,#c2683a);overflow:hidden}
+  .th img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .th .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.02) 40%,rgba(0,0,0,.45))}
+  .th .pl{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.92)}.th .pl svg{width:24px;height:24px}
+  .th .bl{position:absolute;left:9px;bottom:9px;display:flex;gap:6px;align-items:center}
+  .vbadge{font-size:9.5px;font-weight:800;padding:1px 7px;border-radius:6px;background:var(--vimo-soft);color:#c8430a}
+  .vbadge.b{background:var(--mybox-soft);color:var(--mybox)}
+  .dur{font-size:9.5px;font-weight:700;color:#fff;background:rgba(0,0,0,.6);padding:1px 6px;border-radius:4px}
+  .info{padding:18px 22px;display:flex;flex-direction:column}
+
+  .crumb{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--faint);flex-wrap:wrap}.crumb b{color:var(--soft);font-weight:600}.crumb svg.sep{width:12px;height:12px;color:#c8c8c8}
+  .vmk{width:14px;height:14px;border-radius:4px;display:inline-grid;place-items:center;color:#fff;font-weight:800;font-size:8px;background:linear-gradient(90deg,var(--vimo) 0 50%,#f9a87a 50%)}
+  .mmk{width:13px;height:13px;color:var(--mybox)}
+  .htitle{font-size:19px;font-weight:800;letter-spacing:-.01em;margin-top:6px}
+
+  .countchips{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .cchip{font-size:11.5px;font-weight:600;color:var(--soft);border:1px solid var(--line2);border-radius:999px;padding:5px 12px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .cchip svg{width:13px;height:13px;color:var(--faint)}
+  .cchip b{color:var(--text);font-weight:700;margin-left:1px}
+  .cchip.dl{color:var(--vimo-ink);border-color:var(--vimo-line);background:var(--vimo-soft)}.cchip.dl svg{color:var(--vimo)}
+  .cchip.ok{color:var(--ok-fg);border-color:#bbf7d0;background:var(--ok-bg)}.cchip.ok svg{color:var(--ok-fg)}
+  .cchip.src{font-weight:700;border:none;padding-left:8px}
+  .cchip.src.vimo{background:var(--vimo-soft);color:var(--vimo-ink)}.cchip.src.vimo .vmk{width:14px;height:14px;font-size:8px;border-radius:4px}
+  .cchip.src.mybox{background:var(--mybox-soft);color:#9a3412}.cchip.src.mybox svg{color:var(--mybox)}
+
+  .act{margin-top:auto;padding-top:16px;display:flex;align-items:center;gap:9px}
+  .btn{font-size:12.5px;font-weight:600;border-radius:10px;padding:9px 14px;display:inline-flex;align-items:center;gap:7px;cursor:pointer;border:none;font-family:inherit}.btn svg{width:15px;height:15px}
+  .btn.pv{background:var(--vimo);color:#fff} .btn.pb{background:var(--mybox);color:#fff} .btn.g{background:#fff;border:1px solid var(--line2);color:var(--text)} .btn.link{background:none;color:var(--faint);font-weight:600;padding:9px 6px}
+
+  /* 빈 상태(calm) */
+  .calmside{position:relative;min-height:206px;background:var(--ok-bg);display:grid;place-items:center}
+  .calmside .ic{width:54px;height:54px;border-radius:16px;background:#fff;border:1px solid #d6f0df;display:grid;place-items:center;box-shadow:var(--sh)}.calmside .ic svg{width:26px;height:26px;color:var(--ok-fg)}
+  .calm .info .ttl2{font-size:18px;font-weight:800;margin-top:2px}
+  .calm .info .sub{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.55}
+
+  .note{font-size:11.5px;color:var(--faint);margin-top:9px;padding-left:2px;line-height:1.5}
+  .rulecard{background:#fff;border:1px solid var(--line2);border-radius:16px;padding:20px 24px;margin-top:42px;box-shadow:var(--sh)}
+  .rulecard h3{font-size:15px;font-weight:800}.rulecard p{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.7}.rulecard b{color:var(--vimo-ink)}
+  .rulecard ul{margin:10px 0 0;padding-left:18px;font-size:12.5px;color:var(--soft);line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="intro">
+    <h1>히어로(카운트 칩) — 비모 일 있음 / 없음 경우의 수</h1>
+    <p>확정한 <b>카운트 칩 히어로</b>를 적응 상태로 짰습니다. 규칙은 하나 — 홈 맨 위 히어로 슬롯은 <b>출처(비모/개인) 무관 "지금 가장 급한 1건"</b>으로 채우고, <b>항상 같은 높이</b>를 유지해 빈 구멍을 만들지 않습니다.</p>
+    <div class="diag"><b>적응 규칙</b> — ① 비모 수정 요청/마감이 있으면 → <b>비모가 히어로</b>(강한 톤, 수정 요청·마감 칩) ② 비모가 조용하고 내 업로드에 피드백이 오면 → <b>개인 작업이 히어로</b>(은은한 톤, 코멘트 칩) ③ 둘 다 조용하면 → <b>차분한 '급한 일 없음' 히어로</b>(같은 높이, 업로드 유도). 히어로 아래 목록은 v3.2 규칙대로 재정렬(비모 일 있으면 비모 위·없으면 My box 위).</div>
+  </div>
+
+  <!-- CASE 1 -->
+  <div class="vhead"><span class="tag v">경우 1 · 비모 일 있음</span><div><div class="ttl">비모 프로젝트가 히어로 <em>— 강한 톤</em></div><div class="lede">검수 요청·마감이 걸린 비모 작업이 가장 급함. 가장 흔한 경우.</div></div></div>
+  <div class="ctx">아래 목록: <b>비모와의 작업</b>이 위로, My box는 아래로. 히어로 = 그중 가장 급한 1건.</div>
+  <div class="hero">
+    <div class="th"><img src="https://picsum.photos/seed/vibox-cafe-pour/600/360" onerror="this.style.display='none'"><div class="shade"></div><div class="pl"><svg data-lucide="play"></svg></div><div class="bl"><span class="vbadge">v3</span><span class="dur">1:48</span></div></div>
+    <div class="info">
+      <div class="crumb"><span class="vmk">V</span> 성수 카페 <span class="mono">#1042</span> <svg data-lucide="chevron-right" class="sep"></svg> 완성본 <svg data-lucide="chevron-right" class="sep"></svg> <b>브랜드필름</b></div>
+      <h3 class="htitle">브랜드필름 v3</h3>
+      <div class="countchips tnum">
+        <span class="cchip src vimo"><span class="vmk">V</span>비모</span>
+        <span class="cchip"><svg data-lucide="pen-line"></svg>수정 요청 <b>2</b></span>
+        <span class="cchip dl"><svg data-lucide="clock"></svg>마감 D-2</span>
+      </div>
+      <div class="act">
+        <button class="btn pv"><svg data-lucide="upload"></svg>새 버전(v4) 올리기</button>
+        <button class="btn g"><svg data-lucide="message-square"></svg>코멘트 보기</button>
+        <button class="btn link">프로젝트 열기 →</button>
+      </div>
+    </div>
+  </div>
+  <div class="note">칩 맨 앞 <b>비모 배지</b>(V 듀오톤 마크)로 출처를 명시 + 수정 요청(고스트)·마감(주황) 칩. 색을 또렷이 써서 "지금 비모 일이 급하다"가 바로 읽힘.</div>
+
+  <!-- CASE 2 -->
+  <div class="vhead"><span class="tag b">경우 2 · 비모 없음 · 개인 피드백</span><div><div class="ttl">개인 업로드가 히어로 <em>— 은은한 톤</em></div><div class="lede">비모는 조용한데 내가 올린 작업에 코멘트가 옴. 출처가 개인이라 My box 톤으로.</div></div></div>
+  <div class="ctx">아래 목록: <b>My box</b>가 위로, 비모와의 작업은 "진행 중 없음 · 지난 작업"으로 아래에 차분히.</div>
+  <div class="hero b">
+    <div class="th"><img src="https://picsum.photos/seed/vibox-jeju-road/600/360" onerror="this.style.display='none'"><div class="shade"></div><div class="pl"><svg data-lucide="play"></svg></div><div class="bl"><span class="vbadge b">v2</span><span class="dur">3:12</span></div></div>
+    <div class="info">
+      <div class="crumb"><svg data-lucide="folder" class="mmk"></svg> My box <svg data-lucide="chevron-right" class="sep"></svg> 브이로그 <svg data-lucide="chevron-right" class="sep"></svg> <b>제주_여행_편집본</b></div>
+      <h3 class="htitle">제주_여행_편집본 v2</h3>
+      <div class="countchips tnum">
+        <span class="cchip src mybox"><svg data-lucide="hard-drive"></svg>My box</span>
+        <span class="cchip"><svg data-lucide="message-square"></svg>새 코멘트 <b>3</b></span>
+        <span class="cchip"><svg data-lucide="clock"></svg>업로드 2일 전</span>
+      </div>
+      <div class="act">
+        <button class="btn g"><svg data-lucide="message-square"></svg>코멘트 보기</button>
+        <button class="btn g"><svg data-lucide="share-2"></svg>공유</button>
+        <button class="btn link">파일 열기 →</button>
+      </div>
+    </div>
+  </div>
+  <div class="note">칩 맨 앞 <b>My box 배지</b>(하드드라이브 아이콘 + My box 주황)로 "내 박스 작업"임을 명시. 카드 테두리·버전 배지·폴더 마커까지 합쳐 출처가 확실. 나머지는 마감·수정 요청 대신 <b>새 코멘트</b> 칩(회색)으로 비모보다 한 단계 차분(v3.3 위계).</div>
+
+  <!-- CASE 3 -->
+  <div class="vhead"><span class="tag q">경우 3 · 둘 다 조용</span><div><div class="ttl">차분한 '급한 일 없음' 히어로 <em>— 빈 구멍 0</em></div><div class="lede">비모도, 내 업로드도 처리할 게 없음. 슬롯은 비우지 않고 같은 높이로 차분히 채움.</div></div></div>
+  <div class="ctx">아래 목록: <b>My box</b>가 위로. 지난 비모 작업(승인 완료)은 흐리게 아래에 잔류.</div>
+  <div class="hero calm">
+    <div class="calmside"><div class="ic"><svg data-lucide="check-circle-2"></svg></div></div>
+    <div class="info">
+      <div class="crumb"><svg data-lucide="sparkles" class="mmk" style="color:var(--faint)"></svg> 지금 할 일</div>
+      <div class="ttl2">지금 급한 일이 없어요</div>
+      <div class="sub">전달한 작업은 모두 승인됐고, 새 코멘트도 없습니다.<br>다음 작업이 오면 여기 맨 위에 나타나요.</div>
+      <div class="countchips tnum">
+        <span class="cchip ok"><svg data-lucide="check-circle-2"></svg>최근 승인 <b>2</b></span>
+      </div>
+      <div class="act">
+        <button class="btn pb"><svg data-lucide="upload"></svg>파일 올리기</button>
+        <button class="btn g"><svg data-lucide="folder"></svg>내 파일 보기</button>
+      </div>
+    </div>
+  </div>
+  <div class="note">영상 썸네일 대신 차분한 체크 패널. 색은 옅은 초록(승인=all clear)만. 같은 높이라 레이아웃이 출렁이지 않음.</div>
+
+  <div class="rulecard">
+    <h3>요약 — 히어로는 늘 같은 자리·같은 높이, 내용만 적응</h3>
+    <p>칩 문법은 경우마다 자연스럽게 달라집니다.</p>
+    <ul>
+      <li><b>비모 일 있음</b> → <code>비모</code> 배지(V마크) + <code>수정 요청 N</code>(고스트) + <code>마감 D-X</code>(주황). 가장 강한 톤.</li>
+      <li><b>개인 피드백</b> → <code>My box</code> 배지(하드드라이브) + <code>새 코멘트 N</code> + <code>업로드 N일 전</code>. 회색만, 한 단계 차분.</li>
+      <li><b>둘 다 조용</b> → 칩 없이 <code>최근 승인 N</code> + 업로드 유도. 옅은 초록.</li>
+    </ul>
+    <p style="margin-top:12px">이대로 괜찮으면 <b>vibox-prototype.html</b>에 경우 2(개인 히어로)·경우 3(빈 상태)을 실제 토글로 반영하겠습니다. 톤·칩 문구 조정도 가능합니다.</p>
+  </div>
+</div>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>if(window.lucide) lucide.createIcons();</script>
+</body>
+</html>

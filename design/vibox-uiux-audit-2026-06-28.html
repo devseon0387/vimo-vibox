@@ -1,0 +1,268 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>vibox UI/UX 점검 — 2026-06-28</title>
+<style>
+:root{--bg:#fafafa;--card:#fff;--bd:#e7e7e7;--tx:#1a1a1a;--mut:#666;--faint:#999;--accent:#e85008;--accent-soft:#fef0e8;
+--high:#dc2626;--high-bg:#fef2f2;--med:#d97706;--low:#6b7280;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo",sans-serif}
+.wrap{max-width:920px;margin:0 auto;padding:32px 20px 80px}
+header h1{font-size:24px;margin:0 0 4px;letter-spacing:-.01em}.sub{color:var(--mut);font-size:13px;margin-bottom:20px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}.stat{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px 14px}.stat b{font-size:20px;display:block;line-height:1.1}.stat.h b{color:var(--high)}.stat.m b{color:var(--med)}.stat.l b{color:var(--low)}.stat span{font-size:12px;color:var(--mut)}
+.summary{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:18px 20px;margin-bottom:18px;color:#333}.summary h2{font-size:14px;margin:0 0 8px;color:var(--accent);letter-spacing:.02em}
+.themes{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:26px}.chip{background:#f0eeec;border:1px solid var(--bd);border-radius:999px;padding:5px 12px;font-size:13px;color:#444}
+.filters{position:sticky;top:0;background:var(--bg);padding:10px 0;display:flex;gap:8px;border-bottom:1px solid var(--bd);margin-bottom:18px;z-index:5}.filters button{border:1px solid var(--bd);background:var(--card);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;color:#444}.filters button.on{background:var(--tx);color:#fff;border-color:var(--tx)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px 18px;margin-bottom:14px}.card-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}.card-top h3{font-size:16px;margin:0;flex:1 1 100%;order:3;letter-spacing:-.01em}.num{font-size:12px;color:var(--faint);min-width:20px}
+.pill{font-size:11px;font-weight:600;border-radius:6px;padding:3px 8px;white-space:nowrap}.pill.sev{color:#fff}.sev-high .pill.sev{background:var(--high)}.sev-medium .pill.sev{background:var(--med)}.sev-low .pill.sev{background:var(--low)}.pill.dim{background:#eee;color:#555}
+.where{margin:0 0 10px;display:flex;flex-wrap:wrap;gap:6px}.where code{background:#f4f3f2;border:1px solid var(--bd);border-radius:5px;padding:2px 7px;font-size:11.5px;color:#555;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.row{display:flex;gap:10px;margin:7px 0}.lbl{flex:0 0 38px;font-size:12px;font-weight:600;color:var(--faint);padding-top:2px}.row p{margin:0;color:#333;font-size:14px}.row.fix p,.row.fix .lbl{color:#1d6b3a}
+/* demo kit */
+.dm{margin-top:14px;border-top:1px dashed var(--bd);padding-top:12px}.dm-cap{font-size:11.5px;color:var(--faint);margin-bottom:9px}
+.dm-pair{display:flex;gap:12px;flex-wrap:wrap}.dm-col{flex:1 1 230px;min-width:210px;border:1px solid var(--bd);border-radius:10px;overflow:hidden;background:#fff}
+.dm-h{font-size:11px;font-weight:700;padding:5px 10px}.bad .dm-h{background:var(--high-bg);color:var(--high)}.good .dm-h{background:#ecfdf5;color:#1d6b3a}.dm-b{padding:12px}
+.box{border:1px solid var(--bd);border-radius:8px}.flexrow{display:flex;justify-content:space-between;align-items:center;padding:6px 8px}
+.mn-side{font-size:12.5px}.mn-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;color:#444;margin:1px 0}.mn-item .ic{width:14px;height:14px;border-radius:3px;background:#cfcfcf;flex:none}.mn-on{background:var(--accent-soft);color:var(--accent)}.mn-on .ic{background:var(--accent)}.strip-l{box-shadow:inset 3px 0 0 0 var(--accent)}
+.mn-row{display:flex;align-items:center;gap:8px;padding:8px 4px;border-top:1px solid var(--bd);font-size:12px}
+.bar{height:7px;border-radius:4px;background:#eee;overflow:hidden;margin-top:3px}.bar>div{height:100%}
+.sw{display:inline-flex;align-items:center;gap:6px;font-size:11px;margin:3px 10px 3px 0}.sw i{width:24px;height:15px;border-radius:4px;border:1px solid rgba(0,0,0,.12);display:inline-block}
+.b{display:inline-block;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600}.b-ac{background:var(--accent);color:#fff}.b-ink{background:#111;color:#fff}.b-out{background:#fff;border:1px solid var(--bd);color:#333}.b-dng{background:var(--high);color:#fff}
+.bd{display:inline-block;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;vertical-align:1px}.note{font-size:11.5px;color:var(--mut)}.note.ok,.ok{color:#1d6b3a}
+.strike{text-decoration:line-through;color:var(--high)}
+table.cmp{width:100%;border-collapse:collapse;font-size:12px}table.cmp td,table.cmp th{border:1px solid var(--bd);padding:5px 8px;text-align:left;vertical-align:top}
+.phone{width:155px;border:2px solid #ccc;border-radius:16px;padding:8px 8px;background:#fff;margin:auto;font-size:11px}
+.tabbar{position:absolute;bottom:0;left:0;right:0;height:22px;background:#f0f0f0;border-top:1px solid var(--bd);font-size:9px;text-align:center;line-height:22px}
+.dock{position:absolute;left:10px;right:10px;color:#fff;border-radius:6px;font-size:9px;text-align:center;padding:4px}
+.bgbox{background:#f0f0f0;border-radius:8px;padding:10px;font-size:11px}.modalbox{background:#fff;border:1px solid var(--bd);border-radius:6px;padding:8px;margin-top:6px}
+.nativebox{background:#e8e8e8;border:1px solid #bbb;border-radius:6px;padding:10px;font-size:11px;font-family:system-ui}.nbtn{border:1px solid #999;border-radius:4px;padding:2px 9px;background:#fff;font-size:11px}
+.toast{background:#111;color:#fff;border-radius:6px;padding:6px 10px;font-size:11px;margin-top:6px;display:flex;justify-content:space-between}
+.li{padding:6px 0}.sk{height:11px;border-radius:5px;background:linear-gradient(90deg,#eee,#f7f7f7,#eee);background-size:200px 100%;animation:shim 1.1s infinite linear;margin:7px 0}@keyframes shim{0%{background-position:-120px 0}100%{background-position:120px 0}}
+.inp{border:1px solid var(--bd);border-radius:6px;padding:5px 8px;font-size:12px;width:88%}.inp.foc{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.bellwrap{position:relative;display:inline-block;color:#444}.reddot{position:absolute;top:-2px;right:-2px;width:7px;height:7px;border-radius:50%;background:var(--high)}
+footer{margin-top:30px;color:var(--faint);font-size:12px;text-align:center}
+</style></head><body><div class="wrap">
+<header><h1>vibox UI/UX 점검</h1><div class="sub">2026-06-28 · 코드 기준 다차원 리뷰 + 적대적 검증 (8개 차원 · 에이전트 78 · 발견 69 → 검증통과 59 → 정리 22) · 각 항목 예시는 before/after 미니 목업</div>
+<div class="stats"><div class="stat h"><b>2</b><span>높음</span></div><div class="stat m"><b>15</b><span>중간</span></div><div class="stat l"><b>5</b><span>낮음</span></div><div class="stat"><b>22</b><span>총 항목</span></div></div></header>
+<div class="summary"><h2>총평</h2><p>vibox UI 리뷰의 가장 큰 문제는 디자인 토큰·색 의미 체계가 곳곳에서 우회되고 붕괴된 점이다. 계약상 '개인(My box)=무채색·주황=비모(팀) 전용·sky(--personal)는 폐기'인데, 폐기 예정 sky와 팀 주황이 진입점·라벨·모바일 탭·선택 하이라이트·저장바·빈 상태·PWA 테마까지 거의 모든 화면에 새어 같은 공간이 화면마다 다른 색 정체성을 갖고, 회색조차 토큰(zinc)과 Tailwind slate 두 갈래로 분열돼 있다. 동시에 계약이 '절대 금지'로 못박은 좌측 액센트 띠가 전역 사이드바·파일 테이블 포커스·여러 카드에 반복 노출되고, 공용 Button(채택 0회)/Badge·스타일드 다이얼로그·스켈레톤 같은 디자인 시스템 자산을 두고도 raw 버튼 295곳·네이티브 confirm/prompt/alert·맨 텍스트 로딩으로 우회한다. 그 위에 공간·페이지·모드·개념어 명칭이 화면마다 제각각이라 길찾기가 깨지고(화면에서 본 이름으로 ⌘K 검색이 안 되는 findability 결함 포함), 모바일에서는 hover 전용 컨트롤 탓에 선택·즐겨찾기·이름변경·공유가 아예 불가능하며, 모달 포커스 트랩·보조 텍스트 대비 같은 접근성 사각과 전 사용자 첫 화면(PartnerHome)의 무동작 버튼·막다른 선택 같은 죽은 어포던스가 더해진다. 기능을 막는 치명 결함보다는 일관성·접근성·마감 결함이 광범위하게 누적된 양상이다.</p></div>
+<div class="themes"><span class="chip">디자인 토큰·색 의미 체계 붕괴 (sky·주황·slate·emerald·fuchsia·violet)</span><span class="chip">계약상 금지된 좌측 액센트 띠 패턴 반복</span><span class="chip">디자인 시스템·앱 표준 미채택 (Button/Badge·스타일드 다이얼로그·스켈레톤 우회)</span><span class="chip">용어·명칭·카피 비일관 (공간·페이지·모드·개념어·은어·문법)</span><span class="chip">모바일·접근성 사각 (hover 전용 컨트롤·레이아웃 가림·포커스/대비/색상 단독 의존)</span><span class="chip">홈 대시보드의 죽은·오해유발 UI</span></div>
+<div class="filters"><button class="on" data-f="all">전체 22</button><button data-f="high">높음 2</button><button data-f="medium">중간 15</button><button data-f="low">낮음 5</button></div>
+<main id="list"><article class="card sev-high" data-sev="high">
+  <div class="card-top"><span class="num">1</span><span class="pill sev">높음</span><span class="pill dim">디자인 규칙 위반</span><h3>계약상 금지된 좌측 액센트 띠가 사이드바·테이블·카드 여러 곳에 반복</h3></div>
+  <div class="where"><code>components/SidebarNav.tsx:103-108</code> <code>components/FileTable.tsx:722</code> <code>app/(app)/my/stats/my-stats-client.tsx:246-251</code> <code>components/dev/NotesPane.tsx:263</code></div>
+  <div class="row"><span class="lbl">문제</span><p>'항목 좌측 2px 액센트 띠/바 절대 금지(선택은 배경 채움+글자색)' 계약과 전용 피드백 문서가 있는데도 네 곳이 좌측 3px 띠를 그린다. SidebarNav:103-108은 활성 nav가 이미 bg-accent-soft+text-accent인데 그 위에 좌측 3px 주황 span을 덧대 전역 노출된다. FileTable:722는 포커스 행에 shadow-[inset_3px_0_0_0_var(--accent,_#3b82f6)]로 좌측 3px 바를 그리는데 이미 bg-accent-soft/40 면 채움이 있어 중복이고 #3b82f6 파란 폴백은 팔레트 밖이다. my-stats:246-251 칭찬 카드는 border-l-[3px] border-fuchsia-500(팔레트에 없는 자홍), NotesPane:263은 선택 항목에 border-l-[3px] border-l-accent + pl 보정.</p></div>
+  <div class="row"><span class="lbl">영향</span><p>가장 자주 노출되는 전역 좌측 네비와 파일 테이블 포커스에서 명시적으로 금지된 패턴이 그대로 보이고, 배경 채움 방식을 쓰는 다른 화면과 선택 표현이 충돌해 일관성이 깨진다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>네 곳 모두 좌측 띠(span/inset shadow/border-l)를 제거하고 bg-accent-soft+text-accent(개인 영역은 bg-mybox-soft) 면 채움만 유지. 더 또렷한 포커스가 필요하면 좌측 바 대신 전체 ring(ring-2 ring-inset ring-accent). #3b82f6 폴백·fuchsia 제거, NotesPane는 pl-[17px]를 원래 px-5로 환원.</p></div>
+  <div class="dm"><div class="dm-cap">활성 네비 — 좌측 3px 주황 띠(금지) vs 면 채움만</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제 (현재)</div><div class="dm-b"><div class="mn-side"><div class="mn-item"><span class="ic"></span>홈</div><div class="mn-item mn-on strip-l"><span class="ic"></span>비모 프로젝트</div><div class="mn-item"><span class="ic"></span>My box</div></div></div></div>
+<div class="dm-col good"><div class="dm-h">수정 (권장)</div><div class="dm-b"><div class="mn-side"><div class="mn-item"><span class="ic"></span>홈</div><div class="mn-item mn-on"><span class="ic"></span>비모 프로젝트</div><div class="mn-item"><span class="ic"></span>My box</div></div></div></div></div></div>
+</article>
+<article class="card sev-high" data-sev="high">
+  <div class="card-top"><span class="num">2</span><span class="pill sev">높음</span><span class="pill dim">디자인 규칙 위반</span><h3>My box 무채색 계약 붕괴 — sky(폐기 토큰)·팀 주황이 개인 공간 전역에 혼입</h3></div>
+  <div class="where"><code>components/dashboard/SpaceLabel.tsx:17</code> <code>components/SpaceCard.tsx:54-102</code> <code>components/PartnerShell.tsx:144</code> <code>components/AppShell.tsx:162</code> <code>components/SegmentSidebar.tsx:57-58</code> <code>components/QuotaBar.tsx:17</code> <code>components/PartnerHome.tsx:727</code> <code>components/ManagerSidebar.tsx:199-203</code> <code>components/PartnerSidebar.tsx:185</code> <code>components/FileCardGrid.tsx:274-278/342-346</code> <code>components/FileTable.tsx:721</code> <code>components/EmptyState.tsx:91-129</code> <code>app/layout.tsx:40</code> <code>public/manifest.webmanifest:8</code> <code>app/(app)/vimo-box/library/library-client.tsx:227</code></div>
+  <div class="row"><span class="lbl">문제</span><p>계약은 'My box·개인=무채색(--mybox #52525b), 주황은 비모(팀) 전용, sky(--personal #0ea5e9)는 폐기·혼용 위험'으로 명시한다(globals.css:36 주석·PartnerContextPanel:25 코멘트). 그러나 (1) sky 잔재: 공용 'My box' 배지 SpaceLabel:17, SpaceCard 개인 카드, PartnerShell 아이콘, AppShell 모바일탭 tint, SegmentSidebar tint/CTA, QuotaBar 정상 막대, PWA themeColor(layout:40·manifest:8), 자료실 업로드 진행 카드(library:227)가 전부 sky다. (2) 주황 누출: My box 파일 선택/드롭 하이라이트(FileCardGrid·FileTable:721), 빈 폴더 EmptyState 드롭존·아이콘·칩, 홈 개인 저장바(PartnerHome:727)·사이드바 저장바가 주황이다. 결국 같은 'My box 저장량'이 sky(QuotaBar)·주황(홈/사이드바) 두 색으로, 같은 공간이 데스크톱(회색)·모바일탭(sky)로 갈린다. 내부 드라이브 리스트는 이미 --mybox 중립으로 마이그레이션돼 있어 진입 전후 색이 어긋난다.</p></div>
+  <div class="row"><span class="lbl">영향</span><p>사용자가 보는 거의 모든 화면에서 개인 공간이 sky 또는 팀 주황으로 떠 정작 My box 본문(무채색)과 충돌하고, '회색=개인/주황=팀' 공간 신호가 무너진다. 신규 유저 첫 화면(빈 폴더·홈 카드·PWA 첫인상)부터 잘못된 색 정체성을 학습한다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>개인 계열을 --mybox/--mybox-soft/--mybox-line/--mybox-ink로 일원화: sky tint(#0ea5e9)→var(--mybox), 저장바 정상 구간→중립(임계만 --warning/--danger). 선택·드롭·EmptyState는 displayPrefix(/personal)로 공간 prop을 FileTable/FileCardGrid까지 내려 mybox 토큰 분기하고 팀에서만 accent 유지. PWA themeColor·manifest는 중립(흰/검정). 한 화면(My box)에 사이드바·본문 저장바 중복은 하나만 남김. 장기적으로 globals.css의 --personal* 토큰 제거, 미사용 SpaceCard.tsx 삭제/교정.</p></div>
+  <div class="dm"><div class="dm-cap">"My box(개인)" 색 — 화면마다 sky·주황으로 갈림 vs 무채색 통일</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제 (현재)</div><div class="dm-b"><span class="bd" style="background:#e0f2fe;color:#0369a1">My box</span> <span class="note">배지=sky</span><div style="margin:8px 0"><span class="note">저장바</span><div class="bar"><div style="width:48%;background:var(--accent)"></div></div><span class="note">주황(팀색)</span></div><span class="bd" style="background:#e0f2fe;color:#0369a1">모바일 탭</span> <span class="note">sky</span></div></div>
+<div class="dm-col good"><div class="dm-h">수정 (권장)</div><div class="dm-b"><span class="bd" style="background:#f4f4f5;color:#3f3f46">My box</span> <span class="note">중립 그레이</span><div style="margin:8px 0"><span class="note">저장바</span><div class="bar"><div style="width:48%;background:#52525b"></div></div><span class="note">중립(임계만 경고색)</span></div><span class="bd" style="background:#f4f4f5;color:#3f3f46">모바일 탭</span> <span class="note">중립</span></div></div></div></div>
+</article>
+<article class="card sev-medium" data-sev="medium">
+  <div class="card-top"><span class="num">3</span><span class="pill sev">중간</span><span class="pill dim">일관성</span><h3>하드코딩 색이 디자인 토큰을 우회 (slate 회색 분열·emerald·rose)</h3></div>
+  <div class="where"><code>components/QuotaBar.tsx:20-36</code> <code>app/(app)/my/box/page.tsx:70-114</code> <code>components/FeedbackModal.tsx:1530/1613/1638</code> <code>app/(app)/inbox/inbox-client.tsx:99</code> <code>components/SidebarNav.tsx:112</code></div>
+  <div class="row"><span class="lbl">문제</span><p>globals.css가 중립 그레이를 zinc 토큰(--border #ececec, --text-faint #999, --surface #fafafa, --mybox #52525b)으로 정의했는데 ~20개 파일 ~393회에서 Tailwind 기본 slate(쿨 블루-그레이)를 직접 써 회색이 두 갈래로 분열된다(My box 페이지·QuotaBar·FeedbackModal slate 200회·library·my-stats·공유뷰어). slate-200(#e2e8f0)≠--border, slate-400(#94a3b8)≠--text-faint로 미세하게 더 파랗다. 또 승인/성공 초록이 success 토큰(#16a34a) 대신 emerald(FeedbackModal:1613/1638, inbox:99)로, 사이드바 미확인 카운트가 danger 토큰 대신 raw bg-rose-500(SidebarNav:112)로 칠해진다.</p></div>
+  <div class="row"><span class="lbl">영향</span><p>토큰 카드와 slate 카드가 한 화면에 섞여 테두리·텍스트 회색 톤이 어긋나고, Team(zinc)→My box(slate)→검수(slate-900)로 이동 시 회색 온도가 파랗게 틀어진다(개인=무채색 계약과 충돌). 검수의 가장 중요한 '승인' 색이 시스템 밖 emerald라 초록이 두 종 공존하고, 색 1곳 수정으로 전역 변경이 안 돼 drift가 누적된다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>slate-*→토큰 유틸(border-slate-200→border-border, text-slate-500→text-text-muted, text-slate-400→text-text-faint, bg-slate-50→bg-surface, bg-slate-100→bg-hover, My box는 --mybox 계열). emerald-*→success 토큰(bg-success/text-success/soft 또는 Badge success variant), rose-500→danger 토큰.</p></div>
+  <div class="dm"><div class="dm-cap">중립 회색이 토큰(zinc) vs Tailwind slate 두 갈래 — slate가 더 파랗다 + 의미색 이탈</div><div class="dm-b box">
+<div class="sw"><i style="background:#ececec"></i>토큰 border #ececec</div><div class="sw"><i style="background:#e2e8f0"></i>slate-200 #e2e8f0 (파란기)</div><br>
+<div class="sw"><i style="background:#999"></i>토큰 faint #999</div><div class="sw"><i style="background:#94a3b8"></i>slate-400 #94a3b8</div><br>
+<div class="sw"><i style="background:#16a34a"></i>success #16a34a</div><div class="sw"><i style="background:#10b981"></i>emerald (승인색 이탈)</div><div class="sw"><i style="background:#f43f5e"></i>rose (카운트)</div></div></div>
+</article>
+<article class="card sev-medium" data-sev="medium">
+  <div class="card-top"><span class="num">4</span><span class="pill sev">중간</span><span class="pill dim">일관성</span><h3>디자인 시스템 컴포넌트(Button/Badge) 미채택 + 1차 CTA 검정·주황 혼용</h3></div>
+  <div class="where"><code>components/ui/Button.tsx:22 (import 0회)</code> <code>components/ui/Badge.tsx:52</code> <code>components/ShareDialog.tsx:195/226</code> <code>components/MoveDialog.tsx:223</code> <code>components/PromptDialog.tsx:144</code> <code>components/admin/*</code> <code>app/(app)/admin/clients/clients-list.tsx:90/136</code> <code>components/SidebarNav.tsx:112</code> <code>app/(app)/inbox/inbox-client.tsx:220</code></div>
+  <div class="row"><span class="lbl">문제</span><p>토큰·focus 링 내장 공용 Button이 정의돼 있으나 repo 전체 import 0회 — raw &lt;button&gt;이 71개 파일 295곳에 손수 작성돼 높이(h-9/h-[30px]/py-1.5~2.5)·패딩·라운딩·hover가 화면마다 다르고, 295개 중 focus-visible 링 0개(a11y 격차). 1차 CTA 색도 검정(bg-text)과 주황(bg-accent) 두 갈래: ShareDialog는 주 액션 '공유 링크 생성'이 검정(:195)인데 '닫기'가 주황(:226)이고, clients-list:136은 hover:bg-accent/90으로 hover까지 갈린다. 공용 Badge도 5개 파일만 쓰고 카운트 칩은 손수 작성 rounded-full(SidebarNav:112 rose, inbox:220 accent-soft)이라 공용 Badge(rounded-md)와 모양·색이 불일치한다.</p></div>
+  <div class="row"><span class="lbl">영향</span><p>동일 위계 버튼이 화면마다 미묘하게 다르고, 사용자가 '가장 중요한 버튼'을 색으로 학습할 수 없으며 닫기/취소가 생성보다 더 눈에 띄는 역전이 생긴다. 팀 전용색 주황이 관리자·개인 다이얼로그 generic primary로 새어 색 의미가 무너지고, 동일한 '개수' 신호가 빨강·주황으로 갈린다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>다이얼로그/폼 1차 액션부터 &lt;Button&gt;으로 치환하고 점진 확대(부족하면 ink primary variant 추가). primary 1종 고정(일반=중립 ink, 비모 맥락만 bg-accent), hover는 accent-hover로 통일하고 bg-accent/90 제거, ShareDialog 닫기는 secondary로 강등. 카운트 배지는 색·라운딩 각 1종으로 공용 Badge에 흡수(또는 count variant 추가).</p></div>
+  <div class="dm"><div class="dm-cap">다이얼로그 1차 액션 — 생성=검정·닫기=주황(역전) vs 통일</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제 (현재)</div><div class="dm-b"><span class="b b-ink">공유 링크 생성</span> <span class="b b-ac">닫기</span><div class="note" style="margin-top:6px;color:var(--high)">닫기가 더 눈에 띔 · 팀색 주황이 generic으로</div></div></div>
+<div class="dm-col good"><div class="dm-h">수정 (권장)</div><div class="dm-b"><span class="b b-out">닫기</span> <span class="b b-ac">공유 링크 생성</span><div class="note ok" style="margin-top:6px">primary 1종 · 보조는 흰 테두리 · 공용 Button</div></div></div></div></div>
+</article>
+<article class="card sev-medium" data-sev="medium">
+  <div class="card-top"><span class="num">5</span><span class="pill sev">중간</span><span class="pill dim">디자인 규칙 위반</span><h3>유니코드 이모지 사용 — lucide 전용 계약 위반</h3></div>
+  <div class="where"><code>components/InboxDesktopNotifier.tsx:132</code> <code>components/StatsAdmin.tsx:654-657/869</code> <code>app/(app)/my/stats/my-stats-client.tsx:266</code> <code>components/FeedbackModal.tsx:2227/2232</code> <code>components/dev/NoteEditor.tsx:292</code></div>
+  <div class="row"><span class="lbl">문제</span><p>'이모지 금지→lucide만' 계약을 어기는 곳이 user-facing에 다수다. AppShell로 전역 셸에 항상 렌더되는 알림 토글이 🔔/🔕(같은 앱 PushBell·AppShell은 lucide Bell 사용), StatsAdmin 저장소 통계가 🔴🟡🟢 신호등, my-stats:266 ⚠, FeedbackModal 스캔 결과 ✓/✗(같은 모달이 lucide Check/X 다수 사용), NoteEditor:292 👁/✏️.</p></div>
+  <div class="row"><span class="lbl">영향</span><p>같은 의미(알림·체크·경고)를 어떤 곳은 lucide, 어떤 곳은 이모지로 표현해 톤이 깨지고, 이모지는 OS·폰트별 렌더가 달라 정렬·크기·색이 어긋난다. 신호등 이모지는 색약 사용자에게 불리하다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>🔔/🔕→Bell/BellOff, ⚠→AlertTriangle, ✓/✗→Check/X, 🔴🟡🟢→Circle+의미색(text-danger/warning/success), 👁/✏️→Eye/Pencil. 색은 success/warning/danger 토큰으로.</p></div>
+  <div class="dm"><div class="dm-cap">유니코드 이모지 vs lucide 아이콘</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제 (현재)</div><div class="dm-b" style="font-size:16px;line-height:2.1">🔔 알림 · 🔕 끔<br>🔴 🟡 🟢 상태<br>✓ ✗ 스캔 결과</div></div>
+<div class="dm-col good"><div class="dm-h">수정 (lucide)</div><div class="dm-b" style="line-height:2.3;color:#444"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg> 알림<br><span class="dot" style="background:var(--high)"></span> <span class="dot" style="background:var(--med)"></span> <span class="dot" style="background:#16a34a"></span> 상태<br><span style="color:#16a34a"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" style="vertical-align:-2px"><path d="M20 6 9 17l-5-5"/></svg></span><span style="color:var(--high)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" style="vertical-align:-2px"><path d="M18 6 6 18M6 6l12 12"/></svg></span> 스캔</div></div></div></div>
+</article>
+<article class="card sev-medium" data-sev="medium">
+  <div class="card-top"><span class="num">6</span><span class="pill sev">중간</span><span class="pill dim">접근성</span><h3>모달·다이얼로그에 dialog 시맨틱·포커스 트랩 없음</h3></div>
+  <div class="where"><code>components/Modal.tsx:56-87</code> <code>components/CommandPalette.tsx:288/298</code> <code>components/ConfirmDialog.tsx:72</code></div>
+  <div class="row"><span class="lbl">문제</span><p>공용 Modal 카드에 role="dialog"·aria-modal·aria-labelledby가 없고 제목 div도 연결되지 않는다. 열릴 때 초기 포커스 이동과 포커스 트랩이 없어 Tab이 배경(사이드바·파일목록)으로 샌다(Esc·body overflow lock만 존재). PreviewModal·ShareDialog·MoveDialog·ConflictDialog·FilePickerDialog·ShortcutHelp·UsersAdmin이 모두 재사용하고, CommandPalette도 같은 패턴이며 입력창에 aria-label도 없다. ConfirmDialog는 confirm 버튼 focus는 있으나 트랩은 없다.</p></div>
+  <div class="row"><span class="lbl">영향</span><p>스크린리더에 '대화상자'로 안내되지 않고, 키보드 사용자는 모달 뒤 가려진 요소로 포커스가 새서 조작 위치를 잃는다. 검수·공유·이동 등 핵심 흐름 전반에 영향이 크며 키보드 우선인 CommandPalette에서 특히 심하다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>Modal 카드에 role="dialog" aria-modal="true", 제목 div에 id+aria-labelledby. 마운트 시 첫 포커서블/닫기 버튼에 focus(), 닫힐 때 트리거 복귀, Tab/Shift+Tab 포커스 트랩 추가. CommandPalette 입력창에 aria-label 부여.</p></div>
+  <div class="dm"><div class="dm-cap">모달 열렸을 때 Tab 포커스 흐름</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제 — 배경으로 샘</div><div class="dm-b"><div class="bgbox">배경(사이드바·목록)<div class="modalbox">모달</div><div class="note" style="color:var(--high);margin-top:4px">Tab이 배경 요소로 빠져나감 ↗</div></div></div></div>
+<div class="dm-col good"><div class="dm-h">수정 — 트랩</div><div class="dm-b"><div class="bgbox" style="opacity:.55">배경(비활성)<div class="modalbox" style="border:2px solid var(--accent)">모달 <span class="note ok">Tab ↻ 내부 순환</span></div><div class="note" style="margin-top:4px">role=dialog · aria-modal · 포커스 트랩</div></div></div></div></div></div>
+</article>
+<article class="card sev-medium" data-sev="medium">
+  <div class="card-top"><span class="num">7</span><span class="pill sev">중간</span><span class="pill dim">접근성</span><h3>보조 텍스트 색 #999·#a3a3a3·#9a9a9a 대비 WCAG AA 미달</h3></div>
+  <div class="where"><code>app/globals.css:12-13</code> <code>47</code> <code>components/SpaceCard.tsx:67 및 보조 텍스트 전반(59개 파일 ~306회)</code></div>
+  <div class="row"><span class="lbl">문제</span><p>--text-faint #999(흰 배경 ~2.85:1), --text-placeholder #a3a3a3(~2.5:1), --faint #9a9a9a(~2.8:1) 모두 일반 텍스트 기준 4.5:1에 미달한다. text-text-faint가 59개 파일 306회, placeholder 계열 311회로 파일 메타(업로더·날짜·크기)·카드 부제(SpaceCard:67 '개인 파일 — 나만 봄')·카운트·버전·placeholder 같은 정보성 텍스트에 쓰이고, 상당수가 text-2xs(10px)와 결합돼 더 읽기 어렵다.</p></div>
+  <div class="row"><span class="lbl">영향</span><p>저시력·고령·야외 화면 사용자가 파일 날짜·크기·업로더 등 2차 정보를 읽기 어렵다. 영상 파일을 훑어 찾는 드라이브 특성상 메타데이터 가독성이 핵심 동선이다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>의미 있는 보조 텍스트 최소색을 대비 4.5:1 초과로 상향(#6b6b6b ~4.7:1, 기존 --text-soft #666 ~5.7:1), placeholder는 최소 #767676. 진짜 장식/비활성에만 #999 이하 사용.</p></div>
+  <div class="dm"><div class="dm-cap">보조 텍스트 대비 (흰 배경, AA 기준 4.5:1)</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제 (현재)</div><div class="dm-b"><p style="color:#999;margin:2px 0">#999 보조 텍스트 — 2.85:1</p><p style="color:#a3a3a3;margin:2px 0">#a3a3a3 placeholder — 2.5:1</p><span class="note" style="color:var(--high)">AA 미달</span></div></div>
+<div class="dm-col good"><div class="dm-h">수정 (권장)</div><div class="dm-b"><p style="color:#6b6b6b;margin:2px 0">#6b6b6b 보조 텍스트 — 4.7:1</p><p style="color:#767676;margin:2px 0">#767676 placeholder — 4.5:1</p><span class="note ok">AA 충족</span></div></div></div></div>
+</article>
+<article class="card sev-medium" data-sev="medium">
+  <div class="card-top"><span class="num">8</span><span class="pill sev">중간</span><span class="pill dim">인터랙션·피드백</span><h3>파괴적 동작이 네이티브 브라우저 다이얼로그 + undo·진행 피드백 부재</h3></div>
+  <div class="where"><code>app/(app)/vimo-box/library/library-client.tsx:107/123-136</code> <code>components/admin/TokensManager.tsx:114-125</code> <code>app/(app)/admin/r2/r2-list.tsx:45/67</code></div>
+  <div class="row"><span class="lbl">문제</span><p>자료실 새 폴더는 window.prompt, 삭제는 window.confirm을 쓰고 진행 중 busy/disabled가 없으며 성공 토스트에 '되돌리기'가 없다. 토큰 회수(TokensManager)는 native confirm + 실패 시 native alert + 성공 피드백 없음. R2 캐시 개별/전체 내림(r2-list)도 native confirm. 앱 표준은 styled PromptDialog/ConfirmDialog(useConfirm, variant:'danger')+낙관적 숨김+'되돌리기' 토스트(FileCardGrid·FileTable·TrashView·SharesView·UsersAdmin)인데 이들만 우회한다.</p></div>
+  <div class="row"><span class="lbl">영향</span><p>OS 기본 팝업이 떠 디자인 톤(존댓말·중립 회색·lucide)이 깨지고, 파괴적 삭제 확인이 앱의 danger 다이얼로그 안전장치를 우회한다. 진행 표시·성공 피드백·즉시 undo가 없어 클릭이 먹었는지 알기 어렵고 복원하려면 휴지통 페이지까지 가야 한다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>usePrompt/useConfirm(삭제=variant:'danger')으로 교체, 핸들러에 busy 상태를 두어 버튼 비활성·행 opacity로 진행 표시. 삭제는 응답 trashId로 '되돌리기' 토스트(library DELETE 라우트가 trashId를 반환하도록 보완), 실패=toast.error(humanError), 성공=toast.success로 통일.</p></div>
+  <div class="dm"><div class="dm-cap">파괴적 동작 확인</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제 — 네이티브 confirm</div><div class="dm-b"><div class="nativebox">vibox.cloud 내용:<br>삭제하시겠습니까?<div style="text-align:right;margin-top:8px"><span class="nbtn">취소</span> <span class="nbtn">확인</span></div></div><div class="note" style="margin-top:5px;color:var(--high)">진행 표시·되돌리기 없음</div></div></div>
+<div class="dm-col good"><div class="dm-h">수정 — 스타일드 + undo</div><div class="dm-b"><div class="box" style="padding:10px"><b>영상을 삭제할까요?</b><div class="note">휴지통으로 이동돼요</div><div style="text-align:right;margin-top:8px"><span class="b b-out" style="padding:4px 10px">취소</span> <span class="b b-dng" style="padding:4px 10px">삭제</span></div></div><div class="toast">삭제됨 <span style="color:#7dd3a0">되돌리기</span></div></div></div></div></div>
+</article>
+<article class="card sev-medium" data-sev="medium">
+  <div class="card-top"><span class="num">9</span><span class="pill sev">중간</span><span class="pill dim">반응형/모바일</span><h3>모바일에서 hover 전용 컨트롤 탓에 선택·즐겨찾기·이름변경·공유 불가</h3></div>
+  <div class="where"><code>app/globals.css:457-474</code> <code>components/PartnerHome.tsx:214/264/308/372/386</code> <code>components/FileCardGrid.tsx:284/381</code> <code>components/BulkActionBar.tsx:149-166</code></div>
+  <div class="row"><span class="lbl">문제</span><p>홈(전 역할 PartnerHome) 행/카드 컨트롤(.ck 선택·.fstar/.gstar 즐겨찾기·.more-b)이 :hover에서만 opacity:1+pointer-events:auto로 켜지고, 820px 모바일 쿼리에 이 셀렉터 override가 없다(@media (hover:none) 0건). pointer-events:none이라 터치 탭이 래핑 Link로 통과돼 토글 대신 파일이 열리고, 리스트뷰 별(.ract.fav)은 .ract{display:none}에 걸려 사라진다. FileCardGrid도 카드 액션 툴바(이름변경/이동/공유/다운로드/삭제)가 {hover&amp;&amp;...}로만 렌더되고 hover는 onMouseEnter로만 세팅돼 터치에서 안 켜진다. 롱프레스→선택 후 BulkActionBar엔 ZIP/이동/삭제만 있고 이름변경·공유가 없다.</p></div>
+  <div class="row"><span class="lbl">영향</span><p>폰/태블릿에서 홈·파일 브라우저로부터 다중선택·즐겨찾기·이름변경·단일 파일 '공유 링크 만들기'를 할 방법이 전혀 없다. 공유는 vibox 핵심 기능이라 체감이 크고, 홈은 전 사용자 첫 화면이다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>@media (hover:none)에서 해당 셀렉터를 상시 opacity:1·pointer-events:auto로 노출(데스크톱만 hover 숨김). 모바일 카드에 상시 ⋯ 버튼을 두어 기존 ContextMenu(이름변경/이동/공유/다운로드/삭제)를 열거나 롱프레스를 컨텍스트 메뉴로 연결. 최소한 BulkActionBar에 공유 추가.</p></div>
+  <div class="dm"><div class="dm-cap">모바일 파일 행 컨트롤 (터치엔 hover 없음)</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제 — hover 전용</div><div class="dm-b"><div class="phone"><div class="mn-row" style="border:0">브랜드필름_v3.mp4</div><div class="mn-row">광고_30s.mp4</div><div class="note" style="color:var(--high);margin-top:6px">선택·즐겨찾기·⋯ 안 보임</div></div></div></div>
+<div class="dm-col good"><div class="dm-h">수정 — 상시 노출</div><div class="dm-b"><div class="phone"><div class="mn-row" style="border:0;justify-content:space-between">브랜드필름_v3.mp4 <b>⋯</b></div><div class="mn-row" style="justify-content:space-between">광고_30s.mp4 <b>⋯</b></div><div class="note ok" style="margin-top:6px">상시 ⋯ → 이름변경·공유·삭제</div></div></div></div></div></div>
+</article>
+<article class="card sev-medium" data-sev="medium">
+  <div class="card-top"><span class="num">10</span><span class="pill sev">중간</span><span class="pill dim">반응형/모바일</span><h3>모바일 레이아웃 깨짐 — 업로드 도크가 탭바 가림·휴지통 가로스크롤·검수 상단바 오버플로</h3></div>
+  <div class="where"><code>components/GlobalUploadDock.tsx:88</code> <code>components/AppShell.tsx:167-169</code> <code>components/TrashView.tsx:170-171</code> <code>components/FeedbackModal.tsx:1530</code></div>
+  <div class="row"><span class="lbl">문제</span><p>GlobalUploadDock이 fixed bottom-4 z-40인데 MobileTabBar도 fixed bottom-0 z-40 height 64px이고 도크가 DOM 후행이라, 360px 폰에서 업로드 중 하단 내비(활동·비모 탭)를 덮는다(업로드 항목이 비워질 때까지 지속). TrashView는 overflow-x-auto 안 min-w-[780px] 6컬럼 표를 모바일 카드 대안 없이 써(FilesPane는 &lt;md에서 FileCardGrid로 스왑하는 자체 표준 보유) 복원/영구삭제 버튼이 화면 밖으로 밀린다. FeedbackModal 상단바는 flex-wrap 없이 비게스트(매니저/파트너)에서 워드마크+브레드크럼+버전핀+토글+결정 버튼이 한 줄에 들어가 ~375px 폰에서 승인/수정요청 버튼이 밀리거나 잘릴 수 있다.</p></div>
+  <div class="row"><span class="lbl">영향</span><p>업로드 중 모바일 하단 내비가 막혀 화면 전환이 방해받고, 휴지통 복원/삭제가 가로스크롤을 강제당하며, 매니저/파트너가 모바일 검수에서 1차 액션(승인·수정요청)이 비좁거나 오버플로된다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>도크를 모바일에서 탭바 위로(bottom-[calc(64px+env(safe-area-inset-bottom)+12px)] md:bottom-6). 휴지통은 &lt;md에서 FileCardGrid 스왑 패턴 재사용(항목당 카드+복원/삭제). 검수 상단바에 flex-wrap 허용 또는 &lt;md에서 결정 버튼 아이콘 축약+브레드크럼 truncate.</p></div>
+  <div class="dm"><div class="dm-cap">모바일 하단 — 업로드 도크 vs 탭바</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제 — 탭바 가림</div><div class="dm-b"><div class="phone" style="height:96px;position:relative"><div class="tabbar">홈 · 활동 · 비모</div><div class="dock" style="bottom:6px;background:var(--accent)">업로드 중… (탭바 가림)</div></div></div></div>
+<div class="dm-col good"><div class="dm-h">수정 — 탭바 위로</div><div class="dm-b"><div class="phone" style="height:96px;position:relative"><div class="dock" style="bottom:30px;background:#111">업로드 중…</div><div class="tabbar">홈 · 활동 · 비모</div></div></div></div></div></div>
+</article>
+<article class="card sev-medium" data-sev="medium">
+  <div class="card-top"><span class="num">11</span><span class="pill sev">중간</span><span class="pill dim">인터랙션·피드백</span><h3>홈 대시보드(PartnerHome) 죽은·오해유발 컨트롤 다수</h3></div>
+  <div class="where"><code>components/PartnerHome.tsx:313-324/395-397</code> <code>:492/570-583</code> <code>:626-627/299/561-566/48-50</code></div>
+  <div class="row"><span class="lbl">문제</span><p>전 역할 홈인 PartnerHome에서 각 행의 '다운로드·공유·더보기' 버튼이 onClick={(e)=&gt;e.preventDefault()}뿐이라 호버 스타일·aria-label은 있지만 아무 동작도 안 하고 Link 이동까지 막는다(별만 onToggleFav로 실동작). 선택 체크박스·'전체 선택'은 selected를 체크 표시에만 쓰고 selected.size를 읽는 코드가 없어 BulkActionBar가 안 떠 막다른 길이다(일반 FilesPane엔 BulkActionBar 존재). 'My box' 섹션은 무채색 헤더인데 목록에 team 파일이 섞여 비모 검수 상태·'공유 중' 배지가 뜨고, '크기' 컬럼은 항상 '—', size 정렬 화살표는 noop, 헤더 합계는 항상 '폴더 0'이다.</p></div>
+  <div class="row"><span class="lbl">영향</span><p>가장 자주 보는 홈에서 다운로드·공유가 무반응이라 고장/미완성으로 느껴지고, 선택·정렬 어포던스가 거짓말을 한다. 'My box'에 비모 파일이 섞여 의미·색이 혼란스럽고 '폴더 0'은 의미 없는 노이즈다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>세 버튼에 실제 핸들러 연결(다운로드 앵커·ShareDialog·ContextMenu) 또는 미구현 시 제거/disabled. selected.size&gt;0일 때 BulkActionBar 렌더하거나 선택 UI 제거. 섹션명을 '최근 파일'로 정정, 데이터 없는 '크기' 컬럼·동작 없는 정렬·'폴더 0' 제거.</p></div>
+  <div class="dm"><div class="dm-cap">홈 행의 다운로드·공유·더보기 버튼</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제 — 무동작</div><div class="dm-b"><div class="mn-row" style="border:0;justify-content:space-between">티저_15s.mp4 <span class="note">받기·공유·더보기</span></div><div class="note" style="color:var(--high)">클릭해도 아무 일 없음 (Link 이동까지 막음)</div></div></div>
+<div class="dm-col good"><div class="dm-h">수정</div><div class="dm-b"><div class="mn-row" style="border:0;justify-content:space-between">티저_15s.mp4 <span class="note ok">받기·공유·더보기</span></div><div class="note">실제 핸들러 연결 / 미구현 시 제거</div></div></div></div></div>
+</article>
+<article class="card sev-medium" data-sev="medium">
+  <div class="card-top"><span class="num">12</span><span class="pill sev">중간</span><span class="pill dim">레이아웃·시각 위계</span><h3>홈에 1순위 주황 업로드 버튼이 2개 (자체 원칙 위반)</h3></div>
+  <div class="where"><code>components/PartnerHome.tsx:615-617/141-143/651-657</code> <code>components/SegmentSidebar.tsx:161-162</code></div>
+  <div class="row"><span class="lbl">문제</span><p>홈에 업로드 진입이 셋이다: 상단 툴바 '업로드'(주황, →/team?upload=1), 히어로 '새 버전 올리기'(주황), My box '올리기'(ink/검정). 이 중 주황 primary가 둘(툴바+히어로). SegmentSidebar는 주석에 '화면당 주황 업로드 1개 원칙'으로 홈에서 CTA를 흰색으로 양보하는데, 정작 홈 본문에는 주황이 둘이라 자체 원칙을 어긴다. 툴바 '업로드'는 라벨 없이 /team으로 직행한다.</p></div>
+  <div class="row"><span class="lbl">영향</span><p>1순위 액션이 둘로 갈려 시선이 분산되고 어디를 눌러야 할지 모호하며, 사용자는 어느 공간에 올라가는지 알기 어렵다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>홈의 주황 업로드를 히어로 컨텍스트 업로드 하나만 남기고, 상단 툴바 업로드는 보조(흰 테두리) 스타일로 강등하거나 대상 공간을 명시.</p></div>
+  <div class="dm"><div class="dm-cap">홈 업로드 진입 — 주황 1순위 버튼이 2개</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제 (현재)</div><div class="dm-b"><div class="flexrow"><span class="note">상단바</span><span class="b b-ac">업로드</span></div><div class="box flexrow" style="margin-top:8px"><span class="note">히어로</span><span class="b b-ac">새 버전 올리기</span></div><div class="note" style="color:var(--high);margin-top:5px">주황 1순위 2개</div></div></div>
+<div class="dm-col good"><div class="dm-h">수정</div><div class="dm-b"><div class="flexrow"><span class="note">상단바</span><span class="b b-out">업로드</span></div><div class="box flexrow" style="margin-top:8px"><span class="note">히어로</span><span class="b b-ac">새 버전 올리기</span></div><div class="note ok" style="margin-top:5px">주황은 히어로 1개, 상단바는 보조</div></div></div></div></div>
+</article>
+<article class="card sev-medium" data-sev="medium">
+  <div class="card-top"><span class="num">13</span><span class="pill sev">중간</span><span class="pill dim">카피·문구</span><h3>용어·명칭 불일치 — 공간·페이지·모드·개념어가 화면마다 제각각</h3></div>
+  <div class="where"><code>components/CommandPalette.tsx:62-72</code> <code>components/ManagerSidebar.tsx:67-240</code> <code>components/PartnerSidebar.tsx:217</code> <code>components/PartnerHome.tsx:124/145/192</code> <code>components/ShareDialog.tsx:127/149</code> <code>components/SharesView.tsx:250</code> <code>components/GlobalUploadDock.tsx:47/419-430</code> <code>app/(app)/admin/keys/page.tsx:41</code> <code>components/InsightsView.tsx:75/85</code> <code>components/MoveDialog.tsx:155</code></div>
+  <div class="row"><span class="lbl">문제</span><p>같은 대상을 화면마다 다른 이름으로 부른다. (1) 팀 공유 공간: 'VIMO Box'(CommandPalette) vs '비모 프로젝트'(정본, ManagerSidebar/team) vs '비모'(PartnerHome) vs 업로드독 루트 라벨 '렌더링'이 병존하고 /team↔/vimo-box 경로가 이원화. (2) 관리자 페이지: 사이드바 '저장소 점검/통계/사용자/API 키/공유' vs ⌘K팔레트 '스토리지 관리/트래픽 통계/사용자 관리/API 토큰/공유 링크 관리' vs 페이지 H1 'API 토큰/공유 링크/인사이트' — CommandPalette가 label 부분일치라 화면에서 본 이름('인사이트'·'저장소')으로 검색하면 안 잡히는 findability 결함. (3) 공유 모드: '보기 전용/피드백 받기'(ShareDialog) vs '검수/미리보기'(GlobalUploadDock) vs '풀/프리뷰'(SharesView 영어 음차). (4) 'My box'/'내 박스'/'My Box' 3표기, 코멘트/댓글/의견/피드백 혼용.</p></div>
+  <div class="row"><span class="lbl">영향</span><p>검색·사이드바·파일목록·패널이 같은 공간/페이지/모드인지 알 수 없어 길찾기·멘탈모델이 깨지고, 화면에서 본 이름으로 ⌘K 검색해도 못 찾는다. '풀'·'스토리지'·'인텔리전스' 음차는 의미가 즉시 와닿지 않는다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>라우트→표시명 단일 맵(상수)으로 사이드바·검색·H1이 같은 문자열을 쓰게 통일. 'VIMO Box'·'렌더링'·'풀/프리뷰' 제거, 음차 한글화(스토리지→저장소, 인텔리전스→공유 분석), 공유 모드는 한 쌍('미리보기/검수')으로. 단 파트너 청중용 '비모와의 작업'과 한글 라벨 목록의 '내 박스'는 의도된 분기로 유지하고, MoveDialog 'My Box'만 'My box'로 교정.</p></div>
+  <div class="dm"><div class="dm-cap">같은 대상을 화면마다 다른 이름으로</div><table class="cmp"><tr><th>대상</th><th style="color:var(--high)">현재 (제각각)</th><th style="color:#1d6b3a">통일</th></tr><tr><td>팀 공유 공간</td><td>VIMO Box / 비모 프로젝트 / 비모 / 렌더링</td><td>비모 프로젝트</td></tr><tr><td>공유 모드</td><td>풀 / 프리뷰 / preview</td><td>검수 / 미리보기</td></tr><tr><td>관리 메뉴</td><td>스토리지 / 인텔리전스</td><td>저장소 / 공유 분석</td></tr></table></div>
+</article>
+<article class="card sev-medium" data-sev="medium">
+  <div class="card-top"><span class="num">14</span><span class="pill sev">중간</span><span class="pill dim">카피·문구</span><h3>외부 클라이언트를 사내 은어 "클라"로 표기 — "클라이언트"와 혼용</h3></div>
+  <div class="where"><code>components/FeedbackModal.tsx:196/1314/2356/3334/3401-3404</code> <code>components/ShareDialog.tsx:130/152</code> <code>components/SharesView.tsx:187</code> <code>app/(app)/admin/clients/page.tsx:16</code></div>
+  <div class="row"><span class="lbl">문제</span><p>같은 검수 모달 안에서도 역할 배지는 '클라'(FeedbackModal:196 은어)인데 코멘트 헤더 배지는 '클라이언트'(:3334, 동일 스타일이라 공간 제약 아님)다. '클라에게 공개'(:1314)·'클라공개'(:3404)·ShareDialog '클라가 영상만 시청'·SharesView '클라에게'·admin/clients '외부 클라'처럼 사내 줄임말이 user-facing에 노출된다(inbox-client는 '클라이언트'로 올바름). 게스트(=클라이언트 본인)도 '클라' 배지를 본다.</p></div>
+  <div class="row"><span class="lbl">영향</span><p>고객을 다루는 도구에 '클라'·'클라공개' 은어가 보여 정돈되지 않은 인상을 주고, 같은 모달에서 '클라'와 '클라이언트'가 동시에 나와 같은 대상인지 헷갈린다. 담백한 존댓말 톤 계약과 충돌한다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>user-facing 문구를 모두 '클라이언트'로 통일(RoleBadge:196 라벨 포함). '클라공개'→'클라이언트에게 공개', '클라에게 보이기'→'클라이언트에게 표시'.</p></div>
+  <div class="dm"><div class="dm-cap">외부 고객 호칭</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제 — 은어 혼용</div><div class="dm-b"><span class="bd" style="background:#eee;color:#555">클라</span> <span class="bd" style="background:var(--accent-soft);color:var(--accent)">클라공개</span><div class="note">같은 모달에 '클라'·'클라이언트' 혼재</div></div></div>
+<div class="dm-col good"><div class="dm-h">수정</div><div class="dm-b"><span class="bd" style="background:#eee;color:#555">클라이언트</span> <span class="bd" style="background:var(--accent-soft);color:var(--accent)">클라이언트에게 공개</span></div></div></div></div>
+</article>
+<article class="card sev-medium" data-sev="medium">
+  <div class="card-top"><span class="num">15</span><span class="pill sev">중간</span><span class="pill dim">카피·문구</span><h3>공유 링크 취소 다이얼로그에 '취소'·'취소하기' 두 버튼이 동시에</h3></div>
+  <div class="where"><code>components/SharesView.tsx:87/95/107</code> <code>components/ConfirmDialog.tsx:124</code></div>
+  <div class="row"><span class="lbl">문제</span><p>링크 회수 확인 다이얼로그 제목이 '공유 링크 취소'(:87), confirmLabel이 '취소하기'(:95)인데 ConfirmDialog 기본 cancel이 '취소'(:124)라, 한 다이얼로그에 dismiss '취소'와 destructive 실행 '취소하기'가 나란히 놓인다. 같은 어근 '취소'로 의미가 반전된다(보통 '취소'=중단인데 여기선 중단이 '취소', 파괴적 실행이 '취소하기').</p></div>
+  <div class="row"><span class="lbl">영향</span><p>'취소'가 닫기인지 회수 실행인지 분간이 안 돼, 회수하려다 닫거나 닫으려다 회수할 위험이 있다(파괴적 동작). 색/위치 차이가 오클릭을 다소 완화하긴 한다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>회수 어휘를 '취소'에서 분리: 제목 '공유 링크 해제', confirmLabel '링크 해제'(또는 '회수'), 토스트 '링크가 해제됐어요'. 닫기 버튼만 '취소'로 남김.</p></div>
+  <div class="dm"><div class="dm-cap">공유 링크 회수 다이얼로그</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제</div><div class="dm-b"><div class="box" style="padding:10px;font-size:11.5px"><b>공유 링크 취소</b><div style="text-align:right;margin-top:8px"><span class="b b-out" style="padding:4px 10px">취소</span> <span class="b b-dng" style="padding:4px 10px">취소하기</span></div></div><div class="note" style="color:var(--high)">'취소'·'취소하기'가 나란히 — 뭘 누르지?</div></div></div>
+<div class="dm-col good"><div class="dm-h">수정</div><div class="dm-b"><div class="box" style="padding:10px;font-size:11.5px"><b>공유 링크 해제</b><div style="text-align:right;margin-top:8px"><span class="b b-out" style="padding:4px 10px">취소</span> <span class="b b-dng" style="padding:4px 10px">링크 해제</span></div></div></div></div></div></div>
+</article>
+<article class="card sev-medium" data-sev="medium">
+  <div class="card-top"><span class="num">16</span><span class="pill sev">중간</span><span class="pill dim">레이아웃·시각 위계</span><h3>인사이트 구분선이 미정의 토큰으로 인해 진한 선으로 렌더</h3></div>
+  <div class="where"><code>components/InsightsView.tsx:240</code> <code>280</code> <code>app/globals.css(@theme)</code></div>
+  <div class="row"><span class="lbl">문제</span><p>border-b border-border-soft(:240)와 divide-y divide-border-soft(:280)를 쓰는데 globals.css @theme에 --color-border-soft/--border-soft가 정의돼 있지 않다(앱 테마엔 없고 _docs/public 목업에만 존재). Tailwind v4에서 미등록 유틸은 색이 발행되지 않아 border-color가 currentColor(--text #111, 거의 검정)로 떨어지고, globals.css에 전역 border-color 리셋도 없다.</p></div>
+  <div class="row"><span class="lbl">영향</span><p>수정 패턴 카드 카테고리 헤더 하단선과 최근 코멘트 구분선이 의도한 '연한 회색'이 아니라 텍스트색에 가까운 진한 선으로 보여 카드가 시끄러워진다(조용한 톤 위반).</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>border-border-soft/divide-border-soft를 정의된 border-border/divide-border로 교체하거나 globals.css @theme에 --color-border-soft 토큰 추가.</p></div>
+  <div class="dm"><div class="dm-cap">목록 구분선 — 미정의 토큰 → 진한 기본선</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제 (진한 선)</div><div class="dm-b" style="font-size:12px"><div class="li" style="border-bottom:1px solid #111">항목 A</div><div class="li" style="border-bottom:1px solid #111">항목 B</div><div class="li">항목 C</div></div></div>
+<div class="dm-col good"><div class="dm-h">수정 (연한 토큰)</div><div class="dm-b" style="font-size:12px"><div class="li" style="border-bottom:1px solid #ececec">항목 A</div><div class="li" style="border-bottom:1px solid #ececec">항목 B</div><div class="li">항목 C</div></div></div></div></div>
+</article>
+<article class="card sev-medium" data-sev="medium">
+  <div class="card-top"><span class="num">17</span><span class="pill sev">중간</span><span class="pill dim">상태 처리</span><h3>로딩·에러·빈 상태가 스켈레톤·재시도 없이 맨 텍스트 (여러 화면)</h3></div>
+  <div class="where"><code>app/(app)/vimo-box/library/library-client.tsx:71/247-250</code> <code>app/(app)/my/stats/my-stats-client.tsx:71-96</code> <code>app/(app)/inbox/inbox-client.tsx:88-94</code> <code>components/PartnerHome.tsx:671-682</code></div>
+  <div class="row"><span class="lbl">문제</span><p>자료실은 route loading.tsx의 FileTableSkeleton을 안 쓰고 '불러오는 중…' 텍스트 박스 한 줄만 보이며, 폴더 이동마다 setLoading(true)라 테이블 전체가 텍스트 박스로 깜빡 교체된다. my-stats는 로딩이 min-h-screen 회색 한 줄, 에러도 '데이터를 불러오지 못했어요' 한 줄로 재시도 버튼·아이콘이 없고 fetch에 .catch가 없어 거부 시 unhandled rejection + 막다른 에러 화면이 된다(route error.tsx는 이 swallowed rejection을 못 잡음). inbox는 로딩(스피너)·빈 상태(카드)는 잘됐는데 에러만 한 줄(아이콘·카드·재시도 없음). PartnerHome 신규 유저 제로 상태는 '아래 파일의 별을 누르라'는 즐겨찾기 힌트 뒤에 '보관함이 비어 있어요'가 떠, 가리키는 파일이 0개인 모순이 발생한다.</p></div>
+  <div class="row"><span class="lbl">영향</span><p>KPI/파일 목록이 빈 회색 한 줄이라 느리게 느껴지고, 에러 시 새로고침 외 빠져나갈 길이 없는 막다른 화면이 된다. 같은 '파일 목록'인데 자료실만 로딩 모양이 달라 거칠고, 신규 유저 첫 화면 안내가 존재하지 않는 대상을 가리킨다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>로딩은 FileTableSkeleton/KPI 스켈레톤 재사용(폴더 전환 시 기존 목록 유지+얇은 진행 표시), 에러는 AlertTriangle+안내+'다시 시도'(재페치) 카드로 통일하고 fetch에 .catch 추가. 제로 상태는 즐겨찾기 힌트를 숨기고 업로드 유도 빈 상태(중립 아이콘+'올리기')로 대체.</p></div>
+  <div class="dm"><div class="dm-cap">로딩 상태</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제 — 맨 텍스트</div><div class="dm-b" style="color:var(--mut);text-align:center;padding:22px 12px;font-size:12px">불러오는 중…</div></div>
+<div class="dm-col good"><div class="dm-h">수정 — 스켈레톤</div><div class="dm-b"><div class="sk" style="width:60%"></div><div class="sk"></div><div class="sk" style="width:80%"></div></div></div></div></div>
+</article>
+<article class="card sev-low" data-sev="low">
+  <div class="card-top"><span class="num">18</span><span class="pill sev">낮음</span><span class="pill dim">접근성</span><h3>기타 접근성 보강 — 포커스 표시·색상 단독 의존·시맨틱 누락</h3></div>
+  <div class="where"><code>components/ShortformReview.tsx:583/598</code> <code>components/StatusBar.tsx:128-159</code> <code>components/SegmentSidebar.tsx:126-156</code></div>
+  <div class="row"><span class="lbl">문제</span><p>ShortformReview 이름/댓글 입력이 outline-none인데 focus:ring/border 대체가 없다(같은 앱 FeedbackModal:3822는 focus-within 처리). StatusBar Litestream 정상/실패가 6px 점의 녹/빨로만 구분되고 텍스트엔 '정상/오류'가 없어 실패해도 '(방금)' 경과시간이 그대로 떠 색상 단독 의존이다(WCAG 1.4.1). SegmentSidebar '활동' 새 알림 점이 aria-hidden+텍스트 대체 없음, 세그먼트 Link에 aria-current가 없다.</p></div>
+  <div class="row"><span class="lbl">영향</span><p>키보드/스위치 사용자가 어느 입력에 포커스가 있는지 모르고, 색각 이상 사용자가 백업 가동/실패를 구분 못 해 장애를 놓칠 수 있으며, 스크린리더가 '새 활동'·현재 위치를 안내받지 못한다. 내부 전용 도구라 우선순위는 낮다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>입력에 focus 가시 표시(게스트/개인 맥락은 accent 대신 중립 border). StatusBar 점에 상태 텍스트/아이콘 병기 + title/aria-label(role=status라 음성에 전달됨). 알림 점에 sr-only '새 알림 있음', 활성 세그먼트에 aria-current="page".</p></div>
+  <div class="dm"><div class="dm-cap">입력 포커스 표시 · 상태를 색만으로</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제</div><div class="dm-b"><input class="inp" value="댓글 입력" readonly><div class="note" style="margin-top:6px"><span class="dot" style="background:#16a34a"></span> <span class="dot" style="background:var(--high)"></span> 상태(색만)</div></div></div>
+<div class="dm-col good"><div class="dm-h">수정</div><div class="dm-b"><input class="inp foc" value="댓글 입력" readonly><div class="note" style="margin-top:6px"><span class="dot" style="background:#16a34a"></span>정상 <span class="dot" style="background:var(--high)"></span>실패 (텍스트 병기)</div></div></div></div></div>
+</article>
+<article class="card sev-low" data-sev="low">
+  <div class="card-top"><span class="num">19</span><span class="pill sev">낮음</span><span class="pill dim">반응형/모바일</span><h3>모바일 헤더·탭바의 가짜 상시 알림 점</h3></div>
+  <div class="where"><code>components/AppShell.tsx:99-101/164/185-191</code></div>
+  <div class="row"><span class="lbl">문제</span><p>모바일 헤더 벨에 빨간 점이 무조건 렌더(주석도 '추후 실제 카운트 hook으로 교체')되고, 하단 탭바 '활동' 탭도 showDot:true 고정이라 미확인 알림 유무와 무관하게 항상 점이 뜬다.</p></div>
+  <div class="row"><span class="lbl">영향</span><p>읽을 게 없어도 항상 빨간 점이 떠 '조용함·시끄러운 배지 지양' 톤과 어긋나고 알림 신호의 신뢰도가 떨어진다(cry-wolf). 두 점이 accent 주황이라 팀 전용색 사용도 거슬린다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>이미 있는 /api/inbox unread 카운트를 받아 0이면 점을 숨김. 훅 연결 전까지는 점을 임시 제거.</p></div>
+  <div class="dm"><div class="dm-cap">알림 점 — 항상 vs 미확인 있을 때만</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제 — 항상 빨간 점</div><div class="dm-b"><span class="bellwrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="reddot"></span></span> <span class="note">미확인 0이어도 점</span></div></div>
+<div class="dm-col good"><div class="dm-h">수정 — 0이면 숨김</div><div class="dm-b"><span class="bellwrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-3px"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span> <span class="note ok">unread=0 → 점 없음</span></div></div></div></div>
+</article>
+<article class="card sev-low" data-sev="low">
+  <div class="card-top"><span class="num">20</span><span class="pill sev">낮음</span><span class="pill dim">레이아웃·시각 위계</span><h3>받은편지함 대시보드 카드 톤 이탈 — 그라데이션·3중 라벨·violet·치어리딩</h3></div>
+  <div class="where"><code>components/dashboard/InboxCard.tsx:16/28/39/49</code> <code>components/dashboard/NewCommentsCard.tsx:24</code> <code>components/dashboard/ShareActivityCard.tsx:17</code></div>
+  <div class="row"><span class="lbl">문제</span><p>InboxCard만 배경이 그라데이션(:16)이라 옆 NewComments/ShareActivity(평면 흰색)와 처리가 다르고, 헤더가 '받은편지함'+주황 '비모' 배지+회색 '매니저' 텍스트 3중 라벨, 영상 아이콘이 팔레트에 없는 text-violet-500(:49), 빈 상태가 '검수 대기 영상 없음 — 깔끔!'(:39)으로 음슴체+치어리딩이다(siblings는 '~없어요').</p></div>
+  <div class="row"><span class="lbl">영향</span><p>대시보드 카드 3개 처리가 들쭉날쭉하고, violet이 튀며, '깔끔!'이 담백·존댓말·치어리딩 금지 톤 계약을 어긴다. (주황 '비모' 배지 자체는 계약상 정상.)</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>카드 배경 평면 흰색 통일, 중복 '매니저' 텍스트 제거, 파일 아이콘 무채색, 문구 '검수 대기 영상이 없어요'.</p></div>
+  <div class="dm"><div class="dm-cap">받은편지함 카드 — 톤 이탈</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제</div><div class="dm-b"><div style="background:linear-gradient(135deg,#fff,#fef0e8);border:1px solid var(--bd);border-radius:8px;padding:8px;font-size:11.5px">받은편지함 <span class="bd" style="background:var(--accent-soft);color:var(--accent)">비모</span> <span class="note">매니저</span><br><span style="color:#8b5cf6">▶</span> 영상</div><div class="note" style="color:var(--high)">그라데이션·violet·3중 라벨·치어리딩</div></div></div>
+<div class="dm-col good"><div class="dm-h">수정</div><div class="dm-b"><div style="background:#fff;border:1px solid var(--bd);border-radius:8px;padding:8px;font-size:11.5px">받은편지함<br><span style="color:#777">▶</span> 영상</div><div class="note ok">평면·무채색 · '검수 대기 영상이 없어요'</div></div></div></div></div>
+</article>
+<article class="card sev-low" data-sev="low">
+  <div class="card-top"><span class="num">21</span><span class="pill sev">낮음</span><span class="pill dim">카피·문구</span><h3>카피 마감 결함 — 조사 '으로' 비문·합쇼/해요 혼용·히어로 오라벨</h3></div>
+  <div class="where"><code>components/MoveDialog.tsx:110</code> <code>components/ShareDialog.tsx:104/206</code> <code>components/TrashView.tsx:93-150</code> <code>components/PartnerHome.tsx:112</code></div>
+  <div class="row"><span class="lbl">문제</span><p>MoveDialog:110이 `${relPath}으로`로 조사를 고정 결합해 모음/ㄹ받침 폴더명에서 비문이 된다('자료으로', '기획서으로', '썸네일으로'). ShareDialog는 같은 도움말 블록 연속 문장이 '있어요'(해요체)→'자동 반영됩니다'(합쇼체)로 갈리고 :206 '만들어졌습니다'(합쇼) vs 토스트 '비웠어요'(해요)로 성공 피드백 톤이 혼용되며, TrashView도 합쇼/해요가 섞인다. PartnerHome:112 히어로 라벨이 '가장 최근 영상' 하드코딩인데 heroFile은 이미지·문서일 수 있다(같은 행은 kindLabel로 '이미지'를 맞게 표시 → 내부 모순).</p></div>
+  <div class="row"><span class="lbl">영향</span><p>이동 토스트에 틀린 한국어가 노출되고, 한 화면 안 말투가 오락가락하며, 최근 업로드가 PDF·이미지인 유저는 '가장 최근 영상' 카드로 떠 어리둥절하다. 완성도가 떨어져 보인다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>받침 판정 헬퍼로 '로/으로' 선택('루트로'→'최상위로'도 검토). 정보문은 해요체로 통일('만들어졌어요'·'자동 반영돼요'·'영구 삭제돼요'), 파괴 경고는 단정형 규칙을 하나로 정해 일관 적용. 히어로 라벨을 kindLabel 분기 또는 '최근 작업'으로.</p></div>
+  <div class="dm"><div class="dm-cap">조사 결합 · 문체</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제</div><div class="dm-b" style="font-size:12.5px"><span class="strike">자료으로 이동</span> · <span class="strike">썸네일으로</span><div class="note">받침 무시 비문 · '있어요/됩니다' 혼용</div></div></div>
+<div class="dm-col good"><div class="dm-h">수정</div><div class="dm-b" style="font-size:12.5px"><span class="ok">자료로 이동</span> · <span class="ok">썸네일로</span><div class="note">받침 판정 · 해요체 통일</div></div></div></div></div>
+</article>
+<article class="card sev-low" data-sev="low">
+  <div class="card-top"><span class="num">22</span><span class="pill sev">낮음</span><span class="pill dim">레이아웃·시각 위계</span><h3>파트너 사이드바 '최근'이 홈과 같은 '/'로 연결 — 중복 목적지 + 영구 비활성</h3></div>
+  <div class="where"><code>components/PartnerSidebar.tsx:194</code> <code>224</code></div>
+  <div class="row"><span class="lbl">문제</span><p>라이브러리 그룹 '최근'(:224)이 href '/'로 위쪽 '홈'(:194)과 동일 목적지이고, active 인자가 false로 하드코딩돼 영원히 비활성으로 표시된다(전용 최근 페이지 없음; PartnerHome 자체가 이미 최근 대시보드).</p></div>
+  <div class="row"><span class="lbl">영향</span><p>'홈'·'최근' 두 항목이 같은 화면으로 가 의미가 없고, '/'에선 '홈'만 활성표시되며 '최근'은 절대 활성이 안 돼 불필요한 내비 노이즈가 된다.</p></div>
+  <div class="row fix"><span class="lbl">수정</span><p>실제 최근 파일 뷰로 연결하거나, 전용 페이지가 없으면 '최근' 항목 자체를 제거.</p></div>
+  <div class="dm"><div class="dm-cap">파트너 사이드바 '최근'</div><div class="dm-pair">
+<div class="dm-col bad"><div class="dm-h">문제</div><div class="dm-b"><div class="mn-side"><div class="mn-item"><span class="ic"></span>홈 <span class="note">→ /</span></div><div class="mn-item" style="color:#bbb"><span class="ic"></span>최근 <span class="note">→ / (홈과 같음·영구 비활성)</span></div></div></div></div>
+<div class="dm-col good"><div class="dm-h">수정</div><div class="dm-b"><div class="mn-side"><div class="mn-item"><span class="ic"></span>홈</div><div class="mn-item"><span class="ic"></span>최근 <span class="note ok">→ 실제 최근 뷰 (or 제거)</span></div></div></div></div></div></div>
+</article></main>
+<footer>코드/디자인 계약 기준 휴리스틱 점검 — 미니 목업은 패턴 재현용 도식(실제 픽셀과 다를 수 있음). 각 항목은 적대적 검증(코드 실재·실제 어색함) 통과분.</footer>
+</div><script>
+const btns=document.querySelectorAll('.filters button');btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>x.classList.remove('on'));b.classList.add('on');const f=b.dataset.f;document.querySelectorAll('.card').forEach(c=>{c.style.display=(f==='all'||c.dataset.sev===f)?'':'none'})});
+</script></body></html>

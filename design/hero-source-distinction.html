@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 · 비모 vs My box 출처 구분 — 실제 로고 + 3전략</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --vimo:#e85008; --vimo-ink:#c2410c; --vimo-soft:#fef0e8; --vimo-line:#fbd9c4;
+    --personal:#0ea5e9; --personal-ink:#0369a1; --personal-soft:#e0f2fe; --personal-line:#bae6fd;
+    --slate:#475569; --slate-ink:#334155; --slate-soft:#f1f5f9; --slate-line:#dbe2ea;
+    --text:#171717; --muted:#5f5f5f; --soft:#525252; --faint:#9a9a9a;
+    --page:#f5f5f5; --surf:#fafafa; --line:#ececec; --line2:#e3e3e3; --hair:#f1f1f1;
+    --ok-bg:#f0fdf4; --ok-fg:#16a34a; --warn:#c2410c;
+    --sh:0 1px 3px rgba(0,0,0,.06); --sh2:0 4px 14px rgba(0,0,0,.08);
+    --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);background:#e9e9e9;color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h2,h3,h4,p{margin:0} svg.lucide{width:1em;height:1em;stroke-width:1.9;flex:none;vertical-align:-.14em}
+  .tnum{font-variant-numeric:tabular-nums}.mono{font-variant-numeric:tabular-nums}
+
+  .wrap{max-width:1040px;margin:0 auto;padding:34px 24px 90px}
+  .intro h1{font-size:23px;font-weight:800;letter-spacing:-.02em}
+  .intro p{color:var(--muted);font-size:13.5px;margin-top:9px;line-height:1.65;max-width:840px}
+  .intro .diag{margin-top:13px;background:#fff;border:1px solid var(--line2);border-radius:12px;padding:13px 16px;font-size:12.5px;color:var(--soft);line-height:1.65}
+  .intro .diag b{color:var(--vimo-ink)}
+
+  .strat{margin-top:40px}
+  .shead{display:flex;align-items:flex-end;gap:12px;margin-bottom:6px}
+  .shead .tag{font-size:11px;font-weight:800;color:#fff;background:var(--text);border-radius:7px;padding:4px 10px;white-space:nowrap}
+  .shead .tag.rec{background:var(--vimo)}
+  .shead .ttl{font-size:16px;font-weight:800}.shead .ttl em{font-style:normal;color:var(--vimo)}
+  .shead .lede{font-size:12px;color:var(--faint);margin-top:2px}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px}
+
+  /* 로고 */
+  .vlogo{height:14px;width:auto;display:inline-block;vertical-align:-2px}
+  .vlogo.lg{height:17px}
+  .vlogo.w{filter:brightness(0) invert(1)}
+
+  /* 히어로 (컴팩트) */
+  .hero{display:grid;grid-template-columns:170px 1fr;background:#fff;border:1px solid var(--line2);border-radius:14px;overflow:hidden;box-shadow:var(--sh)}
+  .hero.vimo{border-color:var(--vimo-line)}
+  .hero.mb-blue{border-color:var(--personal-line)}
+  .hero.mb-slate{border-color:var(--slate-line)}
+  .th{position:relative;min-height:182px;background:linear-gradient(135deg,#7c3a1d,#c2683a);overflow:hidden}
+  .th img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .th .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.02) 40%,rgba(0,0,0,.45))}
+  .th .pl{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.92)}.th .pl svg{width:22px;height:22px}
+  .th .bl{position:absolute;left:8px;bottom:8px;display:flex;gap:5px;align-items:center}
+  .vbadge{font-size:9px;font-weight:800;padding:1px 6px;border-radius:5px;background:var(--vimo-soft);color:#c8430a}
+  .vbadge.blue{background:var(--personal-soft);color:var(--personal-ink)}
+  .vbadge.slate{background:var(--slate-soft);color:var(--slate-ink)}
+  .dur{font-size:9px;font-weight:700;color:#fff;background:rgba(0,0,0,.6);padding:1px 5px;border-radius:4px}
+  .info{padding:14px 16px;display:flex;flex-direction:column}
+
+  .crumb{display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--faint);flex-wrap:wrap}.crumb b{color:var(--soft);font-weight:600}.crumb svg.sep{width:11px;height:11px;color:#c8c8c8}
+  .crumb .mb{width:12px;height:12px}
+  .htitle{font-size:16px;font-weight:800;letter-spacing:-.01em;margin-top:5px}
+
+  .countchips{display:flex;align-items:center;gap:7px;margin-top:11px;flex-wrap:wrap}
+  .cchip{font-size:11px;font-weight:600;color:var(--soft);border:1px solid var(--line2);border-radius:999px;padding:4px 10px;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  .cchip svg{width:12px;height:12px;color:var(--faint)}
+  .cchip b{color:var(--text);font-weight:700;margin-left:1px}
+  .cchip.dl{color:var(--vimo-ink);border-color:var(--vimo-line);background:var(--vimo-soft)}.cchip.dl svg{color:var(--vimo)}
+
+  /* 출처 배지 */
+  .src{font-weight:700;border:none;gap:6px}
+  .src.vimo{background:var(--vimo-soft);color:var(--vimo-ink)}
+  .src.vimo-solid{background:var(--vimo);color:#fff}
+  .src.blue{background:var(--personal-soft);color:var(--personal-ink)}.src.blue svg{color:var(--personal)}
+  .src.slate{background:var(--slate-soft);color:var(--slate-ink)}.src.slate svg{color:var(--slate)}
+  .src.ghost{background:#fff;color:var(--soft);border:1px solid var(--line2)}.src.ghost svg{color:var(--faint)}
+
+  .act{margin-top:auto;padding-top:13px;display:flex;align-items:center;gap:7px}
+  .btn{font-size:11.5px;font-weight:600;border-radius:9px;padding:7px 11px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:none;font-family:inherit}.btn svg{width:13px;height:13px}
+  .btn.pv{background:var(--vimo);color:#fff} .btn.pb{background:var(--personal);color:#fff} .btn.ps{background:var(--slate);color:#fff} .btn.g{background:#fff;border:1px solid var(--line2);color:var(--text)} .btn.link{background:none;color:var(--faint);font-weight:600;padding:7px 3px}
+
+  .note{font-size:11.5px;color:var(--faint);margin-top:9px;padding-left:2px;line-height:1.5}
+  .clabel{font-size:11px;font-weight:700;color:var(--faint);margin:0 0 5px 2px;letter-spacing:.02em}
+  .rulecard{background:#fff;border:1px solid var(--line2);border-radius:16px;padding:20px 24px;margin-top:42px;box-shadow:var(--sh)}
+  .rulecard h3{font-size:15px;font-weight:800}.rulecard p{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.7}.rulecard b{color:var(--vimo-ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="intro">
+    <h1>비모 vs My box 출처 구분 — 실제 로고 + 3전략</h1>
+    <p>① 가짜 "V" 타일을 <b>실제 비모 로고</b>(<svg class="vlogo" viewBox="0 0 491.75 396.19" xmlns="http://www.w3.org/2000/svg"><path d="M491.75,10.14v375.95c0,8.49-11.04,13.18-18.49,7.83l-79.1-57.24c-1.12-.78-2.05-1.74-2.71-2.83v-115.6c0-11.2-12.09-18.18-21.78-12.6l-81.95,47.33c-3.17,1.83-7.11,1.63-10.08-.52l-11.76-8.52c-4.46-3.18-4.46-9.77,0-12.98l20-14.49c12.56-9.07,12.56-27.67,0-36.74l-19.96-14.42c-4.42-3.22-4.42-9.8,0-13.02L473.26,2.31c7.44-5.43,18.49-.66,18.49,7.83Z" fill="#f9a87a"/><path d="M269.34,212.47l-55.32,40c-2.96,2.14-6.9,2.34-10.07.52l-81.96-47.34c-9.65-5.58-21.74,1.4-21.74,12.6v111.8c0,2.97-1.43,5.77-3.84,7.51l-68.01,49.19C16.59,395.31,0,386.94,0,372.41V23.82C0,9.28,16.59.91,28.41,9.48l240.94,174.28c9.78,7.07,9.78,21.64,0,28.72Z" fill="#e85008"/></svg> vimo-mark.svg)로 교체했습니다. ② 비모와 My box가 <b>둘 다 주황</b>이라 구분이 안 됐던 게 근본 원인 — 색/무게로 확실히 가르는 3전략을 카드째 비교합니다.</p>
+    <div class="diag"><b>판단 포인트</b> — 카드를 <b>흘깃 봤을 때</b> "이건 비모 일 / 이건 내 박스"가 즉각 갈리는가? 색이 가장 강한 신호. <b>A</b>=색 분리(비모 주황/내 박스 블루) · <b>B</b>=비모만 컬러·내 박스 무채색 · <b>C</b>=솔리드 vs 고스트(무게).</div>
+  </div>
+
+  <!-- 전략 A -->
+  <div class="strat">
+    <div class="shead"><span class="tag rec">A · 추천</span><div><div class="ttl">색으로 가르기 <em>— 비모 주황 / 내 박스 블루</em></div><div class="lede">My box를 앱 원래 개인 색(블루)으로. 색이 다르니 흘깃 봐도 즉각 구분. 가장 강한 신호.</div></div></div>
+    <div class="pair">
+      <div>
+        <div class="clabel">비모 일</div>
+        <div class="hero vimo">
+          <div class="th"><img src="https://picsum.photos/seed/vibox-cafe-pour/400/300" onerror="this.style.display='none'"><div class="shade"></div><div class="pl"><svg data-lucide="play"></svg></div><div class="bl"><span class="vbadge">v3</span><span class="dur">1:48</span></div></div>
+          <div class="info">
+            <div class="crumb">성수 카페 <span class="mono">#1042</span> <svg data-lucide="chevron-right" class="sep"></svg> <b>브랜드필름</b></div>
+            <h3 class="htitle">브랜드필름 v3</h3>
+            <div class="countchips tnum">
+              <span class="cchip src vimo"><svg class="vlogo" viewBox="0 0 491.75 396.19" xmlns="http://www.w3.org/2000/svg"><path d="M491.75,10.14v375.95c0,8.49-11.04,13.18-18.49,7.83l-79.1-57.24c-1.12-.78-2.05-1.74-2.71-2.83v-115.6c0-11.2-12.09-18.18-21.78-12.6l-81.95,47.33c-3.17,1.83-7.11,1.63-10.08-.52l-11.76-8.52c-4.46-3.18-4.46-9.77,0-12.98l20-14.49c12.56-9.07,12.56-27.67,0-36.74l-19.96-14.42c-4.42-3.22-4.42-9.8,0-13.02L473.26,2.31c7.44-5.43,18.49-.66,18.49,7.83Z" fill="#f9a87a"/><path d="M269.34,212.47l-55.32,40c-2.96,2.14-6.9,2.34-10.07.52l-81.96-47.34c-9.65-5.58-21.74,1.4-21.74,12.6v111.8c0,2.97-1.43,5.77-3.84,7.51l-68.01,49.19C16.59,395.31,0,386.94,0,372.41V23.82C0,9.28,16.59.91,28.41,9.48l240.94,174.28c9.78,7.07,9.78,21.64,0,28.72Z" fill="#e85008"/></svg>비모</span>
+              <span class="cchip dl"><svg data-lucide="clock"></svg>마감 D-2</span>
+            </div>
+            <div class="act"><button class="btn pv"><svg data-lucide="upload"></svg>새 버전</button><button class="btn link">열기 →</button></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="clabel">내 박스</div>
+        <div class="hero mb-blue">
+          <div class="th"><img src="https://picsum.photos/seed/vibox-jeju-road/400/300" onerror="this.style.display='none'"><div class="shade"></div><div class="pl"><svg data-lucide="play"></svg></div><div class="bl"><span class="vbadge blue">v2</span><span class="dur">3:12</span></div></div>
+          <div class="info">
+            <div class="crumb"><svg data-lucide="hard-drive" class="mb" style="color:var(--personal)"></svg> My box <svg data-lucide="chevron-right" class="sep"></svg> <b>제주_여행</b></div>
+            <h3 class="htitle">제주_여행 v2</h3>
+            <div class="countchips tnum">
+              <span class="cchip src blue"><svg data-lucide="hard-drive"></svg>My box</span>
+              <span class="cchip"><svg data-lucide="message-square"></svg>새 코멘트 <b>3</b></span>
+            </div>
+            <div class="act"><button class="btn pb"><svg data-lucide="message-square"></svg>코멘트</button><button class="btn link">열기 →</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="note">색이 다르니 두 카드가 한눈에 갈림. ⚠️ v3.3에서 "My box 주황 통일"을 정하셨던 것과는 반대 방향(개인=블루 복귀).</div>
+  </div>
+
+  <!-- 전략 B -->
+  <div class="strat">
+    <div class="shead"><span class="tag rec">B · 추천</span><div><div class="ttl">비모만 컬러 · 내 박스 무채색 <em>— 브랜드 색 독점</em></div><div class="lede">주황은 비모만. 내 박스는 차분한 그래파이트. "색 있는 게 비모, 무채색이 내 것"이라 직관적이고 브랜드도 안 흐려짐.</div></div></div>
+    <div class="pair">
+      <div>
+        <div class="clabel">비모 일</div>
+        <div class="hero vimo">
+          <div class="th"><img src="https://picsum.photos/seed/vibox-cafe-pour/400/300" onerror="this.style.display='none'"><div class="shade"></div><div class="pl"><svg data-lucide="play"></svg></div><div class="bl"><span class="vbadge">v3</span><span class="dur">1:48</span></div></div>
+          <div class="info">
+            <div class="crumb">성수 카페 <span class="mono">#1042</span> <svg data-lucide="chevron-right" class="sep"></svg> <b>브랜드필름</b></div>
+            <h3 class="htitle">브랜드필름 v3</h3>
+            <div class="countchips tnum">
+              <span class="cchip src vimo"><svg class="vlogo" viewBox="0 0 491.75 396.19" xmlns="http://www.w3.org/2000/svg"><path d="M491.75,10.14v375.95c0,8.49-11.04,13.18-18.49,7.83l-79.1-57.24c-1.12-.78-2.05-1.74-2.71-2.83v-115.6c0-11.2-12.09-18.18-21.78-12.6l-81.95,47.33c-3.17,1.83-7.11,1.63-10.08-.52l-11.76-8.52c-4.46-3.18-4.46-9.77,0-12.98l20-14.49c12.56-9.07,12.56-27.67,0-36.74l-19.96-14.42c-4.42-3.22-4.42-9.8,0-13.02L473.26,2.31c7.44-5.43,18.49-.66,18.49,7.83Z" fill="#f9a87a"/><path d="M269.34,212.47l-55.32,40c-2.96,2.14-6.9,2.34-10.07.52l-81.96-47.34c-9.65-5.58-21.74,1.4-21.74,12.6v111.8c0,2.97-1.43,5.77-3.84,7.51l-68.01,49.19C16.59,395.31,0,386.94,0,372.41V23.82C0,9.28,16.59.91,28.41,9.48l240.94,174.28c9.78,7.07,9.78,21.64,0,28.72Z" fill="#e85008"/></svg>비모</span>
+              <span class="cchip dl"><svg data-lucide="clock"></svg>마감 D-2</span>
+            </div>
+            <div class="act"><button class="btn pv"><svg data-lucide="upload"></svg>새 버전</button><button class="btn link">열기 →</button></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="clabel">내 박스</div>
+        <div class="hero mb-slate">
+          <div class="th"><img src="https://picsum.photos/seed/vibox-jeju-road/400/300" onerror="this.style.display='none'"><div class="shade"></div><div class="pl"><svg data-lucide="play"></svg></div><div class="bl"><span class="vbadge slate">v2</span><span class="dur">3:12</span></div></div>
+          <div class="info">
+            <div class="crumb"><svg data-lucide="hard-drive" class="mb" style="color:var(--slate)"></svg> My box <svg data-lucide="chevron-right" class="sep"></svg> <b>제주_여행</b></div>
+            <h3 class="htitle">제주_여행 v2</h3>
+            <div class="countchips tnum">
+              <span class="cchip src slate"><svg data-lucide="hard-drive"></svg>My box</span>
+              <span class="cchip"><svg data-lucide="message-square"></svg>새 코멘트 <b>3</b></span>
+            </div>
+            <div class="act"><button class="btn ps"><svg data-lucide="message-square"></svg>코멘트</button><button class="btn link">열기 →</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="note">비모=유일한 컬러라 "확 들어옴"(v3.3 요구와도 맞음). 내 박스=무채색이라 둘이 안 헷갈림. 브랜드 주황을 비모만 쓰는 셈.</div>
+  </div>
+
+  <!-- 전략 C -->
+  <div class="strat">
+    <div class="shead"><span class="tag">C</span><div><div class="ttl">솔리드 vs 고스트 <em>— 무게로</em></div><div class="lede">비모=꽉 찬 주황 배지(흰 로고), 내 박스=빈 아웃라인 배지. 색은 비슷하되 무게 차이로 가름.</div></div></div>
+    <div class="pair">
+      <div>
+        <div class="clabel">비모 일</div>
+        <div class="hero vimo">
+          <div class="th"><img src="https://picsum.photos/seed/vibox-cafe-pour/400/300" onerror="this.style.display='none'"><div class="shade"></div><div class="pl"><svg data-lucide="play"></svg></div><div class="bl"><span class="vbadge">v3</span><span class="dur">1:48</span></div></div>
+          <div class="info">
+            <div class="crumb">성수 카페 <span class="mono">#1042</span> <svg data-lucide="chevron-right" class="sep"></svg> <b>브랜드필름</b></div>
+            <h3 class="htitle">브랜드필름 v3</h3>
+            <div class="countchips tnum">
+              <span class="cchip src vimo-solid"><svg class="vlogo w" viewBox="0 0 491.75 396.19" xmlns="http://www.w3.org/2000/svg"><path d="M491.75,10.14v375.95c0,8.49-11.04,13.18-18.49,7.83l-79.1-57.24c-1.12-.78-2.05-1.74-2.71-2.83v-115.6c0-11.2-12.09-18.18-21.78-12.6l-81.95,47.33c-3.17,1.83-7.11,1.63-10.08-.52l-11.76-8.52c-4.46-3.18-4.46-9.77,0-12.98l20-14.49c12.56-9.07,12.56-27.67,0-36.74l-19.96-14.42c-4.42-3.22-4.42-9.8,0-13.02L473.26,2.31c7.44-5.43,18.49-.66,18.49,7.83Z" fill="#f9a87a"/><path d="M269.34,212.47l-55.32,40c-2.96,2.14-6.9,2.34-10.07.52l-81.96-47.34c-9.65-5.58-21.74,1.4-21.74,12.6v111.8c0,2.97-1.43,5.77-3.84,7.51l-68.01,49.19C16.59,395.31,0,386.94,0,372.41V23.82C0,9.28,16.59.91,28.41,9.48l240.94,174.28c9.78,7.07,9.78,21.64,0,28.72Z" fill="#e85008"/></svg>비모</span>
+              <span class="cchip dl"><svg data-lucide="clock"></svg>마감 D-2</span>
+            </div>
+            <div class="act"><button class="btn pv"><svg data-lucide="upload"></svg>새 버전</button><button class="btn link">열기 →</button></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="clabel">내 박스</div>
+        <div class="hero">
+          <div class="th"><img src="https://picsum.photos/seed/vibox-jeju-road/400/300" onerror="this.style.display='none'"><div class="shade"></div><div class="pl"><svg data-lucide="play"></svg></div><div class="bl"><span class="vbadge slate">v2</span><span class="dur">3:12</span></div></div>
+          <div class="info">
+            <div class="crumb"><svg data-lucide="hard-drive" class="mb" style="color:var(--faint)"></svg> My box <svg data-lucide="chevron-right" class="sep"></svg> <b>제주_여행</b></div>
+            <h3 class="htitle">제주_여행 v2</h3>
+            <div class="countchips tnum">
+              <span class="cchip src ghost"><svg data-lucide="hard-drive"></svg>My box</span>
+              <span class="cchip"><svg data-lucide="message-square"></svg>새 코멘트 <b>3</b></span>
+            </div>
+            <div class="act"><button class="btn g"><svg data-lucide="message-square"></svg>코멘트</button><button class="btn link">열기 →</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="note">색 대비가 A·B보다 약해 "딱" 느낌은 덜할 수 있음. 색을 못 바꾸는 제약일 때의 차선.</div>
+  </div>
+
+  <div class="rulecard">
+    <h3>추천</h3>
+    <p><b>A(색 분리)</b> 또는 <b>B(비모만 컬러)</b>입니다. 구분을 "딱" 느끼게 하는 건 결국 <b>색</b>이라, A는 가장 강하고(내 박스=블루), B는 브랜드 주황을 비모만 쓰면서 내 박스를 무채색으로 둬 깔끔합니다(v3.3의 "비모를 확 들어오게"와도 부합). C는 색을 못 바꿀 때의 차선입니다. 로고는 셋 다 실제 <b>vimo-mark.svg</b> 적용. 고르시면 hero-cases.html과 vibox-prototype.html에 반영하겠습니다.</p>
+  </div>
+</div>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>if(window.lucide) lucide.createIcons();</script>
+</body>
+</html>

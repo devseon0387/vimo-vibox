@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 댓글 패널 — 리서치 기반 개선</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --accent:#e85008; --acc-ink:#c2410c; --acc-soft:#fef0e8; --acc-line:#fbd9c4; --ai:#7c3aed; --ai-soft:#f3edff; --emerald:#059669; --emerald-soft:#ecfdf5;
+    --col:#c2410c; --col-soft:#fff1e8; --txt:#6d28d9; --txt-soft:#f3edff; --etc:#475569; --etc-soft:#f1f5f9;
+    --s50:#f8fafc; --s100:#f1f5f9; --s200:#e2e8f0; --s300:#cbd5e1; --s400:#94a3b8; --s500:#64748b; --s600:#475569; --s700:#334155; --s900:#0f172a;
+    --page:#e9eaec; --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif; --sh2:0 16px 44px rgba(15,23,42,.2); --sh:0 1px 2px rgba(15,23,42,.06);
+    --bar:#0b0f17; --barline:#1e293b; --trk:#334155; --buf:#475569; --bartxt:#cbd5e1; --dim:#64748b; --bright:#f1f5f9; --resolved:#94a3b8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);background:var(--page);color:var(--s900);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h3{margin:0} button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  svg.lucide{width:1em;height:1em;stroke-width:2;flex:none;vertical-align:-.14em}
+  .vmk{display:inline-block;vertical-align:-2px} img{display:block}
+  .wrap{max-width:1280px;margin:0 auto;padding:26px 20px 90px}
+  .intro h1{font-size:20px;font-weight:800;letter-spacing:-.02em}
+  .intro p{color:var(--s500);font-size:12.5px;margin-top:7px;line-height:1.6;max-width:900px}.intro b{color:var(--s700)}
+
+  .browser{margin-top:18px;border:1px solid var(--s200);border-radius:13px;overflow:hidden;background:#fff;box-shadow:var(--sh2)}
+  .bchrome{display:flex;align-items:center;gap:8px;padding:9px 13px;background:#f3f3f4;border-bottom:1px solid var(--s200)}
+  .bdots{display:flex;gap:6px}.bdots i{width:11px;height:11px;border-radius:50%;background:#d6d6d8;display:block}
+  .burl{flex:1;background:#fff;border:1px solid var(--s200);border-radius:7px;padding:5px 11px;font-size:11px;color:var(--s400);display:flex;align-items:center;gap:7px}.burl svg{width:12px;height:12px;color:#bdbdbd}
+  .viewer{height:638px;display:flex;flex-direction:column;background:#fff;overflow:hidden}
+
+  .vhead{flex:none;display:flex;align-items:center;gap:11px;padding:10px 15px;background:#fff;border-bottom:1px solid var(--s200)}
+  .vhead .crumb{font-size:12.5px;color:var(--s400);display:flex;align-items:center;gap:6px}.vhead .crumb b{color:var(--s600);font-weight:600}.vhead .crumb .cur{color:var(--s900);font-weight:700}.vhead .crumb svg{width:13px;height:13px;color:var(--s300)}
+  .vhead .pin{font-size:11px;font-weight:800;color:var(--accent);background:var(--acc-soft);border-radius:6px;padding:2px 8px}
+  .vhead .up{font-size:11px;color:var(--s400)}.vhead .up b{color:var(--s600);font-weight:600}
+  .vhead .r{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .vhead .unres{font-size:11px;font-weight:700;color:var(--acc-ink);background:var(--acc-soft);border-radius:7px;padding:5px 9px;display:inline-flex;align-items:center;gap:5px}.vhead .unres svg{width:13px;height:13px}
+  .b{font-size:12px;font-weight:600;border-radius:8px;padding:6px 11px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.b svg{width:14px;height:14px}
+  .b-out{background:#fff;border:1px solid var(--s200);color:var(--s700)} .b-ok{background:var(--emerald);color:#fff}
+
+  .body{flex:1;display:flex;min-height:0}
+  .left{flex:1;min-width:0;display:flex;flex-direction:column;background:#000}
+  .stage{flex:1;min-height:0;position:relative;display:grid;place-items:center;background:linear-gradient(125deg,#0d4d4a 0%,#1f6f5c 36%,#c2683a 76%,#e85008 100%)}
+  .stage .pbtn{position:absolute;width:72px;height:72px;border-radius:50%;background:rgba(11,15,23,.55);backdrop-filter:blur(3px);border:1px solid rgba(255,255,255,.18);display:grid;place-items:center;z-index:2}.stage .pbtn svg{width:27px;height:27px;color:#fff;fill:#fff;margin-left:4px}
+  .stage .anno{position:absolute;top:13px;right:13px;font-size:11.5px;font-weight:600;color:#fff;background:rgba(0,0,0,.42);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:6px 11px;display:inline-flex;align-items:center;gap:6px}.stage .anno svg{width:13px;height:13px}
+  .stage .speed{position:absolute;top:13px;left:13px;font-size:11px;font-weight:800;color:#fff;background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.16);border-radius:7px;padding:4px 9px;font-family:ui-monospace,monospace}
+  .stage .sub{position:absolute;left:0;right:0;bottom:16px;text-align:center;color:#fff;font-size:16px;font-weight:600;text-shadow:0 1px 5px rgba(0,0,0,.9)}
+
+  .bar{flex:none;background:var(--bar);border-top:1px solid var(--barline);padding:10px 16px 11px}
+  .r1b{display:flex;align-items:center;gap:12px}
+  .seek{position:relative;flex:1;height:18px;display:flex;align-items:center}
+  .seek .trk{position:absolute;left:0;right:0;height:6px;border-radius:3px;background:var(--trk)}
+  .seek .buf{position:absolute;left:0;height:6px;width:52%;border-radius:3px;background:var(--buf)}
+  .seek .fil{position:absolute;left:0;height:6px;width:34%;border-radius:3px;background:var(--accent)}
+  .seek .mk{position:absolute;top:50%;transform:translate(-50%,-50%);width:11px;height:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2.5px var(--bar),0 1px 3px rgba(0,0,0,.6);z-index:2}
+  .seek .mk.ai{background:var(--ai)}.seek .mk.done{background:var(--resolved)}
+  .seek .head{position:absolute;top:50%;left:34%;transform:translate(-50%,-50%);width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px var(--accent),0 1px 5px rgba(0,0,0,.6);z-index:3}
+  .tcd{font-family:ui-monospace,monospace;font-size:12px;font-weight:600;color:var(--bartxt)}.tcd.dur{color:var(--dim)}
+  .r2b{display:flex;align-items:center;gap:10px;margin-top:9px}
+  .ico{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;color:var(--bartxt)}.ico svg{width:19px;height:19px}
+  .play{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;box-shadow:0 4px 14px rgba(232,80,8,.4)}.play svg{width:22px;height:22px;fill:currentColor}
+  .grp{display:flex;align-items:center;gap:3px}.divb{width:1px;height:24px;background:var(--barline);margin:0 5px}.spb{flex:1}
+  .nav1{display:flex;align-items:center}.nav1 .arw,.nav1 .cm{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--bartxt);position:relative}.nav1 .arw svg,.nav1 .cm svg{width:18px;height:18px}
+  .nav1 .cm .bdg{position:absolute;top:3px;right:2px;min-width:13px;height:13px;padding:0 3px;border-radius:7px;background:var(--accent);color:#fff;font-size:8.5px;font-weight:800;display:grid;place-items:center;line-height:1}
+  .utilb{display:flex;align-items:center;gap:3px}.utilb .spd{height:34px;padding:0 10px;border-radius:9px;font-size:12px;font-weight:700;font-family:ui-monospace,monospace;color:var(--bartxt)}.utilb .ico{color:var(--dim)}
+
+  /* ===== 개선 댓글 패널 ===== */
+  .panel{width:368px;flex:none;border-left:1px solid var(--s200);background:var(--s50);display:flex;flex-direction:column;min-height:0}
+  .ph{flex:none;background:#fff;border-bottom:1px solid var(--s200);padding:10px 13px}
+  .ph .r1{display:flex;align-items:center;gap:7px;margin-bottom:9px}
+  .ph .cc{font-size:12px;font-weight:700;color:var(--acc-ink);background:var(--acc-soft);border:1px solid var(--acc-line);border-radius:7px;padding:3px 9px;display:inline-flex;align-items:center;gap:5px}.ph .cc svg{width:13px;height:13px}
+  .ph .sp{flex:1}
+  .ph .hi{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;color:var(--s400)}.ph .hi:hover{background:var(--s100);color:var(--s700)}.ph .hi svg{width:16px;height:16px}
+  .ph .hi.act{color:var(--accent);background:var(--acc-soft)}
+  .ph .seg{display:flex;gap:2px;background:var(--s100);border-radius:8px;padding:3px}.ph .seg button{flex:1;font-size:11.5px;font-weight:700;padding:5px;border-radius:6px;color:var(--s500);display:inline-flex;align-items:center;justify-content:center;gap:5px}.ph .seg button.on{background:#fff;color:var(--s900);box-shadow:var(--sh)}.ph .seg button .ct{font-size:10px;color:var(--s400);font-weight:700}.ph .seg button.on .ct{color:var(--accent)}
+  .bsl{display:flex;align-items:center;gap:6px;padding:7px 13px;font-size:11.5px;color:var(--s500);background:var(--s50);border-bottom:1px solid var(--s100)}.bsl svg{width:13px;height:13px;color:var(--s400)}.bsl a{margin-left:auto;color:#2563eb;font-weight:600;text-decoration:none}
+
+  .list{flex:1;overflow-y:auto;padding:11px;display:flex;flex-direction:column;gap:9px;min-height:0}
+  .lc{position:relative;background:#fff;border:1px solid var(--s200);border-radius:10px;padding:11px 12px;display:flex;gap:10px}
+  .lc:hover{border-color:var(--s300)}
+  .lc-ck{flex:none;width:20px;height:20px;border-radius:50%;border:2px solid var(--s300);background:#fff;margin-top:1px;display:grid;place-items:center}.lc-ck svg{width:11px;height:11px;color:#fff;opacity:0}.lc-ck.on{background:var(--emerald);border-color:var(--emerald)}.lc-ck.on svg{opacity:1}
+  .lc-m{flex:1;min-width:0}
+  .lc-meta{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+  /* 타임코드 칩 = 상태색 (마커와 결속) */
+  .lc-tc{font-family:ui-monospace,monospace;font-size:11px;font-weight:800;padding:1px 7px;border-radius:5px;font-variant-numeric:tabular-nums;color:var(--acc-ink);background:var(--acc-soft)}
+  .lc-tc.ai{color:var(--ai);background:var(--ai-soft)}
+  .lc-tc.done{color:var(--s400);background:var(--s100)}
+  .lc-cat{font-size:9.5px;font-weight:800;border-radius:5px;padding:1px 6px;display:inline-flex;align-items:center;gap:3px}.lc-cat svg{width:10px;height:10px}.lc-cat.col{color:var(--col);background:var(--col-soft)}.lc-cat.txt{color:var(--txt);background:var(--txt-soft)}.lc-cat.etc{color:var(--etc);background:var(--etc-soft)}
+  .lc-pin{width:18px;height:18px;border-radius:5px;display:grid;place-items:center;color:var(--s400);background:var(--s100)}.lc-pin svg{width:11px;height:11px}
+  .lc-au{margin-left:auto;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  .lc-au .av{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:9px;font-weight:800;color:#fff}
+  .lc-au .nm{font-size:10.5px;font-weight:700;color:var(--s600)}
+  .lc-au .role{font-size:9px;font-weight:800;color:#fff;background:var(--ai);border-radius:4px;padding:1px 4px}
+  .lc-au .aib{font-size:9px;font-weight:800;color:var(--ai)}
+  .lc-tx{font-size:13px;color:var(--s900);line-height:1.5}.lc-tx .hl{color:var(--accent);font-weight:600}
+  .lc-foot{display:flex;align-items:center;gap:9px;margin-top:6px}
+  .lc-foot .when{font-size:10px;color:var(--s400)}
+  .lc-foot .rep{font-size:10.5px;font-weight:600;color:var(--s500);display:inline-flex;align-items:center;gap:3px}.lc-foot .rep svg{width:12px;height:12px}
+  .lc-more{position:absolute;top:9px;right:9px;width:24px;height:24px;border-radius:6px;display:grid;place-items:center;color:var(--s400);opacity:0;transition:.12s;background:#fff}.lc:hover .lc-more{opacity:1}.lc-more:hover{background:var(--s100);color:var(--s700)}.lc-more svg{width:14px;height:14px}
+  /* 해결 = 디밍 (취소선·접기·띠 없음) */
+  .lc.done{background:var(--s50);opacity:.62}
+  .lc.done:hover{opacity:.85}
+
+  .linput{flex:none;border-top:1px solid var(--s200);padding:10px 12px;background:#fff}
+  .linput .bx{border:1px solid var(--s200);background:var(--s50);border-radius:10px;overflow:hidden}
+  .linput .row1{display:flex;align-items:center;gap:7px;padding:7px 9px 4px}.linput .row1 .tcc{font-family:ui-monospace,monospace;font-size:10.5px;font-weight:700;color:var(--s900);background:var(--s100);padding:1px 6px;border-radius:5px}
+  .linput .kind{display:flex;gap:2px;background:#fff;border:1px solid var(--s200);border-radius:7px;padding:2px}.linput .kind button{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:5px;color:var(--s400);display:inline-flex;align-items:center;gap:3px}.linput .kind button svg{width:10px;height:10px}.linput .kind button.on{background:var(--s900);color:#fff}
+  .linput .cat{margin-left:auto;font-size:10px;font-weight:700;color:var(--col);background:var(--col-soft);padding:2px 7px;border-radius:6px}
+  .linput .row2{display:flex;align-items:center;gap:8px;padding:2px 9px 9px}.linput .row2 input{flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:12.5px}
+  .linput .send{width:29px;height:29px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center;flex:none}.linput .send svg{width:14px;height:14px}
+
+  .why{margin-top:22px;background:#fff;border:1px solid var(--s200);border-radius:13px;padding:16px 18px}
+  .why h3{font-size:13px;font-weight:800;color:var(--acc-ink);display:flex;align-items:center;gap:7px;margin-bottom:10px}.why h3 svg{width:15px;height:15px}
+  .why ul{margin:0;padding-left:2px;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:8px 22px}
+  .why li{font-size:12px;color:var(--s500);line-height:1.5;display:flex;gap:8px}.why li svg{width:14px;height:14px;color:var(--emerald);flex:none;margin-top:2px}.why li b{color:var(--s700)}
+  @media(max-width:760px){.why ul{grid-template-columns:1fr}}
+  .foot{margin-top:26px;font-size:12px;color:var(--s400);text-align:center;line-height:1.7}
+</style>
+</head>
+<body>
+<svg style="display:none"><symbol id="vmk" viewBox="0 0 491.75 396.19"><path d="M491.75,10.14v375.95c0,8.49-11.04,13.18-18.49,7.83l-79.1-57.24c-1.12-.78-2.05-1.74-2.71-2.83v-115.6c0-11.2-12.09-18.18-21.78-12.6l-81.95,47.33c-3.17,1.83-7.11,1.63-10.08-.52l-11.76-8.52c-4.46-3.18-4.46-9.77,0-12.98l20-14.49c12.56-9.07,12.56-27.67,0-36.74l-19.96-14.42c-4.42-3.22-4.42-9.8,0-13.02L473.26,2.31c7.44-5.43,18.49-.66,18.49,7.83Z" fill="#f9a87a"/><path d="M269.34,212.47l-55.32,40c-2.96,2.14-6.9,2.34-10.07.52l-81.96-47.34c-9.65-5.58-21.74,1.4-21.74,12.6v111.8c0,2.97-1.43,5.77-3.84,7.51l-68.01,49.19C16.59,395.31,0,386.94,0,372.41V23.82C0,9.28,16.59.91,28.41,9.48l240.94,174.28c9.78,7.07,9.78,21.64,0,28.72Z" fill="#e85008"/></symbol></svg>
+
+<div class="wrap">
+  <div class="intro">
+    <h1>댓글 패널 — 리서치 기반 개선</h1>
+    <p>Frame.io·Dropbox Replay·Filestage를 조사해 개선했습니다. <b>체크박스는 그대로</b>. 핵심은 <b>시크바 마커 색(미해결 주황·AI 보라·해결 회색)과 카드 타임코드 칩을 같은 색으로 묶어</b> 마커↔카드를 1:1로 잇고, 해결은 디밍, 헤더는 상태 세그먼트로 정리한 것. 시크바 마커와 우측 카드 색을 비교해 보세요.</p>
+  </div>
+
+  <div class="browser">
+    <div class="bchrome"><span class="bdots"><i></i><i></i><i></i></span><span class="burl"><svg data-lucide="lock"></svg> vibox.cloud/team/브랜드필름_v3</span></div>
+    <div class="viewer">
+      <div class="vhead">
+        <svg class="vmk" width="19" height="15"><use href="#vmk"/></svg>
+        <span class="crumb"><b>team</b><svg data-lucide="chevron-right"></svg><span class="cur">브랜드필름</span></span>
+        <span class="pin">v3</span><span class="up">올린 사람 <b>윤현지(테스트)</b></span>
+        <span class="r"><span class="unres"><svg data-lucide="message-circle"></svg>미해결 2</span><button class="b b-out"><svg data-lucide="pen-line"></svg>수정 요청</button><button class="b b-ok"><svg data-lucide="check"></svg>승인</button></span>
+      </div>
+      <div class="body">
+        <div class="left">
+          <div class="stage"><div class="speed">1x</div><div class="anno"><svg data-lucide="pen-line"></svg>주석</div><div class="pbtn"><svg data-lucide="play"></svg></div><div class="sub">우리의 하루는 한 잔의 커피에서 시작된다</div></div>
+          <div class="bar">
+            <div class="r1b"><span class="tcd">0:36</span><div class="seek"><div class="trk"></div><div class="buf"></div><div class="fil"></div><span class="mk" style="left:7%"></span><span class="mk ai" style="left:39%"></span><span class="mk done" style="left:69%"></span><span class="head"></span></div><span class="tcd dur">1:48</span></div>
+            <div class="r2b">
+              <div class="grp"><button class="ico"><svg data-lucide="step-back"></svg></button><button class="play"><svg data-lucide="play"></svg></button><button class="ico"><svg data-lucide="step-forward"></svg></button></div>
+              <div class="divb"></div>
+              <div class="nav1"><button class="arw"><svg data-lucide="chevron-left"></svg></button><button class="cm"><svg data-lucide="message-square"></svg><span class="bdg">2</span></button><button class="arw"><svg data-lucide="chevron-right"></svg></button></div>
+              <div class="spb"></div>
+              <div class="utilb"><button class="spd">1x</button><button class="ico"><svg data-lucide="volume-2"></svg></button><button class="ico"><svg data-lucide="maximize"></svg></button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="ph">
+            <div class="r1">
+              <span class="cc"><svg data-lucide="message-square"></svg>미해결 2</span>
+              <span class="sp"></span>
+              <button class="hi" title="정렬: 시간순"><svg data-lucide="arrow-down-narrow-wide"></svg></button>
+              <button class="hi" title="해결 숨기기"><svg data-lucide="eye-off"></svg></button>
+              <button class="hi" title="검색"><svg data-lucide="search"></svg></button>
+              <button class="hi" title="설정"><svg data-lucide="settings-2"></svg></button>
+            </div>
+            <div class="seg"><button class="on">전체 <span class="ct">3</span></button><button>미해결 <span class="ct">2</span></button><button>해결 <span class="ct">1</span></button></div>
+          </div>
+          <div class="bsl"><svg data-lucide="eye"></svg>내부 댓글 2건 클라에 비공개<a href="#">공개</a></div>
+          <div class="list">
+            <!-- 미해결 (주황) -->
+            <div class="lc">
+              <button class="lc-ck"></button>
+              <div class="lc-m">
+                <div class="lc-meta"><span class="lc-tc">0:08</span><span class="lc-cat col"><svg data-lucide="palette"></svg>색보정</span><span class="lc-au"><span class="av" style="background:#8a6fb0">박</span><span class="nm">박매니저</span><span class="role">관리</span></span></div>
+                <div class="lc-tx">인트로 색감이 차가워요. 따뜻하게 부탁드려요.</div>
+                <div class="lc-foot"><span class="when">5월 30일</span></div>
+              </div>
+              <button class="lc-more"><svg data-lucide="more-horizontal"></svg></button>
+            </div>
+            <!-- AI (보라) + 주석 핀 -->
+            <div class="lc">
+              <button class="lc-ck"></button>
+              <div class="lc-m">
+                <div class="lc-meta"><span class="lc-tc ai">0:42</span><span class="lc-cat txt"><svg data-lucide="type"></svg>자막</span><span class="lc-pin" title="화면 주석"><svg data-lucide="map-pin"></svg></span><span class="lc-au"><span class="av" style="background:var(--ai)"><svg data-lucide="sparkles" style="width:10px;height:10px;color:#fff"></svg></span><span class="aib">AI 검수</span></span></div>
+                <div class="lc-tx">자막 오타 의심: <span class="hl">‘브랜대’ → ‘브랜드’</span></div>
+                <div class="lc-foot"><span class="when">AI 추천</span><span class="rep" style="color:var(--s400)">무시 · 수정에 추가</span></div>
+              </div>
+              <button class="lc-more"><svg data-lucide="more-horizontal"></svg></button>
+            </div>
+            <!-- 해결 (회색·디밍) -->
+            <div class="lc done">
+              <button class="lc-ck on"><svg data-lucide="check"></svg></button>
+              <div class="lc-m">
+                <div class="lc-meta"><span class="lc-tc done">1:15</span><span class="lc-cat etc">기타</span><span class="lc-au"><span class="av" style="background:#8a6fb0">박</span><span class="nm">박매니저</span><span class="role">관리</span></span></div>
+                <div class="lc-tx">이 전환 정말 좋네요. 이대로.</div>
+                <div class="lc-foot"><span class="when">5월 30일 · 해결됨</span><span class="rep"><svg data-lucide="corner-down-right"></svg>답글 1</span></div>
+              </div>
+              <button class="lc-more"><svg data-lucide="more-horizontal"></svg></button>
+            </div>
+          </div>
+          <div class="linput"><div class="bx"><div class="row1"><span class="tcc">0:36</span><div class="kind"><button class="on"><svg data-lucide="pen-line"></svg>수정</button><button><svg data-lucide="heart"></svg>좋아요</button></div><span class="cat">색보정</span></div><div class="row2"><input placeholder="피드백을 입력하세요 (⌘+Enter)"><button class="send"><svg data-lucide="arrow-up"></svg></button></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="why">
+    <h3><svg data-lucide="sparkles"></svg>리서치에서 가져온 개선 (체크박스는 그대로)</h3>
+    <ul>
+      <li><svg data-lucide="check"></svg><span><b>마커↔카드 색 결속</b> — 시크바 마커와 카드 타임코드 칩이 같은 상태색(미해결 주황·AI 보라·해결 회색). 마커가 더는 카테고리 색이 아님 (Dropbox Replay·Filestage)</span></li>
+      <li><svg data-lucide="check"></svg><span><b>상태 세그먼트 헤더</b> — 전체/미해결/해결 탭(작업 큐). 기본은 미해결. '해결 숨기기' 눈 토글을 여기로 (Replay)</span></li>
+      <li><svg data-lucide="check"></svg><span><b>해결 = 디밍</b> — 취소선·접기·좌측 띠 없이 카드 전체를 흐리게(배경/투명도만). 우리 '띠 금지' 규칙과 일치 (Filestage)</span></li>
+      <li><svg data-lucide="check"></svg><span><b>타임코드 1급 + 작은 아바타</b> — 시점·누가를 빠르게 스캔. 작성자 아바타 도입 (Frame.io)</span></li>
+      <li><svg data-lucide="check"></svg><span><b>화면 주석은 핀 아이콘</b>으로 한 칸 — 텍스트 없이 종류 즉시 구분 (Frame.io 핀/라소)</span></li>
+      <li><svg data-lucide="check"></svg><span><b>부차 액션은 hover ⋯로</b> — 수정·삭제·클라공개·순화를 접어 휴지 상태를 차분하게. 답글은 접고 정렬/필터 제외</span></li>
+    </ul>
+  </div>
+
+  <div class="foot">체크박스 유지 · 좌측 띠 없음 · slate 카드 · 마커↔카드 색 결속<br>이 방향이 맞으면 실제 코드로 구현(마커 상태색 통일 포함) · 카드 밀도·아바타 수위는 조정 가능</div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>if(window.lucide) lucide.createIcons();</script>
+</body>
+</html>

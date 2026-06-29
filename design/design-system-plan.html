@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 디자인시스템 토대 — #1 계획</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  /* 실제 비박스 색 토큰 + 제안 타이포/라운딩 스케일 */
+  :root{
+    --bg:#fff;--surface:#fafafa;--surface-2:#f7f7f7;--border:#ececec;--border-hover:#d4d4d4;
+    --text:#111;--text-muted:#555;--text-soft:#666;--text-faint:#999;
+    --accent:#e85008;--accent-hover:#c8430a;--accent-soft:#fef0e8;
+    --danger:#dc2626;--danger-soft:#fef2f2;--success:#16a34a;--success-soft:#f0fdf4;
+    --warning:#d97706;--warning-soft:#fef3c7;--purple:#7c3aed;--purple-soft:#f5f3ff;
+    --personal:#0ea5e9;--personal-soft:#e0f2fe;--personal-dark:#0369a1;--mybox:#52525b;--mybox-soft:#f4f4f5;
+    /* 제안: 타이포 스케일 (16종 → 8단계) */
+    --text-2xs:10px;--text-xs:11px;--text-sm:12px;--text-base:13px;--text-md:14px;--text-lg:16px;--text-xl:18px;--text-2xl:22px;
+    /* 제안: 라운딩 스케일 (6종 → 5단계) */
+    --radius-sm:6px;--radius-md:8px;--radius-lg:12px;--radius-xl:16px;--radius-full:999px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#eceef1;color:var(--text);font-family:Pretendard,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .lucide{width:1em;height:1em;stroke-width:2;flex:none}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .wrap{max-width:1080px;margin:0 auto;padding:34px 24px 90px}
+  h1{font-size:23px;font-weight:800;letter-spacing:-.02em}
+  .lead{color:var(--text-soft);font-size:13.5px;margin-top:9px;line-height:1.65;max-width:840px}
+  .lead b{color:var(--text)}
+  .approach{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .approach .s{font-size:11.5px;font-weight:700;color:var(--text-soft);background:#fff;border:1px solid var(--border);border-radius:var(--radius-full);padding:6px 13px;display:inline-flex;align-items:center;gap:6px}
+  .approach .s .n{width:18px;height:18px;border-radius:var(--radius-full);background:var(--accent);color:#fff;display:grid;place-items:center;font-size:10px;font-weight:800}
+  .approach .lucide{color:var(--text-faint);font-size:14px;align-self:center}
+
+  .sec{margin-top:38px}
+  .sec h2{font-size:16px;font-weight:800;display:flex;align-items:center;gap:9px}
+  .sec h2 .b{width:24px;height:24px;border-radius:var(--radius-sm);background:var(--text);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:800}
+  .sec .d{font-size:12.5px;color:var(--text-soft);margin:6px 0 16px;line-height:1.6;max-width:820px}
+  .card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px}
+
+  /* 현황 */
+  .stat{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .stat .k{background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);padding:13px 15px}
+  .stat .k .big{font-size:22px;font-weight:800;color:var(--accent)}
+  .stat .k .lab{font-size:11.5px;color:var(--text-soft);margin-top:3px;line-height:1.4}
+  .bars{margin-top:14px;display:flex;flex-direction:column;gap:6px}
+  .bars .r{display:flex;align-items:center;gap:9px}
+  .bars .r .nm{width:108px;font-size:11px;font-family:ui-monospace,monospace;color:var(--text-soft);text-align:right}
+  .bars .r .bar{flex:1;height:14px;background:var(--surface-2);border-radius:var(--radius-sm);overflow:hidden}
+  .bars .r .bar i{display:block;height:100%;background:var(--accent);opacity:.85}
+  .bars .r .ct{width:40px;font-size:10.5px;color:var(--text-faint);font-family:ui-monospace,monospace}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
+  th{font-size:10.5px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:.04em}
+  td .tk{font-family:ui-monospace,monospace;font-weight:700;color:var(--accent);font-size:11.5px}
+  td .px{font-family:ui-monospace,monospace;color:var(--text-soft)}
+  td .old{font-family:ui-monospace,monospace;color:var(--text-faint);font-size:10.5px}
+  .samp{color:var(--text)}
+
+  /* 컴포넌트 데모 */
+  .demo{display:flex;flex-direction:column;gap:18px}
+  .grp{display:flex;flex-direction:column;gap:9px}
+  .grp .gl{font-size:10.5px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:.04em}
+  .rowd{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+  /* Button (제안 최종형) */
+  .btn{font-family:Pretendard;font-weight:700;border:1px solid transparent;border-radius:var(--radius-md);display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;transition:background .15s,border-color .15s,color .15s;white-space:nowrap}
+  .btn .lucide{font-size:1.15em}
+  .btn-sm{height:30px;padding:0 11px;font-size:var(--text-xs)}
+  .btn-md{height:36px;padding:0 14px;font-size:var(--text-base)}
+  .btn-lg{height:42px;padding:0 18px;font-size:var(--text-md)}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover{background:var(--accent-hover)}
+  .btn-secondary{background:#fff;color:var(--text);border-color:var(--border)}
+  .btn-secondary:hover{border-color:var(--border-hover);background:var(--surface)}
+  .btn-ghost{background:transparent;color:var(--text-soft)}
+  .btn-ghost:hover{background:var(--surface);color:var(--text)}
+  .btn-danger{background:var(--danger-soft);color:var(--danger)}
+  .btn-danger:hover{background:#fde0e0}
+  .btn:disabled,.btn[aria-disabled=true]{opacity:.5;cursor:not-allowed;pointer-events:none}
+  .spin{animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+
+  /* Badge (제안) */
+  .badge{display:inline-flex;align-items:center;gap:4px;font-weight:700;border-radius:var(--radius-sm);line-height:1;white-space:nowrap}
+  .badge .lucide{font-size:1.05em}
+  .badge-sm{font-size:var(--text-2xs);padding:3px 7px}
+  .badge-md{font-size:var(--text-xs);padding:4px 9px}
+  .bg-neutral{background:var(--mybox-soft);color:var(--mybox)}
+  .bg-accent{background:var(--accent-soft);color:var(--accent)}
+  .bg-sky{background:var(--personal-soft);color:var(--personal-dark)}
+  .bg-success{background:var(--success-soft);color:var(--success)}
+  .bg-warning{background:var(--warning-soft);color:var(--warning)}
+  .bg-danger{background:var(--danger-soft);color:var(--danger)}
+  .bg-purple{background:var(--purple-soft);color:var(--purple)}
+
+  .codeblock{background:#1a1a1e;color:#e4e4e7;border-radius:var(--radius-md);padding:13px 15px;font-family:ui-monospace,monospace;font-size:11.5px;line-height:1.65;overflow-x:auto;margin-top:8px}
+  .codeblock .c{color:#71717a}.codeblock .k{color:#fca5a5}.codeblock .s{color:#86efac}.codeblock .p{color:#fdba74}
+
+  .steps{counter-reset:s;display:flex;flex-direction:column;gap:11px}
+  .steps .st{display:flex;gap:13px}
+  .steps .st .n{counter-increment:s;flex:none;width:26px;height:26px;border-radius:var(--radius-full);background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:800;font-size:12px}
+  .steps .st .n::before{content:counter(s)}
+  .steps .st .b{font-size:12.5px;line-height:1.55}
+  .steps .st .b b{font-weight:700}
+  .steps .st .b .meta{font-size:11px;color:var(--text-faint);margin-top:1px}
+
+  .note{font-size:12px;color:var(--text-soft);background:var(--warning-soft);border:1px solid #f3e2bd;border-radius:var(--radius-md);padding:10px 13px;margin-top:14px;line-height:1.55}
+  .foot{margin-top:40px;color:var(--text-faint);font-size:12px;line-height:1.7;border-top:1px solid #d9dce0;padding-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>비박스 디자인시스템 토대 — #1 계획</h1>
+  <p class="lead">색 토큰은 이미 잘 정의돼 있는데(@theme inline) <b>컴포넌트 레이어에서 강제가 안 돼</b> 일관성이 샙니다. 핵심은 "토큰을 더 만들기"가 아니라 <b>공용 컴포넌트 + 스케일 토큰 + lint로 새는 구멍을 막는 것</b>. 순서가 중요합니다.</p>
+  <div class="approach">
+    <span class="s"><span class="n">1</span>공용 컴포넌트 (Button·Badge)</span>
+    <i data-lucide="arrow-right"></i>
+    <span class="s"><span class="n">2</span>스케일 토큰 (타이포·라운딩)</span>
+    <i data-lucide="arrow-right"></i>
+    <span class="s"><span class="n">3</span>핵심 파일 마이그레이션</span>
+    <i data-lucide="arrow-right"></i>
+    <span class="s"><span class="n">4</span>lint로 직계 차단</span>
+  </div>
+
+  <!-- 현황 -->
+  <div class="sec">
+    <h2><span class="b">A</span>지금 무엇이 새고 있나 (실측)</h2>
+    <div class="d">레포 전체 grep 결과. 색은 토큰화됐지만 타이포·컴포넌트가 무너져 있습니다.</div>
+    <div class="stat">
+      <div class="k"><div class="big">16종</div><div class="lab"><code>text-[Xpx]</code> 종류 (9~22px) · 1000+회 사용</div></div>
+      <div class="k"><div class="big">0개</div><div class="lab">공용 Button·Badge 컴포넌트 (NewBadge만 존재)</div></div>
+      <div class="k"><div class="big">~13%</div><div class="lab">토큰 채택률 (85개 중 11개만 참조)</div></div>
+    </div>
+    <div class="bars">
+      <div class="r"><span class="nm">text-[11px]</span><span class="bar"><i style="width:100%"></i></span><span class="ct">146</span></div>
+      <div class="r"><span class="nm">text-[13px]</span><span class="bar"><i style="width:94%"></i></span><span class="ct">137</span></div>
+      <div class="r"><span class="nm">text-[12px]</span><span class="bar"><i style="width:88%"></i></span><span class="ct">128</span></div>
+      <div class="r"><span class="nm">text-[12.5px]</span><span class="bar"><i style="width:82%"></i></span><span class="ct">119</span></div>
+      <div class="r"><span class="nm">text-[11.5px]</span><span class="bar"><i style="width:77%"></i></span><span class="ct">112</span></div>
+      <div class="r"><span class="nm">text-[10.5px]</span><span class="bar"><i style="width:70%"></i></span><span class="ct">102</span></div>
+      <div class="r"><span class="nm">…그 외 10종</span><span class="bar"><i style="width:55%;opacity:.5"></i></span><span class="ct">221</span></div>
+    </div>
+  </div>
+
+  <!-- 타이포 스케일 -->
+  <div class="sec">
+    <h2><span class="b">B</span>타이포 스케일 (16종 → 8단계)</h2>
+    <div class="d">0.5px 단위 난립을 의미 있는 8단계로 흡수. 클래스는 <code class="mono">text-2xs … text-2xl</code> 로 통일.</div>
+    <div class="card">
+      <table>
+        <thead><tr><th>토큰</th><th>px</th><th>용도</th><th>흡수하는 기존 값</th><th>미리보기</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tk">text-2xs</span></td><td class="px">10</td><td>마이크로 라벨·배지</td><td class="old">9 · 9.5 · 10 · 10.5</td><td><span class="samp" style="font-size:10px">검수 대기</span></td></tr>
+          <tr><td><span class="tk">text-xs</span></td><td class="px">11</td><td>캡션·메타</td><td class="old">11 · 11.5</td><td><span class="samp" style="font-size:11px">2시간 전 · 1.2GB</span></td></tr>
+          <tr><td><span class="tk">text-sm</span></td><td class="px">12</td><td>보조 텍스트</td><td class="old">12 · 12.5</td><td><span class="samp" style="font-size:12px">파일을 여기에 놓으세요</span></td></tr>
+          <tr><td><span class="tk">text-base</span></td><td class="px">13</td><td>본문 기본</td><td class="old">13 · 13.5</td><td><span class="samp" style="font-size:13px">그래놀라_광고_v2.mp4</span></td></tr>
+          <tr><td><span class="tk">text-md</span></td><td class="px">14</td><td>강조 본문</td><td class="old">14</td><td><span class="samp" style="font-size:14px;font-weight:600">메인편집 v3</span></td></tr>
+          <tr><td><span class="tk">text-lg</span></td><td class="px">16</td><td>소제목</td><td class="old">15 · 16</td><td><span class="samp" style="font-size:16px;font-weight:700">공유 링크</span></td></tr>
+          <tr><td><span class="tk">text-xl</span></td><td class="px">18</td><td>섹션 제목</td><td class="old">18 · 20</td><td><span class="samp" style="font-size:18px;font-weight:800">My box</span></td></tr>
+          <tr><td><span class="tk">text-2xl</span></td><td class="px">22</td><td>페이지 타이틀</td><td class="old">22</td><td><span class="samp" style="font-size:22px;font-weight:800">대시보드</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 라운딩 -->
+  <div class="sec">
+    <h2><span class="b">C</span>라운딩 스케일 (6종 → 5단계)</h2>
+    <div class="card">
+      <div class="rowd" style="gap:22px">
+        <div style="text-align:center"><div style="width:64px;height:44px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--radius-sm);margin:0 auto 6px"></div><div class="mono" style="font-size:11px;color:var(--accent);font-weight:700">radius-sm 6</div><div style="font-size:10.5px;color:var(--text-faint)">칩·작은버튼·입력</div></div>
+        <div style="text-align:center"><div style="width:64px;height:44px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--radius-md);margin:0 auto 6px"></div><div class="mono" style="font-size:11px;color:var(--accent);font-weight:700">radius-md 8</div><div style="font-size:10.5px;color:var(--text-faint)">버튼·카드내부</div></div>
+        <div style="text-align:center"><div style="width:64px;height:44px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--radius-lg);margin:0 auto 6px"></div><div class="mono" style="font-size:11px;color:var(--accent);font-weight:700">radius-lg 12</div><div style="font-size:10.5px;color:var(--text-faint)">카드·패널</div></div>
+        <div style="text-align:center"><div style="width:64px;height:44px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--radius-xl);margin:0 auto 6px"></div><div class="mono" style="font-size:11px;color:var(--accent);font-weight:700">radius-xl 16</div><div style="font-size:10.5px;color:var(--text-faint)">큰카드·모달</div></div>
+        <div style="text-align:center"><div style="width:64px;height:44px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--radius-full);margin:0 auto 6px"></div><div class="mono" style="font-size:11px;color:var(--accent);font-weight:700">radius-full</div><div style="font-size:10.5px;color:var(--text-faint)">알약·아바타</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Button 컴포넌트 -->
+  <div class="sec">
+    <h2><span class="b">D</span>&lt;Button&gt; 컴포넌트 (실제 렌더)</h2>
+    <div class="d">variant × size × state 를 하나로. 지금 13곳에 흩어진 버튼을 이걸로 대체. 아래는 제안 토큰으로 실제 렌더한 모습.</div>
+    <div class="card demo">
+      <div class="grp"><span class="gl">Variant (size md)</span><div class="rowd">
+        <button class="btn btn-md btn-primary"><i data-lucide="upload"></i>업로드</button>
+        <button class="btn btn-md btn-secondary"><i data-lucide="folder-plus"></i>새 폴더</button>
+        <button class="btn btn-md btn-ghost">취소</button>
+        <button class="btn btn-md btn-danger"><i data-lucide="trash-2"></i>삭제</button>
+      </div></div>
+      <div class="grp"><span class="gl">Size (primary)</span><div class="rowd">
+        <button class="btn btn-sm btn-primary">작게 sm · 30</button>
+        <button class="btn btn-md btn-primary">기본 md · 36</button>
+        <button class="btn btn-lg btn-primary">크게 lg · 42</button>
+      </div></div>
+      <div class="grp"><span class="gl">State</span><div class="rowd">
+        <button class="btn btn-md btn-primary"><i data-lucide="link"></i>공유 링크 생성</button>
+        <button class="btn btn-md btn-primary"><i data-lucide="loader" class="spin"></i>생성 중…</button>
+        <button class="btn btn-md btn-primary" disabled>비활성</button>
+        <button class="btn btn-md btn-secondary"><i data-lucide="check"></i>완료</button>
+      </div></div>
+      <div class="codeblock"><span class="c">// 사용</span><br><span class="k">&lt;Button</span> <span class="p">variant</span>=<span class="s">"primary"</span> <span class="p">size</span>=<span class="s">"md"</span> <span class="p">icon</span>=<span class="s">{Upload}</span> <span class="p">loading</span>=<span class="s">{busy}</span><span class="k">&gt;</span>업로드<span class="k">&lt;/Button&gt;</span></div>
+    </div>
+  </div>
+
+  <!-- Badge 컴포넌트 -->
+  <div class="sec">
+    <h2><span class="b">E</span>&lt;Badge&gt; 컴포넌트 (실제 렌더)</h2>
+    <div class="d">tone(soft) × size 로 통일. RoleBadge·CategoryBadge·NewBadge·인라인 칩을 하나로 흡수. 의미색은 토큰에 매핑.</div>
+    <div class="card demo">
+      <div class="grp"><span class="gl">Tone</span><div class="rowd">
+        <span class="badge badge-md bg-neutral">중립</span>
+        <span class="badge badge-md bg-accent">강조</span>
+        <span class="badge badge-md bg-sky">미리보기</span>
+        <span class="badge badge-md bg-success">완료</span>
+        <span class="badge badge-md bg-warning">대기</span>
+        <span class="badge badge-md bg-danger">연체</span>
+        <span class="badge badge-md bg-purple">AI</span>
+      </div></div>
+      <div class="grp"><span class="gl">실제 의미 (현재 흩어진 것들)</span><div class="rowd">
+        <span class="badge badge-md bg-accent"><i data-lucide="message-square"></i>검수</span>
+        <span class="badge badge-md bg-sky"><i data-lucide="eye"></i>미리보기</span>
+        <span class="badge badge-sm bg-success">NEW</span>
+        <span class="badge badge-md bg-neutral"><i data-lucide="user"></i>파트너</span>
+        <span class="badge badge-md bg-danger">미해결 2</span>
+        <span class="badge badge-md bg-purple"><i data-lucide="sparkles"></i>AI 검수</span>
+      </div></div>
+      <div class="codeblock"><span class="k">&lt;Badge</span> <span class="p">tone</span>=<span class="s">"sky"</span> <span class="p">icon</span>=<span class="s">{Eye}</span><span class="k">&gt;</span>미리보기<span class="k">&lt;/Badge&gt;</span></div>
+    </div>
+  </div>
+
+  <!-- 마이그레이션 -->
+  <div class="sec">
+    <h2><span class="b">F</span>실행 순서</h2>
+    <div class="card">
+      <div class="steps">
+        <div class="st"><span class="n"></span><div class="b"><b>공용 컴포넌트부터 만든다</b> — <code class="mono">components/ui/Button.tsx</code>, <code class="mono">Badge.tsx</code> (+ 기존 NewBadge 흡수). 토큰 없이도 바로 쓸 수 있게.<div class="meta">이게 먼저가 아니면 토큰만 늘고 또 직계 구현으로 샘</div></div></div>
+        <div class="st"><span class="n"></span><div class="b"><b>스케일 토큰 추가</b> — globals.css <code class="mono">@theme inline</code> 에 <code class="mono">--text-2xs~2xl</code>, <code class="mono">--radius-sm~xl</code>. Tailwind 유틸 <code class="mono">text-base</code> 등으로 바로 사용.</div></div>
+        <div class="st"><span class="n"></span><div class="b"><b>핫스팟 12개 파일부터 교체</b> — AiFeedbackRow(색 직계 184개)·FeedbackModal·ShareDialog·SharesView·각 *View. 버튼/배지/타이포를 컴포넌트·토큰으로.<div class="meta">전수 교체는 점진적으로, 신규 코드는 무조건 컴포넌트</div></div></div>
+        <div class="st"><span class="n"></span><div class="b"><b>lint로 구멍 차단</b> — <code class="mono">text-[Xpx]</code>·<code class="mono">rounded-[X]</code>·생색 클래스(<code class="mono">bg-slate-*</code> 등) 직계를 ESLint 규칙으로 경고. 새는 걸 원천 차단.</div></div>
+      </div>
+      <div class="note">범위 주의 — 1·2단계(컴포넌트+토큰)는 안전한 추가라 빠름. 3단계(마이그레이션)는 회귀 위험이 있어 핫스팟부터 점진적으로, 화면 캡처로 전후 비교하며 진행. 한 번에 전수 교체 안 함.</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    정리 — 색은 그대로 두고, <b>① Button·Badge 공용 컴포넌트 → ② 타이포·라운딩 스케일 토큰 → ③ 핫스팟 마이그레이션 → ④ lint 차단</b>. 1·2단계만 끝내도 신규 코드의 일관성이 강제되기 시작합니다. 위 버튼/배지는 제안 토큰으로 실제 렌더한 것 — 이 톤 그대로 컴포넌트화. 이모지 금지·lucide.
+  </div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

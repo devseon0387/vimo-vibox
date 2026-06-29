@@ -1,0 +1,331 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>vibox 다이얼로그 리디자인 시안 2</title>
+<style>
+:root{--bg:#fafafa;--card:#fff;--bd:#e7e7e7;--tx:#1a1a1a;--mut:#666;--faint:#999;--accent:#e85008;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo",sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 90px}
+.top{position:sticky;top:0;background:var(--bg);z-index:10;padding:8px 0;border-bottom:1px solid var(--bd);margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.top h1{font-size:18px;margin:0}
+.top .sub{font-size:12.5px;color:var(--mut)}
+.modal{margin-top:26px}
+.mh{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.mh h2{font-size:16px;margin:0;letter-spacing:-.01em}
+.allrow{border:1px solid var(--bd);background:#fff;border-radius:8px;padding:5px 12px;font-size:12.5px;font-weight:600;cursor:pointer;color:#333}
+.row{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 12px}
+.vcard{flex:0 0 400px;background:var(--card);border:1px solid var(--bd);border-radius:13px;padding:12px;display:flex;flex-direction:column}
+.vh{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.vbadge{font-size:11.5px;font-weight:800;color:#fff;background:var(--accent);border-radius:6px;padding:3px 9px}
+.vbadge.cur{background:#888}
+.vname{font-size:12.5px;color:#555;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp{flex:none;margin-left:auto;background:var(--accent);color:#fff;border:none;border-radius:7px;width:30px;height:26px;font-size:11px;cursor:pointer}
+.vh .vname{margin-left:0}
+.stage{position:relative;display:flex;align-items:center;justify-content:center;min-height:300px;max-height:560px;overflow:auto;border-radius:11px;
+ background:repeating-conic-gradient(#eee 0% 25%,#f4f4f4 0% 50%) 0/20px 20px;padding:22px}
+.bd{position:absolute;inset:0;background:rgba(0,0,0,.5);border-radius:11px}
+.panel{position:relative;z-index:2;max-width:100%}
+.rat{font-size:12.5px;color:#444;margin-top:11px;line-height:1.5}
+.chg{margin:8px 0 0;padding-left:16px}
+.chg li{font-size:12px;color:#666;margin:2px 0;line-height:1.45}
+@keyframes dialog-in{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes backdrop-in{from{opacity:0}to{opacity:1}}
+</style></head><body><div class="wrap">
+<div class="top"><h1>다이얼로그 리디자인 시안 2</h1><span class="sub">2026-06-29 · 파일 선택 · 단축키 도움말 — [현재 + 미니멀·친근·구조화·프리미엄] · ▶ 로 dialog-in 애니메이션 · 가로 스크롤로 비교 · 충돌 다이얼로그는 포근한 카드로 구현 완료 → 제외</span></div>
+
+<!-- ============================================================ -->
+<!-- 7 · 파일 선택 (FilePickerDialog)                              -->
+<!-- ============================================================ -->
+<section class="modal">
+  <div class="mh"><h2>7 · 파일 선택 (FilePickerDialog)</h2><button class="allrow" onclick="replayRow(this)">이 줄 재생</button></div>
+  <div class="row">
+
+  <!-- 현재 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge cur">현재</span><span class="vname">운영 디자인</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:400px;max-width:100%;background:#fff;border-radius:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #ececec;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#111;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>파일 선택</span></div>
+        <button style="padding:4px;border:none;background:transparent;color:#666;cursor:pointer;display:grid;place-items:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div style="padding:20px;">
+        <div style="display:flex;align-items:center;gap:4px;font-size:13px;margin-bottom:12px;">
+          <button style="border:none;background:transparent;padding:0;color:#555;cursor:pointer;">Vibox</button>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          <button style="border:none;background:transparent;padding:0;color:#555;cursor:pointer;">프로젝트</button>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          <span style="color:#111;font-weight:600;">2024_가을캠페인</span>
+        </div>
+        <div style="background:#fafafa;border:1px solid #ececec;border-radius:6px;max-height:200px;overflow-y:auto;margin-bottom:14px;">
+          <button style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;color:#555;background:transparent;border:none;border-bottom:1px solid #ececec;cursor:pointer;text-align:left;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>상위 폴더로</button>
+          <button style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;color:#111;background:transparent;border:none;border-bottom:1px solid #f5f5f5;cursor:pointer;text-align:left;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg><span style="flex:1;">컷편집_소스</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+          <button style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;background:#fef0e8;color:#e85008;font-weight:500;border:none;border-bottom:1px solid #f5f5f5;cursor:pointer;text-align:left;"><span style="width:28px;height:28px;border-radius:6px;display:grid;place-items:center;background:#fef2f2;color:#dc2626;flex:none;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg></span><span style="flex:1;">최종_v3.mp4</span></button>
+          <button style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;color:#111;background:transparent;border:none;cursor:pointer;text-align:left;"><span style="width:28px;height:28px;border-radius:6px;display:grid;place-items:center;background:#fef3c7;color:#d97706;flex:none;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3-3.1a2 2 0 0 0-2.8 0L6 21"/></svg></span><span style="flex:1;">썸네일_시안.png</span></button>
+        </div>
+        <div style="font-size:12px;color:#666;margin-bottom:14px;">선택됨: <span style="font-family:ui-monospace,Menlo,monospace;color:#111;">최종_v3.mp4</span></div>
+        <div style="display:flex;gap:8px;">
+          <button style="flex:1;padding:8px 16px;font-size:13px;font-weight:500;color:#555;background:transparent;border:none;border-radius:6px;cursor:pointer;">취소</button>
+          <button style="flex:1;padding:8px 16px;font-size:13px;font-weight:600;color:#fff;background:#111;border:none;border-radius:6px;cursor:pointer;">선택</button>
+        </div>
+      </div>
+    </div></div></div>
+  </div>
+
+  <!-- 미니멀 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge">미니멀</span><span class="vname">Borderless Picker</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:400px;background:#fff;border:1px solid #ececec;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,0.10);overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;">
+      <div style="padding:18px 20px 10px;">
+        <div style="display:flex;align-items:center;gap:5px;font-size:12.5px;color:#999;">
+          <span style="color:#555;cursor:pointer;">Vibox</span><span>/</span><span style="color:#555;cursor:pointer;">프로젝트</span><span>/</span><span style="color:#111;font-weight:600;">2024_가을캠페인</span>
+        </div>
+      </div>
+      <div style="padding:0 8px;">
+        <button style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 12px;font-size:13.5px;color:#999;background:transparent;border:none;border-radius:8px;cursor:pointer;text-align:left;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>상위 폴더</button>
+        <button style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 12px;font-size:13.5px;color:#111;background:transparent;border:none;border-radius:8px;cursor:pointer;text-align:left;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg><span style="flex:1;">컷편집_소스</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        <button style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 12px;font-size:13.5px;font-weight:600;color:#e85008;background:#fef0e8;border:none;border-radius:8px;cursor:pointer;text-align:left;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg><span style="flex:1;">최종_v3.mp4</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>
+        <button style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 12px;font-size:13.5px;color:#111;background:transparent;border:none;border-radius:8px;cursor:pointer;text-align:left;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3-3.1a2 2 0 0 0-2.8 0L6 21"/></svg><span style="flex:1;">썸네일_시안.png</span></button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 20px;margin-top:6px;border-top:1px solid #ececec;">
+        <span style="font-size:12px;color:#999;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><span style="color:#111;font-weight:500;">최종_v3.mp4</span> 선택됨</span>
+        <div style="display:flex;gap:6px;flex:none;"><button style="padding:8px 14px;font-size:13.5px;color:#555;background:transparent;border:none;border-radius:7px;cursor:pointer;">취소</button><button style="padding:8px 18px;font-size:13.5px;font-weight:600;color:#fff;background:#111;border:none;border-radius:7px;cursor:pointer;">선택</button></div>
+      </div>
+    </div></div></div>
+    <div class="rat">리스트를 감싸던 surface 박스·구분선을 없애고 행을 라운드 hover 항목으로 띄워, 파인더처럼 가볍고 빠르게 탐색되는 선택기.</div>
+    <ul class="chg"><li>헤더 타이틀 바 제거 → 브레드크럼만 상단에(슬래시 구분, 마지막만 진하게)로 군더더기 축소</li><li>리스트 외곽 박스·행 구분선 삭제, 행을 8px 라운드 항목으로 띄움 — 선택 행은 surface-soft 배경채움+accent 텍스트+체크(좌측 띠 0)</li><li>"선택됨" 안내를 푸터 좌측 한 줄로 흡수해 본문 높이 확보</li><li>취소/선택 버튼을 푸터 우측으로 컴팩트화</li></ul>
+  </div>
+
+  <!-- 친근 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge">친근</span><span class="vname">큰 타깃 카드</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:400px;background:#fff;border-radius:22px;box-shadow:0 24px 60px -12px rgba(17,17,17,0.2),0 4px 12px rgba(17,17,17,0.05);overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;">
+      <div style="padding:24px 24px 14px;">
+        <h3 style="margin:0 0 4px;font-size:18px;font-weight:800;color:#111;letter-spacing:-0.01em;">어떤 파일을 넣을까요?</h3>
+        <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#888;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>2024_가을캠페인</div>
+      </div>
+      <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px;">
+        <button style="display:flex;align-items:center;gap:13px;padding:12px 14px;border-radius:14px;border:none;background:#fafafa;cursor:pointer;text-align:left;"><span style="width:40px;height:40px;border-radius:11px;background:#fff;display:grid;place-items:center;flex:none;box-shadow:0 1px 3px rgba(0,0,0,0.07);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg></span><div style="flex:1;"><div style="font-size:14px;font-weight:600;">컷편집_소스</div><div style="font-size:12px;color:#999;">폴더 · 24개 항목</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        <button style="display:flex;align-items:center;gap:13px;padding:12px 14px;border-radius:14px;border:2px solid #e85008;background:#fffaf6;cursor:pointer;text-align:left;"><span style="width:40px;height:40px;border-radius:11px;background:#fef2f2;color:#dc2626;display:grid;place-items:center;flex:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg></span><div style="flex:1;"><div style="font-size:14px;font-weight:700;color:#111;">최종_v3.mp4</div><div style="font-size:12px;color:#e85008;font-weight:600;">선택됨 · 영상 · 248MB</div></div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>
+        <button style="display:flex;align-items:center;gap:13px;padding:12px 14px;border-radius:14px;border:none;background:#fafafa;cursor:pointer;text-align:left;"><span style="width:40px;height:40px;border-radius:11px;background:#fef3c7;color:#d97706;display:grid;place-items:center;flex:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3-3.1a2 2 0 0 0-2.8 0L6 21"/></svg></span><div style="flex:1;"><div style="font-size:14px;font-weight:600;">썸네일_시안.png</div><div style="font-size:12px;color:#999;">이미지 · 1.2MB</div></div></button>
+      </div>
+      <div style="display:flex;gap:10px;padding:16px;margin-top:6px;">
+        <button style="flex:1;padding:13px;font-size:14px;font-weight:600;color:#555;background:#fafafa;border:none;border-radius:14px;cursor:pointer;">취소</button>
+        <button style="flex:2;padding:13px;font-size:14px;font-weight:700;color:#fff;background:#e85008;border:none;border-radius:14px;cursor:pointer;box-shadow:0 4px 12px rgba(232,80,8,0.2);">이 파일 선택</button>
+      </div>
+    </div></div></div>
+    <div class="rat">행을 40px 아이콘 타일 + 2줄 메타(종류·용량)의 큰 카드로 키워 터치·스캔이 쉽고, 선택 항목은 둥근 accent 보더로 또렷하게 강조.</div>
+    <ul class="chg"><li>"어떤 파일을 넣을까요?" 질문형 제목 + 현재 폴더 칩으로 맥락을 친근하게 제시</li><li>리스트 행 → 라운드 14px 큰 항목(컬러 타입 타일 + 이름 + 종류·용량 보조줄), 선택은 둥근 accent 보더+soft 배경+체크</li><li>22px 라운드 카드, 풀폭 둥근 버튼(취소 1 : 선택 2 비율로 주 동작 강조)</li><li>폴더는 항목 수, 파일은 종류·용량을 보조줄에 노출해 미리보기 없이도 판단 가능</li></ul>
+  </div>
+
+  <!-- 구조화 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge">구조화</span><span class="vname">2-Pane Browser</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:560px;max-width:100%;background:#fff;border:1px solid #ececec;border-radius:14px;box-shadow:0 12px 40px rgba(17,17,17,0.16);overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid #ececec;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;">파일 선택</div>
+        <div style="display:flex;align-items:center;gap:6px;background:#fafafa;border:1px solid #ececec;border-radius:8px;padding:5px 10px;width:200px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><span style="font-size:12.5px;color:#aaa;">이 폴더에서 검색</span></div>
+      </div>
+      <div style="display:flex;height:260px;">
+        <div style="width:170px;border-right:1px solid #ececec;background:#fafafa;padding:10px 8px;overflow-y:auto;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;color:#999;text-transform:uppercase;padding:4px 8px;">위치</div>
+          <button style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 8px;font-size:12.5px;color:#555;background:transparent;border:none;border-radius:7px;cursor:pointer;text-align:left;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Vibox</button>
+          <button style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 8px;font-size:12.5px;color:#555;background:transparent;border:none;border-radius:7px;cursor:pointer;text-align:left;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>프로젝트</button>
+          <button style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 8px;font-size:12.5px;color:#e85008;font-weight:600;background:#fef0e8;border:none;border-radius:7px;cursor:pointer;text-align:left;margin-left:10px;width:calc(100% - 10px);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>2024_가을캠페인</button>
+        </div>
+        <div style="flex:1;overflow-y:auto;">
+          <div style="display:grid;grid-template-columns:1fr 64px 80px;padding:7px 14px;font-size:10.5px;font-weight:700;letter-spacing:0.04em;color:#999;text-transform:uppercase;border-bottom:1px solid #ececec;"><span>이름</span><span style="text-align:right;">종류</span><span style="text-align:right;">크기</span></div>
+          <button style="width:100%;display:grid;grid-template-columns:1fr 64px 80px;align-items:center;padding:9px 14px;background:transparent;border:none;border-bottom:1px solid #f5f5f5;cursor:pointer;text-align:left;"><span style="display:flex;align-items:center;gap:8px;font-size:13px;color:#111;overflow:hidden;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">컷편집_소스</span></span><span style="text-align:right;font-size:12px;color:#999;">폴더</span><span style="text-align:right;font-size:12px;color:#999;">—</span></button>
+          <button style="width:100%;display:grid;grid-template-columns:1fr 64px 80px;align-items:center;padding:9px 14px;background:#fef0e8;border:none;border-bottom:1px solid #f5f5f5;cursor:pointer;text-align:left;"><span style="display:flex;align-items:center;gap:8px;font-size:13px;color:#e85008;font-weight:600;overflow:hidden;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">최종_v3.mp4</span></span><span style="text-align:right;font-size:12px;color:#c2632a;">영상</span><span style="text-align:right;font-size:12px;color:#c2632a;">248MB</span></button>
+          <button style="width:100%;display:grid;grid-template-columns:1fr 64px 80px;align-items:center;padding:9px 14px;background:transparent;border:none;cursor:pointer;text-align:left;"><span style="display:flex;align-items:center;gap:8px;font-size:13px;color:#111;overflow:hidden;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3-3.1a2 2 0 0 0-2.8 0L6 21"/></svg><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">썸네일_시안.png</span></span><span style="text-align:right;font-size:12px;color:#999;">이미지</span><span style="text-align:right;font-size:12px;color:#999;">1.2MB</span></button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;background:#fafafa;border-top:1px solid #ececec;">
+        <span style="font-size:12px;color:#666;">선택됨 <span style="font-family:ui-monospace,Menlo,monospace;color:#111;">최종_v3.mp4</span> · 248MB</span>
+        <div style="display:flex;gap:8px;"><button style="padding:7px 15px;font-size:13px;font-weight:500;color:#555;background:#fff;border:1px solid #ececec;border-radius:8px;cursor:pointer;">취소</button><button style="padding:7px 16px;font-size:13px;font-weight:600;color:#fff;background:#111;border:none;border-radius:8px;cursor:pointer;">선택</button></div>
+      </div>
+    </div></div></div>
+    <div class="rat">좌측 위치 트리 + 우측 컬럼(이름·종류·크기) 2-pane 브라우저로 깊은 폴더도 한눈에 이동, 파일 메타까지 비교하며 정확히 고를 수 있는 파워 선택기.</div>
+    <ul class="chg"><li>단일 리스트 → 좌 위치 트리(들여쓰기로 깊이) + 우 컬럼 리스트의 2-pane 구조로 탐색·이동 동시 지원</li><li>우측에 이름/종류/크기 컬럼 헤더를 둬 메타 비교 가능, 선택 행은 배경채움+accent 텍스트(좌측 띠 0)</li><li>헤더 우측에 "이 폴더에서 검색" 인풋 추가로 항목 많은 폴더 대응</li><li>푸터 좌측 선택 요약(파일명·크기) + 우측 취소/선택, surface 바로 정보·액션 분리</li></ul>
+  </div>
+
+  <!-- 프리미엄 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge">프리미엄</span><span class="vname">Refined Picker</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:420px;background:#fff;border:1px solid #ececec;border-radius:14px;box-shadow:0 1px 2px rgba(17,17,17,0.04),0 10px 28px -8px rgba(17,17,17,0.14),0 28px 56px -16px rgba(17,17,17,0.10);overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;">
+      <div style="padding:18px 22px 12px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#999;margin-bottom:8px;">파일 선택</div>
+        <div style="display:flex;align-items:center;gap:6px;font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#555;background:#fafafa;border:1px solid #ececec;border-radius:8px;padding:7px 11px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+          <span style="color:#999;">/프로젝트/</span><span style="color:#111;">2024_가을캠페인</span>
+        </div>
+      </div>
+      <div style="padding:0 14px;">
+        <button style="width:100%;display:flex;align-items:center;gap:11px;padding:10px 12px;font-size:13.5px;color:#999;background:transparent;border:none;border-radius:9px;cursor:pointer;text-align:left;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>상위 폴더</button>
+        <button style="width:100%;display:flex;align-items:center;gap:11px;padding:10px 12px;font-size:13.5px;color:#111;background:transparent;border:none;border-radius:9px;cursor:pointer;text-align:left;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg><span style="flex:1;font-weight:500;">컷편집_소스</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+        <button style="width:100%;display:flex;align-items:center;gap:11px;padding:10px 12px;font-size:13.5px;color:#111;background:#f7f7f7;border:none;border-radius:9px;cursor:pointer;text-align:left;"><span style="width:30px;height:30px;border-radius:8px;background:#fef2f2;color:#dc2626;display:grid;place-items:center;flex:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg></span><span style="flex:1;"><span style="display:block;font-weight:600;">최종_v3.mp4</span><span style="display:block;font-size:11.5px;color:#888;">영상 · 248MB · 12분 전</span></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M20 6 9 17l-5-5"/></svg></button>
+        <button style="width:100%;display:flex;align-items:center;gap:11px;padding:10px 12px;font-size:13.5px;color:#111;background:transparent;border:none;border-radius:9px;cursor:pointer;text-align:left;"><span style="width:30px;height:30px;border-radius:8px;background:#fef3c7;color:#d97706;display:grid;place-items:center;flex:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3-3.1a2 2 0 0 0-2.8 0L6 21"/></svg></span><span style="flex:1;"><span style="display:block;font-weight:500;">썸네일_시안.png</span><span style="display:block;font-size:11.5px;color:#888;">이미지 · 1.2MB</span></span></button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 16px;margin-top:8px;">
+        <span style="font-size:11.5px;color:#767676;"><span style="font-weight:600;color:#555;">↵</span> 선택 · <span style="font-weight:600;color:#555;">Esc</span> 닫기</span>
+        <div style="display:flex;gap:8px;"><button style="padding:9px 16px;font-size:13.5px;font-weight:500;color:#555;background:#fff;border:1px solid #ececec;border-radius:9px;cursor:pointer;">취소</button><button style="padding:9px 18px;font-size:13.5px;font-weight:600;color:#fff;background:#111;border:none;border-radius:9px;cursor:pointer;box-shadow:0 1px 2px rgba(17,17,17,0.2);">선택</button></div>
+      </div>
+    </div></div></div>
+    <div class="rat">mono 경로 칩·정제된 행 타이포·키보드 힌트로 정돈한 Linear 풍 선택기. 파일에 종류·용량·시간 보조줄을 더해 미리보기 없이도 정확히 식별.</div>
+    <ul class="chg"><li>이브로우 라벨 + mono 경로 칩(현재 폴더 강조)으로 위치를 고급스럽게 표현</li><li>행을 9px 라운드 + 컬러 타입 타일 + 이름/메타 2줄로 정제, 선택 행은 surface(#f7f7f7) 배경채움+체크(좌측 띠 0)</li><li>chevron·back 아이콘을 1.8 두께로 가늘게 통일, 폴더/파일 위계를 타일 유무로 구분</li><li>푸터에 ↵/Esc 키보드 힌트 + 잉크 솔리드 선택 버튼으로 파워유저 마감</li></ul>
+  </div>
+
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 8 · 단축키 도움말 (ShortcutHelp)                              -->
+<!-- ============================================================ -->
+<section class="modal">
+  <div class="mh"><h2>8 · 단축키 도움말 (ShortcutHelp)</h2><button class="allrow" onclick="replayRow(this)">이 줄 재생</button></div>
+  <div class="row">
+
+  <!-- 현재 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge cur">현재</span><span class="vname">운영 디자인</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="background:#fff;border-radius:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);width:460px;max-width:100%;overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #ececec;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#111;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 8h.01M12 12h.01M14 8h.01M16 12h.01M18 8h.01M6 8h.01M7 16h10M8 12h.01"/><rect width="20" height="16" x="2" y="4" rx="2"/></svg>키보드 단축키</div>
+        <button style="display:flex;padding:4px;border:none;background:transparent;color:#666;cursor:pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div style="padding:18px 20px;display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#6b6b6b;margin-bottom:8px;">전역</div>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;">
+            <li style="display:flex;align-items:center;gap:8px;font-size:13px;color:#555;"><span style="display:flex;gap:3px;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#fff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666;">⌘</kbd><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#fff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666;">K</kbd></span><span style="flex:1;">빠른 검색</span></li>
+            <li style="display:flex;align-items:center;gap:8px;font-size:13px;color:#555;"><span style="display:flex;gap:3px;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#fff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666;">?</kbd></span><span style="flex:1;">이 도움말</span></li>
+            <li style="display:flex;align-items:center;gap:8px;font-size:13px;color:#555;"><span style="display:flex;gap:3px;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#fff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666;">Esc</kbd></span><span style="flex:1;">닫기</span></li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#6b6b6b;margin-bottom:8px;">네비게이션</div>
+          <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;">
+            <li style="display:flex;align-items:center;gap:8px;font-size:13px;color:#555;"><span style="display:flex;gap:3px;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#fff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666;">↑</kbd><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#fff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666;">↓</kbd></span><span style="flex:1;">항목 이동</span></li>
+            <li style="display:flex;align-items:center;gap:8px;font-size:13px;color:#555;"><span style="display:flex;gap:3px;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#fff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666;">Enter</kbd></span><span style="flex:1;">열기</span></li>
+            <li style="display:flex;align-items:center;gap:8px;font-size:13px;color:#555;"><span style="display:flex;gap:3px;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#fff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666;">Space</kbd></span><span style="flex:1;">미리보기</span></li>
+          </ul>
+        </div>
+      </div>
+      <div style="padding:0 20px 16px;font-size:12px;color:#6b6b6b;">Tip: 입력 필드에선 단축키가 작동하지 않습니다.</div>
+    </div></div></div>
+  </div>
+
+  <!-- 미니멀 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge">미니멀</span><span class="vname">Single List</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:380px;background:#fff;border:1px solid #ececec;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,0.10);overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;">
+      <div style="padding:20px 22px 12px;">
+        <h3 style="margin:0;font-size:16px;font-weight:700;letter-spacing:-0.01em;">단축키</h3>
+      </div>
+      <div style="padding:0 22px 8px;">
+        <div style="font-size:10.5px;font-weight:700;letter-spacing:0.08em;color:#aaa;text-transform:uppercase;margin:10px 0 4px;">전역</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f5f5f5;"><span style="font-size:13.5px;color:#333;">빠른 검색</span><span style="display:flex;gap:3px;"><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fafafa;border:1px solid #ececec;border-radius:5px;padding:2px 7px;color:#555;">⌘</kbd><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fafafa;border:1px solid #ececec;border-radius:5px;padding:2px 7px;color:#555;">K</kbd></span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f5f5f5;"><span style="font-size:13.5px;color:#333;">도움말 열기</span><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fafafa;border:1px solid #ececec;border-radius:5px;padding:2px 7px;color:#555;">?</kbd></div>
+        <div style="font-size:10.5px;font-weight:700;letter-spacing:0.08em;color:#aaa;text-transform:uppercase;margin:14px 0 4px;">파일</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f5f5f5;"><span style="font-size:13.5px;color:#333;">항목 이동</span><span style="display:flex;gap:3px;"><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fafafa;border:1px solid #ececec;border-radius:5px;padding:2px 7px;color:#555;">↑</kbd><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fafafa;border:1px solid #ececec;border-radius:5px;padding:2px 7px;color:#555;">↓</kbd></span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f5f5f5;"><span style="font-size:13.5px;color:#333;">미리보기</span><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fafafa;border:1px solid #ececec;border-radius:5px;padding:2px 7px;color:#555;">Space</kbd></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;"><span style="font-size:13.5px;color:#333;">이름 변경</span><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fafafa;border:1px solid #ececec;border-radius:5px;padding:2px 7px;color:#555;">F2</kbd></div>
+      </div>
+      <div style="padding:12px 22px 18px;"><span style="font-size:11.5px;color:#aaa;">입력 중에는 작동하지 않아요</span></div>
+    </div></div></div>
+    <div class="rat">2열 그리드·헤더 아이콘을 버리고 라벨↔키만 좌우로 정렬한 한 컬럼 리스트. 빠르게 훑기 좋은 가장 가벼운 형태.</div>
+    <ul class="chg"><li>헤더 바·키보드 아이콘 제거, 제목 "단축키"만 남김</li><li>2열 그리드 → 1열 "기능 ─ 키" 양끝 정렬 행, 카테고리는 옅은 이브로우 라벨로만 구분</li><li>kbd를 surface(#fafafa) 배경 5px 라운드로 통일해 차분하게</li><li>행 사이 헤어라인(#f5f5f5)만으로 구분, Tip은 옅은 한 줄로 축소</li></ul>
+  </div>
+
+  <!-- 친근 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge">친근</span><span class="vname">그룹 카드</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:400px;background:#fff;border-radius:22px;box-shadow:0 24px 60px -12px rgba(17,17,17,0.2),0 4px 12px rgba(17,17,17,0.05);overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;">
+      <div style="padding:24px 24px 6px;text-align:center;">
+        <div style="display:inline-grid;place-items:center;width:54px;height:54px;border-radius:16px;background:#fef0e8;margin-bottom:12px;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 8h.01M12 12h.01M14 8h.01M16 12h.01M18 8h.01M6 8h.01M7 16h10M8 12h.01"/><rect width="20" height="16" x="2" y="4" rx="2"/></svg></div>
+        <h3 style="margin:0 0 2px;font-size:18px;font-weight:800;letter-spacing:-0.01em;">단축키로 더 빠르게</h3>
+        <p style="margin:0;font-size:13px;color:#888;">자주 쓰는 키만 모아봤어요</p>
+      </div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
+        <div style="background:#fafafa;border-radius:14px;padding:13px 15px;">
+          <div style="font-size:12px;font-weight:700;color:#e85008;margin-bottom:8px;">자주 쓰는 것</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;"><span style="font-size:13.5px;color:#333;">빠른 검색</span><span style="display:flex;gap:3px;"><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fff;border:1px solid #e7e7e7;border-radius:6px;padding:3px 8px;color:#555;box-shadow:0 1px 1px rgba(0,0,0,0.04);">⌘</kbd><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fff;border:1px solid #e7e7e7;border-radius:6px;padding:3px 8px;color:#555;box-shadow:0 1px 1px rgba(0,0,0,0.04);">K</kbd></span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;"><span style="font-size:13.5px;color:#333;">미리보기</span><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fff;border:1px solid #e7e7e7;border-radius:6px;padding:3px 8px;color:#555;box-shadow:0 1px 1px rgba(0,0,0,0.04);">Space</kbd></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;"><span style="font-size:13.5px;color:#333;">이름 변경</span><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fff;border:1px solid #e7e7e7;border-radius:6px;padding:3px 8px;color:#555;box-shadow:0 1px 1px rgba(0,0,0,0.04);">F2</kbd></div>
+        </div>
+        <div style="background:#fafafa;border-radius:14px;padding:13px 15px;">
+          <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:8px;">영상 검수</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;"><span style="font-size:13.5px;color:#333;">재생 · 정지</span><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fff;border:1px solid #e7e7e7;border-radius:6px;padding:3px 8px;color:#555;box-shadow:0 1px 1px rgba(0,0,0,0.04);">Space</kbd></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;"><span style="font-size:13.5px;color:#333;">이전·다음 코멘트</span><span style="display:flex;gap:3px;"><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fff;border:1px solid #e7e7e7;border-radius:6px;padding:3px 8px;color:#555;box-shadow:0 1px 1px rgba(0,0,0,0.04);">[</kbd><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fff;border:1px solid #e7e7e7;border-radius:6px;padding:3px 8px;color:#555;box-shadow:0 1px 1px rgba(0,0,0,0.04);">]</kbd></span></div>
+        </div>
+      </div>
+    </div></div></div>
+    <div class="rat">상단 아이콘 + 다정한 제목으로 분위기를 풀고, 단축키를 "자주 쓰는 것/영상 검수" soft 카드로 묶어 부담 없이 익히도록 구성.</div>
+    <ul class="chg"><li>헤더 바 → 중앙 라운드 아이콘 + "단축키로 더 빠르게" 제목으로 따뜻한 인상</li><li>카테고리를 surface 라운드 카드(14px)로 그룹핑, 자주 쓰는 묶음만 주황 라벨로 강조</li><li>kbd에 살짝 입체감(흰 배경+미세 그림자) 줘 물리 키 느낌, 22px 라운드 카드</li><li>전체 항목 나열 대신 핵심만 추려 학습 부담 감소(전체는 별도 링크 전제)</li></ul>
+  </div>
+
+  <!-- 구조화 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge">구조화</span><span class="vname">검색 + 카테고리 레일</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:540px;max-width:100%;background:#fff;border:1px solid #ececec;border-radius:14px;box-shadow:0 12px 40px rgba(17,17,17,0.16);overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid #ececec;">
+        <span style="font-size:13.5px;font-weight:700;">키보드 단축키</span>
+        <div style="display:flex;align-items:center;gap:6px;background:#fafafa;border:1px solid #ececec;border-radius:8px;padding:5px 10px;width:200px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><span style="font-size:12.5px;color:#aaa;">단축키 검색</span></div>
+      </div>
+      <div style="display:flex;height:248px;">
+        <div style="width:148px;border-right:1px solid #ececec;background:#fafafa;padding:10px 8px;">
+          <button style="width:100%;text-align:left;padding:8px 10px;font-size:12.5px;font-weight:600;color:#e85008;background:#fef0e8;border:none;border-radius:7px;cursor:pointer;margin-bottom:3px;">전역</button>
+          <button style="width:100%;text-align:left;padding:8px 10px;font-size:12.5px;color:#555;background:transparent;border:none;border-radius:7px;cursor:pointer;margin-bottom:3px;">파일 탐색</button>
+          <button style="width:100%;text-align:left;padding:8px 10px;font-size:12.5px;color:#555;background:transparent;border:none;border-radius:7px;cursor:pointer;margin-bottom:3px;">파일 작업</button>
+          <button style="width:100%;text-align:left;padding:8px 10px;font-size:12.5px;color:#555;background:transparent;border:none;border-radius:7px;cursor:pointer;">영상 검수</button>
+        </div>
+        <div style="flex:1;padding:14px 18px;overflow-y:auto;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#999;margin-bottom:10px;">전역</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f5f5;"><span style="font-size:13.5px;color:#333;">빠른 검색 팔레트</span><span style="display:flex;gap:3px;"><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fafafa;border:1px solid #ececec;border-radius:5px;padding:2px 7px;color:#555;">⌘</kbd><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fafafa;border:1px solid #ececec;border-radius:5px;padding:2px 7px;color:#555;">K</kbd></span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f5f5;"><span style="font-size:13.5px;color:#333;">이 단축키 도움말</span><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fafafa;border:1px solid #ececec;border-radius:5px;padding:2px 7px;color:#555;">?</kbd></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f5f5;"><span style="font-size:13.5px;color:#333;">모달·선택·검색 닫기</span><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fafafa;border:1px solid #ececec;border-radius:5px;padding:2px 7px;color:#555;">Esc</kbd></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;"><span style="font-size:13.5px;color:#333;">전체 선택</span><span style="display:flex;gap:3px;"><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fafafa;border:1px solid #ececec;border-radius:5px;padding:2px 7px;color:#555;">⌘</kbd><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:#fafafa;border:1px solid #ececec;border-radius:5px;padding:2px 7px;color:#555;">A</kbd></span></div>
+        </div>
+      </div>
+      <div style="padding:11px 18px;background:#fafafa;border-top:1px solid #ececec;font-size:11.5px;color:#767676;">입력 필드에선 단축키가 작동하지 않습니다 · <span style="font-weight:600;color:#555;">?</span> 로 다시 열기</div>
+    </div></div></div>
+    <div class="rat">단축키가 늘어날 것을 가정해 좌측 카테고리 레일 + 검색 + 우측 항목 리스트로 구조화. 원하는 키를 바로 찾아가는 레퍼런스형 도움말.</div>
+    <ul class="chg"><li>2열 그리드(고정) → 좌 카테고리 레일(전역/탐색/작업/검수) + 우 항목 리스트로 확장 가능한 구조</li><li>헤더 우측 "단축키 검색" 인풋으로 키워드 즉시 필터 전제</li><li>활성 카테고리는 배경채움+accent 텍스트(좌측 띠 0), 항목은 라벨↔키 양끝 정렬 + 헤어라인</li><li>푸터에 작동 조건 + "?로 다시 열기" 힌트를 surface 바로 정리</li></ul>
+  </div>
+
+  <!-- 프리미엄 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge">프리미엄</span><span class="vname">Refined Cheatsheet</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:460px;background:#fff;border:1px solid #ececec;border-radius:14px;box-shadow:0 1px 2px rgba(17,17,17,0.04),0 10px 28px -8px rgba(17,17,17,0.14),0 28px 56px -16px rgba(17,17,17,0.10);overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;">
+      <div style="padding:20px 24px 8px;display:flex;align-items:flex-end;justify-content:space-between;">
+        <div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#999;margin-bottom:6px;">Keyboard</div>
+          <h3 style="margin:0;font-size:18px;font-weight:700;letter-spacing:-0.01em;">단축키 한눈에 보기</h3>
+        </div>
+        <span style="font-size:11.5px;color:#aaa;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#fafafa;border:1px solid #ececec;border-radius:5px;padding:2px 6px;color:#666;">?</kbd> 토글</span>
+      </div>
+      <div style="padding:14px 24px 8px;display:grid;grid-template-columns:1fr 1fr;gap:10px 22px;">
+        <div style="grid-column:1 / -1;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#bbb;">전역</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:13px;color:#444;">빠른 검색</span><span style="display:flex;gap:3px;"><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:linear-gradient(#fff,#f7f7f7);border:1px solid #e2e2e2;border-radius:6px;padding:3px 7px;color:#444;box-shadow:0 1px 0 #e7e7e7;">⌘</kbd><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:linear-gradient(#fff,#f7f7f7);border:1px solid #e2e2e2;border-radius:6px;padding:3px 7px;color:#444;box-shadow:0 1px 0 #e7e7e7;">K</kbd></span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:13px;color:#444;">닫기</span><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:linear-gradient(#fff,#f7f7f7);border:1px solid #e2e2e2;border-radius:6px;padding:3px 7px;color:#444;box-shadow:0 1px 0 #e7e7e7;">Esc</kbd></div>
+        <div style="grid-column:1 / -1;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#bbb;margin-top:6px;">파일</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:13px;color:#444;">항목 이동</span><span style="display:flex;gap:3px;"><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:linear-gradient(#fff,#f7f7f7);border:1px solid #e2e2e2;border-radius:6px;padding:3px 7px;color:#444;box-shadow:0 1px 0 #e7e7e7;">↑</kbd><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:linear-gradient(#fff,#f7f7f7);border:1px solid #e2e2e2;border-radius:6px;padding:3px 7px;color:#444;box-shadow:0 1px 0 #e7e7e7;">↓</kbd></span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:13px;color:#444;">미리보기</span><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:linear-gradient(#fff,#f7f7f7);border:1px solid #e2e2e2;border-radius:6px;padding:3px 7px;color:#444;box-shadow:0 1px 0 #e7e7e7;">Space</kbd></div>
+        <div style="grid-column:1 / -1;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#bbb;margin-top:6px;">영상 검수</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:13px;color:#444;">이전·다음 코멘트</span><span style="display:flex;gap:3px;"><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:linear-gradient(#fff,#f7f7f7);border:1px solid #e2e2e2;border-radius:6px;padding:3px 7px;color:#444;box-shadow:0 1px 0 #e7e7e7;">[</kbd><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:linear-gradient(#fff,#f7f7f7);border:1px solid #e2e2e2;border-radius:6px;padding:3px 7px;color:#444;box-shadow:0 1px 0 #e7e7e7;">]</kbd></span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:13px;color:#444;">다음 영상</span><span style="display:flex;gap:3px;"><kbd style="font-family:ui-monospace,monospace;font-size:10.5px;background:linear-gradient(#fff,#f7f7f7);border:1px solid #e2e2e2;border-radius:6px;padding:3px 7px;color:#444;box-shadow:0 1px 0 #e7e7e7;">J</kbd></span></div>
+      </div>
+      <div style="padding:12px 24px 18px;margin-top:6px;border-top:1px solid #f0f0f0;font-size:11.5px;color:#999;">입력 필드에선 작동하지 않습니다.</div>
+    </div></div></div>
+    <div class="rat">물리 키캡처럼 입체감을 준 kbd와 이브로우 카테고리·정제된 2열 정렬로 마감한 치트시트. 다단 소프트 섀도로 무게감 있게 떠 있는 패널.</div>
+    <ul class="chg"><li>이브로우(Keyboard) + 18px 제목 + 우상단 "? 토글" 힌트로 헤더를 가볍게 정돈</li><li>kbd를 위→아래 그라데이션 + 1px 하단 그림자로 키캡 입체감 부여(고급 디테일)</li><li>2열 정렬에 카테고리 라벨을 행으로 끼워 위계 유지, 라벨↔키 양끝 정렬</li><li>패널 다단 소프트 섀도 + 상·하단 헤어라인으로 본문/힌트 분리</li></ul>
+  </div>
+
+  </div>
+</section>
+
+<footer style="margin-top:30px;color:var(--faint);font-size:12px;text-align:center">시안은 실제 기능·문구 유지 + 토큰 색 기반 재현. 채택 시 해당 컴포넌트(FilePickerDialog·ShortcutHelp)에 반영. — 시안 2 · 충돌 다이얼로그=포근한 카드로 구현 완료(제외), ConfirmDialog도 적용 완료</footer>
+</div>
+<script>
+function play(el){const a=el.getAttribute('data-anim');if(!a)return;el.style.animation='none';void el.offsetWidth;el.style.animation=a;}
+function replayCard(btn){btn.closest('.vcard').querySelectorAll('[data-anim]').forEach(play);}
+function replayRow(btn){btn.closest('.modal').querySelectorAll('[data-anim]').forEach(play);}
+window.addEventListener('load',()=>{const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.querySelectorAll('[data-anim]').forEach(play);io.unobserve(e.target);}})},{threshold:.15});document.querySelectorAll('.vcard').forEach(s=>io.observe(s));});
+</script>
+</body></html>

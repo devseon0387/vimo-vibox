@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 댓글 패널 — 여러 시안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --accent:#e85008; --acc-ink:#c2410c; --acc-soft:#fef0e8; --acc-line:#fbd9c4; --ai:#7c3aed; --ai-soft:#f3edff; --emerald:#059669;
+    --col:#c2410c; --col-soft:#fff1e8; --txt:#6d28d9; --txt-soft:#f3edff; --etc:#475569; --etc-soft:#f1f5f9;
+    --s50:#f8fafc; --s100:#f1f5f9; --s200:#e2e8f0; --s300:#cbd5e1; --s400:#94a3b8; --s500:#64748b; --s600:#475569; --s700:#334155; --s900:#0f172a;
+    --page:#e9eaec; --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif; --sh2:0 12px 32px rgba(15,23,42,.13); --sh:0 1px 2px rgba(15,23,42,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);background:var(--page);color:var(--s900);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h3,h4{margin:0} button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  svg.lucide{width:1em;height:1em;stroke-width:2;flex:none;vertical-align:-.14em}
+  .wrap{max-width:1440px;margin:0 auto;padding:28px 22px 90px}
+  .intro h1{font-size:20px;font-weight:800;letter-spacing:-.02em}
+  .intro p{color:var(--s500);font-size:12.5px;margin-top:7px;line-height:1.6;max-width:1000px}.intro b{color:var(--s700)}
+
+  .row{display:flex;gap:18px;margin-top:22px;align-items:flex-start}
+  .col{flex:1;min-width:0}
+  .col .lab{display:flex;align-items:baseline;gap:8px;margin-bottom:9px}
+  .col .lab .n{font-size:11px;font-weight:800;color:#fff;background:var(--accent);width:20px;height:20px;border-radius:6px;display:grid;place-items:center;flex:none}
+  .col .lab h3{font-size:14px;font-weight:800}
+  .col .lab p{font-size:11px;color:var(--s400);margin-top:3px;line-height:1.4}
+
+  /* 패널 셸 (공통) */
+  .panel{border:1px solid var(--s200);border-radius:13px;overflow:hidden;background:var(--s50);box-shadow:var(--sh2);display:flex;flex-direction:column;height:560px}
+  .ph{flex:none;background:#fff;border-bottom:1px solid var(--s200);padding:10px 12px}
+  .ph .r1{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+  .ph .cc{font-size:11.5px;font-weight:700;color:var(--acc-ink);background:var(--acc-soft);border:1px solid var(--acc-line);border-radius:7px;padding:3px 8px;display:inline-flex;align-items:center;gap:4px}.ph .cc svg{width:12px;height:12px}
+  .ph .sp{flex:1}
+  .ph .hi{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;color:var(--s400)}.ph .hi svg{width:15px;height:15px}
+  .ph .seg{display:flex;gap:2px;background:var(--s100);border-radius:8px;padding:3px}.ph .seg button{flex:1;font-size:11px;font-weight:700;padding:5px 4px;border-radius:6px;color:var(--s500);display:inline-flex;align-items:center;justify-content:center;gap:4px}.ph .seg button.on{background:#fff;color:var(--s900);box-shadow:var(--sh)}.ph .seg .ct{font-size:9.5px;color:var(--s400)}.ph .seg button.on .ct{color:var(--accent)}
+  .list{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:0}
+  .linput{flex:none;border-top:1px solid var(--s200);padding:9px 11px;background:#fff}
+  .linput .bx{border:1px solid var(--s200);background:var(--s50);border-radius:10px;display:flex;align-items:center;gap:7px;padding:7px 9px}
+  .linput .tcc{font-family:ui-monospace,monospace;font-size:10px;font-weight:700;color:var(--s900);background:var(--s100);padding:1px 6px;border-radius:5px}
+  .linput input{flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:12px}
+  .linput .send{width:27px;height:27px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center;flex:none}.linput .send svg{width:13px;height:13px}
+
+  /* 칩 공통: 타임코드=상태색(마커 결속) */
+  .tc{font-family:ui-monospace,monospace;font-size:11px;font-weight:800;padding:1px 7px;border-radius:5px;font-variant-numeric:tabular-nums;color:var(--acc-ink);background:var(--acc-soft)}
+  .tc.ai{color:var(--ai);background:var(--ai-soft)}.tc.done{color:var(--s400);background:var(--s100)}
+  .cat{font-size:9px;font-weight:800;border-radius:5px;padding:1px 6px;display:inline-flex;align-items:center;gap:3px}.cat svg{width:9px;height:9px}.cat.col{color:var(--col);background:var(--col-soft)}.cat.txt{color:var(--txt);background:var(--txt-soft)}.cat.etc{color:var(--etc);background:var(--etc-soft)}
+  .av{border-radius:50%;display:grid;place-items:center;font-weight:800;color:#fff;flex:none}
+  .ck{flex:none;border-radius:50%;border:2px solid var(--s300);background:#fff;display:grid;place-items:center}.ck svg{color:#fff;opacity:0}.ck.on{background:var(--emerald);border-color:var(--emerald)}.ck.on svg{opacity:1}
+  .more{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;color:var(--s400);opacity:0;transition:.12s;background:#fff}.card:hover .more,.crow:hover .more{opacity:1}.more svg{width:13px;height:13px}
+
+  /* ===== V1 균형 ===== */
+  .v1 .card{position:relative;background:#fff;border:1px solid var(--s200);border-radius:10px;padding:10px 11px;display:flex;gap:9px}.v1 .card:hover{border-color:var(--s300)}
+  .v1 .ck{width:19px;height:19px;margin-top:1px}.v1 .ck svg{width:10px;height:10px}
+  .v1 .m{flex:1;min-width:0}
+  .v1 .meta{display:flex;align-items:center;gap:5px;margin-bottom:5px}
+  .v1 .au{margin-left:auto;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}.v1 .au .av{width:17px;height:17px;font-size:8.5px}.v1 .au .nm{font-size:10px;font-weight:700;color:var(--s600)}.v1 .au .role{font-size:8.5px;font-weight:800;color:#fff;background:var(--ai);border-radius:4px;padding:1px 4px}.v1 .au .aib{font-size:8.5px;font-weight:800;color:var(--ai)}
+  .v1 .tx{font-size:12.5px;color:var(--s900);line-height:1.5}.v1 .tx .hl{color:var(--accent);font-weight:600}
+  .v1 .ft{display:flex;align-items:center;gap:8px;margin-top:5px}.v1 .ft .when{font-size:9.5px;color:var(--s400)}.v1 .ft .rep{font-size:10px;font-weight:600;color:var(--s500);display:inline-flex;align-items:center;gap:3px}.v1 .ft .rep svg{width:11px;height:11px}
+  .v1 .card.done{background:var(--s50);opacity:.62}
+
+  /* ===== V2 컴팩트 ===== */
+  .v2 .list{gap:5px;padding:8px}
+  .v2 .card{position:relative;background:#fff;border:1px solid var(--s200);border-radius:9px;padding:8px 9px;display:flex;gap:8px;align-items:flex-start}
+  .v2 .ck{width:16px;height:16px;margin-top:1px}.v2 .ck svg{width:9px;height:9px}
+  .v2 .m{flex:1;min-width:0}
+  .v2 .meta{display:flex;align-items:center;gap:5px;margin-bottom:2px}
+  .v2 .tc{font-size:10px;padding:0 5px}
+  .v2 .catico{width:15px;height:15px;border-radius:4px;display:grid;place-items:center}.v2 .catico svg{width:9px;height:9px}.v2 .catico.col{color:var(--col);background:var(--col-soft)}.v2 .catico.txt{color:var(--txt);background:var(--txt-soft)}.v2 .catico.etc{color:var(--etc);background:var(--etc-soft)}
+  .v2 .au{margin-left:auto}.v2 .au .av{width:16px;height:16px;font-size:8px;box-shadow:0 0 0 1.5px #fff}
+  .v2 .tx{font-size:12px;color:var(--s700);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .v2 .card.done{background:var(--s50);opacity:.6}
+
+  /* ===== V3 타임코드 레일 ===== */
+  .v3 .card{position:relative;background:#fff;border:1px solid var(--s200);border-radius:10px;padding:10px;display:flex;gap:10px}.v3 .card:hover{border-color:var(--s300)}
+  .v3 .rail{flex:none;width:46px;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .v3 .rail .tc{font-size:11px;padding:2px 0;width:100%;text-align:center}
+  .v3 .ck{width:18px;height:18px}.v3 .ck svg{width:10px;height:10px}
+  .v3 .m{flex:1;min-width:0}
+  .v3 .top{display:flex;align-items:center;gap:5px;margin-bottom:4px}.v3 .top .av{width:16px;height:16px;font-size:8px}.v3 .top .nm{font-size:10.5px;font-weight:700;color:var(--s600)}.v3 .top .role{font-size:8.5px;font-weight:800;color:#fff;background:var(--ai);border-radius:4px;padding:1px 4px}.v3 .top .aib{font-size:8.5px;font-weight:800;color:var(--ai)}.v3 .top .cat{margin-left:auto}
+  .v3 .tx{font-size:12.5px;color:var(--s900);line-height:1.5}.v3 .tx .hl{color:var(--accent);font-weight:600}
+  .v3 .ft{font-size:9.5px;color:var(--s400);margin-top:4px}
+  .v3 .card.done{background:var(--s50);opacity:.62}
+
+  /* ===== V4 상태 그룹 ===== */
+  .v4 .sec{font-size:10.5px;font-weight:800;color:var(--s500);text-transform:none;letter-spacing:.01em;padding:6px 4px 4px;display:flex;align-items:center;gap:6px}.v4 .sec .c{color:var(--accent)}
+  .v4 .sec.res{color:var(--s400);cursor:pointer}.v4 .sec.res svg{width:13px;height:13px;margin-left:auto;color:var(--s400)}
+  .v4 .card{position:relative;background:#fff;border:1px solid var(--s200);border-radius:10px;padding:10px 11px;display:flex;gap:9px;margin-bottom:7px}.v4 .card:hover{border-color:var(--s300)}
+  .v4 .ck{width:19px;height:19px;margin-top:1px}.v4 .ck svg{width:10px;height:10px}
+  .v4 .m{flex:1;min-width:0}
+  .v4 .meta{display:flex;align-items:center;gap:5px;margin-bottom:5px}
+  .v4 .au{margin-left:auto;display:inline-flex;align-items:center;gap:4px}.v4 .au .av{width:17px;height:17px;font-size:8.5px}.v4 .au .nm{font-size:10px;font-weight:700;color:var(--s600)}.v4 .au .role{font-size:8.5px;font-weight:800;color:#fff;background:var(--ai);border-radius:4px;padding:1px 4px}.v4 .au .aib{font-size:8.5px;font-weight:800;color:var(--ai)}
+  .v4 .tx{font-size:12.5px;color:var(--s900);line-height:1.5}.v4 .tx .hl{color:var(--accent);font-weight:600}
+  .v4 .resbox{margin-top:4px;border:1px dashed var(--s200);border-radius:9px;background:var(--s50);padding:8px 10px}
+  .v4 .resbox .rl{font-size:11px;color:var(--s500);display:flex;align-items:center;gap:6px}.v4 .resbox .rl .av{width:16px;height:16px;font-size:8px}.v4 .resbox .rl .tc{font-size:10px}.v4 .resbox .rl .x{margin-left:auto;font-size:10px;color:var(--s400)}
+
+  .foot{margin-top:30px;font-size:12px;color:var(--s400);text-align:center;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="intro">
+    <h1>댓글 패널 — 여러 시안</h1>
+    <p>유지: <b>체크박스 · 마커↔카드 상태색</b>(타임코드 칩 = 미해결 주황·AI 보라·해결 회색) · <b>좌측 띠 없음</b> · slate 카드 · 해결 디밍. 다른 축: <b>카드 레이아웃·밀도·그룹핑</b>. 같은 3개 코멘트(0:08 색보정·0:42 AI 자막·1:15 해결)로 비교하세요.</p>
+  </div>
+
+  <div class="row">
+    <!-- V1 균형 -->
+    <div class="col">
+      <div class="lab"><span class="n">1</span><div><h3>균형 (기준)</h3><p>아바타+이름+역할 다 표시</p></div></div>
+      <div class="panel v1">
+        <div class="ph">
+          <div class="r1"><span class="cc"><svg data-lucide="message-square"></svg>미해결 2</span><span class="sp"></span><button class="hi"><svg data-lucide="arrow-down-narrow-wide"></svg></button><button class="hi"><svg data-lucide="eye-off"></svg></button><button class="hi"><svg data-lucide="search"></svg></button></div>
+          <div class="seg"><button class="on">전체 <span class="ct">3</span></button><button>미해결 <span class="ct">2</span></button><button>해결 <span class="ct">1</span></button></div>
+        </div>
+        <div class="list">
+          <div class="card"><button class="ck"><svg data-lucide="check"></svg></button><div class="m"><div class="meta"><span class="tc">0:08</span><span class="cat col"><svg data-lucide="palette"></svg>색보정</span><span class="au"><span class="av" style="width:17px;height:17px;background:#8a6fb0">박</span><span class="nm">박매니저</span><span class="role">관리</span></span></div><div class="tx">인트로 색감이 차가워요. 따뜻하게 부탁드려요.</div><div class="ft"><span class="when">5월 30일</span></div></div><button class="more"><svg data-lucide="more-horizontal"></svg></button></div>
+          <div class="card"><button class="ck"><svg data-lucide="check"></svg></button><div class="m"><div class="meta"><span class="tc ai">0:42</span><span class="cat txt"><svg data-lucide="type"></svg>자막</span><span class="au"><span class="av" style="width:17px;height:17px;background:var(--ai)"><svg data-lucide="sparkles" style="width:9px;height:9px;color:#fff"></svg></span><span class="aib">AI</span></span></div><div class="tx">자막 오타: <span class="hl">‘브랜대’ → ‘브랜드’</span></div><div class="ft"><span class="when">AI 추천 · 무시</span></div></div><button class="more"><svg data-lucide="more-horizontal"></svg></button></div>
+          <div class="card done"><button class="ck on"><svg data-lucide="check"></svg></button><div class="m"><div class="meta"><span class="tc done">1:15</span><span class="cat etc">기타</span><span class="au"><span class="av" style="width:17px;height:17px;background:#8a6fb0">박</span><span class="nm">박매니저</span><span class="role">관리</span></span></div><div class="tx">이 전환 정말 좋네요.</div><div class="ft"><span class="when">해결됨</span><span class="rep"><svg data-lucide="corner-down-right"></svg>답글 1</span></div></div></div>
+        </div>
+        <div class="linput"><div class="bx"><span class="tcc">0:36</span><input placeholder="피드백 입력…"><button class="send"><svg data-lucide="arrow-up"></svg></button></div></div>
+      </div>
+    </div>
+
+    <!-- V2 컴팩트 -->
+    <div class="col">
+      <div class="lab"><span class="n">2</span><div><h3>컴팩트</h3><p>아바타만·카테고리 아이콘·조밀(많이 보임)</p></div></div>
+      <div class="panel v2">
+        <div class="ph">
+          <div class="r1"><span class="cc"><svg data-lucide="message-square"></svg>미해결 2</span><span class="sp"></span><button class="hi"><svg data-lucide="arrow-down-narrow-wide"></svg></button><button class="hi"><svg data-lucide="eye-off"></svg></button></div>
+          <div class="seg"><button class="on">전체</button><button>미해결</button><button>해결</button></div>
+        </div>
+        <div class="list">
+          <div class="card"><button class="ck"><svg data-lucide="check"></svg></button><div class="m"><div class="meta"><span class="tc">0:08</span><span class="catico col"><svg data-lucide="palette"></svg></span><span class="au"><span class="av" style="width:16px;height:16px;background:#8a6fb0">박</span></span></div><div class="tx">인트로 색감이 차가워요. 따뜻하게 부탁드려요.</div></div></div>
+          <div class="card"><button class="ck"><svg data-lucide="check"></svg></button><div class="m"><div class="meta"><span class="tc ai">0:42</span><span class="catico txt"><svg data-lucide="type"></svg></span><span class="au"><span class="av" style="width:16px;height:16px;background:var(--ai)"><svg data-lucide="sparkles" style="width:9px;height:9px;color:#fff"></svg></span></span></div><div class="tx">자막 오타: ‘브랜대’ → ‘브랜드’</div></div></div>
+          <div class="card done"><button class="ck on"><svg data-lucide="check"></svg></button><div class="m"><div class="meta"><span class="tc done">1:15</span><span class="catico etc"></span><span class="au"><span class="av" style="width:16px;height:16px;background:#8a6fb0">박</span></span></div><div class="tx">이 전환 정말 좋네요.</div></div></div>
+        </div>
+        <div class="linput"><div class="bx"><span class="tcc">0:36</span><input placeholder="피드백 입력…"><button class="send"><svg data-lucide="arrow-up"></svg></button></div></div>
+      </div>
+    </div>
+
+    <!-- V3 타임코드 레일 -->
+    <div class="col">
+      <div class="lab"><span class="n">3</span><div><h3>타임코드 레일</h3><p>좌측에 시점을 크게(타임라인 리스트 느낌)</p></div></div>
+      <div class="panel v3">
+        <div class="ph">
+          <div class="r1"><span class="cc"><svg data-lucide="message-square"></svg>미해결 2</span><span class="sp"></span><button class="hi"><svg data-lucide="arrow-down-narrow-wide"></svg></button><button class="hi"><svg data-lucide="eye-off"></svg></button></div>
+          <div class="seg"><button class="on">전체 <span class="ct">3</span></button><button>미해결 <span class="ct">2</span></button><button>해결 <span class="ct">1</span></button></div>
+        </div>
+        <div class="list">
+          <div class="card"><div class="rail"><button class="ck"><svg data-lucide="check"></svg></button><span class="tc">0:08</span></div><div class="m"><div class="top"><span class="av" style="width:16px;height:16px;background:#8a6fb0">박</span><span class="nm">박매니저</span><span class="cat col"><svg data-lucide="palette"></svg>색보정</span></div><div class="tx">인트로 색감이 차가워요. 따뜻하게 부탁드려요.</div><div class="ft">5월 30일</div></div><button class="more"><svg data-lucide="more-horizontal"></svg></button></div>
+          <div class="card"><div class="rail"><button class="ck"><svg data-lucide="check"></svg></button><span class="tc ai">0:42</span></div><div class="m"><div class="top"><span class="av" style="width:16px;height:16px;background:var(--ai)"><svg data-lucide="sparkles" style="width:9px;height:9px;color:#fff"></svg></span><span class="aib">AI</span><span class="cat txt"><svg data-lucide="type"></svg>자막</span></div><div class="tx">자막 오타: <span class="hl">‘브랜대’ → ‘브랜드’</span></div><div class="ft">AI 추천 · 무시</div></div><button class="more"><svg data-lucide="more-horizontal"></svg></button></div>
+          <div class="card done"><div class="rail"><button class="ck on"><svg data-lucide="check"></svg></button><span class="tc done">1:15</span></div><div class="m"><div class="top"><span class="av" style="width:16px;height:16px;background:#8a6fb0">박</span><span class="nm">박매니저</span><span class="cat etc">기타</span></div><div class="tx">이 전환 정말 좋네요.</div><div class="ft">해결됨 · 답글 1</div></div></div>
+        </div>
+        <div class="linput"><div class="bx"><span class="tcc">0:36</span><input placeholder="피드백 입력…"><button class="send"><svg data-lucide="arrow-up"></svg></button></div></div>
+      </div>
+    </div>
+
+    <!-- V4 상태 그룹 -->
+    <div class="col">
+      <div class="lab"><span class="n">4</span><div><h3>상태 그룹</h3><p>미해결 먼저·해결은 접힌 그룹으로</p></div></div>
+      <div class="panel v4">
+        <div class="ph">
+          <div class="r1"><span class="cc"><svg data-lucide="message-square"></svg>미해결 2</span><span class="sp"></span><button class="hi"><svg data-lucide="arrow-down-narrow-wide"></svg></button><button class="hi"><svg data-lucide="search"></svg></button></div>
+        </div>
+        <div class="list">
+          <div class="sec">미해결 <span class="c">2</span></div>
+          <div class="card"><button class="ck"><svg data-lucide="check"></svg></button><div class="m"><div class="meta"><span class="tc">0:08</span><span class="cat col"><svg data-lucide="palette"></svg>색보정</span><span class="au"><span class="av" style="width:17px;height:17px;background:#8a6fb0">박</span><span class="nm">박매니저</span><span class="role">관리</span></span></div><div class="tx">인트로 색감이 차가워요. 따뜻하게 부탁드려요.</div></div><button class="more"><svg data-lucide="more-horizontal"></svg></button></div>
+          <div class="card"><button class="ck"><svg data-lucide="check"></svg></button><div class="m"><div class="meta"><span class="tc ai">0:42</span><span class="cat txt"><svg data-lucide="type"></svg>자막</span><span class="au"><span class="av" style="width:17px;height:17px;background:var(--ai)"><svg data-lucide="sparkles" style="width:9px;height:9px;color:#fff"></svg></span><span class="aib">AI</span></span></div><div class="tx">자막 오타: <span class="hl">‘브랜대’ → ‘브랜드’</span></div></div><button class="more"><svg data-lucide="more-horizontal"></svg></button></div>
+          <div class="sec res">해결됨 <span>1</span><svg data-lucide="chevron-down"></svg></div>
+          <div class="resbox"><div class="rl"><span class="av" style="width:16px;height:16px;background:#8a6fb0">박</span><span class="tc done">1:15</span><span style="color:var(--s500)">이 전환 정말 좋네요.</span><span class="x">펼치기</span></div></div>
+        </div>
+        <div class="linput"><div class="bx"><span class="tcc">0:36</span><input placeholder="피드백 입력…"><button class="send"><svg data-lucide="arrow-up"></svg></button></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">전부 체크박스·마커↔카드 상태색·좌측 띠 없음 유지 · 카드 레이아웃·밀도·그룹핑만 다름<br>끌리는 번호나 조합(예: "4 그룹 + 3 레일")을 알려주세요 → 실제 코드로 구현</div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>if(window.lucide) lucide.createIcons();</script>
+</body>
+</html>

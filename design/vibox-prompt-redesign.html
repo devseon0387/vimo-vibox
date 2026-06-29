@@ -1,0 +1,166 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>vibox 입력 프롬프트 리디자인 시안</title>
+<style>
+:root{--bg:#fafafa;--card:#fff;--bd:#e7e7e7;--tx:#1a1a1a;--mut:#666;--faint:#999;--accent:#e85008;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo",sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 90px}
+.top{position:sticky;top:0;background:var(--bg);z-index:10;padding:8px 0;border-bottom:1px solid var(--bd);margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.top h1{font-size:18px;margin:0}
+.top .sub{font-size:12.5px;color:var(--mut)}
+.modal{margin-top:26px}
+.mh{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.mh h2{font-size:16px;margin:0;letter-spacing:-.01em}
+.allrow{border:1px solid var(--bd);background:#fff;border-radius:8px;padding:5px 12px;font-size:12.5px;font-weight:600;cursor:pointer;color:#333}
+.row{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 12px}
+.vcard{flex:0 0 400px;background:var(--card);border:1px solid var(--bd);border-radius:13px;padding:12px;display:flex;flex-direction:column}
+.vh{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.vbadge{font-size:11.5px;font-weight:800;color:#fff;background:var(--accent);border-radius:6px;padding:3px 9px}
+.vbadge.cur{background:#888}
+.vname{font-size:12.5px;color:#555;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp{flex:none;margin-left:auto;background:var(--accent);color:#fff;border:none;border-radius:7px;width:30px;height:26px;font-size:11px;cursor:pointer}
+.vh .vname{margin-left:0}
+.stage{position:relative;display:flex;align-items:center;justify-content:center;min-height:320px;max-height:560px;overflow:auto;border-radius:11px;
+ background:repeating-conic-gradient(#eee 0% 25%,#f4f4f4 0% 50%) 0/20px 20px;padding:22px}
+.bd{position:absolute;inset:0;background:rgba(0,0,0,.5);border-radius:11px}
+.panel{position:relative;z-index:2;max-width:100%}
+.rat{font-size:12.5px;color:#444;margin-top:11px;line-height:1.5}
+.chg{margin:8px 0 0;padding-left:16px}
+.chg li{font-size:12px;color:#666;margin:2px 0;line-height:1.45}
+@keyframes dialog-in{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes backdrop-in{from{opacity:0}to{opacity:1}}
+</style></head><body><div class="wrap">
+<div class="top"><h1>입력 프롬프트 리디자인 시안</h1><span class="sub">2026-06-29 · PromptDialog (새 폴더·이름 변경) — [현재 + 미니멀·친근·구조화·프리미엄] · ▶ 로 dialog-in 애니메이션 · 가로 스크롤로 비교</span></div>
+
+<section class="modal">
+  <div class="mh"><h2>2 · 입력 프롬프트 (PromptDialog)</h2><button class="allrow" onclick="replayRow(this)">이 줄 재생</button></div>
+  <div class="row">
+
+  <!-- 현재 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge cur">현재</span><span class="vname">운영 디자인</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;background:#fff;border-radius:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);width:380px;max-width:100%;overflow:hidden;">
+      <div style="padding:24px;">
+        <h3 style="font-size:18px;line-height:1.3;font-weight:700;color:#111;margin:0 0 6px;">폴더 이름 변경</h3>
+        <div style="font-size:15px;color:#555;line-height:1.6;margin:0 0 16px;">새 폴더 이름을 입력하세요. 공유 링크는 그대로 유지됩니다.</div>
+        <input type="text" value="2026 브랜드필름 검수본" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #e85008;border-radius:6px;font-size:15px;color:#111;outline:none;box-shadow:0 0 0 2px #fef0e8;font-family:inherit;" />
+        <div style="margin-top:8px;font-size:13px;color:#dc2626;">이미 같은 이름의 폴더가 있습니다</div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;padding:12px 20px;background:#fafafa;border-top:1px solid #ececec;">
+        <button style="padding:8px 16px;font-size:15px;font-weight:500;color:#555;background:transparent;border:none;border-radius:6px;cursor:pointer;font-family:inherit;">취소</button>
+        <button style="padding:8px 16px;font-size:15px;font-weight:600;color:#fff;background:#111;border:none;border-radius:6px;cursor:pointer;font-family:inherit;">확인</button>
+      </div>
+    </div></div></div>
+  </div>
+
+  <!-- 미니멀 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge">미니멀</span><span class="vname">Hairline Prompt</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:360px;background:#fff;border:1px solid #ececec;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,0.10);font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;overflow:hidden;">
+      <div style="padding:22px 22px 18px;">
+        <h3 style="margin:0 0 12px;font-size:16px;font-weight:700;color:#111;letter-spacing:-0.01em;">폴더 이름 변경</h3>
+        <input type="text" value="2026 브랜드필름 검수본" style="width:100%;box-sizing:border-box;padding:10px 13px;border:1px solid #e85008;border-radius:9px;font-size:14.5px;color:#111;outline:none;box-shadow:0 0 0 3px #fef0e8;font-family:inherit;" />
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:6px;padding:0 22px 18px;">
+        <button style="border:none;background:transparent;padding:8px 14px;font-size:14px;font-weight:500;color:#555;border-radius:7px;cursor:pointer;">취소</button>
+        <button style="border:none;background:#111;padding:8px 18px;font-size:14px;font-weight:600;color:#fff;border-radius:7px;cursor:pointer;">변경</button>
+      </div>
+    </div></div></div>
+    <div class="rat">설명 문구·surface footer·구분선을 걷어내고 제목 + 입력 + 우측 액션만 남긴 가장 가벼운 입력창. 단순 이름 변경에 군더더기 0.</div>
+    <ul class="chg"><li>본문 설명 문구 제거(제목만으로 충분) · footer surface 바·border-top 제거</li><li>입력칸 라운드 9px + accent 포커스 링(focus 시만), 패널 1px #ececec 경계 + 가벼운 그림자</li><li>취소=무테 텍스트 / 확인=잉크 솔리드, 우측 정렬로 시각 위계 단순화</li><li>제목 16px·입력 14.5px로 타이트한 타이포 스케일</li></ul>
+  </div>
+
+  <!-- 친근 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge">친근</span><span class="vname">포근한 입력 카드</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:360px;background:#fff;border-radius:26px;box-shadow:0 24px 60px -12px rgba(17,17,17,0.22),0 4px 12px rgba(17,17,17,0.06);padding:30px 26px 22px;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;text-align:center;">
+      <div style="display:flex;justify-content:center;margin-bottom:14px;">
+        <div style="width:72px;height:72px;border-radius:50%;background:#fef0e8;display:grid;place-items:center;">
+          <div style="width:52px;height:52px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 2px 8px rgba(232,80,8,0.14);">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+          </div>
+        </div>
+      </div>
+      <h3 style="margin:0 0 6px;font-size:18px;font-weight:800;color:#111;letter-spacing:-0.01em;">새 이름을 정해 주세요</h3>
+      <p style="margin:0 0 16px;font-size:13.5px;line-height:1.6;color:#888;">공유 링크는 그대로 유지돼요.</p>
+      <input type="text" value="2026 브랜드필름 검수본" style="width:100%;box-sizing:border-box;padding:13px 15px;border:1.5px solid #e85008;border-radius:14px;font-size:15px;color:#111;outline:none;box-shadow:0 0 0 3px #fef0e8;font-family:inherit;text-align:center;margin-bottom:18px;" />
+      <div style="display:flex;flex-direction:column;gap:9px;">
+        <button style="width:100%;padding:14px;font-size:15px;font-weight:700;color:#fff;background:#e85008;border:none;border-radius:15px;cursor:pointer;box-shadow:0 4px 12px rgba(232,80,8,0.22);">이름 바꾸기</button>
+        <button style="width:100%;padding:13px;font-size:14px;font-weight:600;color:#555;background:#fafafa;border:none;border-radius:15px;cursor:pointer;">취소</button>
+      </div>
+    </div></div></div>
+    <div class="rat">앞서 채택한 "포근한 카드" 언어를 입력창에도 적용 — 중앙 폴더 동심원 + 둥근 큰 입력칸 + 풀폭 pill 버튼으로 확인/충돌 다이얼로그와 한 가족.</div>
+    <ul class="chg"><li>상단 중앙 72px 폴더 동심원(accent-soft) + "새 이름을 정해 주세요" 질문형 제목으로 부드러운 인상</li><li>입력칸 라운드 14px·패딩 13px·중앙 정렬 + accent 보더/포커스 링으로 누르기 쉽고 또렷하게</li><li>풀폭 스택 pill 버튼(주황 "이름 바꾸기" + 회색 "취소"), 26px 라운드 카드·soft 그림자</li><li>ConfirmDialog·ConflictDialog와 동일 카드 골격 → 다이얼로그 패밀리 일관성</li></ul>
+  </div>
+
+  <!-- 구조화 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge">구조화</span><span class="vname">Labeled Field</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:420px;max-width:100%;background:#fff;border:1px solid #ececec;border-radius:14px;box-shadow:0 12px 40px rgba(17,17,17,0.16);overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;">
+      <div style="display:flex;align-items:center;gap:8px;padding:12px 20px;background:#f7f7f7;border-bottom:1px solid #ececec;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+        <span style="font-size:13.5px;font-weight:700;">폴더 이름 변경</span>
+      </div>
+      <div style="padding:20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
+          <label style="font-size:12px;font-weight:700;letter-spacing:0.02em;color:#6b6b6b;">폴더 이름</label>
+          <span style="font-size:11.5px;color:#dc2626;font-weight:600;">중복</span>
+        </div>
+        <input type="text" value="2026 브랜드필름 검수본" style="width:100%;box-sizing:border-box;padding:10px 13px;border:1px solid #dc2626;border-radius:9px;font-size:14.5px;color:#111;outline:none;box-shadow:0 0 0 3px #fef2f2;font-family:inherit;" />
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:7px;">
+          <span style="font-size:12px;color:#dc2626;display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>이미 같은 이름의 폴더가 있어요</span>
+          <span style="font-size:11.5px;color:#aaa;">13 / 60</span>
+        </div>
+        <div style="margin-top:14px;padding:11px 13px;background:#fafafa;border:1px solid #ececec;border-radius:10px;display:flex;align-items:center;gap:8px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+          <span style="font-size:11.5px;color:#6b6b6b;">위치 <span style="color:#111;font-weight:500;">프로젝트 / 2024_가을캠페인</span> · 공유 링크 유지</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 12px 20px;background:#fafafa;border-top:1px solid #ececec;">
+        <span style="font-size:11.5px;color:#767676;"><span style="font-weight:600;color:#555;">Enter</span> 저장 · <span style="font-weight:600;color:#555;">Esc</span> 취소</span>
+        <div style="display:flex;gap:8px;">
+          <button style="padding:8px 15px;font-size:13.5px;font-weight:500;color:#555;background:transparent;border:1px solid #ececec;border-radius:8px;cursor:pointer;">취소</button>
+          <button style="padding:8px 16px;font-size:13.5px;font-weight:600;color:#fff;background:#111;border:none;border-radius:8px;cursor:pointer;">변경</button>
+        </div>
+      </div>
+    </div></div></div>
+    <div class="rat">필드 라벨·검증 상태·글자수·위치 맥락·키보드 힌트로 입력 과정을 명료화. 폴더명 규칙이 까다로운 운영 환경에 맞는 폼형 입력창.</div>
+    <ul class="chg"><li>상단 컨텍스트 바(연필 아이콘 + 모달 제목)로 성격 표시, 입력에 라벨("폴더 이름") + 우측 상태 배지</li><li>검증 에러는 아이콘 + 문구 + danger 포커스 링으로 즉시 인지, 우측 글자수(13/60) 카운터</li><li>대상 위치·공유 링크 유지 여부를 surface 안내 블록으로 구조화</li><li>푸터에 Enter/Esc 키보드 힌트 + 취소/변경 버튼</li></ul>
+  </div>
+
+  <!-- 프리미엄 -->
+  <div class="vcard">
+    <div class="vh"><span class="vbadge">프리미엄</span><span class="vname">Refined Prompt</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:400px;background:#fff;border:1px solid #ececec;border-radius:14px;box-shadow:0 1px 2px rgba(17,17,17,0.04),0 10px 28px -8px rgba(17,17,17,0.14),0 28px 56px -16px rgba(17,17,17,0.10);overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;">
+      <div style="padding:22px 24px 4px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#999;margin-bottom:8px;">이름 변경</div>
+        <h3 style="margin:0 0 14px;font-size:18px;font-weight:700;line-height:1.3;color:#111;letter-spacing:-0.01em;">폴더 이름을 바꿉니다</h3>
+        <div style="display:flex;align-items:center;gap:7px;font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#555;background:#fafafa;border:1px solid #ececec;border-radius:8px;padding:7px 11px;margin-bottom:14px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+          <span style="color:#999;">/프로젝트/</span><span style="color:#111;">2024_가을캠페인</span>
+        </div>
+        <input type="text" value="2026 브랜드필름 검수본" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1.5px solid #e85008;border-radius:11px;font-size:15px;font-weight:500;color:#111;outline:none;box-shadow:0 0 0 3px #fef0e8;font-family:inherit;" />
+        <div style="margin-top:8px;font-size:12.5px;color:#6b6b6b;">바꿀 이름을 입력하고 Enter를 누르세요.</div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 18px;margin-top:6px;">
+        <span style="font-size:11.5px;color:#767676;"><span style="font-weight:600;color:#555;">↵</span> 저장 · <span style="font-weight:600;color:#555;">Esc</span> 닫기</span>
+        <div style="display:flex;gap:8px;">
+          <button style="padding:9px 16px;font-size:13.5px;font-weight:500;color:#555;background:#fff;border:1px solid #ececec;border-radius:9px;cursor:pointer;">취소</button>
+          <button style="display:inline-flex;align-items:center;gap:8px;padding:9px 16px;font-size:13.5px;font-weight:600;color:#fff;background:#111;border:none;border-radius:9px;cursor:pointer;box-shadow:0 1px 2px rgba(17,17,17,0.2);">변경 <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:rgba(255,255,255,0.16);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></button>
+        </div>
+      </div>
+    </div></div></div>
+    <div class="rat">이브로우 라벨·mono 경로 칩·정제된 입력 포커스·키보드 힌트로 마감한 Linear/Vercel 풍 입력창. 현재 위치 맥락을 보여 어디를 바꾸는지 명확.</div>
+    <ul class="chg"><li>이브로우(이름 변경) + 18px 제목 + mono 경로 칩(현재 위치)으로 맥락을 고급스럽게 제시</li><li>입력칸 라운드 11px·1.5px accent 보더·soft 포커스 링 + 보조 안내 한 줄</li><li>패널 다단 소프트 섀도, 잉크 프라이머리 안에 체크 글리프 + ↵/Esc 키보드 힌트</li><li>중립·주황 절제 사용(accent는 포커스·경로 아이콘에만)</li></ul>
+  </div>
+
+  </div>
+</section>
+
+<footer style="margin-top:30px;color:var(--faint);font-size:12px;text-align:center">시안은 실제 기능(폴더 생성·이름 변경·검증) 유지 + 토큰 색 기반 재현. 채택 시 PromptDialog.tsx(usePrompt)에 반영. — showcase #2</footer>
+</div>
+<script>
+function play(el){const a=el.getAttribute('data-anim');if(!a)return;el.style.animation='none';void el.offsetWidth;el.style.animation=a;}
+function replayCard(btn){btn.closest('.vcard').querySelectorAll('[data-anim]').forEach(play);}
+function replayRow(btn){btn.closest('.modal').querySelectorAll('[data-anim]').forEach(play);}
+window.addEventListener('load',()=>{const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.querySelectorAll('[data-anim]').forEach(play);io.unobserve(e.target);}})},{threshold:.15});document.querySelectorAll('.vcard').forEach(s=>io.observe(s));});
+</script>
+</body></html>

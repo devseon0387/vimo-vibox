@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 댓글 패널 — 베스트 도구 기반 시안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --accent:#e85008; --acc-ink:#c2410c; --acc-soft:#fef0e8; --acc-line:#fbd9c4; --ai:#7c3aed; --ai-soft:#f3edff; --emerald:#059669;
+    --col:#c2410c; --col-soft:#fff1e8; --txt:#6d28d9; --txt-soft:#f3edff; --etc:#475569; --etc-soft:#f1f5f9;
+    --s50:#f8fafc; --s100:#f1f5f9; --s200:#e2e8f0; --s300:#cbd5e1; --s400:#94a3b8; --s500:#64748b; --s600:#475569; --s700:#334155; --s900:#0f172a;
+    --page:#e9eaec; --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif; --sh2:0 12px 32px rgba(15,23,42,.13); --sh:0 1px 2px rgba(15,23,42,.06);
+    --bar:#0b0f17; --trk:#334155; --resolved:#94a3b8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);background:var(--page);color:var(--s900);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h3{margin:0} button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  svg.lucide{width:1em;height:1em;stroke-width:2;flex:none;vertical-align:-.14em}
+  .wrap{max-width:1500px;margin:0 auto;padding:26px 22px 90px}
+  .intro h1{font-size:20px;font-weight:800;letter-spacing:-.02em}
+  .intro p{color:var(--s500);font-size:12.5px;margin-top:7px;line-height:1.6;max-width:1040px}.intro b{color:var(--s700)}
+
+  .row{display:flex;gap:16px;margin-top:22px;align-items:flex-start}
+  .col{flex:1;min-width:0}
+  .lab{margin-bottom:9px}
+  .lab .t{display:flex;align-items:center;gap:7px}.lab .n{font-size:11px;font-weight:800;color:#fff;background:var(--accent);width:20px;height:20px;border-radius:6px;display:grid;place-items:center;flex:none}.lab h3{font-size:14px;font-weight:800}
+  .lab .src{font-size:10.5px;color:var(--s400);margin-top:3px}.lab .src b{color:var(--acc-ink);font-weight:700}
+
+  /* 시크바 마커 띠 (패널 위) */
+  .scr{background:var(--bar);border-radius:11px 11px 0 0;padding:13px 14px 11px;border:1px solid var(--s200);border-bottom:none}
+  .scr .bar{position:relative;height:6px;border-radius:3px;background:var(--trk)}
+  .scr .fil{position:absolute;left:0;top:0;bottom:0;width:34%;border-radius:3px;background:var(--accent)}
+  .scr .mk{position:absolute;top:50%;transform:translate(-50%,-50%);width:11px;height:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2.5px var(--bar);z-index:2}
+  .scr .mk.ai{background:var(--ai)}.scr .mk.done{background:var(--resolved)}
+  .scr .head{position:absolute;top:50%;left:34%;transform:translate(-50%,-50%);width:13px;height:13px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px var(--accent);z-index:3}
+  /* 번호 마커(v4) */
+  .scr .nmk{position:absolute;top:50%;transform:translate(-50%,-50%);width:17px;height:17px;border-radius:50%;background:var(--accent);color:#fff;font-size:9px;font-weight:800;display:grid;place-items:center;box-shadow:0 0 0 2.5px var(--bar);z-index:2}.scr .nmk.ai{background:var(--ai)}.scr .nmk.done{background:var(--resolved)}
+
+  .panel{border:1px solid var(--s200);border-top:none;border-radius:0 0 13px 13px;overflow:hidden;background:var(--s50);box-shadow:var(--sh2);display:flex;flex-direction:column;height:528px}
+  .ph{flex:none;background:#fff;border-bottom:1px solid var(--s200);padding:9px 11px}
+  .ph .r1{display:flex;align-items:center;gap:6px}
+  .ph .cc{font-size:11px;font-weight:700;color:var(--s600)}.ph .cc b{color:var(--acc-ink)}
+  .ph .sp{flex:1}
+  .ph .hi{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;color:var(--s400)}.ph .hi svg{width:15px;height:15px}
+  .ph .seg{display:flex;gap:2px;background:var(--s100);border-radius:8px;padding:3px}.ph .seg button{flex:1;font-size:10.5px;font-weight:700;padding:5px 4px;border-radius:6px;color:var(--s500);display:inline-flex;align-items:center;justify-content:center;gap:4px}.ph .seg button.on{background:#fff;color:var(--s900);box-shadow:var(--sh)}.ph .seg .bdg{font-size:9px;font-weight:800;color:#fff;background:var(--accent);border-radius:6px;padding:0 4px;min-width:13px;text-align:center}
+  .ph .fchips{display:flex;gap:4px;margin-top:7px;flex-wrap:wrap}.ph .fchips .fc{font-size:9.5px;font-weight:700;color:var(--s500);background:var(--s100);border-radius:6px;padding:3px 7px;display:inline-flex;align-items:center;gap:3px}.ph .fchips .fc svg{width:10px;height:10px}.ph .fchips .fc.on{background:var(--s900);color:#fff}
+  .srch{display:flex;align-items:center;gap:6px;padding:6px 11px;background:#fff;border-bottom:1px solid var(--s100);font-size:11px;color:var(--s400)}.srch svg{width:13px;height:13px}
+
+  .list{flex:1;overflow-y:auto;padding:9px;display:flex;flex-direction:column;gap:7px;min-height:0}
+  .linput{flex:none;border-top:1px solid var(--s200);padding:8px 10px;background:#fff}
+  .linput .bx{border:1px solid var(--s200);background:var(--s50);border-radius:9px;display:flex;align-items:center;gap:7px;padding:6px 8px}
+  .linput .tcc{font-family:ui-monospace,monospace;font-size:10px;font-weight:700;color:var(--s900);background:var(--s100);padding:1px 5px;border-radius:5px}
+  .linput input{flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:11.5px}
+  .linput .send{width:26px;height:26px;border-radius:7px;background:var(--accent);color:#fff;display:grid;place-items:center;flex:none}.linput .send svg{width:12px;height:12px}
+
+  /* 공통 칩/요소 */
+  .tc{font-family:ui-monospace,monospace;font-size:10.5px;font-weight:800;padding:1px 6px;border-radius:5px;font-variant-numeric:tabular-nums;color:#fff;background:var(--accent)}
+  .tc.ai{background:var(--ai)}.tc.done{background:var(--resolved)}
+  .tcq{font-family:ui-monospace,monospace;font-size:10.5px;font-weight:800;padding:1px 6px;border-radius:5px;color:var(--acc-ink);background:var(--acc-soft)}
+  .tcq.ai{color:var(--ai);background:var(--ai-soft)}.tcq.done{color:var(--s400);background:var(--s100)}
+  .av{border-radius:50%;display:grid;place-items:center;font-weight:800;color:#fff;flex:none}
+  .ck{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--s300);background:#fff;display:grid;place-items:center}.ck svg{width:11px;height:11px;color:#fff;opacity:0}.ck.on{background:var(--emerald);border-color:var(--emerald)}.ck.on svg{opacity:1}
+  .tico{color:var(--s500)}.tico svg{width:14px;height:14px}
+  .more{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;color:var(--s400)}.more svg{width:14px;height:14px}
+  .card{position:relative;background:#fff;border:1px solid var(--s200);border-radius:9px;padding:9px 10px}
+  .card.done{background:var(--s50);opacity:.6}
+  .txt{font-size:12px;color:var(--s900);line-height:1.45}.txt .hl{color:var(--accent);font-weight:600}
+
+  /* v1 타임코드 척추 */
+  .v1 .row1{display:flex;align-items:center;gap:7px;margin-bottom:5px}.v1 .av{width:24px;height:24px;font-size:10px}.v1 .nm{font-size:11.5px;font-weight:700;color:var(--s700)}.v1 .row1 .tc{margin-left:auto}
+  .v1 .body{display:flex;gap:6px;align-items:flex-start;padding-left:31px}.v1 .body .tico{margin-top:1px}
+  .v1 .ft{padding-left:31px;margin-top:5px;font-size:9.5px;color:var(--s400);display:flex;gap:8px;align-items:center}.v1 .ft .rp{display:inline-flex;align-items:center;gap:3px;font-weight:600;color:var(--s500)}.v1 .ft svg{width:11px;height:11px}
+
+  /* v2 상태 탭 큐 */
+  .v2 .row1{display:flex;align-items:center;gap:6px;margin-bottom:5px}.v2 .lbc{font-size:9px;font-weight:800;color:var(--s600);background:var(--s100);border-radius:5px;padding:1px 6px;display:inline-flex;align-items:center;gap:3px}.v2 .lbc svg{width:9px;height:9px;color:var(--s400)}.v2 .row1 .more{margin-left:auto}
+  .v2 .body{display:flex;gap:6px;align-items:flex-start;margin-bottom:6px}.v2 .body .tico{margin-top:1px}
+  .v2 .ft{display:flex;align-items:center;gap:6px}.v2 .av{width:22px;height:22px;font-size:9px}.v2 .nm{font-size:10.5px;font-weight:700;color:var(--s600)}.v2 .tm{font-size:9.5px;color:var(--s400)}.v2 .ft .rp{margin-left:auto;font-size:9.5px;color:var(--s500);display:inline-flex;align-items:center;gap:3px}.v2 .ft .rp svg{width:11px;height:11px}
+
+  /* v3 투두 디밍 */
+  .v3 .pinrow{display:flex;align-items:center;gap:5px;font-size:9.5px;font-weight:800;color:var(--s400);padding:3px 4px 5px}.v3 .pinrow svg{width:11px;height:11px}
+  .v3 .row1{display:flex;align-items:center;gap:7px;margin-bottom:5px}.v3 .av{width:23px;height:23px;font-size:9.5px}.v3 .nm{font-size:11px;font-weight:700;color:var(--s700)}.v3 .row1 .rt{margin-left:auto;display:flex;align-items:center;gap:6px}.v3 .pin{color:var(--accent)}.v3 .pin.off{color:var(--s300)}.v3 .pin svg{width:13px;height:13px}
+  .v3 .body{display:flex;gap:6px;align-items:flex-start;padding-left:30px}.v3 .body .tico{margin-top:1px}
+  .v3 .ft{padding-left:30px;margin-top:5px;display:flex;align-items:center;gap:6px}
+  .v3 .plabel{font-size:9px;font-weight:700;color:var(--s500);background:var(--s100);border-radius:5px;padding:2px 7px 2px 5px;display:inline-flex;align-items:center;gap:4px}.v3 .plabel .dot{width:7px;height:7px;border-radius:50%}
+  .v3 .ft .rp{margin-left:auto;font-size:9.5px;color:var(--s500);display:inline-flex;align-items:center;gap:3px}.v3 .ft .rp svg{width:11px;height:11px}
+
+  /* v4 번호 키 */
+  .v4 .row1{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+  .v4 .num{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;flex:none}.v4 .num.ai{background:var(--ai)}.v4 .num.done{background:var(--resolved)}
+  .v4 .nm{font-size:11.5px;font-weight:700;color:var(--s700)}.v4 .row1 .tc{margin-left:auto}.v4 .newdot{width:7px;height:7px;border-radius:50%;background:#dc2626}
+  .v4 .body{display:flex;gap:6px;align-items:flex-start;padding-left:31px}.v4 .body .tico{margin-top:1px}
+  .v4 .ft{padding-left:31px;margin-top:5px;font-size:9.5px;color:var(--s400);display:flex;gap:8px;align-items:center}.v4 .ft .rp{display:inline-flex;align-items:center;gap:3px;font-weight:600;color:var(--s500)}.v4 .ft svg{width:11px;height:11px}
+
+  .foot{margin-top:28px;font-size:12px;color:var(--s400);text-align:center;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="intro">
+    <h1>댓글 패널 — 베스트 도구 기반 시안</h1>
+    <p>각 시안이 동종 최고 도구의 <b>고유 접근법</b>에 뿌리내립니다. 공통: 체크박스(우리 것)·<b>타임코드칩=시크바 마커 상태색</b>(주황 미해결·보라 AI·회색 해결)·좌측 띠 없음·답글은 카운트/정렬 제외. 각 패널 위 <b>시크바 마커 띠</b>로 결속이 보입니다.</p>
+  </div>
+
+  <div class="row">
+    <!-- V1 타임코드 척추 (Frame.io) -->
+    <div class="col">
+      <div class="lab"><div class="t"><span class="n">1</span><h3>타임코드 척추</h3></div><div class="src">기반: <b>Frame.io</b> · 타임코드 1급 + 유형=아이콘=필터</div></div>
+      <div class="scr"><div class="bar"><div class="fil"></div><span class="mk" style="left:7%"></span><span class="mk ai" style="left:39%"></span><span class="mk done" style="left:69%"></span><span class="head"></span></div></div>
+      <div class="panel v1">
+        <div class="ph"><div class="r1"><span class="cc">코멘트 3 · <b>미해결 2</b></span><span class="sp"></span><button class="hi"><svg data-lucide="arrow-up-down"></svg></button><button class="hi"><svg data-lucide="sliders-horizontal"></svg></button><button class="hi"><svg data-lucide="eye-off"></svg></button></div>
+          <div class="fchips"><span class="fc on">전체</span><span class="fc"><svg data-lucide="map-pin"></svg>핀</span><span class="fc"><svg data-lucide="pen-line"></svg>주석</span><span class="fc"><svg data-lucide="sparkles"></svg>AI</span></div></div>
+        <div class="srch"><svg data-lucide="search"></svg>코멘트·#해시태그 검색</div>
+        <div class="list">
+          <div class="card"><div class="row1"><button class="ck"><svg data-lucide="check"></svg></button><span class="av" style="width:24px;height:24px;background:#8a6fb0">박</span><span class="nm">박매니저</span><span class="tc">0:08</span></div><div class="body"><span class="tico"><svg data-lucide="map-pin"></svg></span><span class="txt">인트로 색감이 차가워요. 따뜻하게 부탁드려요.</span></div><div class="ft"><span class="rp"><svg data-lucide="message-square"></svg>답글 2</span><span>5월 30일</span></div></div>
+          <div class="card"><div class="row1"><button class="ck"><svg data-lucide="check"></svg></button><span class="av" style="width:24px;height:24px;background:var(--ai)"><svg data-lucide="sparkles" style="width:11px;height:11px;color:#fff"></svg></span><span class="nm">AI 검수</span><span class="tc ai">0:42</span></div><div class="body"><span class="tico"><svg data-lucide="type"></svg></span><span class="txt">자막 오타: <span class="hl">‘브랜대’→‘브랜드’</span></span></div><div class="ft"><span>AI 추천 · 무시</span></div></div>
+          <div class="card done"><div class="row1"><button class="ck on"><svg data-lucide="check"></svg></button><span class="av" style="width:24px;height:24px;background:#8a6fb0">박</span><span class="nm">박매니저</span><span class="tc done">1:15</span></div><div class="body"><span class="txt">이 전환 정말 좋네요.</span></div><div class="ft"><span class="rp"><svg data-lucide="message-square"></svg>답글 1</span><span>해결됨</span></div></div>
+        </div>
+        <div class="linput"><div class="bx"><span class="tcc">0:36</span><input placeholder="피드백 입력…"><button class="send"><svg data-lucide="arrow-up"></svg></button></div></div>
+      </div>
+    </div>
+
+    <!-- V2 상태 탭 큐 (Dropbox Replay) -->
+    <div class="col">
+      <div class="lab"><div class="t"><span class="n">2</span><h3>상태 탭 큐</h3></div><div class="src">기반: <b>Dropbox Replay</b> · 전체/미해결/해결 탭 + 라벨</div></div>
+      <div class="scr"><div class="bar"><div class="fil"></div><span class="mk" style="left:7%"></span><span class="mk ai" style="left:39%"></span><span class="mk done" style="left:69%"></span><span class="head"></span></div></div>
+      <div class="panel v2">
+        <div class="ph"><div class="seg"><button class="on">전체</button><button>미해결 <span class="bdg">2</span></button><button>해결</button></div>
+          <div class="fchips"><span class="fc"><svg data-lucide="filter"></svg>필터</span><span class="fc"><svg data-lucide="arrow-up-down"></svg>시간순</span></div></div>
+        <div class="list">
+          <div class="card"><div class="row1"><button class="ck"><svg data-lucide="check"></svg></button><span class="tc">0:08</span><span class="lbc"><svg data-lucide="pin"></svg>확인필요</span><button class="more"><svg data-lucide="more-vertical"></svg></button></div><div class="body"><span class="tico"><svg data-lucide="pen-line"></svg></span><span class="txt">인트로 색감이 차가워요. 따뜻하게 부탁드려요.</span></div><div class="ft"><span class="av" style="width:22px;height:22px;background:#8a6fb0">박</span><span class="nm">박매니저</span><span class="tm">2시간 전</span><span class="rp"><svg data-lucide="corner-down-right"></svg>2</span></div></div>
+          <div class="card"><div class="row1"><button class="ck"><svg data-lucide="check"></svg></button><span class="tc ai">0:42</span><span class="lbc"><svg data-lucide="pin"></svg>질문</span><button class="more"><svg data-lucide="more-vertical"></svg></button></div><div class="body"><span class="tico"><svg data-lucide="sparkles" style="color:var(--ai)"></svg></span><span class="txt">자막 오타: <span class="hl">‘브랜대’→‘브랜드’</span></span></div><div class="ft"><span class="av" style="width:22px;height:22px;background:var(--ai)"><svg data-lucide="sparkles" style="width:10px;height:10px;color:#fff"></svg></span><span class="nm">AI 검수</span><span class="tm">방금</span></div></div>
+          <div class="card done"><div class="row1"><button class="ck on"><svg data-lucide="check"></svg></button><span class="tc done">1:15</span><span class="lbc"><svg data-lucide="pin"></svg>확정</span><button class="more"><svg data-lucide="more-vertical"></svg></button></div><div class="body"><span class="txt">이 전환 정말 좋네요.</span></div><div class="ft"><span class="av" style="width:22px;height:22px;background:#8a6fb0">박</span><span class="nm">박매니저</span><span class="tm">어제</span><span class="rp"><svg data-lucide="corner-down-right"></svg>1</span></div></div>
+        </div>
+        <div class="linput"><div class="bx"><span class="tcc">0:36</span><input placeholder="피드백 입력…"><button class="send"><svg data-lucide="arrow-up"></svg></button></div></div>
+      </div>
+    </div>
+
+    <!-- V3 투두 디밍 (Filestage) -->
+    <div class="col">
+      <div class="lab"><div class="t"><span class="n">3</span><h3>투두 디밍</h3></div><div class="src">기반: <b>Filestage</b> · To-Do·해결 회색 잔존·우선순위 라벨</div></div>
+      <div class="scr"><div class="bar"><div class="fil"></div><span class="mk" style="left:7%"></span><span class="mk ai" style="left:39%"></span><span class="mk done" style="left:69%"></span><span class="head"></span></div></div>
+      <div class="panel v3">
+        <div class="ph"><div class="r1"><span class="cc">할 일 <b>2</b> · 완료 1</span><span class="sp"></span><button class="hi"><svg data-lucide="arrow-down-up"></svg></button><button class="hi"><svg data-lucide="eye-off"></svg></button></div></div>
+        <div class="list">
+          <div class="pinrow"><svg data-lucide="pin"></svg>고정됨</div>
+          <div class="card"><div class="row1"><button class="ck"><svg data-lucide="check"></svg></button><span class="av" style="width:23px;height:23px;background:#8a6fb0">박</span><span class="nm">박매니저</span><span class="rt"><span class="tc">0:08</span><span class="pin"><svg data-lucide="pin"></svg></span></span></div><div class="body"><span class="tico"><svg data-lucide="pen-line"></svg></span><span class="txt">인트로 색감이 차가워요. 따뜻하게 부탁드려요.</span></div><div class="ft"><span class="plabel"><span class="dot" style="background:#dc2626"></span>Must Fix</span><span class="rp"><svg data-lucide="corner-down-right"></svg>답글 2</span></div></div>
+          <div class="card"><div class="row1"><button class="ck"><svg data-lucide="check"></svg></button><span class="av" style="width:23px;height:23px;background:var(--ai)"><svg data-lucide="sparkles" style="width:11px;height:11px;color:#fff"></svg></span><span class="nm">AI 검수</span><span class="rt"><span class="tc ai">0:42</span><span class="pin off"><svg data-lucide="pin"></svg></span></span></div><div class="body"><span class="tico"><svg data-lucide="type"></svg></span><span class="txt">자막 오타: <span class="hl">‘브랜대’→‘브랜드’</span></span></div><div class="ft"><span class="plabel"><span class="dot" style="background:#0891b2"></span>자막</span></div></div>
+          <div class="card done"><div class="row1"><button class="ck on"><svg data-lucide="check"></svg></button><span class="av" style="width:23px;height:23px;background:#8a6fb0">박</span><span class="nm">박매니저</span><span class="rt"><span class="tc done">1:15</span></span></div><div class="body"><span class="txt">이 전환 정말 좋네요.</span></div><div class="ft"><span style="font-size:9.5px;color:var(--s400)">완료 · 답글 1</span></div></div>
+        </div>
+        <div class="linput"><div class="bx"><span class="tcc">0:36</span><input placeholder="피드백 입력…"><button class="send"><svg data-lucide="arrow-up"></svg></button></div></div>
+      </div>
+    </div>
+
+    <!-- V4 번호 키 (ReviewStudio) -->
+    <div class="col">
+      <div class="lab"><div class="t"><span class="n">4</span><h3>번호 키</h3></div><div class="src">기반: <b>ReviewStudio</b> · 번호가 카드·마커·핀을 하나로</div></div>
+      <div class="scr"><div class="bar"><div class="fil"></div><span class="nmk" style="left:7%">1</span><span class="nmk ai" style="left:39%">2</span><span class="nmk done" style="left:69%">3</span><span class="head"></span></div></div>
+      <div class="panel v4">
+        <div class="ph"><div class="r1"><span class="cc">코멘트 3 · <b>미해결 2</b></span><span class="sp"></span><button class="hi"><svg data-lucide="list-todo"></svg></button><button class="hi"><svg data-lucide="crosshair"></svg></button><button class="hi"><svg data-lucide="chevrons-down-up"></svg></button></div></div>
+        <div class="list">
+          <div class="card"><div class="row1"><button class="ck"><svg data-lucide="check"></svg></button><span class="num">1</span><span class="nm">박매니저</span><span class="newdot"></span><span class="tc">0:08</span></div><div class="body"><span class="tico"><svg data-lucide="map-pin"></svg></span><span class="txt">인트로 색감이 차가워요. 따뜻하게 부탁드려요.</span></div><div class="ft"><span class="rp"><svg data-lucide="corner-down-right"></svg>답글 2</span><span>5월 30일</span></div></div>
+          <div class="card"><div class="row1"><button class="ck"><svg data-lucide="check"></svg></button><span class="num ai">2</span><span class="nm">AI 검수</span><span class="tc ai">0:42</span></div><div class="body"><span class="tico"><svg data-lucide="type"></svg></span><span class="txt">자막 오타: <span class="hl">‘브랜대’→‘브랜드’</span></span></div><div class="ft"><span>AI 추천 · 무시</span></div></div>
+          <div class="card done"><div class="row1"><button class="ck on"><svg data-lucide="check"></svg></button><span class="num done">3</span><span class="nm">박매니저</span><span class="tc done">1:15</span></div><div class="body"><span class="txt">이 전환 정말 좋네요.</span></div><div class="ft"><span class="rp"><svg data-lucide="corner-down-right"></svg>답글 1</span><span>해결됨</span></div></div>
+        </div>
+        <div class="linput"><div class="bx"><span class="tcc">0:36</span><input placeholder="피드백 입력…"><button class="send"><svg data-lucide="arrow-up"></svg></button></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">각 시안 = 한 베스트 도구의 고유 접근법 · 전부 체크박스·마커↔카드 상태색·좌측 띠 없음 유지<br>끌리는 번호나 조합을 알려주세요 → 컨트롤 바(1번)와 함께 실제 코드로 구현</div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>if(window.lucide) lucide.createIcons();</script>
+</body>
+</html>

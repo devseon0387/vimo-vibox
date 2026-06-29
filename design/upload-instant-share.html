@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>업로드 → 즉시 공유 링크 — 디자인 시안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root{
+    --bg:#fff;--surface:#fafafa;--surface2:#f6f6f7;--border:#ececec;--border2:#e2e2e4;--text:#18181b;--soft:#52525b;--faint:#9b9ba3;
+    --accent:#e85008;--accent2:#F94000;--accent-soft:#fef0e8;--mybox:#52525b;
+    --ok:#16a34a;--ok-soft:#f0fdf4;--sky:#0369a1;--sky-soft:#f0f9ff;--warn:#d97706;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#eceef1;color:var(--text);font-family:Pretendard,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .lucide{width:1em;height:1em;stroke-width:2;flex:none}
+  .wrap{max-width:1240px;margin:0 auto;padding:34px 24px 90px}
+  h1{font-size:23px;font-weight:800;letter-spacing:-.02em}
+  .lead{color:var(--soft);font-size:14px;margin-top:9px;line-height:1.65;max-width:860px}
+  .sech{font-size:12px;font-weight:800;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;margin:38px 0 14px}
+
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
+  @media(max-width:880px){.grid{grid-template-columns:1fr}}
+  .card{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  .card.reco{border-color:#f4c9b3;box-shadow:0 0 0 3px var(--accent-soft)}
+  .chead{display:flex;align-items:center;gap:9px;padding:14px 16px 12px}
+  .chead .n{width:24px;height:24px;border-radius:7px;background:var(--text);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:800}
+  .card.reco .chead .n{background:var(--accent)}
+  .chead .t{font-size:14.5px;font-weight:800}
+  .chead .reco-tag{margin-left:auto;font-size:10.5px;font-weight:800;color:var(--accent);background:var(--accent-soft);padding:3px 9px;border-radius:999px}
+  .stage{background:linear-gradient(160deg,#fbfbfc,#f1f2f4);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:22px 16px;min-height:208px;display:flex;align-items:center;justify-content:center;position:relative}
+  .desc{padding:13px 16px 8px;font-size:12.5px;color:var(--soft);line-height:1.6}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;padding:2px 16px 15px}
+  .tag{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;border:1px solid var(--border2)}
+  .tag.p{color:var(--ok);background:var(--ok-soft);border-color:#cdebd6}
+  .tag.c{color:var(--warn);background:#fffbeb;border-color:#f3e2bd}
+
+  /* ---- shared UI bits ---- */
+  .linkpill{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border2);border-radius:9px;padding:6px 6px 6px 11px;font-size:12px;font-family:ui-monospace,monospace;color:var(--soft);max-width:100%}
+  .linkpill .u{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .copybtn{display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#fff;border:none;font-size:11.5px;font-weight:700;padding:6px 11px;border-radius:7px;font-family:Pretendard;flex:none}
+  .copybtn .lucide{font-size:13px}
+  .seg{display:inline-flex;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:2px;gap:2px}
+  .seg b{font-size:11px;font-weight:700;color:var(--soft);padding:4px 10px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;cursor:default}
+  .seg b.on{background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .seg b.on.rev{color:var(--sky)}
+  .seg .lucide{font-size:12px}
+  .thumb{border-radius:8px;background:linear-gradient(120deg,#3730a3,#7c3aed,#db2777);position:relative;flex:none}
+  .thumb .pl{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.9)}
+  .thumb .pl .lucide{font-size:18px}
+  .check{width:18px;height:18px;border-radius:999px;background:var(--ok);color:#fff;display:grid;place-items:center}
+  .check .lucide{font-size:12px}
+
+  /* A: 업로드 독 */
+  .dock{width:300px;background:#fff;border:1px solid var(--border2);border-radius:13px;box-shadow:0 10px 34px rgba(0,0,0,.14);overflow:hidden}
+  .dock .dh{display:flex;align-items:center;gap:7px;padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700}
+  .dock .dh .sp{flex:1}
+  .dock .row{display:flex;align-items:center;gap:9px;padding:10px 12px}
+  .dock .row .thumb{width:42px;height:30px}
+  .dock .meta{flex:1;min-width:0}
+  .dock .meta .nm{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dock .share{padding:0 12px 11px;display:flex;flex-direction:column;gap:7px}
+  .dock .share .lk{display:flex;gap:6px;align-items:center}
+
+  /* B: 토스트 */
+  .toast{width:330px;background:#fff;border:1px solid var(--border2);border-radius:13px;box-shadow:0 10px 34px rgba(0,0,0,.16);padding:12px 13px;display:flex;gap:11px}
+  .toast .ic{width:30px;height:30px;border-radius:8px;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center;flex:none}
+  .toast .ic .lucide{font-size:16px}
+  .toast .body{flex:1;min-width:0}
+  .toast .body .h{font-size:12.5px;font-weight:700;margin-bottom:6px}
+  .toast .body .acts{display:flex;align-items:center;gap:7px}
+  .toast .x{color:var(--faint);align-self:flex-start}.toast .x .lucide{font-size:15px}
+
+  /* C: 모달 */
+  .modal{width:330px;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.22);overflow:hidden}
+  .modal .mh{background:linear-gradient(135deg,var(--accent-soft),#fff);padding:16px 18px 13px;border-bottom:1px solid var(--border)}
+  .modal .mh .t{font-size:15px;font-weight:800;display:flex;align-items:center;gap:7px}
+  .modal .mh .t .check{width:20px;height:20px}
+  .modal .mh .s{font-size:11.5px;color:var(--soft);margin-top:3px}
+  .modal .mb{padding:14px 18px 16px;display:flex;flex-direction:column;gap:12px}
+  .modal .field{display:flex;flex-direction:column;gap:5px}
+  .modal .field .lbl{font-size:10.5px;font-weight:800;color:var(--faint);text-transform:uppercase;letter-spacing:.04em}
+  .modal .qr{width:64px;height:64px;border-radius:8px;background:repeating-conic-gradient(#18181b 0 25%, #fff 0 50%) 0 0/14px 14px;border:3px solid #fff;outline:1px solid var(--border)}
+  .modal .done{height:38px;border-radius:9px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;border:none;display:grid;place-items:center}
+
+  /* D: 카드 상시 링크 */
+  .vgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .vcard{background:#fff;border:1px solid var(--border);border-radius:11px;overflow:hidden}
+  .vcard .cv{aspect-ratio:16/10;position:relative}
+  .vcard .cv .tc{position:absolute;right:5px;bottom:5px;background:rgba(0,0,0,.7);color:#fff;font-size:8.5px;font-weight:600;border-radius:3px;padding:1px 4px}
+  .vcard .cf{padding:7px 9px}
+  .vcard .cf .nm{font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .vcard .cf .lkrow{display:flex;align-items:center;gap:5px;margin-top:6px}
+  .vcard .cf .lkbtn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--accent);background:var(--accent-soft);border:none;border-radius:6px;padding:5px 0}
+  .vcard .cf .lkbtn .lucide{font-size:12px}
+  .vcard .cf .ico{width:26px;border-radius:6px;background:var(--surface2);display:grid;place-items:center;color:var(--soft)}
+  .vcard .cf .ico .lucide{font-size:13px}
+
+  /* E: 스마트 바 */
+  .smartbar{width:480px;max-width:100%;background:#fff;border:1px solid var(--border2);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.13);display:flex;align-items:center;gap:11px;padding:10px 13px}
+  .smartbar .thumb{width:46px;height:30px}
+  .smartbar .info{min-width:0}
+  .smartbar .info .nm{font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+  .smartbar .info .st{font-size:11px;color:var(--ok);font-weight:600;margin-top:1px}
+  .smartbar .sp{flex:1}
+  .smartbar .ghost{font-size:11.5px;font-weight:700;color:var(--soft);background:none;border:none;display:inline-flex;align-items:center;gap:4px}
+  .smartbar .ghost .lucide{font-size:13px}
+  .smartbar .x{color:var(--faint)}.smartbar .x .lucide{font-size:16px}
+
+  .decis{background:#fff;border:1px solid var(--border);border-radius:14px;padding:6px 4px;margin-top:6px}
+  .decis .r{display:flex;gap:14px;padding:13px 16px;border-bottom:1px solid var(--border);align-items:flex-start}
+  .decis .r:last-child{border-bottom:none}
+  .decis .q{flex:none;width:150px;font-size:12.5px;font-weight:800}
+  .decis .a{font-size:12.5px;color:var(--soft);line-height:1.6}
+  .decis .a b{color:var(--accent);font-weight:700}
+  .foot{margin-top:34px;color:var(--faint);font-size:12px;line-height:1.7;border-top:1px solid #d9dce0;padding-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>영상 업로드 → 즉시 공유 링크 · 디자인 시안</h1>
+  <p class="lead">업로드가 끝나면 공유 링크가 자동 생성됩니다(링크는 이제 영구). 관건은 <b>어디에·얼마나 적극적으로</b> 보여주느냐 — 침투적이지 않으면서 "바로 복사해서 보내기"가 한 동작이어야 합니다. 아래 5개 시안 + 핵심 UX 결정.</p>
+
+  <div class="sech">5개 시안</div>
+  <div class="grid">
+
+    <!-- A -->
+    <div class="card">
+      <div class="chead"><span class="n">A</span><span class="t">업로드 독 인라인</span></div>
+      <div class="stage">
+        <div class="dock">
+          <div class="dh"><i data-lucide="upload-cloud" style="font-size:15px;color:var(--accent)"></i>업로드 1<span class="sp"></span><i data-lucide="chevron-down" style="font-size:15px;color:var(--faint)"></i></div>
+          <div class="row">
+            <span class="thumb"><span class="pl"><i data-lucide="play"></i></span></span>
+            <div class="meta"><div class="nm">그래놀라_광고_v2.mp4</div></div>
+            <span class="check"><i data-lucide="check"></i></span>
+          </div>
+          <div class="share">
+            <div class="seg"><b class="on rev"><i data-lucide="message-square"></i>검수</b><b><i data-lucide="eye"></i>미리보기</b></div>
+            <div class="lk"><span class="linkpill"><span class="u">vibox.cloud/s/ab12cd</span></span><button class="copybtn"><i data-lucide="copy"></i>복사</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="desc">진행률 바로 그 자리(업로드 독)에서 완료되면 링크·복사·모드 토글이 펼쳐짐. 맥락 유지, 추가 창 없음.</div>
+      <div class="tags"><span class="tag p">비침투적</span><span class="tag p">맥락 유지</span><span class="tag c">독을 닫으면 안 보임</span></div>
+    </div>
+
+    <!-- B -->
+    <div class="card">
+      <div class="chead"><span class="n">B</span><span class="t">완료 토스트</span></div>
+      <div class="stage">
+        <div class="toast">
+          <span class="ic"><i data-lucide="link"></i></span>
+          <div class="body">
+            <div class="h">공유 링크가 준비됐어요</div>
+            <div class="acts"><span class="linkpill"><span class="u">vibox.cloud/s/ab12cd</span></span><button class="copybtn"><i data-lucide="copy"></i>복사</button></div>
+          </div>
+          <span class="x"><i data-lucide="x"></i></span>
+        </div>
+      </div>
+      <div class="desc">완료 순간 우하단에 토스트가 떠 링크+복사 제공, 몇 초 뒤 사라짐. 가볍고 즉각적. 설정 변경은 '설정'으로.</div>
+      <div class="tags"><span class="tag p">즉각적</span><span class="tag p">가벼움</span><span class="tag c">놓치면 사라짐</span><span class="tag c">모드 선택 약함</span></div>
+    </div>
+
+    <!-- C -->
+    <div class="card">
+      <div class="chead"><span class="n">C</span><span class="t">공유 준비 모달</span></div>
+      <div class="stage">
+        <div class="modal">
+          <div class="mh"><div class="t"><span class="check"><i data-lucide="check"></i></span>공유 준비 완료</div><div class="s">그래놀라_광고_v2.mp4</div></div>
+          <div class="mb">
+            <div class="field"><span class="lbl">모드</span><div class="seg"><b class="on rev"><i data-lucide="message-square"></i>검수</b><b><i data-lucide="eye"></i>미리보기</b></div></div>
+            <div class="field"><span class="lbl">링크</span><div class="lk" style="display:flex;gap:6px;align-items:center"><span class="linkpill" style="flex:1"><span class="u">vibox.cloud/s/ab12cd</span></span><button class="copybtn"><i data-lucide="copy"></i>복사</button></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="desc">업로드 직후 모달이 떠 링크·모드·다운로드를 한 번에 정리. 가장 적극적 — "보내려고 올렸다"엔 최적, 저장만 할 땐 과함.</div>
+      <div class="tags"><span class="tag p">명확·완결</span><span class="tag p">모드 선택 확실</span><span class="tag c">침투적(매번 막음)</span><span class="tag c">대량 업로드 불리</span></div>
+    </div>
+
+    <!-- D -->
+    <div class="card">
+      <div class="chead"><span class="n">D</span><span class="t">카드 상시 링크</span></div>
+      <div class="stage">
+        <div class="vgrid" style="width:260px">
+          <div class="vcard">
+            <div class="cv thumb" style="border-radius:0"><span class="pl"><i data-lucide="play"></i></span><span class="tc">00:48</span></div>
+            <div class="cf"><div class="nm">그래놀라_광고_v2.mp4</div>
+              <div class="lkrow"><button class="lkbtn"><i data-lucide="link"></i>링크 복사</button><span class="ico"><i data-lucide="settings-2"></i></span></div>
+            </div>
+          </div>
+          <div class="vcard">
+            <div class="cv thumb" style="border-radius:0;background:linear-gradient(120deg,#0ea5e9,#22c55e)"><span class="pl"><i data-lucide="play"></i></span><span class="tc">01:12</span></div>
+            <div class="cf"><div class="nm">티저_15s.mp4</div>
+              <div class="lkrow"><button class="lkbtn"><i data-lucide="link"></i>링크 복사</button><span class="ico"><i data-lucide="settings-2"></i></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="desc">업로드 순간을 특별 취급하지 않고, 모든 영상 카드에 '링크 복사'를 상시 노출(이제 모두 링크 보유). 가장 잔잔·일관적.</div>
+      <div class="tags"><span class="tag p">무방해</span><span class="tag p">일관적</span><span class="tag p">대량에 강함</span><span class="tag c">"방금 생성됨" 신호 약함</span></div>
+    </div>
+
+  </div>
+
+  <!-- E full width -->
+  <div class="grid" style="grid-template-columns:1fr;margin-top:22px">
+    <div class="card reco">
+      <div class="chead"><span class="n">E</span><span class="t">스마트 완료 바</span><span class="reco-tag">추천 (A+D 결합)</span></div>
+      <div class="stage" style="min-height:150px">
+        <div class="smartbar">
+          <span class="thumb"><span class="pl"><i data-lucide="play"></i></span></span>
+          <div class="info"><div class="nm"><span class="check" style="width:16px;height:16px"><i data-lucide="check"></i></span>그래놀라_광고_v2.mp4</div><div class="st">검수 링크 생성됨 · 영구</div></div>
+          <div class="sp"></div>
+          <div class="seg"><b class="on rev"><i data-lucide="message-square"></i>검수</b><b><i data-lucide="eye"></i>미리보기</b></div>
+          <span class="linkpill"><span class="u">vibox.cloud/s/ab12cd</span></span>
+          <button class="copybtn"><i data-lucide="copy"></i>링크 복사</button>
+          <span class="x"><i data-lucide="x"></i></span>
+        </div>
+      </div>
+      <div class="desc">완료 시 화면 하단에 <b>슬림 바</b>가 떠 영상·상태·모드 토글·링크·복사를 한 줄에. 닫아도 카드(시안 D)에 '링크 복사'가 상시 남음 → <b>지금 보내기 + 나중에 보내기</b> 둘 다 커버. 비침투적이면서 "방금 생성됨"이 또렷.</div>
+      <div class="tags"><span class="tag p">비침투+또렷</span><span class="tag p">모드 사후 전환</span><span class="tag p">대량 OK(쌓임)</span><span class="tag p">D와 병행</span></div>
+    </div>
+  </div>
+
+  <div class="sech">핵심 UX 결정 (시안과 무관하게 정해야 할 것)</div>
+  <div class="decis">
+    <div class="r"><div class="q">기본 모드</div><div class="a"><b>검수(피드백 받기)</b>를 기본으로 추천 — 비박스의 핵심이 '클라 검수'라서. 단 <b>마지막 선택 기억</b> + 한 번에 미리보기로 전환 가능. (저장만 하는 사람도 링크는 무해하게 생성됨)</div></div>
+    <div class="r"><div class="q">모든 업로드?</div><div class="a">예 — 영상 업로드는 전부 자동 생성(링크 영구라 부담 0). 단 <b>이미지·문서 등은 제외</b>하거나 약하게(카드 링크만). 영상에 집중.</div></div>
+    <div class="r"><div class="q">대량 업로드</div><div class="a">여러 개 올리면 매번 모달(C)은 피로 → <b>스마트 바(E)는 쌓이거나 "N개 링크 생성됨 · 전체 보기"</b>로 묶음. 카드(D)엔 각각 링크.</div></div>
+    <div class="r"><div class="q">새 버전 업로드</div><div class="a">기존 영상의 새 버전이면 <b>같은 공유 링크에 버전 추가</b>(V1~Vn) 옵션 제시 — 새 링크 남발 방지. (프로젝트=폴더 버전 모델과 연결)</div></div>
+    <div class="r"><div class="q">복사 피드백</div><div class="a">복사 시 버튼이 <b>"복사됨 ✓"</b>로 1.5초 전환 + 살짝 진동(모바일). 링크는 <code>vibox.cloud/s/…</code> 짧은 형태.</div></div>
+  </div>
+
+  <div class="foot">
+    추천 = <b>E(스마트 완료 바) + D(카드 상시 링크) 병행</b>. 업로드 직후엔 슬림 바로 "지금 바로 복사해서 보내기"를 또렷하게, 닫은 뒤엔 모든 카드의 '링크 복사'로 "언제든 다시"를 커버. 모달(C)은 너무 막고, 토스트(B)는 놓치기 쉽고, 독 인라인(A)은 독을 닫으면 사라짐. 모드 기본=검수(마지막 선택 기억). 디자인 톤·로고·이모지 금지 동일.
+  </div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

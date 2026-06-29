@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>vibox 토스트 애니메이션 시안</title>
+<style>
+:root{--bg:#fafafa;--card:#fff;--bd:#e7e7e7;--tx:#1a1a1a;--mut:#666;--faint:#999;--accent:#e85008;--success:#16a34a;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo",sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:30px 20px 90px}
+h1{font-size:23px;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--mut);font-size:13px;margin-bottom:16px}
+.rec{background:#fff;border:1px solid var(--bd);border-left:none;border-radius:12px;padding:13px 16px;margin-bottom:18px;font-size:13.5px;color:#333}
+.rec b{color:var(--accent)}
+.ctrls{display:flex;gap:8px;align-items:center;margin-bottom:22px;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:5}
+.ctrls button{border:1px solid var(--bd);background:#fff;border-radius:9px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;color:#333}
+.ctrls button.primary{background:var(--tx);color:#fff;border-color:var(--tx)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;display:flex;flex-direction:column}
+.card.cur{border-color:#f0d0c4;background:#fffaf8}
+.ch{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:2px}
+.ch h2{font-size:16px;margin:0;letter-spacing:-.01em}
+.ch .badge{font-size:10.5px;font-weight:700;background:#eee;color:#666;border-radius:5px;padding:2px 7px}
+.card.cur .ch .badge{background:#fbe4d9;color:#b4470f}
+.card .pick{font-size:10.5px;font-weight:700;background:var(--success);color:#fff;border-radius:5px;padding:2px 7px}
+.desc{font-size:12.5px;color:var(--mut);margin:0 0 12px}
+.stage{position:relative;height:140px;border-radius:11px;display:flex;align-items:flex-end;justify-content:center;padding:18px;
+ background:repeating-conic-gradient(#eee 0% 25%,#f4f4f4 0% 50%) 0/20px 20px;overflow:hidden}
+.code{margin-top:11px;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#666;background:#f6f5f4;border:1px solid var(--bd);border-radius:7px;padding:7px 9px;line-height:1.5;word-break:break-all}
+.replay{align-self:flex-start;margin-top:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:6px 13px;font-size:12.5px;font-weight:600;cursor:pointer}
+
+/* ===== 토스트 (실제 디자인 재현) ===== */
+.toast{display:inline-flex;align-items:center;gap:12px;background:#fff;border:1px solid #ececec;
+ padding:6px 6px 6px 16px;border-radius:9999px;min-width:240px;max-width:100%;
+ box-shadow:0 4px 14px rgba(0,0,0,.10),0 2px 4px rgba(0,0,0,.05);transform-origin:center bottom;opacity:0;will-change:transform,opacity,filter}
+.ti{flex:none;width:18px;height:18px;border-radius:9999px;background:var(--success);display:grid;place-items:center}
+.tm{flex:1;font-size:14px;font-weight:500;color:#111;white-space:nowrap}
+.ta{flex:none;border:none;background:transparent;color:var(--accent);font-size:14px;font-weight:700;padding:4px 12px;border-radius:9999px;cursor:pointer}
+.tc{flex:none;border:none;background:transparent;color:#555;width:24px;height:24px;border-radius:9999px;display:grid;place-items:center;cursor:pointer}
+
+/* ===== 시안 키프레임 ===== */
+/* 0. 현재 — 스프링 스쿼시 팝 */
+@keyframes tin-cur{0%{opacity:0;transform:translateY(40px) scale(.3)}50%{opacity:1;transform:translateY(-6px) scale(1.1,.92)}70%{transform:translateY(2px) scale(.96,1.04)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes tout-cur{0%{opacity:1;transform:scale(1)}20%{opacity:1;transform:scale(1.05,.95)}100%{opacity:0;transform:translateY(20px) scale(.6)}}
+/* A. 차분한 상승 */
+@keyframes tin-rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tout-rise{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(8px)}}
+/* B. 부드러운 팝 */
+@keyframes tin-pop{from{opacity:0;transform:translateY(8px) scale(.92)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes tout-pop{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.96)}}
+/* C. 스프링 정착 (절제된 바운스) */
+@keyframes tin-spr{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+/* D. Sonner풍 (상승+미세 스케일) */
+@keyframes tin-son{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes tout-son{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(6px) scale(.96)}}
+/* E. 블러 인 */
+@keyframes tin-blur{from{opacity:0;transform:translateY(10px);filter:blur(6px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+@keyframes tout-blur{from{opacity:1;filter:blur(0)}to{opacity:0;transform:translateY(4px);filter:blur(4px)}}
+@media (prefers-reduced-motion: reduce){.toast{animation:tin-rise 1ms both!important}}
+</style></head><body><div class="wrap">
+<h1>vibox 토스트 애니메이션 시안</h1>
+<div class="sub">2026-06-29 · 같은 알약 디자인에 등장/퇴장 애니만 다르게 · 자동 루프(등장→유지→퇴장) · <b>▶등장</b>으로 개별 재생</div>
+<div class="rec">현재는 <b>580ms 스프링 스쿼시-팝</b>(scale 0.3→1.1 찌그러짐 + cubic-bezier 1.6 오버슈트)이라 통통 튀고 과합니다. 추천: 절제된 <b>C. 스프링 정착</b>(찌그러짐 없는 가벼운 바운스) 또는 차분한 제품엔 <b>D. Sonner풍</b>. 고르시면 globals.css의 toast-in/out + Toast.tsx 타이밍에 반영하겠습니다.</div>
+<div class="ctrls">
+<button class="primary" onclick="enterAll()">동시 등장</button>
+<button id="loopBtn" onclick="toggleLoop()">⏸ 자동 루프 멈춤</button>
+</div>
+<div class="grid" id="grid"></div>
+<footer style="margin-top:26px;color:var(--faint);font-size:12px;text-align:center">알약 디자인·색은 실제 토스트 그대로. 시안별 키프레임은 위 CSS에 정의 — 채택 시 그대로 이식.</footer>
+</div>
+<script>
+const ICON='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+const XICO='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+const VARIANTS=[
+ {id:'cur', cur:true, name:'현재', badge:'기준', desc:'스프링 스쿼시-팝 — 통통 튐, 찌그러짐, 580ms로 다소 길고 과함.',
+  en:'tin-cur 580ms cubic-bezier(.5,1.6,.4,1) both', ex:'tout-cur 280ms cubic-bezier(.32,0,.67,0) both'},
+ {id:'rise', name:'A. 차분한 상승', desc:'아래서 16px 떠오르며 페이드. 군더더기 없고 프로페셔널. 260ms ease-out.',
+  en:'tin-rise 260ms cubic-bezier(.22,.61,.36,1) both', ex:'tout-rise 200ms cubic-bezier(.4,0,1,1) both'},
+ {id:'pop', name:'B. 부드러운 팝', desc:'scale 0.92→1 + 8px 상승. 오버슈트 없는 미니멀 팝. 260ms.',
+  en:'tin-pop 260ms cubic-bezier(.22,.61,.36,1) both', ex:'tout-pop 190ms cubic-bezier(.4,0,1,1) both'},
+ {id:'spr', name:'C. 스프링 정착', pick:true, desc:'22px 상승 + 가벼운 1회 오버슈트(찌그러짐 없음). 생기 있되 절제. 440ms.',
+  en:'tin-spr 440ms cubic-bezier(.34,1.56,.64,1) both', ex:'tout-rise 220ms cubic-bezier(.4,0,1,1) both'},
+ {id:'son', name:'D. Sonner풍', desc:'14px 상승 + 미세 스케일(0.96→1), 매끄러운 이징. 모던 토스트 표준. 360ms.',
+  en:'tin-son 360ms cubic-bezier(.21,1.02,.73,1) both', ex:'tout-son 240ms cubic-bezier(.4,0,.6,1) both'},
+ {id:'blur', name:'E. 블러 인', desc:'10px 상승 + blur 6px→0 페이드. 부드럽게 초점 맞춰지는 느낌. 320ms.',
+  en:'tin-blur 320ms cubic-bezier(.22,.61,.36,1) both', ex:'tout-blur 220ms cubic-bezier(.4,0,1,1) both'},
+];
+const grid=document.getElementById('grid');
+VARIANTS.forEach(v=>{
+  const c=document.createElement('div');
+  c.className='card'+(v.cur?' cur':'');
+  c.innerHTML=`<div class="ch"><h2>${v.name}</h2>${v.pick?'<span class="pick">추천</span>':`<span class="badge">${v.badge||''}</span>`}</div>
+   <p class="desc">${v.desc}</p>
+   <div class="stage"><div class="toast" data-en="${v.en}" data-ex="${v.ex}">
+     <span class="ti">${ICON}</span><span class="tm">파일 3개 업로드 완료</span>
+     <button class="ta">되돌리기</button><button class="tc">${XICO}</button>
+   </div></div>
+   <div class="code">in: ${v.en}<br>out: ${v.ex}</div>
+   <button class="replay" onclick="enterOne(this.closest('.card').querySelector('.toast'))">▶ 등장</button>`;
+  grid.appendChild(c);
+});
+const toasts=()=>[...document.querySelectorAll('.toast')];
+function enterOne(el){const a=el.getAttribute('data-en');el.style.animation='none';void el.offsetWidth;el.style.animation=a;}
+function exitOne(el){const a=el.getAttribute('data-ex');el.style.animation='none';void el.offsetWidth;el.style.animation=a;}
+function enterAll(){toasts().forEach(enterOne);}
+function exitAll(){toasts().forEach(exitOne);}
+let timers=[],looping=true;
+const ENTER_HOLD=2050, CYCLE=2950;
+function tick(){enterAll();timers.push(setTimeout(exitAll,ENTER_HOLD));}
+function startLoop(){tick();timers.push(setInterval(tick,CYCLE));}
+function stopLoop(){timers.forEach(t=>{clearTimeout(t);clearInterval(t)});timers=[];}
+function toggleLoop(){const b=document.getElementById('loopBtn');looping=!looping;if(looping){startLoop();b.textContent='⏸ 자동 루프 멈춤'}else{stopLoop();b.textContent='▶ 자동 루프 시작'}}
+window.addEventListener('load',()=>startLoop());
+</script>
+</body></html>

@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 검수 뷰어 — step1에서 개선 시안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --accent:#e85008; --acc-ink:#c2410c; --acc-soft:#fef0e8; --acc-line:#fbd9c4;
+    --s50:#f8fafc; --s100:#f1f5f9; --s200:#e2e8f0; --s300:#cbd5e1; --s400:#94a3b8;
+    --s500:#64748b; --s600:#475569; --s700:#334155; --s900:#0f172a;
+    --emerald:#059669; --emerald-soft:#ecfdf5; --ai:#7c3aed; --ai-soft:#f3edff; --praise:#db2777; --praise-soft:#fdf2f8;
+    --col:#c2410c; --col-soft:#fff1e8; --txt:#6d28d9; --txt-soft:#f3edff; --etc:#475569; --etc-soft:#f1f5f9;
+    --stage:#0b0c0f; --page:#e9eaec;
+    --sh:0 1px 2px rgba(15,23,42,.06); --sh2:0 12px 36px rgba(15,23,42,.13);
+    --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);background:var(--page);color:var(--s900);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h2,h3,h4,p{margin:0} button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  svg.lucide{width:1em;height:1em;stroke-width:2;flex:none;vertical-align:-.14em}
+  .vmk{display:inline-block;vertical-align:-2px} img{display:block}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:30px 22px 120px}
+  .intro h1{font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .intro p{color:var(--s500);font-size:13px;margin-top:8px;line-height:1.65;max-width:880px}
+  .intro b{color:var(--s700)}
+
+  .jump{position:sticky;top:0;z-index:50;background:rgba(233,234,236,.88);backdrop-filter:blur(8px);margin:18px -22px 0;padding:11px 22px;border-bottom:1px solid var(--s200);display:flex;gap:7px;flex-wrap:wrap}
+  .jump a{font-size:12px;font-weight:700;color:var(--s600);text-decoration:none;padding:6px 12px;border-radius:8px;border:1px solid transparent;transition:.15s}
+  .jump a:hover{background:#fff;border-color:var(--s200)} .jump a.on{background:var(--s900);color:#fff}
+  .jump a b{color:var(--s400);margin-right:5px} .jump a.on b{color:rgba(255,255,255,.5)}
+
+  .lbl{display:flex;align-items:baseline;gap:11px;margin:30px 0 11px}
+  .lbl .n{font-size:12px;font-weight:800;color:#fff;background:var(--accent);width:22px;height:22px;border-radius:7px;display:grid;place-items:center;flex:none;transform:translateY(3px)}
+  .lbl h2{font-size:16.5px;font-weight:800;letter-spacing:-.01em}
+  .lbl p{font-size:12.5px;color:var(--s400)}
+  .lbl .tag{font-size:10.5px;font-weight:800;border-radius:6px;padding:3px 8px;margin-left:auto;transform:translateY(2px);background:var(--acc-soft);color:var(--acc-ink);border:1px solid var(--acc-line)}
+
+  .browser{border:1px solid var(--s200);border-radius:13px;overflow:hidden;background:#fff;box-shadow:var(--sh2)}
+  .bchrome{display:flex;align-items:center;gap:8px;padding:9px 13px;background:#f3f3f4;border-bottom:1px solid var(--s200)}
+  .bdots{display:flex;gap:6px}.bdots i{width:11px;height:11px;border-radius:50%;background:#d6d6d8;display:block}
+  .burl{flex:1;background:#fff;border:1px solid var(--s200);border-radius:7px;padding:5px 11px;font-size:11px;color:var(--s400);display:flex;align-items:center;gap:7px}.burl svg{width:12px;height:12px;color:#bdbdbd}
+  .viewer{height:580px;display:flex;flex-direction:column;background:#fff;overflow:hidden}
+
+  /* 헤더 (라이브) */
+  .vhead{flex:none;display:flex;align-items:center;gap:11px;padding:10px 15px;background:#fff;border-bottom:1px solid var(--s200)}
+  .vhead .crumb{font-size:12.5px;color:var(--s400);display:flex;align-items:center;gap:6px;min-width:0}
+  .vhead .crumb b{color:var(--s600);font-weight:600}.vhead .crumb .cur{color:var(--s900);font-weight:700}
+  .vhead .crumb svg{width:13px;height:13px;color:var(--s300)}
+  .vhead .pin{font-size:11px;font-weight:800;color:var(--accent);background:var(--acc-soft);border-radius:6px;padding:2px 8px}
+  .vhead .up{font-size:11px;color:var(--s400)}.vhead .up b{color:var(--s600);font-weight:600}
+  .vhead .r{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .vhead .unres{font-size:11px;font-weight:700;color:var(--acc-ink);background:var(--acc-soft);border-radius:7px;padding:5px 9px;display:inline-flex;align-items:center;gap:5px}.vhead .unres svg{width:13px;height:13px}
+  .b{font-size:12px;font-weight:600;border-radius:8px;padding:6px 11px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.b svg{width:14px;height:14px}
+  .b-out{background:#fff;border:1px solid var(--s200);color:var(--s700)} .b-ok{background:var(--emerald);color:#fff}
+  .b-rep{background:var(--s100);color:var(--s600);border:1px solid var(--s200)}
+
+  .body2{flex:1;display:flex;min-height:0}
+
+  /* 좌: 영상 + 컨트롤 오버레이 (step1) */
+  .vstage{flex:1;min-width:0;position:relative;background:#000;display:grid;place-items:center;overflow:hidden}
+  .vstage>.cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.92}
+  .vstage .big{position:relative;z-index:2;width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.93);display:grid;place-items:center;box-shadow:0 8px 26px rgba(0,0,0,.4)}
+  .vstage .big svg{width:22px;height:22px;color:#141414;fill:#141414;stroke:none;margin-left:3px}
+  .vstage .anno{position:absolute;top:12px;right:12px;z-index:5;font-size:11px;font-weight:600;color:#fff;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:5px 10px;display:inline-flex;align-items:center;gap:5px}.vstage .anno svg{width:12px;height:12px}
+
+  /* ❶ step1 컨트롤 = 흰 카드 (현재) */
+  .ctl-card{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:12px 16px}
+  .ctl-card .inner{background:#fff;border:1px solid var(--s200);border-radius:12px;box-shadow:var(--sh2);padding:11px 13px}
+  /* ❷ 개선 컨트롤 = 어두운 반투명 오버레이 */
+  .ctl-dark{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:26px 16px 12px;background:linear-gradient(transparent,rgba(0,0,0,.66))}
+
+  .seekrow{display:flex;align-items:center;gap:12px;margin-bottom:9px}
+  .seekrow .tc{font-size:11px;font-family:ui-monospace,monospace;font-weight:700;font-variant-numeric:tabular-nums;min-width:50px}
+  .seekrow .bar{position:relative;flex:1;height:5px;border-radius:3px}
+  .seekrow .bar .track{position:absolute;inset:0;border-radius:3px}
+  .seekrow .bar .fill{position:absolute;left:0;top:0;bottom:0;width:34%;border-radius:3px;background:var(--accent)}
+  .seekrow .bar .mk{position:absolute;top:50%;transform:translate(-50%,-50%);width:11px;height:11px;border-radius:50%;border:3px solid var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.5)}
+  .seekrow .bar .mk.ai{border-color:var(--ai)}.seekrow .bar .mk.pr{border-color:var(--praise)}
+  .seekrow .dur{font-size:11px;font-family:ui-monospace,monospace;color:var(--s400);min-width:50px;text-align:right}
+  .ctlrow{display:flex;align-items:center;gap:10px}
+  .clust{display:flex;align-items:center;border-radius:99px;padding:2px}
+  .clust button{height:26px;padding:0 9px;border-radius:99px;font-size:10.5px;font-weight:700;font-family:ui-monospace,monospace}
+  .clust .play{width:30px;height:30px;padding:0;border-radius:50%;display:grid;place-items:center;margin:0 2px}
+  .clust .play svg{width:12px;height:12px;fill:currentColor}
+  .ctlrow .fb{height:30px;padding:0 9px;border-radius:8px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px}.ctlrow .fb svg{width:13px;height:13px;fill:currentColor}
+  .ctlrow .sp{flex:1}
+  .ctlrow .icon{width:30px;height:30px;border-radius:8px;display:grid;place-items:center}.ctlrow .icon svg{width:16px;height:16px}
+  .ctlrow .spd{height:30px;padding:0 8px;border-radius:8px;font-size:11px;font-weight:700;font-family:ui-monospace,monospace}
+
+  /* 컨트롤 색: 흰 카드(라이트) */
+  .ctl-card .tc{color:var(--s900)} .ctl-card .track{background:var(--s100)} .ctl-card .fill{background:var(--s900)} .ctl-card .mk{background:#fff}
+  .ctl-card .clust{background:var(--s50);border:1px solid var(--s200)} .ctl-card .clust button{color:var(--s500)} .ctl-card .clust .play{background:var(--s900);color:#fff}
+  .ctl-card .fb{color:var(--s500)} .ctl-card .icon{color:var(--s500)} .ctl-card .spd{color:var(--s500)} .ctl-card .sep{width:1px;height:22px;background:var(--s200);margin:0 3px}
+  /* 컨트롤 색: 어두운 오버레이 */
+  .ctl-dark .tc{color:#fff} .ctl-dark .track{background:rgba(255,255,255,.25)} .ctl-dark .mk{background:#fff}
+  .ctl-dark .clust{background:rgba(255,255,255,.14)} .ctl-dark .clust button{color:rgba(255,255,255,.85)} .ctl-dark .clust .play{background:#fff;color:#111}
+  .ctl-dark .fb{color:rgba(255,255,255,.9)} .ctl-dark .icon{color:rgba(255,255,255,.9)} .ctl-dark .spd{color:rgba(255,255,255,.9)} .ctl-dark .sep{width:1px;height:22px;background:rgba(255,255,255,.2);margin:0 3px}
+
+  /* 우: 패널 (라이브) */
+  .panel{width:360px;flex:none;border-left:1px solid var(--s200);background:var(--s50);display:flex;flex-direction:column;min-height:0}
+  .ph{flex:none;padding:11px 14px 10px;background:#fff;border-bottom:1px solid var(--s200)}
+  .ph .r1{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+  .ph h3{font-size:13.5px;font-weight:700}.ph .cnt{font-size:12px;color:var(--s400);font-weight:500}.ph .cnt b{color:var(--acc-ink);font-weight:700}
+  .ph .set{margin-left:auto;width:27px;height:27px;border-radius:7px;display:grid;place-items:center;color:var(--s400)}.ph .set svg{width:16px;height:16px}
+  .ph .filt{display:flex;align-items:center;gap:6px}
+  .ph .seg{flex:1;display:flex;gap:2px;background:var(--s100);border-radius:7px;padding:3px}
+  .ph .seg button{flex:1;font-size:11px;font-weight:700;padding:4px;border-radius:5px;color:var(--s500);display:inline-flex;align-items:center;justify-content:center;gap:4px}.ph .seg button svg{width:11px;height:11px}.ph .seg button.on{background:#fff;color:var(--s900);box-shadow:var(--sh)}
+  .ph .sort{width:27px;height:27px;border-radius:6px;background:var(--s900);color:#fff;display:grid;place-items:center}.ph .sort svg{width:13px;height:13px}
+  .banner{display:flex;align-items:center;gap:8px;margin:11px;padding:8px 11px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;color:#1e40af}.banner svg{width:14px;height:14px}.banner .bb{margin-left:auto;font-size:11px;font-weight:700;background:#2563eb;color:#fff;padding:3px 8px;border-radius:6px}
+  /* 슬림 배너(인라인 한 줄) */
+  .banner-slim{display:flex;align-items:center;gap:6px;padding:7px 14px;font-size:11.5px;color:var(--s500);border-bottom:1px solid var(--s100)}.banner-slim svg{width:13px;height:13px;color:var(--s400)}.banner-slim a{margin-left:auto;color:#2563eb;font-weight:600;text-decoration:none}
+  .list{flex:1;overflow-y:auto;padding:11px;display:flex;flex-direction:column;gap:9px;min-height:0}
+
+  /* 코멘트 카드 (라이브 full) */
+  .lc{background:#fff;border:1px solid var(--s200);border-radius:10px;padding:11px 12px;display:flex;gap:10px}
+  .lc-ck{flex:none;width:20px;height:20px;border-radius:50%;border:2px solid var(--s300);background:#fff;margin-top:1px;display:grid;place-items:center}.lc-ck svg{width:11px;height:11px;color:#fff;opacity:0}.lc-ck.on{background:var(--emerald);border-color:var(--emerald)}.lc-ck.on svg{opacity:1}
+  .lc-m{flex:1;min-width:0}
+  .lc-meta{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+  .lc-tc{font-family:ui-monospace,monospace;font-size:11px;font-weight:700;color:var(--s900);background:var(--s100);padding:1px 6px;border-radius:5px}.lc-tc.ai{color:var(--ai);background:var(--ai-soft)}.lc-tc.ok{color:var(--emerald);background:var(--emerald-soft)}
+  .lc-cat{font-size:9.5px;font-weight:800;border-radius:5px;padding:1px 6px;display:inline-flex;align-items:center;gap:3px}.lc-cat svg{width:10px;height:10px}.lc-cat.col{color:var(--col);background:var(--col-soft)}.lc-cat.txt{color:var(--txt);background:var(--txt-soft)}.lc-cat.etc{color:var(--etc);background:var(--etc-soft)}
+  .lc-au{margin-left:auto;font-size:10.5px;color:var(--s400);display:inline-flex;align-items:center;gap:5px;font-weight:500;white-space:nowrap}
+  .lc-role{font-size:9px;font-weight:800;color:var(--s500);background:var(--s100);border-radius:4px;padding:1px 4px}
+  .ai-dot{width:14px;height:14px;border-radius:50%;background:var(--ai);display:inline-grid;place-items:center}.ai-dot svg{width:8px;height:8px;color:#fff}
+  .lc-tx{font-size:13px;color:var(--s700);line-height:1.5}.lc-tx .hl{color:var(--accent);font-weight:600}
+  .lc-sub{font-size:10.5px;color:var(--s400);margin-top:5px}
+  .lc-act{flex:none;display:flex;gap:1px;align-items:flex-start}.lc-act button{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;color:var(--s400)}.lc-act svg{width:13px;height:13px}
+  .lc.done{background:var(--s50)}.lc.done .lc-tx{color:var(--s400);text-decoration:line-through;text-decoration-color:var(--s300)}
+
+  /* 코멘트 카드 (미니멀) */
+  .lcm{background:#fff;border:1px solid var(--s200);border-radius:10px;padding:10px 12px;display:flex;gap:10px}
+  .lcm .lc-ck{width:18px;height:18px}
+  .lcm .m{flex:1;min-width:0}
+  .lcm .top{display:flex;align-items:baseline;gap:7px;margin-bottom:3px}
+  .lcm .lc-tc{font-size:10.5px}
+  .lcm .nm{font-size:11px;font-weight:700;color:var(--s700)}
+  .lcm .ai-mini{font-size:9px;font-weight:800;color:var(--ai)}
+  .lcm .when{margin-left:auto;font-size:10px;color:var(--s400)}
+  .lcm .tx{font-size:12.5px;color:var(--s700);line-height:1.5}.lcm .tx .hl{color:var(--accent);font-weight:600}
+  .lcm.done .tx{color:var(--s400);text-decoration:line-through;text-decoration-color:var(--s300)}
+  .lcm .act{flex:none;display:flex;gap:1px;opacity:0;transition:.12s}.lcm:hover .act{opacity:1}.lcm .act button{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;color:var(--s400)}.lcm .act svg{width:12px;height:12px}
+
+  /* 입력 */
+  .linput{flex:none;border-top:1px solid var(--s200);padding:10px 12px;background:#fff}
+  .linput .bx{border:1px solid var(--s200);background:var(--s50);border-radius:10px;overflow:hidden}
+  .linput .row1{display:flex;align-items:center;gap:7px;padding:7px 9px 4px}
+  .linput .row1 .tc{font-family:ui-monospace,monospace;font-size:10.5px;font-weight:700;color:var(--s900);background:var(--s100);padding:1px 6px;border-radius:5px}
+  .linput .kind{display:flex;gap:2px;background:#fff;border:1px solid var(--s200);border-radius:7px;padding:2px}.linput .kind button{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:5px;color:var(--s400);display:inline-flex;align-items:center;gap:3px}.linput .kind button svg{width:10px;height:10px}.linput .kind button.on{background:var(--s900);color:#fff}
+  .linput .cat{margin-left:auto;font-size:10px;font-weight:700;color:var(--col);background:var(--col-soft);padding:2px 7px;border-radius:6px}
+  .linput .row2{display:flex;align-items:center;gap:8px;padding:2px 9px 9px}.linput .row2 input{flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:12.5px}
+  .linput .send{width:29px;height:29px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center;flex:none}.linput .send svg{width:14px;height:14px}
+  /* 슬림 입력 한 줄 */
+  .linput.slim .bx{display:flex;align-items:center;gap:8px;padding:6px 9px}
+  .linput.slim .row1,.linput.slim .row2{display:contents}
+  .linput.slim .kind,.linput.slim .cat{display:none}
+  .linput.slim input{flex:1;border:none;background:transparent;outline:none;font-size:12.5px;font-family:inherit}
+
+  .foot{margin-top:40px;font-size:12px;color:var(--s400);text-align:center;line-height:1.7}
+</style>
+</head>
+<body>
+<svg style="display:none"><symbol id="vmk" viewBox="0 0 491.75 396.19"><path d="M491.75,10.14v375.95c0,8.49-11.04,13.18-18.49,7.83l-79.1-57.24c-1.12-.78-2.05-1.74-2.71-2.83v-115.6c0-11.2-12.09-18.18-21.78-12.6l-81.95,47.33c-3.17,1.83-7.11,1.63-10.08-.52l-11.76-8.52c-4.46-3.18-4.46-9.77,0-12.98l20-14.49c12.56-9.07,12.56-27.67,0-36.74l-19.96-14.42c-4.42-3.22-4.42-9.8,0-13.02L473.26,2.31c7.44-5.43,18.49-.66,18.49,7.83Z" fill="#f9a87a"/><path d="M269.34,212.47l-55.32,40c-2.96,2.14-6.9,2.34-10.07.52l-81.96-47.34c-9.65-5.58-21.74,1.4-21.74,12.6v111.8c0,2.97-1.43,5.77-3.84,7.51l-68.01,49.19C16.59,395.31,0,386.94,0,372.41V23.82C0,9.28,16.59.91,28.41,9.48l240.94,174.28c9.78,7.07,9.78,21.64,0,28.72Z" fill="#e85008"/></symbol></svg>
+
+<div class="wrap">
+  <div class="intro">
+    <h1>step1에서 더 개선 — 비교 시안</h1>
+    <p>현재(step1: 사이드바 제거·영상 큼)는 그대로 두고, 제가 짚은 세 가지를 각각 개선했습니다. <b>모두 컨트롤은 어두운 오버레이</b>(흰 카드 → 영상에 녹임)를 기본으로 깔고, 그 위에서 우측 패널·코멘트 카드 정리를 다르게 했습니다. 고르시면 실제 코드로 구현해 박제로 확정합니다.</p>
+  </div>
+
+  <nav class="jump" id="jump">
+    <a href="#s0"><b>현재</b>step1</a>
+    <a href="#s1"><b>1</b>컨트롤만 어둡게</a>
+    <a href="#s2"><b>2</b>+ 패널 슬림</a>
+    <a href="#s3"><b>3</b>+ 카드 미니멀</a>
+    <a href="#s4"><b>4</b>종합</a>
+  </nav>
+
+  <!-- 현재 (step1) -->
+  <div class="lbl" id="s0"><span class="n">·</span><div><h2>현재 — step1</h2></div><p style="margin-top:5px">사이드바 제거·영상 큼. 컨트롤이 흰 카드</p><span class="tag">기준</span></div>
+  <div class="browser"><div class="bchrome"><span class="bdots"><i></i><i></i><i></i></span><span class="burl"><svg data-lucide="lock"></svg> vibox.cloud/team/성수카페/브랜드필름</span></div>
+    <div class="viewer"><div data-head></div><div class="body2">
+      <div class="vstage"><div data-stage></div><div class="ctl-card" data-ctl></div></div>
+      <div class="panel"><div data-ph></div><div data-banner></div><div class="list" data-cards="full"></div><div data-input></div></div>
+    </div></div>
+  </div>
+
+  <!-- 1: 컨트롤만 어둡게 -->
+  <div class="lbl" id="s1"><span class="n">1</span><div><h2>컨트롤만 어둡게</h2></div><p style="margin-top:5px">흰 카드 → 어두운 반투명 오버레이. 패널·카드는 현재 그대로</p></div>
+  <div class="browser"><div class="bchrome"><span class="bdots"><i></i><i></i><i></i></span><span class="burl"><svg data-lucide="lock"></svg> vibox.cloud/team/성수카페/브랜드필름</span></div>
+    <div class="viewer"><div data-head></div><div class="body2">
+      <div class="vstage"><div data-stage></div><div class="ctl-dark" data-ctl></div></div>
+      <div class="panel"><div data-ph></div><div data-banner></div><div class="list" data-cards="full"></div><div data-input></div></div>
+    </div></div>
+  </div>
+
+  <!-- 2: + 패널 슬림 -->
+  <div class="lbl" id="s2"><span class="n">2</span><div><h2>+ 우측 패널 슬림</h2></div><p style="margin-top:5px">설정+필터 한 줄, 클라공개 배너를 얇은 인라인으로 → 코멘트가 더 빨리 시작</p></div>
+  <div class="browser"><div class="bchrome"><span class="bdots"><i></i><i></i><i></i></span><span class="burl"><svg data-lucide="lock"></svg> vibox.cloud/team/성수카페/브랜드필름</span></div>
+    <div class="viewer"><div data-head></div><div class="body2">
+      <div class="vstage"><div data-stage></div><div class="ctl-dark" data-ctl></div></div>
+      <div class="panel"><div data-ph="slim"></div><div data-banner="slim"></div><div class="list" data-cards="full"></div><div data-input="slim"></div></div>
+    </div></div>
+  </div>
+
+  <!-- 3: + 카드 미니멀 -->
+  <div class="lbl" id="s3"><span class="n">3</span><div><h2>+ 코멘트 카드 미니멀</h2></div><p style="margin-top:5px">카테고리칩(기타)·역할배지 빼고 타임코드·이름·내용·해결만. 액션은 hover</p></div>
+  <div class="browser"><div class="bchrome"><span class="bdots"><i></i><i></i><i></i></span><span class="burl"><svg data-lucide="lock"></svg> vibox.cloud/team/성수카페/브랜드필름</span></div>
+    <div class="viewer"><div data-head></div><div class="body2">
+      <div class="vstage"><div data-stage></div><div class="ctl-dark" data-ctl></div></div>
+      <div class="panel"><div data-ph></div><div data-banner></div><div class="list" data-cards="mini"></div><div data-input></div></div>
+    </div></div>
+  </div>
+
+  <!-- 4: 종합 -->
+  <div class="lbl" id="s4"><span class="n">4</span><div><h2>종합</h2></div><p style="margin-top:5px">어두운 컨트롤 + 슬림 패널 + 미니멀 카드</p><span class="tag">추천</span></div>
+  <div class="browser"><div class="bchrome"><span class="bdots"><i></i><i></i><i></i></span><span class="burl"><svg data-lucide="lock"></svg> vibox.cloud/team/성수카페/브랜드필름</span></div>
+    <div class="viewer"><div data-head></div><div class="body2">
+      <div class="vstage"><div data-stage></div><div class="ctl-dark" data-ctl></div></div>
+      <div class="panel"><div data-ph="slim"></div><div data-banner="slim"></div><div class="list" data-cards="mini"></div><div data-input="slim"></div></div>
+    </div></div>
+  </div>
+
+  <div class="foot">현재 라이브(slate 카드·헤더·색)는 유지 · 컨트롤·패널·카드 정리만 다름<br>마음에 드는 번호나 조합(예: "컨트롤은 1, 카드는 3")을 알려주세요 → 실제 코드로 구현 후 박제</div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  const HEAD = `<div class="vhead">
+    <svg class="vmk" width="19" height="15"><use href="#vmk"/></svg>
+    <span class="crumb"><b>성수 카페</b><svg data-lucide="chevron-right"></svg><span class="cur">브랜드필름</span></span>
+    <span class="pin">v3</span><span class="up">올린 사람 <b>서준</b></span>
+    <span class="r"><span class="unres"><svg data-lucide="message-circle"></svg>미해결 2</span>
+      <button class="b b-out"><svg data-lucide="pen-line"></svg>수정 요청</button>
+      <button class="b b-ok"><svg data-lucide="check"></svg>승인</button></span>
+  </div>`;
+  const STAGE = `<img class="cover" src="https://picsum.photos/seed/vibox-cafe-pour/1280/720"><div class="big"><svg data-lucide="play"></svg></div><span class="anno"><svg data-lucide="pen-line"></svg>주석</span>`;
+  const CTL = `<div class="seekrow"><span class="tc">0:36</span><div class="bar"><div class="track"></div><div class="fill"></div><span class="mk" style="left:7%"></span><span class="mk ai" style="left:39%"></span><span class="mk pr" style="left:69%"></span></div><span class="dur">1:48</span></div>
+    <div class="ctlrow"><div class="clust"><button>10초</button><button>3초</button><button class="play"><svg data-lucide="play"></svg></button><button>3초</button><button>10초</button></div>
+      <span class="sep"></span>
+      <button class="fb"><svg data-lucide="skip-back"></svg>이전 피드백</button><button class="fb">다음 피드백<svg data-lucide="skip-forward"></svg></button>
+      <span class="sp"></span><button class="spd">1x</button><button class="icon"><svg data-lucide="volume-2"></svg></button><button class="icon"><svg data-lucide="maximize"></svg></button></div>`;
+  const PH = `<div class="ph"><div class="r1"><h3>댓글</h3><span class="cnt">2 · 미해결 <b>2</b></span><button class="set"><svg data-lucide="settings-2"></svg></button></div>
+    <div class="filt"><div class="seg"><button class="on">전체</button><button><svg data-lucide="pen-line"></svg>수정 2</button><button><svg data-lucide="heart"></svg>좋아요</button></div><button class="sort"><svg data-lucide="arrow-down-narrow-wide"></svg></button></div></div>`;
+  const PH_SLIM = `<div class="ph"><div class="r1" style="margin-bottom:0"><h3>댓글</h3><span class="cnt">2 · 미해결 <b>2</b></span>
+    <div class="seg" style="flex:none;margin-left:auto"><button class="on">전체</button><button>수정 2</button><button>좋아요</button></div>
+    <button class="set"><svg data-lucide="settings-2"></svg></button></div></div>`;
+  const BANNER = `<div class="banner"><svg data-lucide="eye"></svg>내부 댓글 <b style="font-weight:700">2건</b>이 아직 클라에게 비공개<span class="bb">모두 클라공개</span></div>`;
+  const BANNER_SLIM = `<div class="banner-slim"><svg data-lucide="eye"></svg>내부 2건 클라 비공개<a href="#">공개</a></div>`;
+  const INPUT = `<div class="linput"><div class="bx"><div class="row1"><span class="tc">0:36</span><div class="kind"><button class="on"><svg data-lucide="pen-line"></svg>수정</button><button><svg data-lucide="heart"></svg>좋아요</button></div><span class="cat">색보정</span></div><div class="row2"><input placeholder="피드백을 입력하세요 (⌘+Enter)"><button class="send"><svg data-lucide="arrow-up"></svg></button></div></div></div>`;
+  const INPUT_SLIM = `<div class="linput slim"><div class="bx"><span class="tc" style="font-family:ui-monospace,monospace;font-size:10.5px;font-weight:700;color:var(--s900);background:var(--s100);padding:1px 6px;border-radius:5px">0:36</span><input placeholder="피드백을 입력하세요…"><button class="send"><svg data-lucide="arrow-up"></svg></button></div></div>`;
+
+  // 코멘트 카드 — full (라이브)
+  const CARDS_FULL = `
+    <div class="lc"><button class="lc-ck"></button><div class="lc-m"><div class="lc-meta"><span class="lc-tc">0:08</span><span class="lc-cat col"><svg data-lucide="palette"></svg>색보정</span><span class="lc-au">박매니저 <span class="lc-role">관리</span></span></div><div class="lc-tx">인트로 색감이 차가워요. 따뜻하게 부탁드려요.</div><div class="lc-sub">5월 30일</div></div><div class="lc-act"><button><svg data-lucide="corner-down-right"></svg></button><button><svg data-lucide="more-horizontal"></svg></button></div></div>
+    <div class="lc"><button class="lc-ck"></button><div class="lc-m"><div class="lc-meta"><span class="lc-tc ai">0:42</span><span class="lc-cat txt"><svg data-lucide="type"></svg>자막</span><span class="lc-au"><span class="ai-dot"><svg data-lucide="sparkles"></svg></span>AI 검수</span></div><div class="lc-tx">자막 오타 의심: <span class="hl">‘브랜대’ → ‘브랜드’</span></div><div class="lc-sub">AI 추천 · 무시</div></div><div class="lc-act"><button><svg data-lucide="plus"></svg></button><button><svg data-lucide="x"></svg></button></div></div>
+    <div class="lc done"><button class="lc-ck on"><svg data-lucide="check"></svg></button><div class="lc-m"><div class="lc-meta"><span class="lc-tc ok">1:15</span><span class="lc-cat etc">기타</span><span class="lc-au">박매니저 <span class="lc-role">관리</span></span></div><div class="lc-tx">이 전환 정말 좋네요. 이대로.</div><div class="lc-sub">5월 30일 · 해결됨</div></div><div class="lc-act"><button><svg data-lucide="corner-down-right"></svg></button><button><svg data-lucide="more-horizontal"></svg></button></div></div>`;
+  // 코멘트 카드 — mini
+  const CARDS_MINI = `
+    <div class="lcm"><button class="lc-ck"></button><div class="m"><div class="top"><span class="lc-tc">0:08</span><span class="nm">박매니저</span><span class="when">5월 30일</span></div><div class="tx">인트로 색감이 차가워요. 따뜻하게 부탁드려요.</div></div><div class="act"><button><svg data-lucide="corner-down-right"></svg></button><button><svg data-lucide="more-horizontal"></svg></button></div></div>
+    <div class="lcm"><button class="lc-ck"></button><div class="m"><div class="top"><span class="lc-tc ai">0:42</span><span class="nm">AI 검수</span><span class="ai-mini">AI</span><span class="when">무시</span></div><div class="tx">자막 오타 의심: <span class="hl">‘브랜대’ → ‘브랜드’</span></div></div><div class="act"><button><svg data-lucide="plus"></svg></button><button><svg data-lucide="x"></svg></button></div></div>
+    <div class="lcm done"><button class="lc-ck on"><svg data-lucide="check"></svg></button><div class="m"><div class="top"><span class="lc-tc ok">1:15</span><span class="nm">박매니저</span><span class="when">해결됨</span></div><div class="tx">이 전환 정말 좋네요. 이대로.</div></div><div class="act"><button><svg data-lucide="corner-down-right"></svg></button></div></div>`;
+
+  document.querySelectorAll('[data-head]').forEach(e=>e.innerHTML=HEAD);
+  document.querySelectorAll('[data-stage]').forEach(e=>e.innerHTML=STAGE);
+  document.querySelectorAll('[data-ctl]').forEach(e=>e.innerHTML=CTL);
+  document.querySelectorAll('[data-ph]').forEach(e=>e.innerHTML=e.getAttribute('data-ph')==='slim'?PH_SLIM:PH);
+  document.querySelectorAll('[data-banner]').forEach(e=>e.innerHTML=e.getAttribute('data-banner')==='slim'?BANNER_SLIM:BANNER);
+  document.querySelectorAll('[data-input]').forEach(e=>e.innerHTML=e.getAttribute('data-input')==='slim'?INPUT_SLIM:INPUT);
+  document.querySelectorAll('[data-cards]').forEach(e=>e.innerHTML=e.getAttribute('data-cards')==='mini'?CARDS_MINI:CARDS_FULL);
+
+  if(window.lucide) lucide.createIcons();
+  const links=[...document.querySelectorAll('.jump a')];const map={};links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('on'));map[e.target.id]?.classList.add('on');}})},{rootMargin:'-45% 0px -50% 0px'});
+  ['s0','s1','s2','s3','s4'].forEach(id=>{const el=document.getElementById(id);if(el)io.observe(el);});
+</script>
+</body>
+</html>

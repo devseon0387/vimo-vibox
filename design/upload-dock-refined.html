@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>업로드 독 공유 #3 디벨롭</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root{
+    --surface:#fafafa;--surface2:#f4f4f5;--border:#ededee;--border-hover:#dadadc;
+    --text:#18181b;--text-soft:#52525b;--text-faint:#a1a1aa;
+    --accent:#e85008;--accent-soft:#fdeee6;
+    --emerald:#059669;--emerald-soft:#ecfdf5;--sky:#0369a1;--sky-soft:#e3f1fb;--amber:#b45309;--amber-soft:#fffbeb;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#e9ebee;color:var(--text);font-family:Pretendard,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .lucide{width:1em;height:1em;stroke-width:2;flex:none}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .page{max-width:1040px;margin:0 auto;padding:30px 24px 80px}
+  h1{font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .lead{color:var(--text-soft);font-size:13.5px;margin-top:8px;line-height:1.6;max-width:800px}
+  .lead b{color:var(--text)}
+  .sech{font-size:12px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;margin:34px 0 16px}
+  .row{display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start;justify-content:center}
+  .col{display:flex;flex-direction:column;gap:11px;align-items:center}
+  .lbl{font-size:13px;font-weight:800;text-align:center}
+  .lbl .v{font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:2px 8px;margin-left:5px}
+  .sublbl{font-size:11.5px;color:var(--text-faint);text-align:center;max-width:300px;line-height:1.5;margin-top:-4px}
+
+  .dock{width:344px;background:#fff;border:1px solid var(--border);border-radius:13px;box-shadow:0 12px 38px rgba(0,0,0,.13);overflow:hidden}
+  .dh{display:flex;align-items:center;gap:10px;padding:11px 15px;border-bottom:1px solid var(--border)}
+  .dh .di{color:var(--emerald)}.dh .di .lucide{font-size:16px}
+  .dh .t{flex:1;font-size:13px;font-weight:800}
+  .dh .s{font-size:11px;color:var(--text-faint)}
+  .dh .chev{color:var(--text-soft)}.dh .chev .lucide{font-size:17px}
+  .item{padding:13px 15px}
+  .item + .item{border-top:1px solid #f3f3f4}
+
+  .frow{display:flex;align-items:center;gap:10px}
+  .frow .st{color:var(--emerald)}.frow .st .lucide{font-size:15px}
+  .frow .nm{flex:1;min-width:0}
+  .frow .nm .n{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .frow .nm .sub{font-size:10.5px;color:var(--text-faint);margin-top:1px}
+  .frow .x{color:var(--text-faint);cursor:pointer}.frow .x:hover{color:var(--text-soft)}.frow .x .lucide{font-size:15px}
+
+  /* 공유 컨트롤 — 중첩 박스 없이, 구분선 + 여백만 */
+  .sharep{margin-top:11px;padding-top:11px;border-top:1px dashed var(--border);display:flex;flex-direction:column;gap:9px}
+
+  /* A: 통합 복사 바 (URL + 붙은 복사) */
+  .linkbar{display:flex;align-items:stretch;border:1px solid var(--border);border-radius:9px;overflow:hidden;background:#fff}
+  .linkbar .u{flex:1;min-width:0;display:flex;align-items:center;gap:7px;padding:8px 11px;font-size:11.5px;color:var(--text-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .linkbar .u .lucide{font-size:13px;color:var(--text-faint);flex:none}
+  .linkbar .u span{overflow:hidden;text-overflow:ellipsis}
+  .lcopy{flex:none;border:none;border-left:1px solid var(--border);background:var(--accent-soft);color:var(--accent);font-family:Pretendard;font-size:12px;font-weight:700;padding:0 15px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+  .lcopy:hover{background:#fbe4d7}
+  .lcopy.done{background:var(--emerald-soft);color:var(--emerald)}
+  .lcopy .lucide{font-size:13px}
+
+  /* B: 클릭=복사 바 전체 */
+  .linkbtn{width:100%;display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:9px;background:#fff;padding:9px 12px;cursor:pointer;font-family:Pretendard;transition:background .15s,border-color .15s}
+  .linkbtn:hover{background:var(--surface);border-color:var(--border-hover)}
+  .linkbtn .lucide.lk{font-size:13px;color:var(--text-faint)}
+  .linkbtn .u{flex:1;min-width:0;text-align:left;font-size:11.5px;color:var(--text-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .linkbtn .cp{flex:none;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--accent)}
+  .linkbtn.done .cp{color:var(--emerald)}
+  .linkbtn .cp .lucide{font-size:13px}
+
+  /* 컨트롤 행: 모드 + 은은한 보조 */
+  .ctrl{display:flex;align-items:center;gap:8px}
+  .seg{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:2px}
+  .seg button{border:none;background:none;font-family:Pretendard;font-size:11px;font-weight:700;color:var(--text-soft);padding:5px 11px;border-radius:6px;display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+  .seg button .lucide{font-size:12px}
+  .seg button.on{background:#fff;color:var(--sky);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+  .seg button.on.prev{color:var(--text)}
+  .ctrl .sp{flex:1}
+  .qi{width:30px;height:30px;border-radius:7px;border:none;background:none;display:grid;place-items:center;color:var(--text-faint);cursor:pointer}
+  .qi:hover{background:var(--surface2);color:var(--text-soft)}
+  .qi.on{color:var(--accent)}
+  .qi .lucide{font-size:15px}
+
+  /* 진행/최적화 */
+  .prog{height:4px;background:var(--surface2);border-radius:99px;overflow:hidden;margin:9px 0 5px}
+  .prog .f{height:100%;background:var(--accent);border-radius:99px}
+  .pmeta{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text-faint)}
+  .spin{animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+  .opt{margin-top:8px;font-size:10.5px;color:var(--amber);display:inline-flex;align-items:center;gap:5px}
+  .opt .lucide{font-size:12px}
+
+  .foot{margin-top:36px;color:var(--text-faint);font-size:12px;line-height:1.7;border-top:1px solid #d9dce0;padding-top:16px;max-width:840px}
+  .foot b{color:var(--text)}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>업로드 독 공유 — #3 디벨롭</h1>
+  <p class="lead">#3(한 줄 압축)을 더 깔끔하게: <b>중첩된 박스 제거</b>(공유 영역을 별도 회색 박스에 가두지 않고 점선 구분선+여백만), <b>링크와 복사를 하나의 바로 통합</b>, <b>주황은 은은하게</b>(accent-soft). 두 가지 정제안 — <b>클릭해보세요</b>(복사·모드 토글 동작).</p>
+
+  <div class="sech">두 정제안 (340px 독 폭)</div>
+  <div class="row">
+
+    <!-- A 통합 복사 바 -->
+    <div class="col">
+      <div class="dock">
+        <div class="item">
+          <div class="frow">
+            <span class="st"><i data-lucide="check"></i></span>
+            <div class="nm"><div class="n">그래놀라_광고_v2.mp4</div><div class="sub">00:48 · 1.2GB</div></div>
+            <span class="x"><i data-lucide="x"></i></span>
+          </div>
+          <div class="sharep">
+            <div class="linkbar">
+              <span class="u"><i data-lucide="link"></i><span>vibox.cloud/s/g7k2ab</span></span>
+              <button class="lcopy" id="cpA" onclick="copyA()"><i data-lucide="copy"></i><span id="cpAt">복사</span></button>
+            </div>
+            <div class="ctrl">
+              <div class="seg"><button class="on" id="aRev" onclick="modeA('rev')"><i data-lucide="message-square"></i>검수</button><button id="aPrev" onclick="modeA('prev')"><i data-lucide="eye"></i>미리보기</button></div>
+              <span class="sp"></span>
+              <button class="qi on" id="aDl" onclick="this.classList.toggle('on')" title="다운로드 허용"><i data-lucide="download"></i></button>
+              <button class="qi" title="새 탭에서 열기"><i data-lucide="external-link"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="lbl">A · 통합 복사 바<span class="v">추천</span></div>
+      <div class="sublbl">URL과 복사가 한 바. 붙은 복사 버튼은 은은한 주황 → 클릭 시 초록 '복사됨'</div>
+    </div>
+
+    <!-- B 클릭=복사 -->
+    <div class="col">
+      <div class="dock">
+        <div class="item">
+          <div class="frow">
+            <span class="st"><i data-lucide="check"></i></span>
+            <div class="nm"><div class="n">그래놀라_광고_v2.mp4</div><div class="sub">00:48 · 1.2GB</div></div>
+            <span class="x"><i data-lucide="x"></i></span>
+          </div>
+          <div class="sharep">
+            <button class="linkbtn" id="cpB" onclick="copyB()">
+              <i data-lucide="link" class="lk"></i>
+              <span class="u">vibox.cloud/s/g7k2ab</span>
+              <span class="cp" id="cpBc"><i data-lucide="copy"></i><span id="cpBt">복사</span></span>
+            </button>
+            <div class="ctrl">
+              <div class="seg"><button class="on" id="bRev" onclick="modeB('rev')"><i data-lucide="message-square"></i>검수</button><button id="bPrev" onclick="modeB('prev')"><i data-lucide="eye"></i>미리보기</button></div>
+              <span class="sp"></span>
+              <button class="qi on" onclick="this.classList.toggle('on')" title="다운로드 허용"><i data-lucide="download"></i></button>
+              <button class="qi" title="새 탭에서 열기"><i data-lucide="external-link"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="lbl">B · 클릭 = 복사</div>
+      <div class="sublbl">바 전체가 복사 버튼. 가장 미니멀(버튼 분리 없음) · 우측에 복사 신호만</div>
+    </div>
+
+  </div>
+
+  <div class="sech">추천안(A) 실제 스택 — 여러 개 올릴 때</div>
+  <div class="row">
+    <div class="dock">
+      <div class="dh"><span class="di"><i data-lucide="check-circle-2"></i></span><span class="t">업로드</span><span class="s">3개 중 2 완료</span><span class="chev"><i data-lucide="chevron-down"></i></span></div>
+
+      <div class="item">
+        <div class="frow">
+          <span class="st"><i data-lucide="check"></i></span>
+          <div class="nm"><div class="n">그래놀라_광고_v2.mp4</div><div class="sub">00:48 · 1.2GB</div></div>
+          <span class="x"><i data-lucide="x"></i></span>
+        </div>
+        <div class="sharep">
+          <div class="linkbar">
+            <span class="u"><i data-lucide="link"></i><span>vibox.cloud/s/g7k2ab</span></span>
+            <button class="lcopy"><i data-lucide="copy"></i>복사</button>
+          </div>
+          <div class="ctrl">
+            <div class="seg"><button class="on"><i data-lucide="message-square"></i>검수</button><button><i data-lucide="eye"></i>미리보기</button></div>
+            <span class="sp"></span>
+            <button class="qi on" title="다운로드 허용"><i data-lucide="download"></i></button>
+            <button class="qi" title="열기"><i data-lucide="external-link"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="frow">
+          <span class="st" style="color:var(--amber)"><i data-lucide="loader" class="spin"></i></span>
+          <div class="nm"><div class="n">인터뷰_풀버전.mp4</div><div class="sub">스트리밍 최적화 중 62%</div></div>
+          <span class="x"><i data-lucide="x"></i></span>
+        </div>
+        <div class="opt"><i data-lucide="info"></i>지금 공유해도 재생돼요 — 최적화는 백그라운드</div>
+      </div>
+
+      <div class="item">
+        <div class="frow">
+          <span class="st" style="color:var(--accent)"><i data-lucide="loader" class="spin"></i></span>
+          <div class="nm"><div class="n">메이킹필름.mov</div></div>
+          <span class="x"><i data-lucide="x"></i></span>
+        </div>
+        <div class="prog"><div class="f" style="width:43%"></div></div>
+        <div class="pmeta mono"><span>43%</span><span>820MB / 1.9GB</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    #3에서 정제: 회색 박스에 가두지 않고 <b>점선 구분선 + 여백</b>으로 가볍게, 링크·복사를 <b>한 바로 통합</b>, 주황을 <b>accent-soft</b>로 낮춤(쨍함↓). 모드 활성=흰 칩+sky 텍스트(더 차분). 완료=emerald, 최적화=amber, 진행=accent. 스택돼도 각 카드가 컴팩트해 독이 부담 없음. <b>A(통합 바)</b> 추천 — 복사 어포던스가 또렷하면서 깔끔. lucide·이모지 금지.
+  </div>
+</div>
+<script>
+  lucide.createIcons();
+  function swapIcon(host,name){ host.querySelector('[data-lucide]')?.remove(); const i=document.createElement('i'); i.setAttribute('data-lucide',name); host.prepend(i); lucide.createIcons(); }
+  let aDone=false;
+  function copyA(){ if(aDone)return; aDone=true; const b=document.getElementById('cpA'); b.classList.add('done'); document.getElementById('cpAt').textContent='복사됨'; swapIcon(b,'check');
+    setTimeout(()=>{aDone=false;b.classList.remove('done');document.getElementById('cpAt').textContent='복사';swapIcon(b,'copy');},1600); }
+  let bDone=false;
+  function copyB(){ if(bDone)return; bDone=true; const b=document.getElementById('cpB'),c=document.getElementById('cpBc'); b.classList.add('done'); document.getElementById('cpBt').textContent='복사됨'; swapIcon(c,'check');
+    setTimeout(()=>{bDone=false;b.classList.remove('done');document.getElementById('cpBt').textContent='복사';swapIcon(c,'copy');},1600); }
+  function modeA(m){ document.getElementById('aRev').classList.toggle('on',m==='rev'); const p=document.getElementById('aPrev'); p.classList.toggle('on',m==='prev'); p.classList.toggle('prev',m==='prev'); }
+  function modeB(m){ document.getElementById('bRev').classList.toggle('on',m==='rev'); const p=document.getElementById('bPrev'); p.classList.toggle('on',m==='prev'); p.classList.toggle('prev',m==='prev'); }
+</script>
+</body>
+</html>

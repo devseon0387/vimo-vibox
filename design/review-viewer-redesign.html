@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 검수 뷰어 — 레이아웃·코멘트 재설계 시안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --vimo:#e85008; --vimo-ink:#c2410c; --vimo-soft:#fef0e8; --vimo-line:#fbd9c4;
+    --ai:#6b46ff; --ai-soft:#efeaff; --praise:#ec4899; --praise-soft:#fdf2f8;
+    --text:#171717; --muted:#5f5f5f; --soft:#525252; --faint:#9a9a9a;
+    --page:#ececed; --surf:#fafafa; --surf2:#f4f4f5; --line:#ececec; --line2:#e3e3e3; --hair:#f2f2f3;
+    --ok:#16a34a; --ok-soft:#f0fdf4; --stage:#0b0c0f; --stage2:#15171c;
+    --sh:0 1px 3px rgba(0,0,0,.07); --sh2:0 10px 34px rgba(0,0,0,.12);
+    --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);background:var(--page);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h2,h3,h4,p{margin:0}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  svg.lucide{width:1em;height:1em;stroke-width:1.9;flex:none;vertical-align:-.14em}
+  .vmk{display:inline-block;vertical-align:-2px}
+  img{display:block}
+
+  .wrap{max-width:1280px;margin:0 auto;padding:30px 22px 120px}
+  .intro h1{font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .intro p{color:var(--muted);font-size:13px;margin-top:8px;line-height:1.65;max-width:880px}
+  .intro .axes{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+  .intro .axes span{font-size:11.5px;font-weight:700;color:var(--vimo-ink);background:var(--vimo-soft);border:1px solid var(--vimo-line);border-radius:999px;padding:4px 11px}
+
+  /* 점프 내비 */
+  .jump{position:sticky;top:0;z-index:50;background:rgba(236,236,237,.86);backdrop-filter:blur(8px);margin:18px -22px 0;padding:11px 22px;border-bottom:1px solid var(--line2);display:flex;gap:7px;flex-wrap:wrap}
+  .jump a{font-size:12px;font-weight:700;color:var(--soft);text-decoration:none;padding:6px 12px;border-radius:8px;border:1px solid transparent;transition:.15s}
+  .jump a:hover{background:#fff;border-color:var(--line2)}
+  .jump a.on{background:var(--text);color:#fff}
+  .jump a b{color:var(--faint);font-weight:700;margin-right:5px}
+  .jump a.on b{color:rgba(255,255,255,.5)}
+
+  .lbl{display:flex;align-items:baseline;gap:11px;margin:30px 0 11px}
+  .lbl .n{font-size:12px;font-weight:800;color:#fff;background:var(--vimo);width:22px;height:22px;border-radius:7px;display:grid;place-items:center;flex:none;transform:translateY(3px)}
+  .lbl h2{font-size:16.5px;font-weight:800;letter-spacing:-.01em}
+  .lbl p{font-size:12.5px;color:var(--faint)}
+  .lbl .tag{font-size:10.5px;font-weight:800;border-radius:6px;padding:3px 8px;margin-left:auto;transform:translateY(2px)}
+  .lbl .tag.cur{background:#eef0f2;color:#64748b}
+
+  /* 브라우저 프레임 */
+  .browser{border:1px solid var(--line2);border-radius:13px;overflow:hidden;background:#fff;box-shadow:var(--sh2)}
+  .bchrome{display:flex;align-items:center;gap:8px;padding:9px 13px;background:#f3f3f4;border-bottom:1px solid var(--line2)}
+  .bdots{display:flex;gap:6px}.bdots i{width:11px;height:11px;border-radius:50%;background:#d6d6d8;display:block}
+  .burl{flex:1;background:#fff;border:1px solid var(--line2);border-radius:7px;padding:5px 11px;font-size:11px;color:var(--faint);display:flex;align-items:center;gap:7px}.burl svg{width:12px;height:12px;color:#bdbdbd}
+  .viewer{height:600px;display:flex;flex-direction:column;background:#fff;overflow:hidden}
+
+  /* ===== 공통 헤더 (헤더는 유지 — 불만 대상 아님) ===== */
+  .vhead{flex:none;display:flex;align-items:center;gap:11px;padding:10px 15px;background:#fff;border-bottom:1px solid var(--line)}
+  .vhead .crumb{font-size:12.5px;color:var(--faint);display:flex;align-items:center;gap:6px;min-width:0}
+  .vhead .crumb b{color:var(--soft);font-weight:600}
+  .vhead .crumb .cur{color:var(--text);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .vhead .crumb svg{width:13px;height:13px;color:#ccc}
+  .vhead .pin{font-size:11px;font-weight:800;color:var(--vimo);background:var(--vimo-soft);border-radius:6px;padding:2px 8px;font-variant-numeric:tabular-nums}
+  .vhead .up{font-size:11px;color:var(--faint)}.vhead .up b{color:var(--soft);font-weight:600}
+  .vhead .r{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .vhead .unres{font-size:11px;font-weight:700;color:var(--vimo-ink);background:var(--vimo-soft);border-radius:7px;padding:5px 9px;display:inline-flex;align-items:center;gap:5px}.vhead .unres svg{width:13px;height:13px}
+  .b{font-size:12px;font-weight:600;border-radius:8px;padding:6px 11px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.b svg{width:14px;height:14px}
+  .b-out{background:#fff;border:1px solid var(--line2);color:var(--text)}
+  .b-ok{background:var(--ok);color:#fff}
+
+  /* 공통 플레이어 */
+  .stage{position:relative;background:var(--stage);overflow:hidden;width:100%;height:100%;display:grid;place-items:center}
+  .stage>.cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.92}
+  .stage .big{position:relative;z-index:2;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.94);display:grid;place-items:center;box-shadow:0 8px 26px rgba(0,0,0,.4)}
+  .stage .big svg{width:24px;height:24px;color:#141414;fill:#141414;stroke:none;margin-left:3px}
+  .ctrls{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:18px 14px 11px;background:linear-gradient(transparent,rgba(0,0,0,.62))}
+  .scrub{position:relative;height:5px;border-radius:3px;background:rgba(255,255,255,.28);margin-bottom:10px}
+  .scrub .fill{position:absolute;left:0;top:0;bottom:0;width:34%;background:var(--vimo);border-radius:3px}
+  .scrub .mk{position:absolute;top:50%;transform:translate(-50%,-50%);width:11px;height:11px;border-radius:50%;background:#fff;border:3px solid var(--vimo);box-shadow:0 1px 4px rgba(0,0,0,.5);cursor:pointer}
+  .scrub .mk.ai{border-color:var(--ai)}.scrub .mk.pr{border-color:var(--praise)}
+  .crow{display:flex;align-items:center;gap:13px;color:#fff}
+  .crow button{color:#fff;display:grid;place-items:center}.crow svg{width:17px;height:17px}
+  .crow .tm{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}.crow .tm .mut{color:rgba(255,255,255,.55)}
+  .crow .sp{flex:1}.crow .spd{font-size:11px;font-weight:700;border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:2px 7px}
+
+  /* 코멘트 공통 조각 */
+  .av{border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;font-weight:700}
+  .av.ai{background:var(--ai)}
+  .tcchip{font-size:10.5px;font-weight:700;color:var(--vimo-ink);background:var(--vimo-soft);border-radius:5px;padding:1px 7px;font-variant-numeric:tabular-nums;cursor:pointer}
+  .tcchip.ai{color:var(--ai);background:var(--ai-soft)}.tcchip.ok{color:var(--ok);background:var(--ok-soft)}
+  .aib{font-size:9px;font-weight:800;color:var(--ai);background:var(--ai-soft);border-radius:4px;padding:1px 5px}
+  .typ{font-size:9.5px;font-weight:800;border-radius:5px;padding:1px 6px;display:inline-flex;align-items:center;gap:3px}.typ svg{width:10px;height:10px}
+  .typ.fix{color:var(--vimo-ink);background:var(--vimo-soft)}.typ.pr{color:var(--praise);background:var(--praise-soft)}
+
+  /* 패널 헤더(우측 레일 공통) */
+  .ph{flex:none;padding:11px 14px;border-bottom:1px solid var(--line)}
+  .ph .r1{display:flex;align-items:center;gap:8px}
+  .ph h3{font-size:13.5px;font-weight:800}
+  .ph .c{font-size:12px;color:var(--faint);font-weight:600}
+  .ph .set{margin-left:auto;width:27px;height:27px;border-radius:7px;display:grid;place-items:center;color:var(--faint)}
+  .ph .set svg{width:16px;height:16px}
+  .ph .seg{display:flex;gap:3px;margin-top:10px}
+  .ph .seg button{font-size:11px;font-weight:700;padding:4px 10px;border-radius:7px;color:var(--faint);display:inline-flex;align-items:center;gap:5px}
+  .ph .seg button svg{width:11px;height:11px}
+  .ph .seg button.on{background:var(--text);color:#fff}
+
+  .body2{flex:1;display:flex;min-height:0}
+
+  /* ============ 시안 1: 시네마 독 ============ */
+  .s1-wrap{flex:1;display:flex;flex-direction:column;min-height:0;background:var(--stage)}
+  .s1-stage{flex:1;min-height:0;position:relative}
+  .s1-dock{flex:none;background:#fff;border-top:1px solid var(--line2)}
+  .s1-track{padding:13px 16px 4px;position:relative}
+  .s1-track .axis{position:relative;height:30px}
+  .s1-track .axis .line{position:absolute;left:0;right:0;top:14px;height:3px;border-radius:2px;background:var(--line2)}
+  .s1-track .axis .line .done{position:absolute;left:0;top:0;bottom:0;width:34%;background:var(--vimo);opacity:.5;border-radius:2px}
+  .s1-dot{position:absolute;top:14px;transform:translate(-50%,-50%);width:15px;height:15px;border-radius:50%;background:#fff;border:3px solid var(--vimo);cursor:pointer;display:grid;place-items:center}
+  .s1-dot.ai{border-color:var(--ai)}.s1-dot.pr{border-color:var(--praise)}
+  .s1-dot .t{position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:9.5px;font-weight:700;color:var(--soft);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .s1-cards{display:flex;gap:10px;padding:6px 16px 14px;overflow-x:auto}
+  .s1-card{flex:none;width:230px;border:1px solid var(--line2);border-radius:11px;padding:10px 12px;background:#fff}
+  .s1-card.sel{border-color:var(--vimo);box-shadow:0 0 0 3px var(--vimo-soft)}
+  .s1-card .top{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+  .s1-card .av{width:22px;height:22px;font-size:10px}
+  .s1-card .nm{font-size:11.5px;font-weight:700}
+  .s1-card .top .tcchip{margin-left:auto}
+  .s1-card .tx{font-size:12px;color:#33363b;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .s1-card .ft{display:flex;gap:12px;margin-top:8px}
+  .s1-card .ft button{font-size:10.5px;color:var(--faint);display:inline-flex;align-items:center;gap:4px}.s1-card .ft svg{width:12px;height:12px}
+  .s1-input{flex:none;display:flex;align-items:center;gap:9px;padding:9px 16px;border-top:1px solid var(--line);background:var(--surf)}
+  .s1-input .tcchip{flex:none}
+  .s1-input input{flex:1;border:1px solid var(--line2);background:#fff;border-radius:9px;padding:8px 11px;font-family:inherit;font-size:12.5px;outline:none}
+  .s1-input .send{width:32px;height:32px;border-radius:8px;background:var(--vimo);color:#fff;display:grid;place-items:center;flex:none}.s1-input .send svg{width:15px;height:15px}
+
+  /* ============ 시안 2: 포커스 검수 ============ */
+  .s2-stage{flex:1;min-width:0;background:var(--stage);position:relative}
+  .s2-rail{width:354px;flex:none;border-left:1px solid var(--line);background:#fff;display:flex;flex-direction:column;min-height:0}
+  .s2-nav{flex:none;display:flex;align-items:center;gap:10px;padding:11px 15px;border-bottom:1px solid var(--line)}
+  .s2-nav .pos{font-size:12px;font-weight:800}.s2-nav .pos b{color:var(--vimo)}
+  .s2-nav .sp{flex:1}
+  .s2-nav .arw{width:30px;height:30px;border-radius:8px;border:1px solid var(--line2);display:grid;place-items:center;color:var(--soft)}
+  .s2-nav .arw svg{width:16px;height:16px}
+  .s2-focus{flex:1;padding:18px 18px;overflow-y:auto;min-height:0}
+  .s2-focus .who{display:flex;align-items:center;gap:9px;margin-bottom:13px}
+  .s2-focus .who .av{width:34px;height:34px;font-size:13px}
+  .s2-focus .who .nm{font-size:14px;font-weight:800}
+  .s2-focus .who .role{font-size:11px;color:var(--faint)}
+  .s2-focus .who .tcchip{margin-left:auto;font-size:12px;padding:3px 9px}
+  .s2-focus .typ{margin-bottom:9px}
+  .s2-focus .big-tx{font-size:15px;line-height:1.6;color:#1d1f24;font-weight:500}
+  .s2-focus .acts{display:flex;gap:8px;margin-top:16px}
+  .s2-focus .acts .b{font-size:12px}
+  .s2-focus .acts .b-ok{background:var(--ok)}
+  .s2-focus .acts .b-rep{background:var(--surf2);color:var(--soft);border:1px solid var(--line2)}
+  .s2-mini{flex:none;border-top:1px solid var(--line);padding:10px 14px;display:flex;gap:7px;align-items:center;background:var(--surf)}
+  .s2-mini .d{width:9px;height:9px;border-radius:50%;background:var(--line2)}
+  .s2-mini .d.on{background:var(--vimo);transform:scale(1.3)}
+  .s2-mini .d.ai{background:var(--ai)}.s2-mini .d.pr{background:var(--praise)}
+  .s2-mini .lab{font-size:10.5px;color:var(--faint);margin-left:auto}
+
+  /* ============ 시안 3: 스레드(채팅형) ============ */
+  .s3-stage{flex:1;min-width:0;background:var(--stage);position:relative}
+  .s3-rail{width:350px;flex:none;border-left:1px solid var(--line);background:var(--surf);display:flex;flex-direction:column;min-height:0}
+  .s3-feed{flex:1;overflow-y:auto;padding:14px 14px;display:flex;flex-direction:column;gap:14px;min-height:0}
+  .s3-msg{display:flex;gap:9px}
+  .s3-msg .av{width:28px;height:28px;font-size:11px}
+  .s3-msg .col{flex:1;min-width:0}
+  .s3-msg .meta{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+  .s3-msg .meta .nm{font-size:11.5px;font-weight:700}
+  .s3-msg .meta .tcchip{font-size:9.5px}
+  .s3-bub{background:#fff;border:1px solid var(--line2);border-radius:4px 13px 13px 13px;padding:9px 12px;font-size:12.5px;line-height:1.55;color:#2c2f34}
+  .s3-bub.ai{background:var(--ai-soft);border-color:#ddd3ff}
+  .s3-bub.pr{background:var(--praise-soft);border-color:#fbd0e4}
+  .s3-bub .b{font-weight:700;color:var(--vimo-ink)}
+  .s3-reply{margin:7px 0 0 14px;padding-left:11px;border-left:2px solid var(--line2)}
+  .s3-reply .meta{display:flex;align-items:center;gap:6px}.s3-reply .nm{font-size:11px;font-weight:700}.s3-reply .tt{font-size:11.5px;color:#52555a;margin-top:2px}
+  .s3-act{display:flex;gap:11px;margin:6px 0 0 1px}
+  .s3-act button{font-size:10.5px;color:var(--faint);display:inline-flex;align-items:center;gap:4px}.s3-act svg{width:12px;height:12px}
+  .s3-input{flex:none;border-top:1px solid var(--line2);padding:10px 12px;background:#fff}
+  .s3-input .bar{border:1px solid var(--line2);border-radius:12px;display:flex;align-items:center;gap:8px;padding:7px 9px}
+  .s3-input .bar .tcchip{flex:none}
+  .s3-input .bar input{flex:1;border:none;outline:none;font-family:inherit;font-size:12.5px;background:transparent}
+  .s3-input .bar .send{width:29px;height:29px;border-radius:8px;background:var(--vimo);color:#fff;display:grid;place-items:center;flex:none}.s3-input .bar .send svg{width:15px;height:15px}
+
+  /* ============ 시안 4: 인스펙터(3컬럼) ============ */
+  .s4-list{width:218px;flex:none;border-right:1px solid var(--line);background:var(--surf);display:flex;flex-direction:column;min-height:0}
+  .s4-lh{flex:none;padding:10px 13px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:7px}
+  .s4-lh h3{font-size:12.5px;font-weight:800}.s4-lh .c{font-size:11px;color:var(--faint);font-weight:600}
+  .s4-lh .sort{margin-left:auto;width:24px;height:24px;border-radius:6px;display:grid;place-items:center;color:var(--faint)}.s4-lh .sort svg{width:13px;height:13px}
+  .s4-rows{flex:1;overflow-y:auto;min-height:0}
+  .s4-row{display:flex;gap:8px;padding:9px 13px;border-bottom:1px solid var(--hair);cursor:pointer;align-items:flex-start}
+  .s4-row.sel{background:#fff;box-shadow:inset 2px 0 0 0 transparent}
+  .s4-row.sel{background:var(--vimo-soft)}
+  .s4-row .av{width:20px;height:20px;font-size:9px;margin-top:1px}
+  .s4-row .c{min-width:0;flex:1}
+  .s4-row .l1{display:flex;align-items:center;gap:5px;margin-bottom:2px}
+  .s4-row .l1 .tcchip{font-size:9.5px;padding:0 5px}
+  .s4-row .l1 .nm{font-size:10.5px;color:var(--faint);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .s4-row .tx{font-size:11.5px;color:#3a3d42;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .s4-row.done .tx{color:var(--faint);text-decoration:line-through}
+  .s4-row .dotk{width:7px;height:7px;border-radius:50%;flex:none;margin-top:6px;background:var(--vimo)}
+  .s4-row .dotk.ai{background:var(--ai)}.s4-row .dotk.pr{background:var(--praise)}.s4-row .dotk.done{background:var(--ok)}
+  .s4-mid{flex:1;min-width:0;background:var(--stage);position:relative}
+  .s4-detail{width:300px;flex:none;border-left:1px solid var(--line);background:#fff;display:flex;flex-direction:column;min-height:0}
+  .s4-dh{flex:none;padding:14px 15px;border-bottom:1px solid var(--line)}
+  .s4-dh .who{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+  .s4-dh .who .av{width:28px;height:28px;font-size:11px}
+  .s4-dh .who .nm{font-size:12.5px;font-weight:800}.s4-dh .who .role{font-size:10px;color:var(--faint)}
+  .s4-dh .who .tcchip{margin-left:auto}
+  .s4-dh .tx{font-size:13px;line-height:1.6;color:#1d1f24}
+  .s4-dbody{flex:1;overflow-y:auto;padding:12px 15px;min-height:0}
+  .s4-dbody .rt{font-size:10.5px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.03em;margin-bottom:8px}
+  .s4-rep{display:flex;gap:7px;margin-bottom:11px}
+  .s4-rep .av{width:22px;height:22px;font-size:9px}
+  .s4-rep .nm{font-size:11px;font-weight:700}.s4-rep .tt{font-size:11.5px;color:#52555a;line-height:1.5}
+  .s4-dfoot{flex:none;border-top:1px solid var(--line);padding:11px 14px;display:flex;gap:8px}
+  .s4-dfoot .b{font-size:12px;flex:1;justify-content:center}
+  .s4-dfoot .b-ok{background:var(--ok)}
+  .s4-dfoot .b-rep{background:var(--surf2);color:var(--soft);border:1px solid var(--line2)}
+
+  .foot{margin-top:40px;font-size:12px;color:var(--faint);text-align:center;line-height:1.7}
+</style>
+</head>
+<body>
+<svg style="display:none"><symbol id="vmk" viewBox="0 0 491.75 396.19"><path d="M491.75,10.14v375.95c0,8.49-11.04,13.18-18.49,7.83l-79.1-57.24c-1.12-.78-2.05-1.74-2.71-2.83v-115.6c0-11.2-12.09-18.18-21.78-12.6l-81.95,47.33c-3.17,1.83-7.11,1.63-10.08-.52l-11.76-8.52c-4.46-3.18-4.46-9.77,0-12.98l20-14.49c12.56-9.07,12.56-27.67,0-36.74l-19.96-14.42c-4.42-3.22-4.42-9.8,0-13.02L473.26,2.31c7.44-5.43,18.49-.66,18.49,7.83Z" fill="#f9a87a"/><path d="M269.34,212.47l-55.32,40c-2.96,2.14-6.9,2.34-10.07.52l-81.96-47.34c-9.65-5.58-21.74,1.4-21.74,12.6v111.8c0,2.97-1.43,5.77-3.84,7.51l-68.01,49.19C16.59,395.31,0,386.94,0,372.41V23.82C0,9.28,16.59.91,28.41,9.48l240.94,174.28c9.78,7.07,9.78,21.64,0,28.72Z" fill="#e85008"/></symbol></svg>
+
+<div class="wrap">
+  <div class="intro">
+    <h1>검수 뷰어 — 레이아웃·코멘트 재설계</h1>
+    <p>현재 라이브(좌 영상 + 우 카드 목록 = 사이드 레일 A안)가 안 맞아서, <b>영상과 코멘트의 배치(IA)와 코멘트 표현 방식 자체</b>를 근본적으로 다르게 4가지로 발산했습니다. 헤더(브랜드·브레드크럼·버전·승인/수정요청)와 색·톤은 유지합니다. 같은 영상·같은 3개 코멘트로 공정 비교하세요.</p>
+    <div class="axes">
+      <span>영상↔코멘트 배치</span><span>코멘트 표현(카드/단일/버블/행)</span><span>검수 동선</span>
+    </div>
+  </div>
+
+  <nav class="jump" id="jump">
+    <a href="#s1"><b>1</b>시네마 독</a>
+    <a href="#s2"><b>2</b>포커스 검수</a>
+    <a href="#s3"><b>3</b>스레드</a>
+    <a href="#s4"><b>4</b>인스펙터</a>
+  </nav>
+
+  <!-- =================== 시안 1: 시네마 독 =================== -->
+  <div class="lbl" id="s1">
+    <span class="n">1</span>
+    <div><h2>시네마 독 — 영상 최대 + 하단 시간축 트랙</h2></div>
+    <p style="margin-top:5px">영상이 가로로 꽉. 코멘트는 우측 패널이 아니라 영상 아래 시간축에 분포</p>
+  </div>
+  <div class="browser">
+    <div class="bchrome"><span class="bdots"><i></i><i></i><i></i></span><span class="burl"><svg data-lucide="lock"></svg> vibox.cloud/team/성수카페/브랜드필름</span></div>
+    <div class="viewer">
+      <div class="vhead">
+        <svg class="vmk" width="19" height="15"><use href="#vmk"/></svg>
+        <span class="crumb"><b>성수 카페</b><svg data-lucide="chevron-right"></svg><span class="cur">브랜드필름</span></span>
+        <span class="pin">v3</span>
+        <span class="up">올린 사람 <b>서준</b></span>
+        <span class="r">
+          <span class="unres"><svg data-lucide="message-circle"></svg>미해결 2</span>
+          <button class="b b-out"><svg data-lucide="pen-line"></svg>수정 요청</button>
+          <button class="b b-ok"><svg data-lucide="check"></svg>승인</button>
+        </span>
+      </div>
+      <div class="s1-wrap">
+        <div class="s1-stage">
+          <div class="stage"><img class="cover" src="https://picsum.photos/seed/vibox-cafe-pour/1280/720"><div class="big"><svg data-lucide="play"></svg></div>
+            <div class="ctrls"><div class="scrub"><div class="fill"></div><span class="mk" style="left:7%"></span><span class="mk ai" style="left:39%"></span><span class="mk pr" style="left:69%"></span></div>
+              <div class="crow"><button><svg data-lucide="play"></svg></button><span class="tm">0:36 <span class="mut">/ 1:48</span></span><span class="sp"></span><span class="spd">1x</span><button><svg data-lucide="captions"></svg></button><button><svg data-lucide="volume-2"></svg></button><button><svg data-lucide="maximize"></svg></button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="s1-dock">
+        <div class="s1-track">
+          <div class="axis">
+            <div class="line"><div class="done"></div></div>
+            <span class="s1-dot" style="left:7%"><span class="t">0:08</span></span>
+            <span class="s1-dot ai" style="left:39%"><span class="t">0:42</span></span>
+            <span class="s1-dot pr" style="left:69%"><span class="t">1:15</span></span>
+          </div>
+        </div>
+        <div class="s1-cards">
+          <div class="s1-card sel">
+            <div class="top"><span class="av" style="background:#8a6fb0">박</span><span class="nm">박매니저</span><span class="tcchip">0:08</span></div>
+            <div class="tx"><span class="typ fix"><svg data-lucide="pen-line"></svg>수정</span> 인트로 색감이 차가워요. 따뜻하게 부탁드려요.</div>
+            <div class="ft"><button><svg data-lucide="corner-down-right"></svg>답글</button><button><svg data-lucide="check"></svg>해결</button></div>
+          </div>
+          <div class="s1-card">
+            <div class="top"><span class="av ai" style="width:22px;height:22px"><svg data-lucide="sparkles" style="width:12px;height:12px"></svg></span><span class="nm">AI 자막 검수</span><span class="tcchip ai">0:42</span></div>
+            <div class="tx">자막 오타 의심: ‘브랜대’ → ‘브랜드’</div>
+            <div class="ft"><button><svg data-lucide="plus"></svg>수정에 추가</button><button><svg data-lucide="x"></svg>무시</button></div>
+          </div>
+          <div class="s1-card">
+            <div class="top"><span class="av" style="background:#8a6fb0">박</span><span class="nm">박매니저</span><span class="tcchip ok">1:15</span></div>
+            <div class="tx"><span class="typ pr"><svg data-lucide="heart"></svg>좋아요</span> 이 전환 정말 좋네요. 이대로.</div>
+            <div class="ft"><button><svg data-lucide="corner-down-right"></svg>답글</button></div>
+          </div>
+        </div>
+        <div class="s1-input"><span class="tcchip">0:36</span><input placeholder="이 시점(0:36)에 코멘트 남기기…"><button class="send"><svg data-lucide="arrow-up"></svg></button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== 시안 2: 포커스 검수 =================== -->
+  <div class="lbl" id="s2">
+    <span class="n">2</span>
+    <div><h2>포커스 검수 — 코멘트 한 건씩 크게 순회</h2></div>
+    <p style="margin-top:5px">목록 대신 “지금 처리할 코멘트” 1건에 집중. 영상은 자동으로 그 시점. 다음으로 넘기며 검수</p>
+  </div>
+  <div class="browser">
+    <div class="bchrome"><span class="bdots"><i></i><i></i><i></i></span><span class="burl"><svg data-lucide="lock"></svg> vibox.cloud/team/성수카페/브랜드필름</span></div>
+    <div class="viewer">
+      <div class="vhead">
+        <svg class="vmk" width="19" height="15"><use href="#vmk"/></svg>
+        <span class="crumb"><b>성수 카페</b><svg data-lucide="chevron-right"></svg><span class="cur">브랜드필름</span></span>
+        <span class="pin">v3</span>
+        <span class="up">올린 사람 <b>서준</b></span>
+        <span class="r">
+          <span class="unres"><svg data-lucide="message-circle"></svg>미해결 2</span>
+          <button class="b b-out"><svg data-lucide="pen-line"></svg>수정 요청</button>
+          <button class="b b-ok"><svg data-lucide="check"></svg>승인</button>
+        </span>
+      </div>
+      <div class="body2">
+        <div class="s2-stage">
+          <div class="stage"><img class="cover" src="https://picsum.photos/seed/vibox-cafe-pour/1280/720"><div class="big"><svg data-lucide="play"></svg></div>
+            <div class="ctrls"><div class="scrub"><div class="fill" style="width:7%"></div><span class="mk" style="left:7%"></span><span class="mk ai" style="left:39%"></span><span class="mk pr" style="left:69%"></span></div>
+              <div class="crow"><button><svg data-lucide="play"></svg></button><span class="tm">0:08 <span class="mut">/ 1:48</span></span><span class="sp"></span><span class="spd">1x</span><button><svg data-lucide="volume-2"></svg></button><button><svg data-lucide="maximize"></svg></button></div>
+            </div>
+          </div>
+        </div>
+        <div class="s2-rail">
+          <div class="s2-nav">
+            <span class="pos"><b>1</b> / 3</span>
+            <span class="sp"></span>
+            <button class="arw"><svg data-lucide="chevron-up"></svg></button>
+            <button class="arw"><svg data-lucide="chevron-down"></svg></button>
+          </div>
+          <div class="s2-focus">
+            <div class="who"><span class="av" style="width:34px;height:34px;background:#8a6fb0">박</span><div><div class="nm">박매니저</div><div class="role">비모 · 매니저</div></div><span class="tcchip">0:08</span></div>
+            <span class="typ fix"><svg data-lucide="pen-line"></svg>수정 요청</span>
+            <div class="big-tx">인트로 색감이 차가워요. 조금 더 따뜻한 톤으로 부탁드려요. 로고 등장 직전까지요.</div>
+            <div class="acts">
+              <button class="b b-ok"><svg data-lucide="check"></svg>해결</button>
+              <button class="b b-rep"><svg data-lucide="corner-down-right"></svg>답글</button>
+            </div>
+          </div>
+          <div class="s2-mini">
+            <span class="d on"></span><span class="d ai"></span><span class="d pr"></span>
+            <span class="lab">3건 중 1번째 · 미해결 2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== 시안 3: 스레드 =================== -->
+  <div class="lbl" id="s3">
+    <span class="n">3</span>
+    <div><h2>스레드 — 코멘트를 대화(채팅)처럼</h2></div>
+    <p style="margin-top:5px">카드 대신 메신저식 버블. 타임코드는 말풍선 헤더에. 답글이 자연스러운 스레드로</p>
+  </div>
+  <div class="browser">
+    <div class="bchrome"><span class="bdots"><i></i><i></i><i></i></span><span class="burl"><svg data-lucide="lock"></svg> vibox.cloud/team/성수카페/브랜드필름</span></div>
+    <div class="viewer">
+      <div class="vhead">
+        <svg class="vmk" width="19" height="15"><use href="#vmk"/></svg>
+        <span class="crumb"><b>성수 카페</b><svg data-lucide="chevron-right"></svg><span class="cur">브랜드필름</span></span>
+        <span class="pin">v3</span>
+        <span class="up">올린 사람 <b>서준</b></span>
+        <span class="r">
+          <span class="unres"><svg data-lucide="message-circle"></svg>미해결 2</span>
+          <button class="b b-out"><svg data-lucide="pen-line"></svg>수정 요청</button>
+          <button class="b b-ok"><svg data-lucide="check"></svg>승인</button>
+        </span>
+      </div>
+      <div class="body2">
+        <div class="s3-stage">
+          <div class="stage"><img class="cover" src="https://picsum.photos/seed/vibox-cafe-pour/1280/720"><div class="big"><svg data-lucide="play"></svg></div>
+            <div class="ctrls"><div class="scrub"><div class="fill"></div><span class="mk" style="left:7%"></span><span class="mk ai" style="left:39%"></span><span class="mk pr" style="left:69%"></span></div>
+              <div class="crow"><button><svg data-lucide="play"></svg></button><span class="tm">0:36 <span class="mut">/ 1:48</span></span><span class="sp"></span><span class="spd">1x</span><button><svg data-lucide="volume-2"></svg></button><button><svg data-lucide="maximize"></svg></button></div>
+            </div>
+          </div>
+        </div>
+        <div class="s3-rail">
+          <div class="ph"><div class="r1"><h3>댓글</h3><span class="c">3 · 미해결 2</span><button class="set"><svg data-lucide="settings-2"></svg></button></div></div>
+          <div class="s3-feed">
+            <div class="s3-msg">
+              <span class="av" style="width:28px;height:28px;background:#8a6fb0">박</span>
+              <div class="col">
+                <div class="meta"><span class="nm">박매니저</span><span class="tcchip">0:08</span></div>
+                <div class="s3-bub">인트로 색감이 차가워요. 따뜻하게 부탁드려요.</div>
+                <div class="s3-reply"><div class="meta"><span class="nm">서준</span></div><div class="tt">넵, LUT 다시 잡아서 v4로 올릴게요.</div></div>
+                <div class="s3-act"><button><svg data-lucide="corner-down-right"></svg>답글</button><button><svg data-lucide="check"></svg>해결</button></div>
+              </div>
+            </div>
+            <div class="s3-msg">
+              <span class="av ai" style="width:28px;height:28px"><svg data-lucide="sparkles" style="width:13px;height:13px"></svg></span>
+              <div class="col">
+                <div class="meta"><span class="nm">AI 자막 검수</span><span class="aib">AI</span><span class="tcchip ai">0:42</span></div>
+                <div class="s3-bub ai">자막 오타 의심: <span class="b">‘브랜대’ → ‘브랜드’</span></div>
+                <div class="s3-act"><button><svg data-lucide="plus"></svg>수정 요청에 추가</button><button><svg data-lucide="x"></svg>무시</button></div>
+              </div>
+            </div>
+            <div class="s3-msg">
+              <span class="av" style="width:28px;height:28px;background:#8a6fb0">박</span>
+              <div class="col">
+                <div class="meta"><span class="nm">박매니저</span><span class="tcchip ok">1:15</span></div>
+                <div class="s3-bub pr">이 전환 정말 좋네요. 이대로 갑시다.</div>
+              </div>
+            </div>
+          </div>
+          <div class="s3-input"><div class="bar"><span class="tcchip">0:36</span><input placeholder="메시지 남기기…"><button class="send"><svg data-lucide="arrow-up"></svg></button></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== 시안 4: 인스펙터 =================== -->
+  <div class="lbl" id="s4">
+    <span class="n">4</span>
+    <div><h2>인스펙터 — 3컬럼 (목록 · 큰 영상 · 디테일)</h2></div>
+    <p style="margin-top:5px">좌측 컴팩트 목록으로 한눈에, 가운데 영상 크게, 우측에 선택한 코멘트 깊게(답글·결정). 메일·IDE식</p>
+  </div>
+  <div class="browser">
+    <div class="bchrome"><span class="bdots"><i></i><i></i><i></i></span><span class="burl"><svg data-lucide="lock"></svg> vibox.cloud/team/성수카페/브랜드필름</span></div>
+    <div class="viewer">
+      <div class="vhead">
+        <svg class="vmk" width="19" height="15"><use href="#vmk"/></svg>
+        <span class="crumb"><b>성수 카페</b><svg data-lucide="chevron-right"></svg><span class="cur">브랜드필름</span></span>
+        <span class="pin">v3</span>
+        <span class="up">올린 사람 <b>서준</b></span>
+        <span class="r">
+          <span class="unres"><svg data-lucide="message-circle"></svg>미해결 2</span>
+          <button class="b b-out"><svg data-lucide="pen-line"></svg>수정 요청</button>
+          <button class="b b-ok"><svg data-lucide="check"></svg>승인</button>
+        </span>
+      </div>
+      <div class="body2">
+        <div class="s4-list">
+          <div class="s4-lh"><h3>댓글</h3><span class="c">3</span><button class="sort"><svg data-lucide="arrow-down-narrow-wide"></svg></button></div>
+          <div class="s4-rows">
+            <div class="s4-row sel">
+              <span class="dotk"></span>
+              <div class="c"><div class="l1"><span class="tcchip">0:08</span><span class="nm">박매니저</span></div><div class="tx">인트로 색감이 차가워요. 따뜻하게 부탁드려요.</div></div>
+            </div>
+            <div class="s4-row">
+              <span class="dotk ai"></span>
+              <div class="c"><div class="l1"><span class="tcchip ai">0:42</span><span class="nm">AI 검수</span></div><div class="tx">자막 오타: ‘브랜대’ → ‘브랜드’</div></div>
+            </div>
+            <div class="s4-row done">
+              <span class="dotk done"></span>
+              <div class="c"><div class="l1"><span class="tcchip ok">1:15</span><span class="nm">박매니저</span></div><div class="tx">이 전환 정말 좋네요.</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="s4-mid">
+          <div class="stage"><img class="cover" src="https://picsum.photos/seed/vibox-cafe-pour/1280/720"><div class="big"><svg data-lucide="play"></svg></div>
+            <div class="ctrls"><div class="scrub"><div class="fill" style="width:7%"></div><span class="mk" style="left:7%"></span><span class="mk ai" style="left:39%"></span><span class="mk pr" style="left:69%"></span></div>
+              <div class="crow"><button><svg data-lucide="play"></svg></button><span class="tm">0:08 <span class="mut">/ 1:48</span></span><span class="sp"></span><span class="spd">1x</span><button><svg data-lucide="volume-2"></svg></button><button><svg data-lucide="maximize"></svg></button></div>
+            </div>
+          </div>
+        </div>
+        <div class="s4-detail">
+          <div class="s4-dh">
+            <div class="who"><span class="av" style="width:28px;height:28px;background:#8a6fb0">박</span><div><div class="nm">박매니저</div><div class="role">비모 · 매니저</div></div><span class="tcchip">0:08</span></div>
+            <div class="tx"><span class="typ fix" style="margin-right:5px"><svg data-lucide="pen-line"></svg>수정</span>인트로 색감이 차가워요. 따뜻하게 부탁드려요.</div>
+          </div>
+          <div class="s4-dbody">
+            <div class="rt">답글 1</div>
+            <div class="s4-rep"><span class="av" style="width:22px;height:22px;background:#0ea5a3">서</span><div><div class="nm">서준</div><div class="tt">넵, LUT 다시 잡아서 v4로 올릴게요.</div></div></div>
+          </div>
+          <div class="s4-dfoot">
+            <button class="b b-ok"><svg data-lucide="check"></svg>해결</button>
+            <button class="b b-rep"><svg data-lucide="corner-down-right"></svg>답글</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">같은 영상·같은 3개 코멘트로 비교 · 헤더와 색·톤은 유지 · 모바일은 방향 선택 후 설계<br>마음에 드는 번호(또는 “1의 영상 + 4의 디테일”처럼 조합)를 알려주세요</div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  if(window.lucide) lucide.createIcons();
+  // 점프 내비 활성 표시
+  const links = [...document.querySelectorAll('.jump a')];
+  const map = {};
+  links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const io = new IntersectionObserver((es)=>{
+    es.forEach(e=>{ if(e.isIntersecting){ links.forEach(l=>l.classList.remove('on')); map[e.target.id]?.classList.add('on'); }});
+  },{rootMargin:'-45% 0px -50% 0px'});
+  ['s1','s2','s3','s4'].forEach(id=>{const el=document.getElementById(id); if(el) io.observe(el);});
+</script>
+</body>
+</html>

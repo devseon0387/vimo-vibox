@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>vibox 사람 검수 강화 — 설계 자료</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --accent:#e85008; --accent-soft:#fef0e8; --ink:#1c1917; --soft:#57534e;
+    --faint:#8a847e; --line:#ececec; --line2:#f2efed; --bg:#faf9f8; --card:#fff;
+    --green:#16a34a; --green-soft:#f0fdf4; --amber:#d97706; --amber-soft:#fffbeb;
+    --red:#dc2626; --red-soft:#fef2f2; --purple:#7c3aed; --purple-soft:#f5f1ff; --blue:#2563eb;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);color:var(--ink);
+    line-height:1.6;-webkit-font-smoothing:antialiased;font-size:15px;}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 96px}
+  header{padding:54px 0 30px;border-bottom:1px solid var(--line)}
+  .kicker{font-size:12.5px;font-weight:800;letter-spacing:.12em;color:var(--accent);text-transform:uppercase}
+  h1{font-size:34px;font-weight:800;letter-spacing:-.02em;margin:10px 0 8px;line-height:1.2}
+  .sub{font-size:16px;color:var(--soft);max-width:780px}
+  .meta{margin-top:18px;display:flex;flex-wrap:wrap;gap:8px}
+  .pill{font-size:12px;font-weight:600;color:var(--soft);background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 12px}
+  .pill b{color:var(--ink)}
+  /* lifecycle strip */
+  .flow{margin-top:24px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+  .flow .ttl{font-size:12px;font-weight:800;color:var(--faint);letter-spacing:.04em;margin-bottom:11px}
+  .flow .steps{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px}
+  .flow .st{display:inline-flex;align-items:center;gap:7px;background:var(--accent-soft);color:#a8430a;
+    font-weight:700;border-radius:8px;padding:6px 11px}
+  .flow .st .who{font-size:10.5px;font-weight:800;background:#fff;color:var(--accent);border-radius:5px;padding:1px 6px}
+  .flow .arr{color:#cbc7c2;font-weight:800}
+  nav.toc{position:sticky;top:0;z-index:10;background:rgba(250,249,248,.92);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);margin:0 -24px;padding:11px 24px;display:flex;gap:5px;flex-wrap:wrap}
+  nav.toc a{font-size:13px;font-weight:600;color:var(--soft);text-decoration:none;padding:5px 11px;border-radius:8px}
+  nav.toc a:hover{background:var(--accent-soft);color:var(--accent)}
+  section{padding:40px 0;border-bottom:1px solid var(--line2)}
+  .sh{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  .sh .no{font-size:14px;font-weight:800;color:#fff;background:var(--accent);width:26px;height:26px;border-radius:8px;display:inline-grid;place-items:center;flex:none}
+  h2{font-size:23px;font-weight:800;letter-spacing:-.01em}
+  .lead{color:var(--soft);font-size:14.5px;margin:2px 0 22px;max-width:860px}
+  h3{font-size:16px;font-weight:800;margin:24px 0 10px;display:flex;align-items:center;gap:8px}
+  h3 .dot{width:7px;height:7px;border-radius:2px;background:var(--accent);flex:none}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:760px){.g2{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:17px 18px}
+  .card h4{font-size:14.5px;font-weight:800;margin-bottom:7px}
+  .card ul{list-style:none;font-size:13.5px;color:var(--soft)}
+  .card li{padding:3px 0 3px 15px;position:relative}
+  .card li::before{content:"";position:absolute;left:2px;top:11px;width:4px;height:4px;border-radius:50%;background:#cbc7c2}
+  .card li b{color:var(--ink);font-weight:700}
+  code{font-family:'SFMono-Regular',ui-monospace,monospace;font-size:12px;background:#f4f2f0;padding:1px 5px;border-radius:5px;color:#a8430a}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:11.5px;font-weight:800;color:var(--faint);background:#fbfafa;letter-spacing:.02em}
+  tr:last-child td{border-bottom:none}
+  .tbl{background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden}
+  .b{display:inline-flex;align-items:center;font-size:11px;font-weight:800;border-radius:999px;padding:2px 9px;white-space:nowrap}
+  .b-have{background:var(--green-soft);color:var(--green)}
+  .b-part{background:var(--amber-soft);color:var(--amber)}
+  .b-none{background:var(--red-soft);color:var(--red)}
+  .b-low{background:var(--green-soft);color:var(--green)}
+  .b-mid{background:var(--amber-soft);color:var(--amber)}
+  .b-high{background:var(--red-soft);color:var(--red)}
+  .b-val{background:var(--accent-soft);color:#b8430a}
+  .phase-h{display:flex;align-items:center;gap:10px;margin:26px 0 12px}
+  .phase-h .tag{font-size:12px;font-weight:800;color:#fff;background:var(--ink);border-radius:7px;padding:4px 11px}
+  .phase-h.p1 .tag{background:var(--accent)}
+  .phase-h.p2 .tag{background:#a8430a}
+  .phase-h.p3 .tag{background:#6b3410}
+  .phase-h .ttl{font-size:15px;font-weight:800}
+  .phase-h .ln{flex:1;height:1px;background:var(--line)}
+  .item{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+  .item .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px}
+  .item .name{font-size:14.5px;font-weight:800}
+  .item .body{font-size:13.5px;color:var(--soft)}
+  .item .body em{color:var(--accent);font-style:normal;font-weight:700}
+  .star{color:var(--accent);font-weight:800;font-size:12px}
+  .idea{background:#fff;border:1px solid var(--line);border-radius:13px;padding:16px 18px;margin-bottom:11px;border-left:3px solid var(--accent)}
+  .idea h4{font-size:14.5px;font-weight:800;margin-bottom:5px}
+  .idea p{font-size:13.5px;color:var(--soft)}
+  ol.prio{counter-reset:p;list-style:none;margin-top:8px}
+  ol.prio li{counter-increment:p;position:relative;padding:11px 0 11px 42px;border-bottom:1px solid var(--line2);font-size:14px}
+  ol.prio li::before{content:counter(p);position:absolute;left:0;top:9px;width:27px;height:27px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-weight:800;font-size:13px;display:grid;place-items:center}
+  ol.prio li:last-child{border-bottom:none}
+  ol.prio li b{font-weight:800}
+  .callout{background:var(--accent-soft);border:1px solid #fbd9c4;border-radius:13px;padding:15px 18px;font-size:14px;color:#7a3a18}
+  .callout b{color:#a8430a}
+  .note{font-size:12.5px;color:var(--faint);margin-top:10px}
+  .strengths{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 4px}
+  .strengths span{font-size:12px;font-weight:700;background:#fff;border:1px solid var(--line);border-radius:8px;padding:5px 10px;color:var(--soft)}
+  .src{font-size:12.5px;color:var(--soft);columns:2;column-gap:32px}
+  @media(max-width:760px){.src{columns:1}}
+  .src a{color:var(--blue);text-decoration:none;word-break:break-all}
+  .src li{padding:4px 0;break-inside:avoid;list-style:none;padding-left:13px;position:relative}
+  .src li::before{content:"›";position:absolute;left:0;color:var(--faint)}
+  footer{padding:30px 0;color:var(--faint);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">vibox · 사람이 하는 검수(Review) 강화</div>
+    <h1>프레임아이오는 사람 검수를<br>실제로 어떻게 하고, 우리는 어떻게</h1>
+    <p class="sub">초점은 <b>사람</b> — 클라이언트·매니저·편집자가 영상을 보고 그 순간에 피드백을 남기고, 주고받고, 새 버전으로 반영해 승인까지 가는 <b>협업 검수 워크플로</b>다. (자동/기술 QC는 이 문서 범위 밖.)</p>
+    <div class="meta">
+      <span class="pill">기준 <b>Frame.io V4</b> (2024.10~, NAB 2025)</span>
+      <span class="pill">근거 <b>vibox 실코드 + 1차 출처</b></span>
+      <span class="pill">대상 브랜치 <b>beta</b></span>
+    </div>
+    <div class="flow">
+      <div class="ttl">사람 검수 라이프사이클</div>
+      <div class="steps">
+        <span class="st"><span class="who">클라/매니저</span>영상 시청</span><span class="arr">→</span>
+        <span class="st">그 프레임에 코멘트·주석</span><span class="arr">→</span>
+        <span class="st"><span class="who">편집자</span>반영 후 새 버전</span><span class="arr">→</span>
+        <span class="st">다시 검수 (미해결 추적)</span><span class="arr">→</span>
+        <span class="st"><span class="who">승인자</span>승인 / 수정요청</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <a href="#a">A. Frame.io 사람 검수</a>
+    <a href="#b">B. 경쟁사</a>
+    <a href="#c">C. vibox 현황</a>
+    <a href="#d">D. 강화 로드맵</a>
+    <a href="#e">E. 더 나은 방안</a>
+    <a href="#z">결론·우선순위</a>
+    <a href="#src">출처</a>
+  </nav>
+
+  <!-- A -->
+  <section id="a">
+    <div class="sh"><span class="no">A</span><h2>Frame.io는 사람 검수를 실제로 어떻게 하나</h2></div>
+    <p class="lead">핵심은 “정확한 위치에 + 정확한 의도를 + 흐르는 워크플로로”. 네 축이다.</p>
+
+    <h3><span class="dot"></span>① 코멘트 · 주석 · 협업 (리뷰어가 피드백을 남기는 방식)</h3>
+    <div class="grid g2">
+      <div class="card">
+        <h4>그 프레임에 정확히</h4>
+        <ul>
+          <li><b>프레임 정확 코멘트</b> — 일시정지 → 입력 → Send. 타임코드에 버블 + 우측 카드. 타임스탬프 표시/숨김 토글</li>
+          <li><b>범위(range) 코멘트</b> — <code>I</code>/<code>O</code> 키 또는 플레이바 노란 bracket 드래그로 구간 지정. 카드 클릭 시 그 구간만 루프 (씬·BGM·자막 지속 피드백)</li>
+          <li><b>주석(그리기)</b> — arrow·rect·line + 자유 펜 + 색상 + undo/redo. 0~1 정규화 좌표 JSON으로 저장(해상도 독립). 평소 숨김, 그 코멘트 볼 때만 프레임 위 오버레이</li>
+          <li><b>앵커 코멘트</b> — 재생 중 화면 임의 지점을 클릭/탭해 그 자리에 핀 고정</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>주고받기 + 정리</h4>
+        <ul>
+          <li><b>@멘션</b>(자동완성 + 알림으로 바로 호출) · <b>답글 스레드</b> · <b>이모지 반응</b>(코멘트 없이 동의/승인) · <b>#해시태그</b> · 코멘트당 첨부 6개</li>
+          <li><b>내부 vs 외부</b> — 내부 코멘트(자물쇠)는 외부 리뷰어에게 안 보임. 팀 논의와 클라 피드백 분리</li>
+          <li><b>패널</b> — 정렬(타임코드/최신/작성자/완료) · 필터(주석·첨부·반응·안읽음·사람) · 본문 검색</li>
+          <li><b>완료 추적</b> — <b>Mark As Complete</b>(=해결) 로 코멘트 체크오프, 미해결 vs 완료 추적 · 코멘트 딥링크 · CSV/XML/JSON 내보내기</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3><span class="dot"></span>② 버전 · 비교 (편집자가 반영하고 리뷰어가 다시 보는 방식)</h3>
+    <div class="grid g2">
+      <div class="card">
+        <h4>버전 스택</h4>
+        <ul>
+          <li>새 버전을 기존 위로 <b>드래그</b>해 수직으로 쌓음(폴더 불필요, 타입 혼합 허용). 기본은 최신 버전 표시</li>
+          <li>상단 <b>버전 번호 클릭</b>으로 과거 버전 탐색, “Manage version stack”에서 순서 재배열</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>버전 비교 4모드</h4>
+        <ul>
+          <li><b>Side-by-side</b> — 좌우 배치, 줌·재생 <b>linked</b>(동시 리뷰) / Unlink 토글</li>
+          <li><b>오버레이 슬라이더</b> — 두 컷을 겹쳐 드러내며 정밀 비교</li>
+          <li><b>픽셀 diff</b> — 오른쪽이 흑백 + 변경 픽셀 하이라이트</li>
+          <li><b>비교 중 코멘트</b> — 각 버전 헤더 클릭 → 올바른 버전을 겨냥해 코멘트</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3><span class="dot"></span>③ 승인 워크플로 + 게스트 리뷰 (결정과 흐름)</h3>
+    <div class="grid g2">
+      <div class="card">
+        <h4>승인 — 역할 분리 + 명시적 결정</h4>
+        <ul>
+          <li><b>Reviewer vs Approver 분리</b> — Reviewer는 코멘트·마크업(완료 표시 가능, 필수는 아님), <b>Approver는 반드시 결정을 내려야 다음 단계로</b></li>
+          <li><b>결정 3종</b> — <b>Approve</b>(완료) / <b>Approved with changes</b>(사소 수정, 재승인 불필요) / <b>Needs Work</b>(새 버전 업로드 → 다시 승인 라운드)</li>
+          <li><b>마감 자동 리마인더</b> — 마감 72h / 24h / 당일 자동 이메일</li>
+          <li>(네이티브는 status 메타데이터 + 자동 Collection으로도 구성)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>게스트 리뷰 (클라이언트)</h4>
+        <ul>
+          <li><b>계정 없이</b> 링크로 시청 · <b>코멘트할 때만 이름/이메일</b>(세션 한정 저장)</li>
+          <li>Share 토글 — Comment / Download on·off, <b>버전 표시 제어</b>(모든 버전 vs 최신만), 자막 표시</li>
+          <li>활동 추적 — Opened / Viewed / Commented / Download 를 이름·시각과 함께 피드로</li>
+          <li>보안(고급, 엔터프라이즈) — 비번·만료, 허용명단만(포워딩 차단), 세션·포렌식 워터마크</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3><span class="dot"></span>④ 실시간 협업</h3>
+    <p class="lead" style="margin-top:0"><b>Presence</b> = 지금 같은 영상을 보는 사람을 아바타로 표시 + 코멘트 빠른 동기화·알림. <span style="color:var(--faint)">(피그마식 라이브 공유 커서·동기 재생은 Frame.io 공식엔 미확인 — 그건 Dropbox Replay·SyncSketch의 영역.)</span></p>
+  </section>
+
+  <!-- B -->
+  <section id="b">
+    <div class="sh"><span class="no">B</span><h2>경쟁사 — 사람 검수의 차별점</h2></div>
+    <p class="lead">시장은 다섯으로 수렴한다 — ① 리뷰어 무제한·무가입 ② 코멘트→태스크/투두 ③ 버전 넘어가도 미해결 유지 ④ 검수 진행 대시보드(누가 끝/미완) ⑤ 라이브 동시검수.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th style="width:14%">도구</th><th style="width:42%">사람 검수 차별 강점</th><th>vibox 관점 시사점</th></tr></thead>
+        <tbody>
+          <tr><td><b>Dropbox Replay</b></td><td><b>라이브 스크리닝룸</b>(동기 재생 + 실시간 드로잉) · <b>코멘트→투두 체크박스</b> · <b>버전 넘어가도 미해결 코멘트 유지</b> · 최광범 NLE</td><td>“버전 carry”·“코멘트→투두”가 즉시 이식 가치 큰 패턴</td></tr>
+          <tr><td><b>Wipster</b></td><td><b>코멘트=자동 태스크</b> · 리뷰어별 Finish 상태 → <b>검수 진행 대시보드</b>(누가 끝/미완 한눈)</td><td>“누가 검수 완료/미완” = vibox 매니저 워크플로에 정확히 맞음</td></tr>
+          <tr><td><b>Ziflow</b></td><td>다단계 승인 라우팅(병렬/순차 스테이지) · 컴플라이언스 <b>체크리스트</b> · 세이프존</td><td>승인 라우팅·체크리스트는 vibox 진짜 빈칸</td></tr>
+          <tr><td><b>Filestage</b></td><td><b>리뷰어 무제한</b> · 무가입 업로드/코멘트 · 진짜 멀티포맷</td><td>“리뷰어 무제한”은 vibox가 R2 egress 0로 <b>구조적으로 이미 보유</b></td></tr>
+          <tr><td><b>SyncSketch</b></td><td>동기 재생 + 프레임 위 <b>실시간 스케치</b>(애니/VFX)</td><td>라이브 드로잉은 큰 베팅(후순위)</td></tr>
+          <tr><td><b>Vimeo Review</b></td><td>무가입 링크 · 상태 라벨 + 버전 히스토리(버전별 노트)</td><td>무가입은 vibox 이미 보유 — 차별점 아님</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- C -->
+  <section id="c">
+    <div class="sh"><span class="no">C</span><h2>vibox 현황 — 사람 검수 관점</h2></div>
+    <p class="lead">vibox는 <b>개인이 영상 보고 코멘트 남기는 “검수 뷰어” 자체는 이미 거의 완성</b>이다. 진짜 공백은 그 위의 <b>협업·워크플로</b> 층이다.</p>
+
+    <h3><span class="dot"></span>이미 있음 <span class="b b-have" style="margin-left:4px">중복 제안 금지</span></h3>
+    <div class="grid g2">
+      <div class="card" style="border-color:#cdebd5">
+        <h4>검수 뷰어 (탄탄)</h4>
+        <ul>
+          <li>프레임 정확 <b>타임코드 코멘트</b> · 상태색 마커(미해결/AI/좋아요/해결)</li>
+          <li><b>프레임 스텝</b>(실측 fps + J/L/←→) · 좌우 코멘트 네비(<code>[</code>/<code>]</code>) · 형제 영상 이동(K/J)</li>
+          <li><b>주석/그리기</b> — bbox(자막교정) + arrow·ellipse·pen, 0~1 정규화, OCR 자막 추출</li>
+          <li><b>답글 스레드</b> · 카테고리(6종)·Kind(feedback/praise/approve) 자동감지+override</li>
+          <li>화질 토글(원본↔HLS 프록시) · 전체화면 몰입 · 순화 편집 · 정렬/필터 · <b>해결 마크</b></li>
+        </ul>
+      </div>
+      <div class="card" style="border-color:#cdebd5">
+        <h4>공유 · 게스트 · 승인</h4>
+        <ul>
+          <li><b>승인 & 버전 핀</b> — <code>kind="approve"</code> + 파일명 v## 추출, 매니저 승인/취소</li>
+          <li><b>공유 링크</b>(preview/full · allowComments/Download · includeFeedback)</li>
+          <li><b>게스트 검수</b> — 무가입·이름만. 모바일 세로=숏폼 몰입 뷰어, 데스크톱/가로=FeedbackModal</li>
+          <li><b>클라별 코멘트 격리</b>(같은 영상 여러 클라 공유 시 분리) · 공개/비공개 전환</li>
+          <li><b>시청 추적</b> — 9초 비콘, 시청률·완료 (누가 봤는지)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card" style="border-color:#fde9c8">
+        <h4><span class="b b-part">부분</span> &nbsp;미완</h4>
+        <ul>
+          <li><b>클라별 격리</b> — 컬럼만 nullable, share→client 매핑(Phase 1.5) 미완</li>
+          <li><b>비번/만료</b> — 신규 링크 생성 UI에서 빠짐(레거시만)</li>
+        </ul>
+      </div>
+      <div class="card" style="border-color:#f6d4d4">
+        <h4><span class="b b-none">없음</span> &nbsp;사람 검수 협업·워크플로 공백</h4>
+        <ul>
+          <li><b>범위(in-out) 코멘트</b> — 단일 프레임만 (주석에 <code>startMs/endMs</code> 있음 → 재활용 가능)</li>
+          <li><b>@멘션 + 알림</b> (push 인프라 <code>pushSubscriptions</code>는 보유) · <b>이모지 반응</b></li>
+          <li><b>코멘트 → 태스크(투두) 체크오프</b> (편집자가 코멘트별 처리완료)</li>
+          <li><b>버전 스택 · 버전 간 비교</b>(side-by-side) — 지금은 파일명 태그뿐</li>
+          <li><b>버전 넘어가도 미해결 코멘트 carry</b> (V1 미해결을 V2에서 추적)</li>
+          <li><b>검수 진행 대시보드</b> (누가 검수 끝/미완·미해결 N건)</li>
+          <li><b>승인 역할 분리·명시적 “수정요청” 결정</b> — 지금은 ‘승인’만, Needs-Work/조건부승인·Reviewer/Approver 없음</li>
+          <li><b>마감 기반 리마인더</b> · <b>presence/읽음 표시</b> · <b>라이브 동시검수</b> · <b>코멘트 내보내기</b></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- D -->
+  <section id="d">
+    <div class="sh"><span class="no">D</span><h2>우리는 어떻게 강화할까 — 로드맵</h2></div>
+    <p class="lead">원칙: <code>FeedbackModal</code> + <code>comments</code> 스키마 + 공유링크 위에 <b>추가형</b>으로. <code>annotation.startMs/endMs</code>, <code>pushSubscriptions</code>, <code>clientVideos.status</code>·<code>resolvedAt</code>·<code>kind="approve"</code> 는 <b>이미 깔린 레일</b> — 재활용 우선.</p>
+
+    <div class="phase-h p1"><span class="tag">Phase 1</span><span class="ttl">코멘트·협업 즉시 강화 (기존 위에 노출·연결)</span><span class="ln"></span></div>
+    <div class="item"><div class="top"><span class="name">1-1. 범위(in-out) 코멘트</span><span class="b b-mid">난이도 중</span><span class="b b-val">가치 높</span></div><div class="body">스키마 0 — annotation에 <code>startMs/endMs</code> 이미 존재. <code>I</code>/<code>O</code> 키로 구간 잡고 코멘트, 카드 클릭 시 그 구간만 루프. <em>BGM·자막 지속·씬 단위 피드백</em>에 바로 실효.</div></div>
+    <div class="item"><div class="top"><span class="name">1-2. @멘션 + 알림</span><span class="b b-mid">난이도 중</span><span class="b b-val">가치 높</span></div><div class="body"><code>pushSubscriptions</code> 보유. 코멘트 <code>@이름</code> 파싱 → 해당 매니저/파트너/클라에 web push. <em>“이 부분 확인해주세요”가 즉시 도달</em> — 검수가 핑퐁이 됨.</div></div>
+    <div class="item"><div class="top"><span class="name">1-3. 이모지 반응</span><span class="b b-low">난이도 낮</span><span class="b b-val">가치 중</span></div><div class="body"><code>comment_reactions(commentId, userId, emoji)</code> 테이블(<code>IF NOT EXISTS</code>) + 고정 셋. 코멘트 없이 동의/승인 표현 → 코멘트 노이즈↓, 가벼운 합의.</div></div>
+    <div class="item"><div class="top"><span class="name">1-4. 코멘트 → 태스크 체크오프</span><span class="b b-mid">난이도 중</span><span class="b b-val">가치 중~높</span></div><div class="body">편집자(파트너)가 코멘트별 체크박스로 “처리 완료”. <code>resolvedAt</code> UI화 또는 <code>taskDone</code> 플래그. <em>“미해결만 보기”와 합쳐 편집자의 수정 체크리스트</em>가 됨.</div></div>
+    <div class="item"><div class="top"><span class="name">1-5. 코멘트 내보내기(CSV/EDL)</span><span class="b b-low">난이도 낮</span><span class="b b-val">가치 중</span></div><div class="body"><code>/api/comments?format=csv|edl</code>. 타임코드+카테고리+본문+해결상태. EDL은 크릿/Premiere 마커 임포트의 징검다리(Phase 3 포석).</div></div>
+
+    <div class="phase-h p2"><span class="tag">Phase 2</span><span class="ttl">버전·승인 워크플로 격상 (개인 검수 → 팀 검수)</span><span class="ln"></span></div>
+    <div class="item"><div class="top"><span class="name">2-1. 검수 진행 대시보드</span><span class="b b-mid">난이도 중</span><span class="b b-val">가치 높</span><span class="star">★ Wipster 빈칸</span></div><div class="body">프로젝트/폴더 단위 “리뷰어별 시청·미해결 N건·승인 여부” 롤업. <code>clientVideos.status</code>·<code>shareViews</code>·<code>resolvedAt</code>·<code>kind="approve"</code> 집계 — <em>데이터는 이미 다 있음, 집계 뷰만</em>. 매니저가 “어느 클라가 아직 안 봤나”를 한 화면에.</div></div>
+    <div class="item"><div class="top"><span class="name">2-2. 버전 넘어가도 미해결 코멘트 carry</span><span class="b b-mid">난이도 중</span><span class="b b-val">가치 높</span><span class="star">★ Replay 패턴</span></div><div class="body">같은 폴더 v## 시리즈에서 V1 미해결을 V2 검수 화면 “이전 버전 미해결” 섹션으로. <code>versionTag</code> + <code>filePath</code> 형제 조회. <em>새 버전이 옛 지적을 반영했는지 추적</em> — 검수가 “끝났는지” 판단 가능.</div></div>
+    <div class="item"><div class="top"><span class="name">2-3. 승인 워크플로 격상</span><span class="b b-mid">난이도 중</span><span class="b b-val">가치 높</span></div><div class="body">지금은 ‘승인’만. <b>Reviewer/Approver 역할 + 명시적 결정 3종(승인/조건부승인/<b>수정요청</b>)</b> 추가. “수정요청”은 자동으로 미해결 carry(2-2)와 묶임. (선택) 마감일 + 리마인더는 비봇 알림에 얹기.</div></div>
+    <div class="item"><div class="top"><span class="name">2-4. 버전 비교(side-by-side)</span><span class="b b-high">난이도 중~높</span><span class="b b-val">가치 중</span></div><div class="body">같은 폴더 두 영상 좌우 + 재생·줌 linked. 오버레이/픽셀 diff는 후순위. FeedbackModal을 2-up 그리드로, HLS 두 인스턴스 동기 seek.</div></div>
+
+    <div class="phase-h p3"><span class="tag">Phase 3</span><span class="ttl">실시간·심화 (해자)</span><span class="ln"></span></div>
+    <div class="item"><div class="top"><span class="name">3-1. presence · 읽음 표시</span><span class="b b-mid">난이도 중</span><span class="b b-val">가치 중~높</span></div><div class="body">“지금 N명이 이 버전 보는 중” · 코멘트 읽음 표시(가벼운 폴링/SSE). 게스트 링크에서도 신뢰감. 라이브 동시검수의 전초.</div></div>
+    <div class="item"><div class="top"><span class="name">3-2. 라이브 동시검수(같이 보기)</span><span class="b b-high">난이도 높</span><span class="b b-val">가치 높</span><span class="star">★ 큰 베팅</span></div><div class="body">동기 재생 + 같은 화면을 매니저·클라가 동시에(Replay/SyncSketch 영역). presence 수요 확인 후. 원격 클라 미팅에 강력.</div></div>
+    <div class="item"><div class="top"><span class="name">3-3. 모바일·클라 검수 UX 심화</span><span class="b b-mid">난이도 중</span><span class="b b-val">가치 중</span></div><div class="body">앵커 코멘트(임의 지점 핀)·핀치줌·세이프존 가이드를 <code>ShortformReview</code>에. <em>클라가 폰으로 먼저 본다</em>는 현실에 맞춤.</div></div>
+    <div class="item"><div class="top"><span class="name">3-4. AI 코멘트 요약 (검수 보조)</span><span class="b b-mid">난이도 낮~중</span><span class="b b-val">가치 중</span></div><div class="body">“이 버전 피드백 3줄 요약 + 중복 병합” 버튼(Claude 1콜). 사람 검수를 대체가 아니라 <em>정리해주는</em> 보조. 비봇 audit DNA와 일치.</div></div>
+  </section>
+
+  <!-- E -->
+  <section id="e">
+    <div class="sh"><span class="no">E</span><h2>더 나은 방안 — 모방 이상의 차별화</h2></div>
+    <p class="lead">Frame.io를 베끼는 것 이상으로, vibox 강점을 사람 검수에 레버리지하는 방향.</p>
+    <div class="strengths">
+      <span>영상제작사 도그푸딩(비모 1호)</span><span>매니저↔파트너↔클라 역할·격리 보유</span><span>한국어·국내 워크플로</span><span>R2 egress 0(무제한 시청)</span><span>크릿 자체 NLE</span><span>비봇 능동 운영 문화</span>
+    </div>
+    <div class="idea"><h4>E-1. 검수 진행 대시보드 + 코멘트→태스크 (데이터 이미 보유)</h4><p>Wipster·Replay가 셀링하는 “누가 끝/미완·미해결 N건”을 vibox는 <b>신규 인프라 0</b>로 만들 수 있다(<code>status</code>·<code>resolvedAt</code>·<code>approve</code> 집계). 비봇 “능동 운영자”(미해결 D+N 알림·카톡 운영방 도달)와 묶으면 <b>검수가 알아서 굴러가는</b> 운영이 된다 — Frame.io엔 없는 결합.</p></div>
+    <div class="idea"><h4>E-2. 클라이언트 입장에서 “세상에서 제일 쉬운 검수”</h4><p>Frame.io도 클라에겐 여전히 어렵다. vibox는 <b>무가입 + 모바일 세로 몰입(재생=깨끗/정지=등장) + 한국어</b>로 “링크 받고 폰으로 보다가 톡 치듯 코멘트”를 극단까지. 클라 검수 전환율이 곧 제품력.</p></div>
+    <div class="idea"><h4>E-3. 검수 → 편집 타임라인(크릿) 엔드투엔드</h4><p>Frame.io 최강 해자(코멘트가 Premiere 타임라인 마커로)를 <b>Adobe 종속 없이 자체 NLE로</b> 복제. vibox(검수)+크릿(편집)+비모ERP(프로젝트) 삼각이 닫힌 루프. 1-5 EDL export가 그 시작.</p></div>
+    <div class="idea"><h4>E-4. 모바일 세로 몰입 검수 심화</h4><p>Frame.io조차 <b>전용 세로 모드 근거 없음</b>. vibox <code>ShortformReview</code>가 정확히 그 빈칸 — 앵커 코멘트·핀치줌·세이프존을 모바일에서 견고히 = 경쟁사 미보유 영역. 숏폼 시대 도그푸딩 차별점.</p></div>
+    <div class="idea"><h4>E-5. “개인 검수”가 아니라 “팀 검수” 워크플로</h4><p>vibox는 이미 매니저·파트너·클라 <b>역할과 격리</b>를 갖췄다. 여기에 승인 역할 분리(2-3) + 대시보드(2-1) + carry(2-2)를 얹으면, 단순 코멘트 도구가 아니라 <b>“검수 라운드”가 돌아가는 워크플로</b>가 된다 — 국내 영상사 실제 검수 흐름(클라 1차→수정→2차→OK)에 정확히 맞음.</p></div>
+  </section>
+
+  <!-- Conclusion -->
+  <section id="z">
+    <div class="sh"><span class="no">▶</span><h2>결론 — 다음 작업 우선순위 (사람 검수)</h2></div>
+    <ol class="prio">
+      <li><b>[즉시·1순위] 범위 코멘트(1-1) + @멘션 알림(1-2) + 이모지 반응(1-3)</b> — 코멘트 협업의 즉시 체감. annotation <code>startMs/endMs</code>·<code>pushSubscriptions</code> 재활용으로 스키마 거의 0.</li>
+      <li><b>[팀 검수 핵심] 검수 진행 대시보드(2-1) + 버전 carry(2-2)</b> — 데이터는 이미 다 있고 집계/UI만. 매니저가 “누가 검수했나·뭐가 미해결인가”를 한눈에.</li>
+      <li><b>[승인] 승인 워크플로 격상(2-3)</b> — ‘승인’만 있는 현재에 <b>‘수정요청’ 명시 결정 + 역할</b> 추가. 검수가 “라운드”로 굴러감.</li>
+      <li><b>[보조] 코멘트→태스크(1-4) + 코멘트 요약(3-4) + 내보내기(1-5)</b>.</li>
+      <li><b>[심화·야심] 버전 비교(2-4) → presence(3-1) → 라이브 동시검수(3-2) → 크릿 연결.</b></li>
+    </ol>
+    <div class="callout" style="margin-top:18px"><b>핵심 통찰:</b> vibox는 “개인이 코멘트 남기는 검수 뷰어”는 이미 강하다. 다음 베팅은 그 위의 <b>협업·워크플로 층</b> — ① 코멘트 협업(범위·멘션·반응) ② 팀 검수(대시보드·버전 carry·승인 라운드). 둘 다 <b>이미 깔린 데이터/인프라를 꺼내 엮는</b> 작업이라 가성비가 높다.</div>
+  </section>
+
+  <!-- Sources -->
+  <section id="src" style="border-bottom:none">
+    <div class="sh"><span class="no" style="background:#6b3410">#</span><h2>핵심 출처</h2></div>
+    <ul class="src">
+      <li>Frame.io V4 KC — Commenting on your media · <a href="https://help.frame.io/en/articles/9105251-commenting-on-your-media">help.frame.io/9105251</a></li>
+      <li>Frame.io V4 KC — Comments Panel Overview · <a href="https://help.frame.io/en/articles/9105278-comments-panel-overview">help.frame.io/9105278</a></li>
+      <li>Frame.io V4 KC — Version Stacking · <a href="https://help.frame.io/en/articles/9101068-version-stacking">help.frame.io/9101068</a></li>
+      <li>Frame.io V4 KC — Comparison Viewer · <a href="https://help.frame.io/en/articles/9952618-comparison-viewer">help.frame.io/9952618</a></li>
+      <li>Frame.io V4 KC — Shares · <a href="https://help.frame.io/en/articles/9105232-shares-in-frame-io">help.frame.io/9105232</a></li>
+      <li>Adobe Workfront — Unified review &amp; approval(Reviewer/Approver·결정 3종) · <a href="https://experienceleague.adobe.com/en/docs/workfront/using/review-and-approve-work/get-started-with-unified-approvals">experienceleague.adobe.com</a></li>
+      <li>Frame.io Developer — Working with Annotations(JSON·0~1 좌표) · <a href="https://developer.frame.io/docs/workflows-assets/working-with-annotations">developer.frame.io</a></li>
+      <li>Frame.io Blog — Presence·View History · <a href="https://blog.frame.io/2018/06/13/presence-search-history/">blog.frame.io/2018-06-13</a></li>
+      <li>경쟁사: Dropbox Replay · Wipster · Ziflow · Filestage · SyncSketch · Vimeo Review 공식 기능 페이지</li>
+      <li>vibox 실코드: <code>FeedbackModal.tsx</code> · <code>ShortformReview.tsx</code> · <code>lib/comments/annotation.ts·detect.ts</code> · <code>lib/db/schema.ts</code> · <code>app/api/comments·shares·s/[token]</code></li>
+    </ul>
+  </section>
+
+  <footer>vibox 사람 검수 강화 설계 · 멀티에이전트 리서치(Frame.io·경쟁사) + vibox 코드 실측 합성 · 작성 2026-06-25</footer>
+</div>
+</body>
+</html>

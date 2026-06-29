@@ -1,0 +1,749 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>vibox 모달 디자인</title>
+<style>
+:root{--bg:#fafafa;--card:#fff;--bd:#e7e7e7;--tx:#1a1a1a;--mut:#666;--faint:#999;--accent:#e85008;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo",sans-serif}
+.wrap{max-width:920px;margin:0 auto;padding:22px 20px 90px}
+.top{display:flex;align-items:center;gap:12px;position:sticky;top:0;background:var(--bg);padding:10px 0;z-index:5;border-bottom:1px solid var(--bd);margin-bottom:18px}
+.top h1{font-size:16px;margin:0;font-weight:700}
+.top .all{margin-left:auto;background:var(--tx);color:#fff;border:none;border-radius:9px;padding:8px 15px;font-size:13px;font-weight:600;cursor:pointer}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:14px}
+.chead{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.cn{flex:none;width:30px;height:30px;border-radius:9px;background:var(--accent);color:#fff;font-size:15px;font-weight:800;display:grid;place-items:center}
+.chead h2{font-size:16px;margin:0;letter-spacing:-.01em;flex:1}
+.replay{flex:none;background:var(--accent);color:#fff;border:none;border-radius:8px;width:34px;height:30px;font-size:13px;cursor:pointer}
+.stage{position:relative;display:flex;min-height:300px;max-height:580px;overflow:auto;border-radius:12px;
+ background:repeating-conic-gradient(#eee 0% 25%,#f4f4f4 0% 50%) 0/22px 22px;padding:26px}
+.stage.dark{background:#0c0c0d}
+.bd{position:absolute;inset:0;background:rgba(0,0,0,.5);border-radius:12px}
+.panel{position:relative;z-index:2;max-width:100%}
+@keyframes dialog-in{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes backdrop-in{from{opacity:0}to{opacity:1}}
+@keyframes toast-in{0%{opacity:0;transform:translateY(40px) scale(.3)}50%{opacity:1;transform:translateY(-6px) scale(1.1,.92)}70%{transform:translateY(2px) scale(.96,1.04)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes ctxmenu-in{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+@keyframes fade-in{from{opacity:0}to{opacity:1}}
+@keyframes pa-pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+@keyframes slideup{0%{transform:translateY(20px);opacity:0}100%{transform:translateY(0);opacity:1}}
+</style></head><body><div class="wrap">
+<div class="top"><h1>vibox 모달 · 팝업 — 남은 10 · 완료분(ConfirmDialog·ConflictDialog·PromptDialog·업로드 도크·Toast·ShareDialog) 제외</h1><button class="all" onclick="replayAll()">전체 재생</button></div>
+<section class="card">
+  <div class="chead"><span class="cn">1</span><h2>공용 모달 셸 (Modal)</h2><button class="replay" onclick="replayStage(this)">▶</button></div>
+  <div class="stage " style="align-items:center;justify-content:center">
+    <div class="bd" data-anim="backdrop-in 200ms ease-out both"></div>
+    <div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div role="dialog" aria-modal="true" aria-labelledby="modal-title" tabindex="-1" style="position:relative;background:#ffffff;border-radius:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);width:100%;max-width:672px;max-height:100%;overflow:hidden;display:flex;flex-direction:column;outline:none;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;">
+  <!-- 헤더: px-5 py-3.5, border-b border #ececec -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #ececec;">
+    <div id="modal-title" style="font-size:15px;font-weight:700;color:#111111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">프로젝트 설정</div>
+    <button title="닫기 (Esc)" style="display:flex;align-items:center;justify-content:center;padding:4px;border:none;background:transparent;border-radius:6px;color:#666666;cursor:pointer;flex-shrink:0;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+  </div>
+  <!-- 본문: flex-1 overflow-auto (호출부 children) -->
+  <div style="flex:1;min-height:0;overflow:auto;">
+    <div style="padding:20px;">
+      <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#555555;">이 프로젝트의 이름과 공유 설정을 변경할 수 있습니다. 변경 사항은 즉시 모든 참여자에게 적용됩니다.</p>
+      <label style="display:block;font-size:13px;font-weight:600;color:#111111;margin-bottom:6px;">프로젝트 이름</label>
+      <input type="text" value="2026 브랜드 필름 검수" style="width:100%;box-sizing:border-box;padding:9px 12px;font-size:14px;color:#111111;background:#ffffff;border:1px solid #d4d4d4;border-radius:8px;outline:none;margin-bottom:4px;" />
+      <p style="margin:6px 0 0;font-size:12px;color:#767676;">최대 60자까지 입력할 수 있습니다.</p>
+    </div>
+    <!-- 본문 하단 액션 영역 (호출부 패턴 예시) -->
+    <div style="display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid #ececec;background:#fafafa;">
+      <button style="padding:8px 16px;font-size:14px;font-weight:600;color:#555555;background:#ffffff;border:1px solid #ececec;border-radius:8px;cursor:pointer;">취소</button>
+      <button style="padding:8px 16px;font-size:14px;font-weight:600;color:#ffffff;background:#e85008;border:1px solid #e85008;border-radius:8px;cursor:pointer;">저장</button>
+    </div>
+  </div>
+</div></div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="chead"><span class="cn">2</span><h2>이동 다이얼로그(MoveDialog)</h2><button class="replay" onclick="replayStage(this)">▶</button></div>
+  <div class="stage " style="align-items:center;justify-content:center">
+    <div class="bd" data-anim="backdrop-in 200ms ease-out both"></div>
+    <div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:448px;background:#ffffff;border-radius:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);overflow:hidden;display:flex;flex-direction:column;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111111;">
+  <!-- header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #ececec;">
+    <div style="display:flex;align-items:center;gap:8px;font-size:14px;line-height:20px;font-weight:700;color:#111111;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8L22 12L18 16"/><path d="M2 12H22"/></svg>
+      <span>&quot;기획안_최종.pdf&quot; 이동</span>
+    </div>
+    <button style="display:flex;padding:4px;border:none;background:transparent;border-radius:4px;color:#666666;cursor:pointer;" title="닫기 (Esc)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+  </div>
+
+  <!-- body -->
+  <div style="padding:20px;">
+    <div style="font-size:12px;line-height:16px;color:#6b6b6b;margin-bottom:8px;">대상 폴더</div>
+
+    <!-- breadcrumb -->
+    <div style="display:flex;align-items:center;gap:4px;font-size:13px;line-height:18px;margin-bottom:12px;flex-wrap:wrap;">
+      <button style="border:none;background:transparent;color:#555555;cursor:pointer;padding:0;">Vibox</button>
+      <span style="display:flex;align-items:center;gap:4px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        <span style="color:#111111;font-weight:600;">2026 프로젝트</span>
+      </span>
+    </div>
+
+    <!-- folder list -->
+    <div style="background:#fafafa;border:1px solid #ececec;border-radius:6px;max-height:260px;overflow-y:auto;margin-bottom:16px;">
+      <button style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;line-height:18px;color:#555555;background:transparent;border:none;border-bottom:1px solid #ececec;cursor:pointer;text-align:left;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        상위 폴더로
+      </button>
+      <button style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;line-height:18px;color:#111111;background:transparent;border:none;border-bottom:1px solid #f5f5f5;cursor:pointer;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+        <span style="flex:1;text-align:left;">촬영 원본</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+      <button style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;line-height:18px;color:#111111;background:transparent;border:none;border-bottom:1px solid #f5f5f5;cursor:pointer;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+        <span style="flex:1;text-align:left;">편집본 v2</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+      <button style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;line-height:18px;color:#111111;background:transparent;border:none;border-bottom:1px solid #f5f5f5;cursor:pointer;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+        <span style="flex:1;text-align:left;">납품 완료</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+    </div>
+
+    <!-- target line -->
+    <div style="font-size:12px;line-height:16px;color:#666666;margin-bottom:16px;">
+      이동 대상: <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#111111;">/2026 프로젝트</span>
+    </div>
+
+    <!-- actions -->
+    <div style="display:flex;gap:8px;">
+      <button style="flex:1;padding:8px 16px;font-size:13px;line-height:18px;font-weight:500;color:#555555;background:transparent;border:none;border-radius:6px;cursor:pointer;">취소</button>
+      <button style="flex:1;padding:8px 0;font-size:13px;line-height:18px;font-weight:600;color:#ffffff;background:#111111;border:none;border-radius:6px;cursor:pointer;">여기로 이동</button>
+    </div>
+  </div>
+</div></div>
+  </div>
+</section>
+<section class="card">
+  <div class="chead"><span class="cn">3</span><h2>미리보기 모달(PreviewModal)</h2><button class="replay" onclick="replayStage(this)">▶</button></div>
+  <div class="stage " style="align-items:center;justify-content:center">
+    <div class="bd" data-anim="backdrop-in 200ms ease-out both"></div>
+    <div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;width:880px;max-width:90vw;background:#ffffff;border-radius:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);overflow:hidden;display:flex;flex-direction:column;color:#111111;">
+  <!-- 제목 바 -->
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;border-bottom:1px solid #ececec;">
+    <div style="font-size:14px;line-height:20px;font-weight:700;color:#111111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">2025_브랜드필름_v3_final.mp4</div>
+    <button aria-label="닫기" title="닫기 (Esc)" style="flex-shrink:0;padding:4px;border:none;background:transparent;border-radius:4px;color:#666666;cursor:pointer;display:grid;place-items:center;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <!-- 본문: 영상(검은 배경 + 컨트롤) -->
+  <div style="background:#000000;display:grid;place-items:center;position:relative;">
+    <div style="width:100%;aspect-ratio:16/9;max-height:520px;background:radial-gradient(120% 120% at 50% 35%,#2a2a2a 0%,#0d0d0d 70%);position:relative;display:grid;place-items:center;">
+      <div style="width:62px;height:62px;border-radius:999px;background:rgba(255,255,255,0.12);display:grid;place-items:center;backdrop-filter:blur(2px);">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="#ffffff"><polygon points="6,4 20,12 6,20"/></svg>
+      </div>
+      <!-- 네이티브 컨트롤 흉내 -->
+      <div style="position:absolute;left:0;right:0;bottom:0;height:38px;background:linear-gradient(to top,rgba(0,0,0,0.7),transparent);display:flex;align-items:center;gap:10px;padding:0 14px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#ffffff"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>
+        <span style="font-size:11px;color:#ffffff;font-variant-numeric:tabular-nums;">0:14</span>
+        <div style="flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,0.3);position:relative;"><div style="position:absolute;left:0;top:0;bottom:0;width:22%;background:#e85008;border-radius:2px;"></div></div>
+        <span style="font-size:11px;color:rgba(255,255,255,0.7);font-variant-numeric:tabular-nums;">1:08</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 푸터: 검수 확장 + 네비 + 카운터 + 키 힌트 -->
+  <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;border-top:1px solid #ececec;background:#fafafa;font-size:11px;line-height:16px;color:#6b6b6b;">
+    <button type="button" title="이 영상을 검수 화면으로 (댓글 패널과 함께)" style="display:inline-flex;align-items:center;gap:6px;background:#e85008;color:#ffffff;padding:6px 12px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      검수로 확장
+    </button>
+    <button type="button" title="이전 (←)" style="width:28px;height:28px;display:grid;place-items:center;border:none;background:transparent;border-radius:4px;color:#6b6b6b;cursor:pointer;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button type="button" title="다음 (→)" style="width:28px;height:28px;display:grid;place-items:center;border:none;background:transparent;border-radius:4px;color:#6b6b6b;cursor:pointer;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">3 / 12</span>
+    <span style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+      <kbd style="padding:2px 6px;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;font-family:ui-monospace,Menlo,monospace;">&larr;</kbd>
+      <kbd style="padding:2px 6px;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;font-family:ui-monospace,Menlo,monospace;">&rarr;</kbd>
+      <span>전환</span>
+      <span style="opacity:0.5;">&middot;</span>
+      <kbd style="padding:2px 6px;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;font-family:ui-monospace,Menlo,monospace;">Space</kbd>
+      <kbd style="padding:2px 6px;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;font-family:ui-monospace,Menlo,monospace;">Esc</kbd>
+      <span>닫기</span>
+    </span>
+  </div>
+</div></div>
+  </div>
+</section>
+<section class="card">
+  <div class="chead"><span class="cn">4</span><h2>검수 풀스크린(FeedbackModal·다크)</h2><button class="replay" onclick="replayStage(this)">▶</button></div>
+  <div class="stage dark" style="align-items:center;justify-content:center">
+    
+    <div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:980px;max-width:100%;height:600px;display:flex;flex-direction:column;background:#0f172a;border-radius:12px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.45);font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#0f172a">
+
+  <!-- 상단 헤더 바 (흰색) -->
+  <div style="flex:none;background:#ffffff;border-bottom:1px solid #e2e8f0;padding:10px 16px;display:flex;align-items:center;gap:12px">
+    <button style="width:32px;height:32px;border:none;background:transparent;border-radius:8px;display:grid;place-items:center;color:#475569;cursor:pointer;margin-left:-4px">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </button>
+    <span style="font-size:16px;font-weight:800;letter-spacing:-.02em;color:#0f172a">vi<span style="color:#e85008">.</span>box</span>
+    <nav style="display:flex;align-items:center;gap:6px;font-size:14px;min-width:0">
+      <span style="color:#64748b">캠페인_3월</span>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg>
+      <span style="font-weight:600;color:#0f172a">브랜드필름_최종본</span>
+    </nav>
+    <span style="display:inline-flex;align-items:center;font-size:12px;font-weight:700;color:#e85008;background:#fef0e8;padding:2px 8px;border-radius:6px">v3</span>
+    <span style="font-size:12px;color:#64748b">올린 사람 <span style="font-weight:600;color:#334155">김편집</span></span>
+
+    <div style="flex:1"></div>
+
+    <button title="댓글 패널 접기" style="width:32px;height:32px;border:none;background:transparent;border-radius:6px;display:grid;place-items:center;color:#94a3b8;cursor:pointer">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/><path d="M21 9l-3 3 3 3"/></svg>
+    </button>
+
+    <button style="display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:#334155;background:#fff;border:1px solid #e2e8f0;padding:6px 10px;border-radius:6px;cursor:pointer">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      수정 요청
+    </button>
+    <button style="display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:#fff;background:#059669;padding:6px 10px;border-radius:6px;border:none;cursor:pointer">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6L9 17l-5-5"/></svg>
+      승인
+    </button>
+    <div style="display:flex;align-items:center;gap:2px;border-left:1px solid #e2e8f0;padding-left:8px;color:#64748b">
+      <span style="padding:6px;border-radius:4px;display:grid;place-items:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 15l-6-6-6 6"/></svg></span>
+      <span style="padding:6px;border-radius:4px;display:grid;place-items:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></span>
+    </div>
+  </div>
+
+  <!-- 본문: 좌 비디오 / 우 패널 -->
+  <div style="display:flex;flex:1;min-height:0">
+
+    <!-- 좌: 비디오 무대 + 컨트롤 -->
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:#000">
+      <!-- 무대 -->
+      <div style="position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:#000;overflow:hidden">
+        <!-- 샘플 자막 교정 주석(bbox + 라벨) -->
+        <div style="position:absolute;left:30%;top:62%;width:40%;height:13%;border:2.5px solid #e85008;border-radius:4px;box-shadow:0 0 0 1px rgba(255,255,255,.4),0 0 12px rgba(232,80,8,.4)"></div>
+        <div style="position:absolute;left:50%;top:62%;transform:translate(-50%,calc(-100% - 8px))">
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;white-space:nowrap;color:#fff;background:#e85008">"되요" → "돼요"</span>
+        </div>
+        <!-- 일시정지 중앙 재생 오버레이 -->
+        <div style="position:absolute;inset:0;display:grid;place-items:center;pointer-events:none">
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(0,0,0,.5);display:grid;place-items:center;color:#fff">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- 컨트롤 바 -->
+      <div style="flex:none;background:#0b0f17;border-top:1px solid #1e293b;padding:10px 16px 12px">
+        <!-- Row1: 시크바 -->
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-family:ui-monospace,monospace;font-size:14px;font-weight:600;color:#cbd5e1">00:24</span>
+          <div style="position:relative;flex:1;height:18px;display:flex;align-items:center">
+            <div style="position:absolute;left:0;right:0;height:6px;border-radius:9999px;background:#334155"></div>
+            <div style="position:absolute;left:0;height:6px;width:34%;border-radius:9999px;background:#e85008"></div>
+            <!-- 마커: 미해결(주황)·AI(보라)·해결(회색)·좋아요(핑크) -->
+            <span style="position:absolute;left:18%;width:9px;height:9px;background:#e85008;border-radius:2px;transform:translate(-50%,0) rotate(45deg)"></span>
+            <span style="position:absolute;left:46%;width:9px;height:9px;background:#7c3aed;border-radius:2px;transform:translate(-50%,0) rotate(45deg)"></span>
+            <span style="position:absolute;left:62%;width:9px;height:9px;background:#94a3b8;border-radius:2px;transform:translate(-50%,0) rotate(45deg)"></span>
+            <span style="position:absolute;left:80%;width:9px;height:9px;background:#16a34a;border-radius:2px;transform:translate(-50%,0) rotate(45deg)"></span>
+            <!-- 플레이헤드 -->
+            <span style="position:absolute;left:34%;width:15px;height:15px;border-radius:50%;background:#fff;transform:translateX(-50%);box-shadow:0 0 0 2px #e85008,0 1px 5px rgba(0,0,0,.6)"></span>
+          </div>
+          <span style="font-family:ui-monospace,monospace;font-size:14px;color:#64748b">01:45</span>
+        </div>
+
+        <!-- Row2: 컨트롤 -->
+        <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+          <div style="display:flex;align-items:center;gap:4px">
+            <button style="width:36px;height:36px;border:none;background:transparent;border-radius:9px;display:grid;place-items:center;color:#cbd5e1;cursor:pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 20L9 12l10-8v16zM5 19V5H7v14H5z"/></svg></button>
+            <button style="width:44px;height:44px;border:none;border-radius:50%;background:#e85008;color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 4px 14px rgba(232,80,8,.4)"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+            <button style="width:36px;height:36px;border:none;background:transparent;border-radius:9px;display:grid;place-items:center;color:#cbd5e1;cursor:pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l10 8-10 8V4zm12 1v14h2V5h-2z"/></svg></button>
+          </div>
+          <div style="width:1px;height:24px;background:#1e293b;margin:0 4px"></div>
+          <div style="display:flex;align-items:center">
+            <button style="width:34px;height:34px;border:none;background:transparent;border-radius:9px;display:grid;place-items:center;color:#cbd5e1;cursor:pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <button style="position:relative;width:34px;height:34px;border:none;background:transparent;border-radius:9px;display:grid;place-items:center;color:#cbd5e1;cursor:pointer">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span style="position:absolute;top:2px;right:0;min-width:14px;height:14px;padding:0 4px;border-radius:9999px;background:#e85008;color:#fff;font-size:8.5px;font-weight:700;display:grid;place-items:center">3</span>
+            </button>
+            <button style="width:34px;height:34px;border:none;background:transparent;border-radius:9px;display:grid;place-items:center;color:#cbd5e1;cursor:pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg></button>
+          </div>
+          <div style="flex:1"></div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <button style="width:36px;height:36px;border:none;background:transparent;border-radius:9px;display:grid;place-items:center;color:#94a3b8;cursor:pointer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/></svg></button>
+            <span style="position:relative;display:inline-block">
+              <button style="width:36px;height:36px;border:none;background:transparent;border-radius:9px;display:grid;place-items:center;color:#94a3b8;cursor:pointer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.2.61.78 1 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+              <span style="position:absolute;top:-2px;right:-4px;padding:1px 4px;border-radius:3px;font-size:8px;font-weight:700;line-height:1;background:#64748b;color:#fff;box-shadow:0 0 0 1.5px #0b0f17">저화질</span>
+            </span>
+            <button style="width:36px;height:36px;border:none;background:transparent;border-radius:9px;display:grid;place-items:center;color:#94a3b8;cursor:pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 우: 댓글 패널 (흰색) -->
+    <div style="width:360px;flex:none;border-left:1px solid #e2e8f0;display:flex;flex-direction:column;background:#fff;min-height:0">
+      <!-- 패널 헤더 -->
+      <div style="padding:12px 16px;background:#fff;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:6px">
+        <span style="font-size:14px;font-weight:600;color:#475569">미해결 <span style="color:#e85008;font-weight:700">3</span></span>
+        <div style="flex:1"></div>
+        <button style="width:28px;height:28px;border:none;background:transparent;border-radius:8px;display:grid;place-items:center;color:#94a3b8;cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg></button>
+        <button style="width:28px;height:28px;border:none;background:transparent;border-radius:8px;display:grid;place-items:center;color:#94a3b8;cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        <button style="width:28px;height:28px;border:none;background:transparent;border-radius:8px;display:grid;place-items:center;color:#94a3b8;cursor:pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82M4.6 9a1.65 1.65 0 0 0-.33-1.82"/></svg></button>
+      </div>
+
+      <!-- 코멘트 리스트 -->
+      <div style="flex:1;overflow-y:auto;padding:4px 0">
+
+        <!-- 카드1: 사람 미해결 -->
+        <div style="display:flex;gap:10px;padding:12px 16px">
+          <span style="flex:none;width:20px;height:20px;border-radius:50%;border:2px solid #cbd5e1;margin-top:2px"></span>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+              <span style="font-family:ui-monospace,monospace;font-size:10.5px;font-weight:800;padding:2px 6px;border-radius:4px;color:#e85008;background:#fef0e8">00:24</span>
+              <span style="width:18px;height:18px;border-radius:50%;background:#5b8def;color:#fff;font-size:8.5px;font-weight:700;display:grid;place-items:center">정</span>
+              <span style="font-size:12px;font-weight:600;color:#64748b">정매니저</span>
+              <span style="font-size:10px;font-weight:700;letter-spacing:.06em;padding:1px 4px;border-radius:4px;background:#f3e8ff;color:#7e22ce">매니저</span>
+            </div>
+            <div style="font-size:15px;line-height:1.6;color:#0f172a">이 컷 자막 위치가 인물 얼굴을 가려요. 살짝 아래로 내려주세요.</div>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
+              <span style="font-size:12px;font-weight:600;color:#94a3b8;display:inline-flex;align-items:center;gap:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 10l5 5-5 5"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg>답글 1</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 카드2: AI 자막 교정 -->
+        <div style="display:flex;gap:10px;padding:12px 16px">
+          <span style="flex:none;width:20px;height:20px;border-radius:50%;border:2px solid #cbd5e1;margin-top:2px"></span>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+              <span style="font-family:ui-monospace,monospace;font-size:10.5px;font-weight:800;padding:2px 6px;border-radius:4px;color:#7c3aed;background:#f3edff">00:58</span>
+              <span style="width:18px;height:18px;border-radius:50%;background:#7c3aed;display:grid;place-items:center"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 3l1.9 5.8L20 10l-5.1 3.2L12 19l-2.9-5.8L4 10l6.1-1.2z"/></svg></span>
+              <span style="font-size:12px;font-weight:600;color:#64748b">AI 검수</span>
+            </div>
+            <div style="font-size:15px;line-height:1.6;color:#0f172a">"되요" <span style="color:#cbd5e1;margin:0 2px">→</span> <span style="color:#e85008;font-weight:600">"돼요"</span></div>
+            <div style="font-size:12px;color:#94a3b8;margin-top:4px">맞춤법 · 자막 오타</div>
+          </div>
+        </div>
+
+        <!-- 카드3: 해결됨(디밍) -->
+        <div style="display:flex;gap:10px;padding:12px 16px">
+          <span style="flex:none;width:20px;height:20px;border-radius:50%;background:#10b981;border:2px solid #10b981;display:grid;place-items:center;margin-top:2px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+              <span style="font-family:ui-monospace,monospace;font-size:10.5px;font-weight:800;padding:2px 6px;border-radius:4px;color:#94a3b8;background:#f1f5f9">01:12</span>
+              <span style="width:18px;height:18px;border-radius:50%;background:#e0794b;color:#fff;font-size:8.5px;font-weight:700;display:grid;place-items:center">김</span>
+              <span style="font-size:12px;font-weight:600;color:#64748b">김편집</span>
+            </div>
+            <div style="font-size:15px;line-height:1.6;color:#94a3b8">인트로 BGM 볼륨 2dB 낮췄습니다.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 작성 박스 -->
+      <div style="border-top:1px solid #e2e8f0;padding:12px;background:#fff">
+        <div style="border:1px solid #e2e8f0;background:#f8fafc;border-radius:8px">
+          <div style="display:flex;align-items:center;gap:8px;padding:10px 12px 6px">
+            <span style="font-family:ui-monospace,monospace;font-size:10.5px;font-weight:700;color:#0f172a;background:#f1f5f9;padding:2px 6px;border-radius:4px">00:24</span>
+            <div style="display:flex;align-items:center;gap:2px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:2px">
+              <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:4px;font-size:10.5px;font-weight:600;background:#0f172a;color:#fff"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>수정</span>
+              <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:4px;font-size:10.5px;font-weight:600;color:#94a3b8"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg>좋아요</span>
+            </div>
+            <span style="margin-left:auto;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:10.5px;font-weight:700;color:#d97706;background:#fef3c7">자막 ▾</span>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:8px;padding:2px 12px 10px">
+            <span style="flex:1;font-size:14px;color:#94a3b8;padding:4px 0">피드백을 입력하세요 (⌘+Enter)</span>
+            <button style="width:32px;height:32px;border:none;border-radius:6px;background:#0f172a;color:#fff;display:grid;place-items:center;cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 3l3 9-3 9 19-9z"/><path d="M6 12h16"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></div>
+  </div>
+</section>
+<section class="card">
+  <div class="chead"><span class="cn">5</span><h2>커맨드 팔레트(⌘K)</h2><button class="replay" onclick="replayStage(this)">▶</button></div>
+  <div class="stage " style="align-items:center;justify-content:center">
+    <div class="bd" data-anim="backdrop-in 200ms ease-out both"></div>
+    <div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:600px;max-width:600px;background:#ffffff;border-radius:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,.25),0 0 0 1px rgba(0,0,0,.02);overflow:hidden;border:1px solid #ececec;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111111;">
+  <!-- 검색 헤더 -->
+  <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #ececec;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <span style="flex:1;min-width:0;font-size:15px;color:#767676;">파일·폴더·페이지 검색…</span>
+    <kbd style="font-family:ui-monospace,monospace;font-size:10px;color:#6b6b6b;background:#fafafa;border:1px solid #ececec;border-radius:4px;padding:2px 6px;">Esc</kbd>
+  </div>
+
+  <!-- 결과 리스트 (빈 쿼리 = 정적 페이지 바로가기) -->
+  <div style="max-height:380px;overflow-y:auto;">
+    <!-- 그룹: 이동 -->
+    <div style="padding:4px 0;">
+      <div style="padding:8px 16px 4px;font-size:10px;font-weight:700;color:#6b6b6b;letter-spacing:.05em;text-transform:uppercase;">이동</div>
+
+      <!-- 활성 항목 -->
+      <button style="width:100%;display:flex;align-items:center;gap:12px;padding:8px 16px;text-align:left;border:none;background:#fef0e8;cursor:pointer;">
+        <span style="flex-shrink:0;display:flex;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></span>
+        <span style="flex:1;min-width:0;font-size:14px;color:#111111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">받은편지함</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+
+      <button style="width:100%;display:flex;align-items:center;gap:12px;padding:8px 16px;text-align:left;border:none;background:transparent;cursor:pointer;">
+        <span style="flex-shrink:0;display:flex;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></span>
+        <span style="flex:1;min-width:0;font-size:14px;color:#111111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">비모 프로젝트</span>
+      </button>
+      <button style="width:100%;display:flex;align-items:center;gap:12px;padding:8px 16px;text-align:left;border:none;background:transparent;cursor:pointer;">
+        <span style="flex-shrink:0;display:flex;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></span>
+        <span style="flex:1;min-width:0;font-size:14px;color:#111111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">자료실</span>
+      </button>
+      <button style="width:100%;display:flex;align-items:center;gap:12px;padding:8px 16px;text-align:left;border:none;background:transparent;cursor:pointer;">
+        <span style="flex-shrink:0;display:flex;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></span>
+        <span style="flex:1;min-width:0;font-size:14px;color:#111111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">My box</span>
+      </button>
+      <button style="width:100%;display:flex;align-items:center;gap:12px;padding:8px 16px;text-align:left;border:none;background:transparent;cursor:pointer;">
+        <span style="flex-shrink:0;display:flex;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></span>
+        <span style="flex:1;min-width:0;font-size:14px;color:#111111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">내 기록</span>
+      </button>
+    </div>
+
+    <!-- 그룹: 관리 -->
+    <div style="padding:4px 0;">
+      <div style="padding:8px 16px 4px;font-size:10px;font-weight:700;color:#6b6b6b;letter-spacing:.05em;text-transform:uppercase;">관리</div>
+      <button style="width:100%;display:flex;align-items:center;gap:12px;padding:8px 16px;text-align:left;border:none;background:transparent;cursor:pointer;">
+        <span style="flex-shrink:0;display:flex;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></span>
+        <span style="flex:1;min-width:0;font-size:14px;color:#111111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">트래픽 통계</span>
+      </button>
+      <button style="width:100%;display:flex;align-items:center;gap:12px;padding:8px 16px;text-align:left;border:none;background:transparent;cursor:pointer;">
+        <span style="flex-shrink:0;display:flex;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></span>
+        <span style="flex:1;min-width:0;font-size:14px;color:#111111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">스토리지 관리</span>
+      </button>
+      <button style="width:100%;display:flex;align-items:center;gap:12px;padding:8px 16px;text-align:left;border:none;background:transparent;cursor:pointer;">
+        <span style="flex-shrink:0;display:flex;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></span>
+        <span style="flex:1;min-width:0;font-size:14px;color:#111111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">사용자 관리</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 푸터 단축키 힌트 -->
+  <div style="border-top:1px solid #ececec;background:#fafafa;padding:8px 16px;display:flex;align-items:center;gap:12px;font-size:10px;color:#6b6b6b;">
+    <span><kbd style="font-family:ui-monospace,monospace;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:1px 4px;margin-right:4px;">↑↓</kbd>이동</span>
+    <span><kbd style="font-family:ui-monospace,monospace;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:1px 4px;margin-right:4px;">↵</kbd>열기</span>
+    <span style="margin-left:auto;"><kbd style="font-family:ui-monospace,monospace;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:1px 4px;margin-right:4px;">⌘K</kbd>팔레트 토글</span>
+  </div>
+</div></div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="chead"><span class="cn">6</span><h2>컨텍스트 메뉴(ContextMenu)</h2><button class="replay" onclick="replayStage(this)">▶</button></div>
+  <div class="stage " style="align-items:center;justify-content:center">
+    
+    <div class="panel" data-anim="ctxmenu-in 140ms ease-out both"><div style="position:relative;width:max-content;min-width:180px;background:#ffffff;border:1px solid #ececec;border-radius:8px;padding:4px;box-shadow:0 6px 18px rgba(0,0,0,0.10);font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;font-size:14px;line-height:20px;color:#111111;user-select:none;transform-origin:top left;">
+  <button style="width:100%;text-align:left;padding:6px 10px;border-radius:4px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:transparent;border:0;cursor:pointer;color:#111111;">
+    <span>열기</span>
+    <span style="color:#6b6b6b;font-size:12px;font-family:ui-monospace,Menlo,monospace;flex-shrink:0;">&#8629;</span>
+  </button>
+  <button style="width:100%;text-align:left;padding:6px 10px;border-radius:4px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:transparent;border:0;cursor:pointer;color:#111111;">
+    <span>미리보기</span>
+    <span style="color:#6b6b6b;font-size:12px;font-family:ui-monospace,Menlo,monospace;flex-shrink:0;">Space</span>
+  </button>
+  <div style="height:1px;background:#ececec;margin:4px 0;"></div>
+  <button style="width:100%;text-align:left;padding:6px 10px;border-radius:4px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:transparent;border:0;cursor:pointer;color:#111111;">
+    <span>이름 변경</span>
+    <span style="color:#6b6b6b;font-size:12px;font-family:ui-monospace,Menlo,monospace;flex-shrink:0;">F2</span>
+  </button>
+  <button style="width:100%;text-align:left;padding:6px 10px;border-radius:4px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:transparent;border:0;cursor:pointer;color:#111111;">
+    <span>이동&#8230;</span>
+  </button>
+  <div style="height:1px;background:#ececec;margin:4px 0;"></div>
+  <button style="width:100%;text-align:left;padding:6px 10px;border-radius:4px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fef0e8;border:0;cursor:pointer;color:#e85008;">
+    <span>공유 링크 만들기</span>
+  </button>
+  <button style="width:100%;text-align:left;padding:6px 10px;border-radius:4px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:transparent;border:0;cursor:pointer;color:#111111;">
+    <span>다운로드</span>
+  </button>
+  <button style="width:100%;text-align:left;padding:6px 10px;border-radius:4px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:transparent;border:0;cursor:pointer;color:#111111;">
+    <span>경로 복사</span>
+  </button>
+  <div style="height:1px;background:#ececec;margin:4px 0;"></div>
+  <button style="width:100%;text-align:left;padding:6px 10px;border-radius:4px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:transparent;border:0;cursor:pointer;color:#111111;">
+    <span style="color:#dc2626;">삭제</span>
+    <span style="color:#6b6b6b;font-size:12px;font-family:ui-monospace,Menlo,monospace;flex-shrink:0;">&#9003;</span>
+  </button>
+</div></div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="chead"><span class="cn">7</span><h2>파일 선택(FilePickerDialog)</h2><button class="replay" onclick="replayStage(this)">▶</button></div>
+  <div class="stage " style="align-items:center;justify-content:center">
+    <div class="bd" data-anim="backdrop-in 200ms ease-out both"></div>
+    <div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:448px;max-width:100%;background:#ffffff;border-radius:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);overflow:hidden;display:flex;flex-direction:column;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111111;">
+
+  <!-- 헤더 -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #ececec;">
+    <div style="display:flex;align-items:center;gap:8px;font-size:14px;line-height:20px;font-weight:700;color:#111111;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span>파일 선택</span>
+    </div>
+    <button style="display:grid;place-items:center;padding:4px;border:none;background:transparent;border-radius:4px;color:#666666;cursor:pointer;" title="닫기 (Esc)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <!-- 본문 -->
+  <div style="padding:20px;">
+
+    <!-- 브레드크럼 -->
+    <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:13px;line-height:18px;margin-bottom:12px;">
+      <button style="border:none;background:transparent;padding:0;color:#555555;cursor:pointer;">Vibox</button>
+      <span style="display:flex;align-items:center;gap:4px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        <button style="border:none;background:transparent;padding:0;color:#555555;cursor:pointer;">프로젝트</button>
+      </span>
+      <span style="display:flex;align-items:center;gap:4px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        <span style="color:#111111;font-weight:600;">2024_가을캠페인</span>
+      </span>
+    </div>
+
+    <!-- 파일 리스트 -->
+    <div style="background:#fafafa;border:1px solid #ececec;border-radius:6px;max-height:320px;overflow-y:auto;margin-bottom:16px;">
+
+      <!-- 상위 폴더로 -->
+      <button style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;line-height:18px;color:#555555;background:transparent;border:none;border-bottom:1px solid #ececec;cursor:pointer;text-align:left;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        상위 폴더로
+      </button>
+
+      <!-- 폴더 -->
+      <button style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;line-height:18px;color:#111111;background:transparent;border:none;border-bottom:1px solid #f5f5f5;cursor:pointer;text-align:left;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">컷편집_소스</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+
+      <!-- 영상 파일 (선택됨) -->
+      <button style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;line-height:18px;background:#fef0e8;color:#e85008;font-weight:500;border:none;border-bottom:1px solid #f5f5f5;cursor:pointer;text-align:left;">
+        <span style="width:28px;height:28px;border-radius:6px;display:grid;place-items:center;background:#fef2f2;color:#dc2626;flex-shrink:0;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
+        </span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">최종_v3.mp4</span>
+      </button>
+
+      <!-- 이미지 파일 -->
+      <button style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;line-height:18px;color:#111111;background:transparent;border:none;border-bottom:1px solid #f5f5f5;cursor:pointer;text-align:left;">
+        <span style="width:28px;height:28px;border-radius:6px;display:grid;place-items:center;background:#fef3c7;color:#d97706;flex-shrink:0;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+        </span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">썸네일_시안.png</span>
+      </button>
+
+      <!-- 문서 파일 -->
+      <button style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;line-height:18px;color:#111111;background:transparent;border:none;border-bottom:1px solid #f5f5f5;cursor:pointer;text-align:left;">
+        <span style="width:28px;height:28px;border-radius:6px;display:grid;place-items:center;background:#f0fdf4;color:#16a34a;flex-shrink:0;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">기획안.docx</span>
+      </button>
+
+    </div>
+
+    <!-- 선택 상태 -->
+    <div style="font-size:12px;line-height:16px;color:#666666;margin-bottom:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+      선택됨: <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#111111;">최종_v3.mp4</span>
+    </div>
+
+    <!-- 버튼 -->
+    <div style="display:flex;gap:8px;">
+      <button style="flex:1;padding:8px 16px;font-size:13px;line-height:18px;font-weight:500;color:#555555;background:transparent;border:none;border-radius:6px;cursor:pointer;">취소</button>
+      <button style="flex:1;padding:8px 16px;font-size:13px;line-height:18px;font-weight:600;color:#ffffff;background:#111111;border:none;border-radius:6px;cursor:pointer;">선택</button>
+    </div>
+
+  </div>
+</div></div>
+  </div>
+</section>
+<section class="card">
+  <div class="chead"><span class="cn">8</span><h2>단축키 도움말(ShortcutHelp)</h2><button class="replay" onclick="replayStage(this)">▶</button></div>
+  <div class="stage " style="align-items:center;justify-content:center">
+    <div class="bd" data-anim="backdrop-in 200ms ease-out both"></div>
+    <div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="background:#ffffff;border-radius:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);width:512px;max-width:100%;display:flex;flex-direction:column;overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111111;">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #ececec;">
+    <div style="display:flex;align-items:center;gap:8px;font-size:14px;line-height:20px;font-weight:700;color:#111111;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 8h.01M12 12h.01M14 8h.01M16 12h.01M18 8h.01M6 8h.01M7 16h10M8 12h.01"/><rect width="20" height="16" x="2" y="4" rx="2"/></svg>
+      키보드 단축키
+    </div>
+    <button style="display:flex;padding:4px;border:none;background:transparent;border-radius:4px;color:#666666;cursor:pointer;" title="닫기 (Esc)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <!-- Body: 2-column grid -->
+  <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+    <!-- 전역 -->
+    <div>
+      <div style="font-size:10px;line-height:14px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#6b6b6b;margin-bottom:8px;">전역</div>
+      <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;">
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;align-items:center;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">⌘</kbd><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">K</kbd></span><span style="flex:1;">빠른 검색 팔레트</span></li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;align-items:center;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">?</kbd></span><span style="flex:1;">이 단축키 도움말</span></li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;align-items:center;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">Esc</kbd></span><span style="flex:1;">모달·선택·검색 닫기</span></li>
+      </ul>
+    </div>
+
+    <!-- 파일 네비게이션 -->
+    <div>
+      <div style="font-size:10px;line-height:14px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#6b6b6b;margin-bottom:8px;">파일 네비게이션</div>
+      <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;">
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">↑</kbd></span><span style="flex:1;">이전 항목으로 focus</span></li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">↓</kbd></span><span style="flex:1;">다음 항목으로 focus</span></li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">←</kbd><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">→</kbd></span><span style="flex:1;">그리드 모드: 좌우 컬럼 이동</span></li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">Home</kbd></span><span style="flex:1;">첫 항목으로</span></li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">End</kbd></span><span style="flex:1;">마지막 항목으로</span></li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">Enter</kbd></span><span style="flex:1;">열기 (folder navigate / file preview)</span></li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">Space</kbd></span><span style="flex:1;">Quick Look 미리보기</span></li>
+      </ul>
+    </div>
+
+    <!-- 파일 작업 -->
+    <div>
+      <div style="font-size:10px;line-height:14px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#6b6b6b;margin-bottom:8px;">파일 작업</div>
+      <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;">
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">우클릭</kbd></span><span style="flex:1;">컨텍스트 메뉴</span></li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">F2</kbd></span><span style="flex:1;">이름 변경</span></li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">Delete</kbd></span><span style="flex:1;">삭제 (휴지통으로)</span></li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">⌫</kbd></span><span style="flex:1;">삭제 (Backspace)</span></li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">⌘</kbd><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">A</kbd></span><span style="flex:1;">전체 선택</span></li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">Shift</kbd><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">+클릭</kbd></span><span style="flex:1;">범위 선택</span></li>
+      </ul>
+    </div>
+
+    <!-- 영상 검수 -->
+    <div>
+      <div style="font-size:10px;line-height:14px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#6b6b6b;margin-bottom:8px;">영상 검수 (/vimo-box)</div>
+      <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;">
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">Space</kbd></span><span style="flex:1;">재생 · 일시정지</span></li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">←</kbd><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">→</kbd></span><span style="flex:1;">3초 뒤로 · 앞으로 (Shift = 10초)</span></li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">[</kbd><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">]</kbd></span><span style="flex:1;">이전 · 다음 코멘트</span></li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">J</kbd><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">↓</kbd></span><span style="flex:1;">같은 폴더 다음 영상</span></li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:14px;color:#555555;"><span style="display:flex;gap:4px;flex-shrink:0;"><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">K</kbd><kbd style="font-family:ui-monospace,monospace;font-size:10px;background:#ffffff;border:1px solid #ececec;border-radius:4px;padding:2px 6px;color:#666666;min-width:18px;text-align:center;">↑</kbd></span><span style="flex:1;">같은 폴더 이전 영상</span></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Footer tip -->
+  <div style="padding:0 20px 16px;font-size:12px;color:#6b6b6b;">
+    Tip: 입력 필드에선 단축키가 작동하지 않습니다.
+  </div>
+</div></div>
+  </div>
+</section>
+<section class="card">
+  <div class="chead"><span class="cn">9</span><h2>일괄 작업 바(BulkActionBar)</h2><button class="replay" onclick="replayStage(this)">▶</button></div>
+  <div class="stage " style="align-items:center;justify-content:flex-end">
+    
+    <div class="panel" data-anim="fade-in 220ms ease-out both"><div style="box-sizing:border-box;width:560px;max-width:100%;background:#ffffff;border:1px solid #ececec;border-radius:8px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -2px rgba(0,0,0,0.1);padding:8px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111111;">
+  <button title="선택 해제 (Esc)" style="display:inline-flex;align-items:center;justify-content:center;padding:4px;border:none;background:transparent;border-radius:4px;color:#666666;cursor:pointer;">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+  </button>
+  <span style="font-size:16px;font-weight:600;color:#111111;line-height:1;">3개 선택</span>
+  <span style="font-size:14px;color:#666666;line-height:1;">· 12.4 MB</span>
+  <div style="flex:1 1 0%;min-width:8px;"></div>
+  <button style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;background:#ffffff;border:1px solid #ececec;color:#111111;font-size:14px;font-weight:600;cursor:pointer;">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+    ZIP 다운
+  </button>
+  <button style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;background:#ffffff;border:1px solid #ececec;color:#111111;font-size:14px;font-weight:600;cursor:pointer;">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8 22 12 18 16"/><path d="M2 12h20"/></svg>
+    이동
+  </button>
+  <button style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;background:#ffffff;border:1px solid #ececec;color:#dc2626;font-size:14px;font-weight:600;cursor:pointer;">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+    삭제
+  </button>
+</div></div>
+  </div>
+</section>
+<section class="card">
+  <div class="chead"><span class="cn">10</span><h2>메뉴 셸(MenuShell · 드롭다운)</h2><button class="replay" onclick="replayStage(this)">▶</button></div>
+  <div class="stage " style="align-items:center;justify-content:center">
+    
+    <div class="panel" data-anim="toast-in 440ms cubic-bezier(.16,1,.3,1) both"><div style="width:240px;height:600px;background:#ffffff;border-right:1px solid #ececec;display:flex;flex-direction:column;overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;box-sizing:border-box;">
+  <!-- Header (sticky) -->
+  <div style="padding:20px 16px 12px;display:flex;align-items:center;justify-content:space-between;background:#ffffff;">
+    <span style="font-size:16px;line-height:24px;font-weight:700;letter-spacing:-0.02em;color:#111111;">내 파일</span>
+    <button style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;border:1px solid #ececec;border-radius:6px;background:#ffffff;color:#555555;cursor:pointer;padding:0;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+  </div>
+
+  <!-- Search trigger -->
+  <button style="margin:0 12px 8px;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:6px;background:#fafafa;border:none;color:#6b6b6b;cursor:pointer;width:calc(100% - 24px);box-sizing:border-box;">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <span style="font-size:12px;">파일 검색</span>
+    <kbd style="margin-left:auto;font-size:10px;line-height:14px;padding:1px 6px;background:#ffffff;border:1px solid #ececec;border-radius:4px;color:#6b6b6b;font-family:inherit;">⌘K</kbd>
+  </button>
+
+  <!-- Section: 워크스페이스 -->
+  <div style="padding:12px 16px 6px;font-size:10px;line-height:14px;font-weight:600;letter-spacing:0.1em;color:#6b6b6b;text-transform:uppercase;">워크스페이스</div>
+
+  <a style="margin:1px 8px;display:flex;align-items:center;gap:10px;padding:6px 12px;border-radius:6px;font-size:13px;line-height:18px;color:#666666;text-decoration:none;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.9;flex-shrink:0;"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
+    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">홈</span>
+  </a>
+  <a style="margin:1px 8px;display:flex;align-items:center;gap:10px;padding:6px 12px;border-radius:6px;font-size:13px;line-height:18px;color:#666666;text-decoration:none;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.9;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">최근 파일</span>
+  </a>
+  <a style="margin:1px 8px;display:flex;align-items:center;gap:10px;padding:6px 12px;border-radius:6px;font-size:13px;line-height:18px;color:#666666;text-decoration:none;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.9;flex-shrink:0;"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">공유받음</span>
+    <span style="margin-left:auto;font-size:11px;line-height:16px;color:#6b6b6b;">3</span>
+  </a>
+
+  <!-- Section: 비모 (space = orange) -->
+  <div style="padding:12px 16px 6px;font-size:10px;line-height:14px;font-weight:600;letter-spacing:0.1em;color:#6b6b6b;text-transform:uppercase;">비모</div>
+
+  <!-- ACTIVE item: --space-accent = accent #e85008, bg = color-mix 12% -->
+  <a style="margin:1px 8px;display:flex;align-items:center;gap:10px;padding:6px 12px;border-radius:6px;font-size:13px;line-height:18px;font-weight:500;text-decoration:none;color:#e85008;background:rgba(232,80,8,0.12);">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.9;flex-shrink:0;"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">프로젝트</span>
+  </a>
+  <a style="margin:1px 8px;display:flex;align-items:center;gap:10px;padding:6px 12px 6px 28px;border-radius:6px;font-size:13px;line-height:18px;color:#666666;text-decoration:none;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.9;flex-shrink:0;"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/></svg>
+    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Rendering</span>
+  </a>
+  <a style="margin:1px 8px;display:flex;align-items:center;gap:10px;padding:6px 12px 6px 28px;border-radius:6px;font-size:13px;line-height:18px;color:#666666;text-decoration:none;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.9;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">검수 대기</span>
+    <span style="margin-left:auto;font-size:11px;line-height:16px;color:#6b6b6b;">5</span>
+  </a>
+
+  <!-- Section: 내 공간 (My box = sky personal) -->
+  <div style="padding:12px 16px 6px;font-size:10px;line-height:14px;font-weight:600;letter-spacing:0.1em;color:#6b6b6b;text-transform:uppercase;">내 공간</div>
+  <a style="margin:1px 8px;display:flex;align-items:center;gap:10px;padding:6px 12px;border-radius:6px;font-size:13px;line-height:18px;color:#666666;text-decoration:none;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.9;flex-shrink:0;"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">My box</span>
+  </a>
+
+  <!-- Footer (mt-auto) -->
+  <div style="margin-top:auto;padding:12px 16px;border-top:1px solid #f0ece9;">
+    <p style="margin:0;font-size:10px;line-height:14px;font-weight:700;color:#d6cec8;letter-spacing:0.1em;">VIBOX <span style="font-weight:500;color:#e0d9d3;">v0.3.0</span><span style="font-weight:400;color:#e0d9d3;margin-left:4px;">· 2026.06.24</span></p>
+  </div>
+</div></div>
+  </div>
+</section>
+</div>
+<script>
+function play(el){const a=el.getAttribute('data-anim');if(!a)return;el.style.animation='none';void el.offsetWidth;el.style.animation=a;}
+function replayStage(btn){btn.closest('.card').querySelectorAll('[data-anim]').forEach(play);}
+function replayAll(){document.querySelectorAll('.stage [data-anim]').forEach(play);}
+window.addEventListener('load',()=>{const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.querySelectorAll('[data-anim]').forEach(play);io.unobserve(e.target);}})},{threshold:.3});document.querySelectorAll('.stage').forEach(s=>io.observe(s));});
+</script>
+</body></html>

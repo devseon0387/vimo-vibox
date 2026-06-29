@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 알림 시스템 — 토스트 · 에러 메시지 · 다이얼로그</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root{
+    --bg:#fff; --surface:#fafafa; --surface-2:#f7f7f7; --border:#ececec; --border-hover:#d4d4d4;
+    --text:#111; --text-muted:#555; --text-soft:#666; --text-faint:#999; --hover:#f0f0f0;
+    --accent:#e85008; --accent-soft:#fef0e8;
+    --danger:#dc2626; --danger-soft:#fef2f2; --success:#16a34a; --success-soft:#f0fdf4; --info:#3b82f6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#eef0f2;color:var(--text);font-family:Pretendard,-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .page{max-width:1080px;margin:0 auto;padding:30px 24px 90px}
+  h1{font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .sub{color:var(--text-soft);font-size:13.5px;margin-top:8px;line-height:1.65;max-width:780px}
+  .jump{position:sticky;top:0;z-index:50;background:rgba(238,240,242,.88);backdrop-filter:blur(8px);margin:20px 0 6px;padding:9px 0;border-bottom:1px solid #e2e4e7;display:flex;gap:6px;flex-wrap:wrap}
+  .jump a{font-size:12.5px;font-weight:600;color:var(--text-soft);text-decoration:none;padding:6px 11px;border-radius:8px}
+  .jump a:hover{background:#fff}
+  .sec{margin-top:36px;scroll-margin-top:62px}
+  .sec h2{font-size:17px;font-weight:800;display:flex;align-items:center;gap:9px}
+  .sec h2 .num{font-size:12px;font-weight:800;color:#fff;background:#111;width:24px;height:24px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center}
+  .sec .desc{font-size:13px;color:var(--text-soft);margin:8px 0 18px;line-height:1.6;max-width:760px}
+  .stage{background:#fff;border:1px solid #e2e4e7;border-radius:14px;padding:26px;display:flex;flex-direction:column;gap:12px;align-items:center;box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 26px rgba(0,0,0,.05)}
+  .stage.left{align-items:stretch}
+  .lbl{align-self:flex-start;font-size:10.5px;font-weight:700;letter-spacing:.05em;color:var(--text-faint);text-transform:uppercase}
+
+  /* ── 토스트 (실제 컴포넌트: 흰 알약형) ── */
+  .toast{pointer-events:auto;background:#fff;border:1px solid var(--border);color:var(--text);
+    padding:6px 6px 6px 16px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.10),0 2px 4px rgba(0,0,0,.05);
+    min-width:260px;max-width:560px;display:flex;align-items:center;gap:12px}
+  .toast .ico{flex:none;width:18px;height:18px;border-radius:999px;display:grid;place-items:center;color:#fff}
+  .toast .ico.success{background:var(--success)} .toast .ico.error{background:var(--danger)} .toast .ico.info{background:var(--info)}
+  .toast .ico .lucide{width:11px;height:11px;stroke-width:2.6}
+  .toast .msg{flex:1;font-size:12.5px;font-weight:500;line-height:1.5}
+  .toast .act{flex:none;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer}
+  .toast .act:hover{background:var(--accent-soft)}
+  .toast .x{flex:none;width:24px;height:24px;border-radius:999px;display:grid;place-items:center;color:var(--text-muted);border:none;background:none;cursor:pointer}
+  .toast .x:hover{background:var(--hover)}
+  .toast .x .lucide{width:12px;height:12px}
+
+  /* ── 에러 카탈로그 (before→after) ── */
+  .cat{display:flex;flex-direction:column;gap:0}
+  .catgrp{margin-top:18px}
+  .catgrp:first-child{margin-top:0}
+  .catgrp h3{font-size:13px;font-weight:800;margin-bottom:9px;display:flex;align-items:center;gap:7px}
+  .catgrp h3 .tag{font-size:10px;font-weight:700;color:var(--text-faint);background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:2px 7px;font-family:ui-monospace,monospace}
+  .erow{display:grid;grid-template-columns:1fr auto 1.3fr;gap:14px;align-items:center;padding:9px 0;border-top:1px solid var(--border)}
+  .erow .before{font-family:ui-monospace,SFMono-Regular,monospace;font-size:11.5px;color:#9a3a3a;background:#fdf3f3;border:1px solid #f3dede;border-radius:7px;padding:6px 9px;word-break:break-all}
+  .erow .arrow{color:var(--text-faint)}
+  .erow .arrow .lucide{width:15px;height:15px}
+  .erow .after{font-size:12.5px;color:var(--text);line-height:1.5}
+  .ehead{display:grid;grid-template-columns:1fr auto 1.3fr;gap:14px;font-size:10.5px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:.04em;padding-bottom:4px}
+
+  /* ── 다이얼로그 ── */
+  .dwrap{display:flex;gap:18px;flex-wrap:wrap;width:100%;justify-content:center}
+  .dialog{background:#fff;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.16);max-width:380px;width:100%;overflow:hidden;border:1px solid #eee}
+  .dialog .body{padding:22px}
+  .dialog .top{display:flex;align-items:flex-start;gap:13px;margin-bottom:11px}
+  .dialog .circ{width:40px;height:40px;border-radius:999px;display:grid;place-items:center;flex:none}
+  .dialog .circ.danger{background:var(--danger-soft)} .dialog .circ.danger .lucide{color:var(--danger);width:20px;height:20px}
+  .dialog .circ.accent{background:var(--accent-soft)} .dialog .circ.accent .lucide{color:var(--accent);width:20px;height:20px}
+  .dialog h4{font-size:15.5px;font-weight:800;margin-bottom:5px}
+  .dialog p{font-size:13.5px;color:var(--text-muted);line-height:1.55}
+  .dialog .field{margin-top:13px}
+  .dialog .field input{width:100%;border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:13.5px;outline:none}
+  .dialog .field input:focus{border-color:var(--accent)}
+  .dialog .foot{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;background:var(--surface);border-top:1px solid var(--border)}
+  .btn{padding:8px 15px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none}
+  .btn.ghost{color:var(--text-muted);background:none}
+  .btn.ghost:hover{background:var(--hover);color:var(--text)}
+  .btn.danger{background:var(--danger);color:#fff;font-weight:700}
+  .btn.dark{background:var(--text);color:#fff;font-weight:700}
+  .btn.accent{background:var(--accent);color:#fff;font-weight:700}
+
+  /* upload dock */
+  .dock{width:300px;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 26px rgba(0,0,0,.1);overflow:hidden}
+  .dock .dh{padding:11px 13px;border-bottom:1px solid var(--border);font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:7px}
+  .dock .di{padding:10px 13px;display:flex;align-items:center;gap:9px;font-size:12px}
+  .dock .di .lucide{width:15px;height:15px;flex:none}
+  .dock .di .nm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dock .di.fail .err{color:var(--danger);font-size:11px}
+  .footnote{margin-top:46px;padding-top:18px;border-top:1px solid #e2e4e7;color:var(--text-faint);font-size:12px;line-height:1.75}
+  code{font-family:ui-monospace,monospace;font-size:11.5px;background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:1px 5px}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>비박스 알림 시스템</h1>
+  <p class="sub">토스트·에러 메시지·다이얼로그·업로드 도크의 실제 패턴 정리. 모든 에러는 <code>lib/human-error.ts</code> 한 곳에서 친화 한국어로 변환됩니다(서버 raw 영문 노출 0).</p>
+
+  <nav class="jump">
+    <a href="#toast">1 토스트</a>
+    <a href="#errors">2 에러 메시지 카탈로그</a>
+    <a href="#dialog">3 확인·삭제 다이얼로그</a>
+    <a href="#prompt">4 입력 다이얼로그</a>
+    <a href="#dock">5 업로드 도크</a>
+  </nav>
+
+  <!-- 1. 토스트 -->
+  <section class="sec" id="toast">
+    <h2><span class="num">1</span>토스트 (Toast)</h2>
+    <p class="desc">화면 하단 중앙에 스프링으로 등장하는 흰 <b>알약형</b> 알림. 종류별 컬러 아이콘 원(성공 초록·에러 빨강·정보 파랑). 본문 + 선택적 액션 버튼(주황) + 닫기.</p>
+    <div class="stage">
+      <div class="toast"><span class="ico success"><i data-lucide="check"></i></span><span class="msg">영상이 업로드됐어요</span><button class="x"><i data-lucide="x"></i></button></div>
+      <div class="toast"><span class="ico error"><i data-lucide="alert-circle"></i></span><span class="msg">이 공유 링크는 더 이상 열 수 없어요. 보낸 분께 새 링크를 요청해주세요.</span><button class="x"><i data-lucide="x"></i></button></div>
+      <div class="toast"><span class="ico info"><i data-lucide="info"></i></span><span class="msg">이미 추가되어 있어요</span><button class="x"><i data-lucide="x"></i></button></div>
+      <div class="toast"><span class="ico success"><i data-lucide="check"></i></span><span class="msg">파일 3개를 휴지통으로 옮겼어요</span><button class="act">실행 취소</button><button class="x"><i data-lucide="x"></i></button></div>
+    </div>
+    <p class="desc" style="margin-top:14px">성공/정보는 짧은 사실, 에러는 "왜 + 다음 행동"까지. 액션 버튼(실행 취소 등)은 주황 텍스트로 절제.</p>
+  </section>
+
+  <!-- 2. 에러 카탈로그 -->
+  <section class="sec" id="errors">
+    <h2><span class="num">2</span>에러 메시지 카탈로그</h2>
+    <p class="desc">서버 raw 영문 → 친화 한국어. 같은 에러도 <b>맥락(컨텍스트)</b>에 따라 다른 안내. 아래는 <code>human-error.ts</code> 실제 매핑.</p>
+    <div class="stage left">
+      <div class="ehead"><span>서버 raw (전)</span><span></span><span>비박스 안내 (후)</span></div>
+
+      <div class="catgrp">
+        <h3>공유 링크 — 외부 클라이언트가 보는 면 <span class="tag">share</span></h3>
+        <div class="cat">
+          <div class="erow"><span class="before">revoked / expired</span><span class="arrow"><i data-lucide="arrow-right"></i></span><span class="after">이 공유 링크는 더 이상 열 수 없어요. 보낸 분께 새 링크를 요청해주세요.</span></div>
+          <div class="erow"><span class="before">password required / wrong password</span><span class="arrow"><i data-lucide="arrow-right"></i></span><span class="after">비밀번호가 필요하거나 올바르지 않아요. 보낸 분께 확인해주세요.</span></div>
+          <div class="erow"><span class="before">comments not allowed</span><span class="arrow"><i data-lucide="arrow-right"></i></span><span class="after">이 영상에는 의견을 남길 수 없도록 설정돼 있어요. 보낸 분께 문의해주세요.</span></div>
+        </div>
+      </div>
+
+      <div class="catgrp">
+        <h3>권한 — 같은 "forbidden"도 맥락별로 <span class="tag">forbidden</span></h3>
+        <div class="cat">
+          <div class="erow"><span class="before">forbidden <i style="color:#bbb">(library-write)</i></span><span class="arrow"><i data-lucide="arrow-right"></i></span><span class="after">자료실은 매니저·멤버만 올릴 수 있어요. 관리자에게 문의하세요.</span></div>
+          <div class="erow"><span class="before">forbidden <i style="color:#bbb">(delete)</i></span><span class="arrow"><i data-lucide="arrow-right"></i></span><span class="after">이 항목을 지울 권한이 없어요. 본인이 올린 파일만 삭제 가능합니다.</span></div>
+          <div class="erow"><span class="before">forbidden <i style="color:#bbb">(comment)</i></span><span class="arrow"><i data-lucide="arrow-right"></i></span><span class="after">댓글 권한이 없어요. 매니저에게 문의하세요.</span></div>
+          <div class="erow"><span class="before">unauthorized / 401</span><span class="arrow"><i data-lucide="arrow-right"></i></span><span class="after">로그인 세션이 만료됐어요. 새로고침 후 다시 로그인해주세요.</span></div>
+        </div>
+      </div>
+
+      <div class="catgrp">
+        <h3>파일·휴지통 <span class="tag">delete · move · rename · trash</span></h3>
+        <div class="cat">
+          <div class="erow"><span class="before">not found <i style="color:#bbb">(trash-restore)</i></span><span class="arrow"><i data-lucide="arrow-right"></i></span><span class="after">이미 영구 삭제됐거나 다른 사람이 복원한 항목이에요.</span></div>
+          <div class="erow"><span class="before">already exists <i style="color:#bbb">(rename)</i></span><span class="arrow"><i data-lucide="arrow-right"></i></span><span class="after">같은 이름이 이미 있어요. 다른 이름을 사용해주세요.</span></div>
+          <div class="erow"><span class="before">invalid path / invalid name</span><span class="arrow"><i data-lucide="arrow-right"></i></span><span class="after">사용할 수 없는 경로·이름이에요. 특수문자(/ \ : * ? " &lt; &gt; |)는 빼주세요.</span></div>
+          <div class="erow"><span class="before">reserved path</span><span class="arrow"><i data-lucide="arrow-right"></i></span><span class="after">시스템 예약 폴더에는 작업할 수 없어요.</span></div>
+        </div>
+      </div>
+
+      <div class="catgrp">
+        <h3>업로드·용량·네트워크 <span class="tag">upload · quota · network</span></h3>
+        <div class="cat">
+          <div class="erow"><span class="before">quota exceeded <i style="color:#bbb">(personal-write)</i></span><span class="arrow"><i data-lucide="arrow-right"></i></span><span class="after">내 박스 용량이 부족해요. 관리자에게 요청하거나 오래된 파일을 정리하세요.</span></div>
+          <div class="erow"><span class="before">chunk count mismatch</span><span class="arrow"><i data-lucide="arrow-right"></i></span><span class="after">업로드 청크가 누락됐어요. 다시 시도해주세요.</span></div>
+          <div class="erow"><span class="before">network / fetch / timeout</span><span class="arrow"><i data-lucide="arrow-right"></i></span><span class="after">네트워크 오류가 발생했어요. 잠시 후 다시 시도해주세요.</span></div>
+          <div class="erow"><span class="before">aborted <i style="color:#bbb">(upload)</i></span><span class="arrow"><i data-lucide="arrow-right"></i></span><span class="after">업로드가 취소됐어요.</span></div>
+        </div>
+      </div>
+
+      <div class="catgrp">
+        <h3>폴백 (매칭 안 됨)</h3>
+        <div class="cat">
+          <div class="erow"><span class="before">이미 한국어 메시지</span><span class="arrow"><i data-lucide="arrow-right"></i></span><span class="after">그대로 통과 (서버가 친화 메시지를 보낸 경우)</span></div>
+          <div class="erow"><span class="before">(빈 값)</span><span class="arrow"><i data-lucide="arrow-right"></i></span><span class="after">알 수 없는 오류가 발생했어요. 잠시 후 다시 시도해주세요.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 다이얼로그 -->
+  <section class="sec" id="dialog">
+    <h2><span class="num">3</span>확인·삭제 다이얼로그 (Confirm)</h2>
+    <p class="desc">파괴적 동작(삭제·제거·회수)은 <b>danger</b> 변형(빨강 원 + 빨강 버튼)으로 한 번 더 확인. 일반 확인은 무채색.</p>
+    <div class="stage">
+      <div class="dwrap">
+        <div class="dialog">
+          <div class="body">
+            <div class="top"><span class="circ danger"><i data-lucide="alert-triangle"></i></span>
+              <div><h4>영상을 휴지통으로</h4><p><b>브랜드필름_최종_v3.mp4</b> 을 휴지통으로 옮깁니다. 30일 안에 복원할 수 있어요.</p></div></div>
+          </div>
+          <div class="foot"><button class="btn ghost">취소</button><button class="btn danger">삭제</button></div>
+        </div>
+        <div class="dialog">
+          <div class="body">
+            <div class="top"><span class="circ accent"><i data-lucide="upload"></i></span>
+              <div><h4>새 버전으로 교체</h4><p>같은 폴더에 v4를 올립니다. 기존 v3은 버전 기록에 남아요.</p></div></div>
+          </div>
+          <div class="foot"><button class="btn ghost">취소</button><button class="btn dark">계속</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. 프롬프트 -->
+  <section class="sec" id="prompt">
+    <h2><span class="num">4</span>입력 다이얼로그 (Prompt)</h2>
+    <p class="desc">새 폴더·이름 변경 등 한 줄 입력. 에러는 입력칸 아래에 친화 메시지로.</p>
+    <div class="stage">
+      <div class="dialog">
+        <div class="body">
+          <h4 style="margin-bottom:3px">새 폴더</h4>
+          <p style="font-size:12.5px">My box 안에 만들 폴더 이름을 입력하세요.</p>
+          <div class="field"><input value="촬영 원본" /></div>
+          <p style="color:var(--danger);font-size:12px;margin-top:8px">같은 이름이 이미 있어요. 다른 이름을 사용해주세요.</p>
+        </div>
+        <div class="foot"><button class="btn ghost">취소</button><button class="btn accent">만들기</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. 업로드 도크 -->
+  <section class="sec" id="dock">
+    <h2><span class="num">5</span>업로드 진행 도크 (GlobalUploadDock)</h2>
+    <p class="desc">우하단 고정. 진행/완료/실패를 한눈에. 실패 사유도 친화 메시지로(<code>humanError(entry.error,"upload")</code>).</p>
+    <div class="stage">
+      <div class="dock">
+        <div class="dh"><i data-lucide="upload-cloud" style="width:15px;height:15px;color:var(--accent)"></i> 업로드 2 / 4</div>
+        <div class="di"><i data-lucide="check-circle-2" style="color:var(--success)"></i><span class="nm">메인편집_v3.mp4</span><span style="color:var(--text-faint)">완료</span></div>
+        <div class="di"><i data-lucide="loader" style="color:var(--accent)"></i><span class="nm">티저_15s.mp4</span><span style="color:var(--text-faint)">72%</span></div>
+        <div class="di fail"><i data-lucide="alert-circle" style="color:var(--danger)"></i><span class="nm">원본_4K.mov<br><span class="err">네트워크 오류가 발생했어요. 잠시 후 다시 시도해주세요.</span></span><span style="color:var(--accent);font-weight:700;font-size:11px">재시도</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footnote">
+    원칙 — <b>토스트 = 흰 알약·하단중앙·종류별 컬러 아이콘.</b> 에러 = <code>human-error.ts</code> 단일 출처로 "왜+다음행동" 한국어(특히 외부 클라가 보는 면 우선). 파괴적 동작 = danger 다이얼로그 1회 확인. 성공/정보 토스트는 절제(남발 금지). 채도 높은 빨강은 에러/danger에만, 주황(#e85008)은 액션·진행에만.<br>
+    실제 컴포넌트: <code>components/Toast.tsx</code> · <code>ConfirmDialog.tsx</code> · <code>PromptDialog.tsx</code> · <code>GlobalUploadDock.tsx</code> · <code>lib/human-error.ts</code>.
+  </div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

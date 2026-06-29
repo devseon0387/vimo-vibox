@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 · 홈 = 히어로 + My box(즐겨찾기 + 드라이브 리스트)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --vimo:#e85008; --vimo-ink:#c2410c; --vimo-soft:#fef0e8; --vimo-line:#fbd9c4;
+    --mybox:#f97316; --mybox-soft:#fff3ea; --mybox-line:#fed7aa;
+    --text:#171717; --muted:#5f5f5f; --soft:#525252; --faint:#9a9a9a;
+    --page:#f5f5f5; --surf:#fafafa; --line:#ececec; --line2:#e3e3e3; --hair:#f1f1f1;
+    --warn:#c2410c; --sh:0 1px 3px rgba(0,0,0,.06); --sh2:0 4px 14px rgba(0,0,0,.08);
+    --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);background:#e9e9e9;color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h2,h3,h4,p{margin:0} svg.lucide{width:1em;height:1em;stroke-width:1.9;flex:none;vertical-align:-.14em}
+  .tnum{font-variant-numeric:tabular-nums}.mono{font-variant-numeric:tabular-nums}
+  img{display:block}
+
+  .wrap{max-width:880px;margin:0 auto;padding:30px 22px 90px}
+  .intro h1{font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .intro p{color:var(--muted);font-size:13px;margin-top:8px;line-height:1.6;max-width:760px}
+  .intro .diag{margin-top:12px;background:#fff;border:1px solid var(--line2);border-radius:12px;padding:12px 15px;font-size:12px;color:var(--soft);line-height:1.6}.intro .diag b{color:var(--vimo-ink)}
+
+  .main{background:var(--page);border:1px solid var(--line2);border-radius:16px;padding:20px 22px;margin-top:18px;box-shadow:var(--sh)}
+  .hi{font-size:18px;font-weight:800;margin-bottom:14px}
+
+  .todohead{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:var(--vimo-ink);margin:2px 2px 10px}.todohead svg{width:15px;height:15px;color:var(--vimo)}
+  .todohead .wait{font-weight:600;font-size:11px;color:var(--faint);background:#fff;border:1px solid var(--line2);border-radius:7px;padding:2px 8px}
+
+  /* 히어로 (확정본) */
+  .hero{display:grid;grid-template-columns:300px 1fr;border:1px solid var(--vimo-line);border-radius:16px;overflow:hidden;background:#fff;box-shadow:var(--sh)}
+  .thumb{position:relative;overflow:hidden;min-height:206px;background:linear-gradient(135deg,#7c3a1d,#c2683a)}
+  .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .thumb .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.02) 40%,rgba(0,0,0,.45))}
+  .thumb .pl{position:absolute;inset:0;display:grid;place-items:center}
+  .thumb .plc{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center;color:#1a1a1a;box-shadow:0 4px 14px rgba(0,0,0,.25)}.thumb .plc svg{width:20px;height:20px;margin-left:2px}
+  .thumb .bl{position:absolute;left:9px;bottom:9px;display:flex;align-items:center;gap:6px}
+  .verbadge{font-size:9.5px;font-weight:800;padding:1px 7px;border-radius:6px;background:var(--vimo-soft);color:#c8430a}
+  .dur{font-size:9.5px;font-weight:700;color:#fff;background:rgba(0,0,0,.6);padding:1px 6px;border-radius:4px}
+  .info{padding:16px 18px;display:flex;flex-direction:column}
+  .crumb{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--faint);flex-wrap:wrap}.crumb b{color:var(--soft);font-weight:600}.crumb svg.sep{width:12px;height:12px;color:#c8c8c8}
+  .vmk{width:14px;height:14px;border-radius:4px;display:inline-grid;place-items:center;color:#fff;font-weight:800;font-size:8px;background:linear-gradient(90deg,var(--vimo) 0 50%,#f9a87a 50%)}
+  .info h3{font-size:18px;font-weight:800;margin-top:6px;letter-spacing:-.01em}
+  .countchips{display:flex;align-items:center;gap:8px;margin-top:11px;flex-wrap:wrap}
+  .cchip{font-size:11.5px;font-weight:600;color:var(--soft);border:1px solid var(--line2);border-radius:999px;padding:5px 12px;display:inline-flex;align-items:center;gap:6px}.cchip svg{width:13px;height:13px;color:var(--faint)}.cchip b{color:var(--text);font-weight:700}
+  .cchip.dl{color:var(--vimo-ink);border-color:var(--vimo-line);background:var(--vimo-soft)}.cchip.dl svg{color:var(--vimo)}
+  .act{margin-top:auto;padding-top:14px;display:flex;align-items:center;gap:9px}
+  .btn{font-size:12px;font-weight:600;border-radius:9px;padding:8px 13px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:none;font-family:inherit}.btn svg{width:14px;height:14px}
+  .btn.pv{background:var(--vimo);color:#fff} .btn.g{background:#fff;border:1px solid var(--line2);color:var(--text)} .btn.link{background:none;color:var(--faint);font-weight:600;padding:8px 4px}
+
+  /* My box 헤더 */
+  .mbhead{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;margin:24px 2px 14px}.mbhead svg.hd{width:17px;height:17px;color:var(--mybox)}.mbhead .sum{font-weight:500;font-size:11.5px;color:var(--faint)}
+  .mbhead .right{margin-left:auto;display:flex;align-items:center;gap:6px}
+  .mbhead .vtog{display:inline-flex;border:1px solid var(--line2);border-radius:8px;overflow:hidden}.mbhead .vtog span{padding:4px 9px;font-size:11px;font-weight:600;color:var(--faint);background:#fff;cursor:pointer}.mbhead .vtog span.on{background:var(--mybox-soft);color:#9a3412}
+  .mbhead .up{font-size:11.5px;font-weight:600;color:#fff;background:var(--mybox);border-radius:8px;padding:5px 11px;display:inline-flex;align-items:center;gap:6px;cursor:pointer}.mbhead .up svg{width:13px;height:13px}
+
+  .sublbl{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--soft);margin:0 2px 9px}.sublbl svg{width:13px;height:13px;color:var(--mybox);fill:var(--mybox)}
+  .sublbl.plain svg{color:var(--faint);fill:none}
+
+  /* 즐겨찾기 카드 (fcards/fcard 스타일 그대로) */
+  .fcards{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:20px}
+  .fcard{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--line2);border-radius:12px;background:#fff;cursor:pointer;position:relative}.fcard:hover{background:var(--surf);border-color:var(--mybox-line)}
+  .fcard .fi{width:32px;height:32px;border-radius:8px;background:var(--mybox-soft);display:grid;place-items:center;flex:none}.fcard .fi svg{width:16px;height:16px;color:var(--mybox)}
+  .fcard .fthumb{width:32px;height:32px;border-radius:8px;object-fit:cover;flex:none;background:#ddd}
+  .fcard .ft{min-width:0;flex:1}
+  .fcard .fn{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:14px}
+  .fcard .fc{font-size:10.5px;color:var(--faint)}
+  .fcard .star{position:absolute;top:9px;right:10px;width:13px;height:13px;color:var(--mybox);fill:var(--mybox)}
+
+  /* 드라이브 리스트 (시안1) */
+  .dlist{background:#fff;border:1px solid var(--line2);border-radius:12px;overflow:hidden}
+  .dhead,.drow{display:grid;grid-template-columns:26px 1fr 78px 92px 76px;align-items:center;gap:12px;padding:9px 14px}
+  .dhead{font-size:10.5px;font-weight:700;color:var(--faint);border-bottom:1px solid var(--hair);background:var(--surf)}
+  .drow{border-top:1px solid var(--hair);font-size:12.5px;cursor:pointer}.drow:first-of-type{border-top:none}.drow:hover{background:var(--surf)}
+  .drow .star{width:15px;height:15px;color:#cfcfcf;cursor:pointer}.drow .star.on{color:var(--mybox);fill:var(--mybox)}.drow:hover .star{color:var(--faint)}.drow:hover .star.on{color:var(--mybox)}
+  .drow .nm{display:flex;align-items:center;gap:11px;min-width:0}.drow .nm .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .drow .c{color:var(--faint);font-size:11.5px}
+  .ftn{width:46px;height:30px;border-radius:6px;background:#dcdcdc;flex:none;overflow:hidden}.ftn img{width:100%;height:100%;object-fit:cover;display:block}
+  .ficon{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;flex:none;background:var(--mybox-soft)}.ficon svg{width:17px;height:17px;color:var(--mybox)}
+
+  .note{font-size:11.5px;color:var(--faint);margin-top:11px;padding-left:2px;line-height:1.55}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="intro">
+    <h1>홈 = 지금 할 일(히어로) + My box (즐겨찾기 + 드라이브 리스트)</h1>
+    <p>1번(드라이브 리스트)에 <b>즐겨찾기</b>를 추가했습니다. 즐겨찾기는 가리키신 폴더 카드(<code>fcards &gt; fcard</code>) 스타일 그대로 리스트 위 카드 행으로 올렸고, 폴더·파일을 섞어 별표로 고정합니다. 리스트 각 행에도 별을 달아 그 자리에서 즐겨찾기 토글이 됩니다.</p>
+    <div class="diag"><b>구조</b> — 히어로(지금 할 일) → <b>My box</b> 헤더(리스트/그리드 토글·올리기) → <b>즐겨찾기</b> 카드 행(★ 폴더·파일 혼합) → <b>전체 파일</b> 드라이브 리스트(이름·종류·수정일·크기 + 행별 ★).</div>
+  </div>
+
+  <div class="main">
+    <div class="hi">안녕하세요, 서준님</div>
+    <div class="todohead"><svg data-lucide="target"></svg> 지금 할 일 <span class="wait">처리 대기 1건</span></div>
+    <div class="hero">
+      <div class="thumb"><img src="https://picsum.photos/seed/vibox-cafe-pour/720/405" onerror="this.style.display='none'"><div class="shade"></div><div class="pl"><span class="plc"><svg data-lucide="play"></svg></span></div><div class="bl"><span class="verbadge">v3</span><span class="dur">1:48</span></div></div>
+      <div class="info">
+        <div class="crumb"><span class="vmk">V</span> 성수 카페 <span class="mono">#1042</span> <svg data-lucide="chevron-right" class="sep"></svg> 완성본 <svg data-lucide="chevron-right" class="sep"></svg> <b>브랜드필름</b></div>
+        <h3>브랜드필름 v3</h3>
+        <div class="countchips tnum"><span class="cchip"><svg data-lucide="pen-line"></svg>수정 요청 <b>2</b></span><span class="cchip dl"><svg data-lucide="clock"></svg>마감 D-2</span></div>
+        <div class="act"><button class="btn pv"><svg data-lucide="upload"></svg>새 버전(v4) 올리기</button><button class="btn g"><svg data-lucide="message-square"></svg>코멘트 보기</button><button class="btn link">프로젝트 열기 →</button></div>
+      </div>
+    </div>
+
+    <div class="mbhead"><svg data-lucide="hard-drive" class="hd"></svg> My box <span class="sum">파일 28 · 폴더 4</span>
+      <span class="right"><span class="vtog"><span class="on">리스트</span><span>그리드</span></span><span class="up"><svg data-lucide="upload"></svg>올리기</span></span>
+    </div>
+
+    <div class="sublbl"><svg data-lucide="star"></svg> 즐겨찾기</div>
+    <div class="fcards">
+      <div class="fcard"><span class="fi"><svg data-lucide="folder"></svg></span><div class="ft"><div class="fn">브이로그</div><div class="fc">폴더 · 12개</div></div><svg data-lucide="star" class="star"></svg></div>
+      <div class="fcard"><img class="fthumb" src="https://picsum.photos/seed/vibox-jeju-road/120/120"><div class="ft"><div class="fn">제주_여행_편집본 v2</div><div class="fc">영상 · 420MB</div></div><svg data-lucide="star" class="star"></svg></div>
+      <div class="fcard"><span class="fi"><svg data-lucide="folder"></svg></span><div class="ft"><div class="fn">레퍼런스</div><div class="fc">폴더 · 8개</div></div><svg data-lucide="star" class="star"></svg></div>
+      <div class="fcard"><img class="fthumb" src="https://picsum.photos/seed/vibox-interview/120/120"><div class="ft"><div class="fn">인터뷰_원본_5min</div><div class="fc">영상 · 2.1GB</div></div><svg data-lucide="star" class="star"></svg></div>
+    </div>
+
+    <div class="sublbl plain"><svg data-lucide="folder-open"></svg> 전체 파일</div>
+    <div class="dlist">
+      <div class="dhead"><span></span><span>이름</span><span>종류</span><span>수정일</span><span>크기</span></div>
+      <div class="drow"><svg data-lucide="star" class="star on"></svg><span class="nm"><span class="ftn"><img src="https://picsum.photos/seed/vibox-jeju-road/120/80"></span><span class="t">제주_여행_편집본 v2</span></span><span class="c">영상</span><span class="c">2일 전</span><span class="c">420MB</span></div>
+      <div class="drow"><svg data-lucide="star" class="star"></svg><span class="nm"><span class="ftn"><img src="https://picsum.photos/seed/vibox-vlog0612/120/80"></span><span class="t">브이로그_0612</span></span><span class="c">영상</span><span class="c">3일 전</span><span class="c">180MB</span></div>
+      <div class="drow"><svg data-lucide="star" class="star on"></svg><span class="nm"><span class="ficon"><svg data-lucide="folder"></svg></span><span class="t">레퍼런스_모음</span></span><span class="c">폴더</span><span class="c">5일 전</span><span class="c">—</span></div>
+      <div class="drow"><svg data-lucide="star" class="star on"></svg><span class="nm"><span class="ftn"><img src="https://picsum.photos/seed/vibox-interview/120/80"></span><span class="t">인터뷰_원본_5min</span></span><span class="c">영상</span><span class="c">1주 전</span><span class="c">2.1GB</span></div>
+      <div class="drow"><svg data-lucide="star" class="star"></svg><span class="nm"><span class="ficon"><svg data-lucide="image"></svg></span><span class="t">썸네일_후보_3종</span></span><span class="c">이미지</span><span class="c">1주 전</span><span class="c">12MB</span></div>
+    </div>
+    <div class="note">즐겨찾기 = 위 카드 행(가리키신 <code>fcards &gt; fcard</code> 스타일, ★ 채워진 별). 리스트 행 맨 앞 별을 누르면 그 파일이 즐겨찾기 카드로 올라옵니다(별 채워짐 = 즐겨찾기됨). 폴더·영상·이미지 섞여도 동일 카드.</div>
+  </div>
+</div>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>if(window.lucide) lucide.createIcons();</script>
+</body>
+</html>

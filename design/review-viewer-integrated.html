@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 검수 뷰어 — 통합 (1번 컨트롤 바 + 댓글 패널)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --accent:#e85008; --acc-ink:#c2410c; --acc-soft:#fef0e8; --acc-line:#fbd9c4; --ai:#8b5cf6; --ai-soft:#f3edff; --praise:#db2777; --praise-soft:#fdf2f8; --emerald:#059669; --emerald-soft:#ecfdf5;
+    --col:#c2410c; --col-soft:#fff1e8; --txt:#6d28d9; --txt-soft:#f3edff; --etc:#475569; --etc-soft:#f1f5f9;
+    --s50:#f8fafc; --s100:#f1f5f9; --s200:#e2e8f0; --s300:#cbd5e1; --s400:#94a3b8; --s500:#64748b; --s600:#475569; --s700:#334155; --s900:#0f172a;
+    --page:#e9eaec; --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif; --sh2:0 16px 44px rgba(15,23,42,.2); --sh:0 1px 2px rgba(15,23,42,.06);
+    --bar:#0b0f17; --barline:#1e293b; --trk:#334155; --buf:#475569; --bartxt:#cbd5e1; --dim:#64748b; --bright:#f1f5f9; --resolved:#64748b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);background:var(--page);color:var(--s900);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h3{margin:0} button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  svg.lucide{width:1em;height:1em;stroke-width:2;flex:none;vertical-align:-.14em}
+  .vmk{display:inline-block;vertical-align:-2px} img{display:block}
+  .wrap{max-width:1280px;margin:0 auto;padding:26px 20px 80px}
+  .intro h1{font-size:20px;font-weight:800;letter-spacing:-.02em}
+  .intro p{color:var(--s500);font-size:12.5px;margin-top:7px;line-height:1.6;max-width:900px}.intro b{color:var(--s700)}
+
+  .browser{margin-top:18px;border:1px solid var(--s200);border-radius:13px;overflow:hidden;background:#fff;box-shadow:var(--sh2)}
+  .bchrome{display:flex;align-items:center;gap:8px;padding:9px 13px;background:#f3f3f4;border-bottom:1px solid var(--s200)}
+  .bdots{display:flex;gap:6px}.bdots i{width:11px;height:11px;border-radius:50%;background:#d6d6d8;display:block}
+  .burl{flex:1;background:#fff;border:1px solid var(--s200);border-radius:7px;padding:5px 11px;font-size:11px;color:var(--s400);display:flex;align-items:center;gap:7px}.burl svg{width:12px;height:12px;color:#bdbdbd}
+  .viewer{height:620px;display:flex;flex-direction:column;background:#fff;overflow:hidden}
+
+  /* 헤더 (라이브) */
+  .vhead{flex:none;display:flex;align-items:center;gap:11px;padding:10px 15px;background:#fff;border-bottom:1px solid var(--s200)}
+  .vhead .crumb{font-size:12.5px;color:var(--s400);display:flex;align-items:center;gap:6px}.vhead .crumb b{color:var(--s600);font-weight:600}.vhead .crumb .cur{color:var(--s900);font-weight:700}.vhead .crumb svg{width:13px;height:13px;color:var(--s300)}
+  .vhead .pin{font-size:11px;font-weight:800;color:var(--accent);background:var(--acc-soft);border-radius:6px;padding:2px 8px}
+  .vhead .up{font-size:11px;color:var(--s400)}.vhead .up b{color:var(--s600);font-weight:600}
+  .vhead .r{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .vhead .unres{font-size:11px;font-weight:700;color:var(--acc-ink);background:var(--acc-soft);border-radius:7px;padding:5px 9px;display:inline-flex;align-items:center;gap:5px}.vhead .unres svg{width:13px;height:13px}
+  .b{font-size:12px;font-weight:600;border-radius:8px;padding:6px 11px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.b svg{width:14px;height:14px}
+  .b-out{background:#fff;border:1px solid var(--s200);color:var(--s700)} .b-ok{background:var(--emerald);color:#fff}
+  .vhead .nav{display:flex;gap:1px;margin-left:2px}.vhead .nav button{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;color:var(--s400)}.vhead .nav svg{width:15px;height:15px}
+
+  .body{flex:1;display:flex;min-height:0}
+  /* 좌: 영상 + 컨트롤 바(아래) */
+  .left{flex:1;min-width:0;display:flex;flex-direction:column;background:#000}
+  .stage{flex:1;min-height:0;position:relative;display:grid;place-items:center;background:linear-gradient(125deg,#0d4d4a 0%,#1f6f5c 36%,#c2683a 76%,#e85008 100%)}
+  .stage .pbtn{position:absolute;width:74px;height:74px;border-radius:50%;background:rgba(11,15,23,.55);backdrop-filter:blur(3px);border:1px solid rgba(255,255,255,.18);display:grid;place-items:center;z-index:2}.stage .pbtn svg{width:27px;height:27px;color:#fff;fill:#fff;margin-left:4px}
+  .stage .anno{position:absolute;top:13px;right:13px;font-size:11.5px;font-weight:600;color:#fff;background:rgba(0,0,0,.42);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:6px 11px;display:inline-flex;align-items:center;gap:6px}.stage .anno svg{width:13px;height:13px}
+  .stage .speed{position:absolute;top:13px;left:13px;font-size:11px;font-weight:800;color:#fff;background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.16);border-radius:7px;padding:4px 9px;font-family:ui-monospace,monospace}
+  .stage .sub{position:absolute;left:0;right:0;bottom:16px;text-align:center;color:#fff;font-size:16px;font-weight:600;text-shadow:0 1px 5px rgba(0,0,0,.9)}
+
+  /* 컨트롤 바 = 1번 (영상 아래) */
+  .bar{flex:none;background:var(--bar);border-top:1px solid var(--barline);padding:10px 16px 11px}
+  .r1{display:flex;align-items:center;gap:12px}
+  .seek{position:relative;flex:1;height:18px;display:flex;align-items:center;cursor:pointer}
+  .seek .trk{position:absolute;left:0;right:0;height:6px;border-radius:3px;background:var(--trk)}
+  .seek .buf{position:absolute;left:0;height:6px;width:52%;border-radius:3px;background:var(--buf)}
+  .seek .fil{position:absolute;left:0;height:6px;width:34%;border-radius:3px;background:var(--accent)}
+  .seek .range{position:absolute;left:48%;width:10%;height:6px;border-radius:3px;background:rgba(232,80,8,.32);border:1px solid rgba(232,80,8,.55)}
+  .seek .range:before,.seek .range:after{content:"";position:absolute;top:-2px;bottom:-2px;width:3px;border-radius:2px;background:var(--accent)}.seek .range:before{left:-1px}.seek .range:after{right:-1px}
+  .seek .mk{position:absolute;top:50%;transform:translate(-50%,-50%);width:11px;height:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2.5px var(--bar),0 1px 3px rgba(0,0,0,.6);z-index:2}
+  .seek .mk.ai{background:var(--ai)}.seek .mk.done{background:var(--resolved);display:grid;place-items:center}.seek .mk.done svg{width:7px;height:7px;color:#0b0f17}
+  .seek .head{position:absolute;top:50%;left:34%;transform:translate(-50%,-50%);width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px var(--accent),0 1px 5px rgba(0,0,0,.6);z-index:3}
+  .tc{font-family:ui-monospace,SFMono-Regular,monospace;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--bartxt)}.tc.dur{color:var(--dim)}
+  .r2{display:flex;align-items:center;gap:10px;margin-top:9px}
+  .ico{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;color:var(--bartxt)}.ico:hover{background:rgba(255,255,255,.08);color:var(--bright)}.ico svg{width:19px;height:19px}
+  .play{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;box-shadow:0 4px 14px rgba(232,80,8,.4)}.play svg{width:22px;height:22px;fill:currentColor}
+  .grp{display:flex;align-items:center;gap:3px}.div{width:1px;height:24px;background:var(--barline);margin:0 5px}.sp{flex:1}
+  .nav1{display:flex;align-items:center}
+  .nav1 .arw{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--bartxt)}.nav1 .arw:hover{background:rgba(255,255,255,.1);color:#fff}.nav1 .arw svg{width:18px;height:18px}
+  .nav1 .cm{position:relative;width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--bartxt)}.nav1 .cm svg{width:18px;height:18px}
+  .nav1 .cm .bdg{position:absolute;top:3px;right:2px;min-width:13px;height:13px;padding:0 3px;border-radius:7px;background:var(--accent);color:#fff;font-size:8.5px;font-weight:800;display:grid;place-items:center;line-height:1}
+  .util{display:flex;align-items:center;gap:3px}.util .spd{height:34px;padding:0 10px;border-radius:9px;font-size:12px;font-weight:700;font-family:ui-monospace,monospace;color:var(--bartxt)}.util .spd:hover{background:rgba(255,255,255,.08)}.util .ico{color:var(--dim)}.util .ico:hover{color:var(--bright)}
+
+  /* 우: 댓글 패널 (라이브) */
+  .panel{width:360px;flex:none;border-left:1px solid var(--s200);background:var(--s50);display:flex;flex-direction:column;min-height:0}
+  .ph{flex:none;padding:11px 14px 10px;background:#fff;border-bottom:1px solid var(--s200)}
+  .ph .r{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+  .ph h3{font-size:13.5px;font-weight:700}.ph .cnt{font-size:12px;color:var(--s400);font-weight:500}.ph .cnt b{color:var(--acc-ink);font-weight:700}
+  .ph .set{margin-left:auto;width:27px;height:27px;border-radius:7px;display:grid;place-items:center;color:var(--s400)}.ph .set svg{width:16px;height:16px}
+  .ph .filt{display:flex;align-items:center;gap:6px}
+  .ph .seg{flex:1;display:flex;gap:2px;background:var(--s100);border-radius:7px;padding:3px}.ph .seg button{flex:1;font-size:11px;font-weight:700;padding:4px;border-radius:5px;color:var(--s500);display:inline-flex;align-items:center;justify-content:center;gap:4px}.ph .seg button svg{width:11px;height:11px}.ph .seg button.on{background:#fff;color:var(--s900);box-shadow:var(--sh)}
+  .ph .sort{width:27px;height:27px;border-radius:6px;background:var(--s900);color:#fff;display:grid;place-items:center}.ph .sort svg{width:13px;height:13px}
+  .banner{display:flex;align-items:center;gap:8px;margin:11px;padding:8px 11px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;color:#1e40af}.banner svg{width:14px;height:14px}.banner .bb{margin-left:auto;font-size:11px;font-weight:700;background:#2563eb;color:#fff;padding:3px 8px;border-radius:6px}
+  .list{flex:1;overflow-y:auto;padding:0 11px 11px;display:flex;flex-direction:column;gap:9px;min-height:0}
+  .lc{background:#fff;border:1px solid var(--s200);border-radius:10px;padding:11px 12px;display:flex;gap:10px}
+  .lc-ck{flex:none;width:20px;height:20px;border-radius:50%;border:2px solid var(--s300);background:#fff;margin-top:1px;display:grid;place-items:center}.lc-ck svg{width:11px;height:11px;color:#fff;opacity:0}.lc-ck.on{background:var(--emerald);border-color:var(--emerald)}.lc-ck.on svg{opacity:1}
+  .lc-m{flex:1;min-width:0}
+  .lc-meta{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+  .lc-tc{font-family:ui-monospace,monospace;font-size:11px;font-weight:700;color:var(--s900);background:var(--s100);padding:1px 6px;border-radius:5px}.lc-tc.ai{color:var(--ai);background:var(--ai-soft)}.lc-tc.ok{color:var(--emerald);background:var(--emerald-soft)}
+  .lc-cat{font-size:9.5px;font-weight:800;border-radius:5px;padding:1px 6px;display:inline-flex;align-items:center;gap:3px}.lc-cat svg{width:10px;height:10px}.lc-cat.col{color:var(--col);background:var(--col-soft)}.lc-cat.txt{color:var(--txt);background:var(--txt-soft)}.lc-cat.etc{color:var(--etc);background:var(--etc-soft)}
+  .lc-au{margin-left:auto;font-size:10.5px;color:var(--s400);display:inline-flex;align-items:center;gap:5px;font-weight:500;white-space:nowrap}.lc-role{font-size:9px;font-weight:800;color:var(--s500);background:var(--s100);border-radius:4px;padding:1px 4px}
+  .ai-dot{width:14px;height:14px;border-radius:50%;background:var(--ai);display:inline-grid;place-items:center}.ai-dot svg{width:8px;height:8px;color:#fff}
+  .lc-tx{font-size:13px;color:var(--s700);line-height:1.5}.lc-tx .hl{color:var(--accent);font-weight:600}
+  .lc-sub{font-size:10.5px;color:var(--s400);margin-top:5px}
+  .lc-act{flex:none;display:flex;gap:1px;align-items:flex-start}.lc-act button{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;color:var(--s400)}.lc-act svg{width:13px;height:13px}
+  .lc.done{background:var(--s50)}.lc.done .lc-tx{color:var(--s400);text-decoration:line-through;text-decoration-color:var(--s300)}
+  .linput{flex:none;border-top:1px solid var(--s200);padding:10px 12px;background:#fff}
+  .linput .bx{border:1px solid var(--s200);background:var(--s50);border-radius:10px;overflow:hidden}
+  .linput .row1{display:flex;align-items:center;gap:7px;padding:7px 9px 4px}.linput .row1 .tcc{font-family:ui-monospace,monospace;font-size:10.5px;font-weight:700;color:var(--s900);background:var(--s100);padding:1px 6px;border-radius:5px}
+  .linput .kind{display:flex;gap:2px;background:#fff;border:1px solid var(--s200);border-radius:7px;padding:2px}.linput .kind button{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:5px;color:var(--s400);display:inline-flex;align-items:center;gap:3px}.linput .kind button svg{width:10px;height:10px}.linput .kind button.on{background:var(--s900);color:#fff}
+  .linput .cat{margin-left:auto;font-size:10px;font-weight:700;color:var(--col);background:var(--col-soft);padding:2px 7px;border-radius:6px}
+  .linput .row2{display:flex;align-items:center;gap:8px;padding:2px 9px 9px}.linput .row2 input{flex:1;border:none;background:transparent;outline:none;font-family:inherit;font-size:12.5px}
+  .linput .send{width:29px;height:29px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center;flex:none}.linput .send svg{width:14px;height:14px}
+
+  .note{margin-top:14px;font-size:12px;color:var(--s500);line-height:1.6}.note b{color:var(--s700)}
+</style>
+</head>
+<body>
+<svg style="display:none"><symbol id="vmk" viewBox="0 0 491.75 396.19"><path d="M491.75,10.14v375.95c0,8.49-11.04,13.18-18.49,7.83l-79.1-57.24c-1.12-.78-2.05-1.74-2.71-2.83v-115.6c0-11.2-12.09-18.18-21.78-12.6l-81.95,47.33c-3.17,1.83-7.11,1.63-10.08-.52l-11.76-8.52c-4.46-3.18-4.46-9.77,0-12.98l20-14.49c12.56-9.07,12.56-27.67,0-36.74l-19.96-14.42c-4.42-3.22-4.42-9.8,0-13.02L473.26,2.31c7.44-5.43,18.49-.66,18.49,7.83Z" fill="#f9a87a"/><path d="M269.34,212.47l-55.32,40c-2.96,2.14-6.9,2.34-10.07.52l-81.96-47.34c-9.65-5.58-21.74,1.4-21.74,12.6v111.8c0,2.97-1.43,5.77-3.84,7.51l-68.01,49.19C16.59,395.31,0,386.94,0,372.41V23.82C0,9.28,16.59.91,28.41,9.48l240.94,174.28c9.78,7.07,9.78,21.64,0,28.72Z" fill="#e85008"/></symbol></svg>
+
+<div class="wrap">
+  <div class="intro">
+    <h1>검수 뷰어 — 통합 (1번 컨트롤 바 + 댓글 패널)</h1>
+    <p>헤더 + 영상 + <b>영상 아래 1번 컨트롤 바</b>(좌우 코멘트 네비·미해결 비-히어로·유틸 정리) + 우측 <b>댓글 패널</b>(현재 라이브 slate 카드)을 한 화면에. 영상은 contain(안 가림), 컨트롤은 영상 아래.</p>
+  </div>
+
+  <div class="browser">
+    <div class="bchrome"><span class="bdots"><i></i><i></i><i></i></span><span class="burl"><svg data-lucide="lock"></svg> vibox.cloud/team/브랜드필름_v3</span></div>
+    <div class="viewer">
+      <div class="vhead">
+        <svg class="vmk" width="19" height="15"><use href="#vmk"/></svg>
+        <span class="crumb"><b>team</b><svg data-lucide="chevron-right"></svg><span class="cur">브랜드필름</span></span>
+        <span class="pin">v3</span>
+        <span class="up">올린 사람 <b>윤현지(테스트)</b></span>
+        <span class="r">
+          <span class="unres"><svg data-lucide="message-circle"></svg>미해결 2</span>
+          <button class="b b-out"><svg data-lucide="pen-line"></svg>수정 요청</button>
+          <button class="b b-ok"><svg data-lucide="check"></svg>승인</button>
+          <span class="nav"><button><svg data-lucide="chevron-up"></svg></button><button><svg data-lucide="chevron-down"></svg></button></span>
+        </span>
+      </div>
+      <div class="body">
+        <div class="left">
+          <div class="stage">
+            <div class="speed">1x</div>
+            <div class="anno"><svg data-lucide="pen-line"></svg>주석</div>
+            <div class="pbtn"><svg data-lucide="play"></svg></div>
+            <div class="sub">우리의 하루는 한 잔의 커피에서 시작된다</div>
+          </div>
+          <div class="bar">
+            <div class="r1"><span class="tc">0:36</span>
+              <div class="seek"><div class="trk"></div><div class="buf"></div><div class="fil"></div><div class="range" title="구간 코멘트"></div><span class="mk" style="left:7%"></span><span class="mk ai" style="left:39%"></span><span class="mk done" style="left:69%"><svg data-lucide="check"></svg></span><span class="head"></span></div>
+              <span class="tc dur">1:48</span></div>
+            <div class="r2">
+              <div class="grp"><button class="ico" title="−1프레임 (←)"><svg data-lucide="step-back"></svg></button><button class="play"><svg data-lucide="play"></svg></button><button class="ico" title="+1프레임 (→)"><svg data-lucide="step-forward"></svg></button></div>
+              <div class="div"></div>
+              <div class="nav1"><button class="arw" title="이전 코멘트"><svg data-lucide="chevron-left"></svg></button><button class="cm" title="코멘트"><svg data-lucide="message-square"></svg><span class="bdg">2</span></button><button class="arw" title="다음 코멘트"><svg data-lucide="chevron-right"></svg></button></div>
+              <div class="sp"></div>
+              <div class="util"><button class="spd">1x</button><button class="ico" title="음소거"><svg data-lucide="volume-2"></svg></button><button class="ico" title="전체화면"><svg data-lucide="maximize"></svg></button></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="ph">
+            <div class="r"><h3>댓글</h3><span class="cnt">2 · 미해결 <b>2</b></span><button class="set"><svg data-lucide="settings-2"></svg></button></div>
+            <div class="filt"><div class="seg"><button class="on">전체</button><button><svg data-lucide="pen-line"></svg>수정 2</button><button><svg data-lucide="heart"></svg>좋아요</button></div><button class="sort"><svg data-lucide="arrow-down-narrow-wide"></svg></button></div>
+          </div>
+          <div class="banner"><svg data-lucide="eye"></svg>내부 댓글 <b style="font-weight:700">2건</b>이 아직 클라에게 비공개<span class="bb">모두 클라공개</span></div>
+          <div class="list">
+            <div class="lc"><button class="lc-ck"></button><div class="lc-m"><div class="lc-meta"><span class="lc-tc">0:08</span><span class="lc-cat col"><svg data-lucide="palette"></svg>색보정</span><span class="lc-au">박매니저 <span class="lc-role">관리</span></span></div><div class="lc-tx">인트로 색감이 차가워요. 따뜻하게 부탁드려요.</div><div class="lc-sub">5월 30일</div></div><div class="lc-act"><button><svg data-lucide="corner-down-right"></svg></button><button><svg data-lucide="more-horizontal"></svg></button></div></div>
+            <div class="lc"><button class="lc-ck"></button><div class="lc-m"><div class="lc-meta"><span class="lc-tc ai">0:42</span><span class="lc-cat txt"><svg data-lucide="type"></svg>자막</span><span class="lc-au"><span class="ai-dot"><svg data-lucide="sparkles"></svg></span>AI 검수</span></div><div class="lc-tx">자막 오타 의심: <span class="hl">‘브랜대’ → ‘브랜드’</span></div><div class="lc-sub">AI 추천 · 무시</div></div><div class="lc-act"><button><svg data-lucide="plus"></svg></button><button><svg data-lucide="x"></svg></button></div></div>
+            <div class="lc done"><button class="lc-ck on"><svg data-lucide="check"></svg></button><div class="lc-m"><div class="lc-meta"><span class="lc-tc ok">1:15</span><span class="lc-cat etc">기타</span><span class="lc-au">박매니저 <span class="lc-role">관리</span></span></div><div class="lc-tx">이 전환 정말 좋네요. 이대로.</div><div class="lc-sub">5월 30일 · 해결됨</div></div><div class="lc-act"><button><svg data-lucide="corner-down-right"></svg></button><button><svg data-lucide="more-horizontal"></svg></button></div></div>
+          </div>
+          <div class="linput"><div class="bx"><div class="row1"><span class="tcc">0:36</span><div class="kind"><button class="on"><svg data-lucide="pen-line"></svg>수정</button><button><svg data-lucide="heart"></svg>좋아요</button></div><span class="cat">색보정</span></div><div class="row2"><input placeholder="피드백을 입력하세요 (⌘+Enter)"><button class="send"><svg data-lucide="arrow-up"></svg></button></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note"><b>통합 포인트</b> — 시크바의 코멘트 마커(주황 미해결·보라 AI·회색 해결)가 우측 패널 카드와 1:1로 대응합니다(마커↔카드 양방향 점프). 컨트롤 바는 영상 아래라 자막을 안 가리고, 미해결은 마커가 담당해 바에선 작은 배지로만.</div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>if(window.lucide) lucide.createIcons();</script>
+</body>
+</html>

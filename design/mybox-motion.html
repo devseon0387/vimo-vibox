@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>My box — 폴더 열기 모션 & 로티 전략</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<style>
+  :root{
+    --bg:#fff; --surface:#fafafa; --surface-2:#f7f7f7; --border:#ececec; --border-hover:#d4d4d4;
+    --text:#111; --text-soft:#666; --text-faint:#999; --hover:#f0f0f0; --sel:#f4f4f5;
+    --mybox:#52525b; --mybox-ink:#3f3f46; --fold:#9ca3af; --vimo:#F94000;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#eef0f2;color:var(--text);font-family:Pretendard,-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .page{max-width:1120px;margin:0 auto;padding:30px 24px 90px}
+  h1{font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .sub{color:var(--text-soft);font-size:13.5px;margin-top:7px;line-height:1.65;max-width:760px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:13px}
+  .chip{font-size:11.5px;font-weight:600;color:var(--text-soft);background:#fff;border:1px solid var(--border);border-radius:999px;padding:5px 11px;display:inline-flex;gap:6px;align-items:center}
+  .chip b{color:var(--text)}
+  .sec{margin-top:38px}
+  .sec h2{font-size:16px;font-weight:800;display:flex;align-items:center;gap:9px}
+  .sec h2 .num{font-size:12px;font-weight:800;color:#fff;background:#111;width:23px;height:23px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center}
+  .sec .desc{font-size:13px;color:var(--text-soft);margin:8px 0 16px;line-height:1.6;max-width:740px}
+
+  .panels{display:flex;gap:18px;flex-wrap:wrap}
+  .pcol{flex:1;min-width:300px}
+  .ptag{font-size:12px;font-weight:700;color:var(--text-soft);margin-bottom:8px;display:flex;align-items:center;gap:7px}
+  .ptag .k{font-size:10.5px;font-weight:700;color:var(--text-faint);background:#fff;border:1px solid var(--border);border-radius:6px;padding:2px 7px}
+
+  /* the panel */
+  .panel{width:100%;background:#fff;border:1px solid #e2e4e7;border-radius:13px;padding:8px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 26px rgba(0,0,0,.06)}
+  .phd{display:flex;align-items:center;gap:8px;padding:9px 8px 11px;font-weight:800;font-size:13.5px}
+  .phd svg{width:16px;height:16px;color:#7a7a7a}
+  .seclbl{font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--text-faint);text-transform:uppercase;padding:6px 8px 5px}
+
+  .item{--dur:.24s;--ease:cubic-bezier(.4,0,.2,1);--lift:-4px}
+  .feel-a{--dur:.22s;--ease:cubic-bezier(.33,0,.2,1);--lift:-3px}
+  .feel-b{--dur:.36s;--ease:cubic-bezier(.34,1.4,.5,1);--lift:-7px}
+
+  .row{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:9px;font-size:13.5px;color:var(--text-soft);cursor:pointer;user-select:none;transition:background .15s}
+  .row:hover{background:var(--surface-2)}
+  .row .chev{width:14px;height:14px;color:#b8b8b8;flex:none;transition:transform var(--dur) var(--ease)}
+  .item.open > .row .chev{transform:rotate(90deg)}
+  .row .ficon{position:relative;width:17px;height:17px;flex:none}
+  .row .ficon svg{position:absolute;inset:0;width:17px;height:17px;color:var(--fold);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
+  .row .ficon .open-i{opacity:0;transform:scale(.7)}
+  .item.open > .row .ficon .shut-i{opacity:0;transform:scale(.7)}
+  .item.open > .row .ficon .open-i{opacity:1;transform:none}
+  .row .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .ct{font-size:10.5px;color:var(--text-faint);font-weight:600}
+
+  /* children — grid-rows 0fr→1fr 로 높이 전환 + 자식 stagger */
+  .kids{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--dur) var(--ease)}
+  .item.open > .kids{grid-template-rows:1fr}
+  .kids > .inner{overflow:hidden;min-height:0}
+  .kids .ch{display:flex;align-items:center;gap:7px;padding:6px 8px 6px 34px;border-radius:9px;font-size:13px;color:var(--text-soft);
+    opacity:0;transform:translateY(var(--lift));transition:opacity .2s var(--ease),transform .26s var(--ease)}
+  .kids .ch:hover{background:var(--surface-2)}
+  .item.open > .kids .ch{opacity:1;transform:none}
+  .item.open > .kids .ch:nth-child(1){transition-delay:.03s}
+  .item.open > .kids .ch:nth-child(2){transition-delay:.07s}
+  .item.open > .kids .ch:nth-child(3){transition-delay:.11s}
+  .kids .ch svg{width:15px;height:15px;color:var(--fold);flex:none}
+
+  /* star favorite */
+  .starrow{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--border);border-radius:11px;max-width:330px;background:#fff}
+  .starrow .ficon{width:18px;height:18px;color:var(--fold)}
+  .starrow .nm{flex:1;font-size:13.5px;font-weight:600}
+  .starbtn{position:relative;width:30px;height:30px;border:none;background:none;cursor:pointer;display:grid;place-items:center;color:var(--text-faint);border-radius:8px}
+  .starbtn:hover{background:var(--hover)}
+  .starbtn svg{width:16px;height:16px;transition:transform .2s}
+  .starbtn.on{color:var(--mybox-ink)}
+  .starbtn.pop svg{animation:starpop .42s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes starpop{0%{transform:scale(1)}35%{transform:scale(1.5) rotate(-12deg)}70%{transform:scale(.9)}100%{transform:scale(1)}}
+  .spark{position:absolute;inset:0;pointer-events:none}
+  .spark i{position:absolute;left:50%;top:50%;width:4px;height:4px;border-radius:99px;background:var(--mybox-ink);opacity:0}
+  .starbtn.pop .spark i{animation:spk .5s ease-out}
+  .spark i:nth-child(1){--tx:0px;--ty:-15px}
+  .spark i:nth-child(2){--tx:13px;--ty:-7px}
+  .spark i:nth-child(3){--tx:11px;--ty:9px}
+  .spark i:nth-child(4){--tx:-11px;--ty:9px}
+  .spark i:nth-child(5){--tx:-13px;--ty:-7px}
+  @keyframes spk{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}30%{opacity:.9}100%{opacity:0;transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(1)}}
+
+  /* lottie/moment cards */
+  .moments{display:flex;gap:16px;flex-wrap:wrap}
+  .mcard{flex:1;min-width:210px;background:#fff;border:1px solid #e2e4e7;border-radius:13px;padding:18px;text-align:center}
+  .mcard .stage{height:120px;display:grid;place-items:center;margin-bottom:8px}
+  .mcard .mt{font-size:13px;font-weight:700}
+  .mcard .md{font-size:11.5px;color:var(--text-faint);margin-top:4px;line-height:1.5}
+  .badge{display:inline-block;font-size:10px;font-weight:700;color:var(--vimo);background:#fff3ec;border:1px solid #f6d9cd;border-radius:999px;padding:2px 8px;margin-bottom:8px}
+  /* CSS 빈상태 일러스트 (Lottie 자리 placeholder, 항상 보임) */
+  .emptyfold{position:relative;width:74px;height:60px}
+  .emptyfold .body{position:absolute;inset:auto 0 0 0;height:44px;background:#e4e4e7;border-radius:7px}
+  .emptyfold .tab{position:absolute;left:6px;top:6px;width:30px;height:12px;background:#d4d4d8;border-radius:5px 5px 0 0}
+  .emptyfold .lid{position:absolute;left:0;right:0;bottom:0;height:40px;background:#cbcbd1;border-radius:7px;transform-origin:bottom;animation:lid 2.6s ease-in-out infinite}
+  @keyframes lid{0%,100%{transform:rotateX(0)}50%{transform:rotateX(-32deg)}}
+  .plus{position:absolute;left:50%;top:14px;transform:translateX(-50%);color:#a1a1aa;animation:plus 2.6s ease-in-out infinite}
+  @keyframes plus{0%,40%,100%{opacity:0;transform:translate(-50%,4px) scale(.6)}60%,80%{opacity:1;transform:translate(-50%,-4px) scale(1)}}
+  /* 체크 버스트 (Lottie 모먼트 예시 — CSS) */
+  .checkwrap{position:relative;width:84px;height:84px}
+  .checkring,.checkmk{position:absolute;inset:0;width:84px;height:84px}
+  .checkring circle{fill:none;stroke:#16a34a;stroke-width:3.5;stroke-dasharray:145;stroke-dashoffset:145;transform-origin:center;animation:ring 2.8s ease-in-out infinite}
+  .checkmk path{fill:none;stroke:#16a34a;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;animation:mk 2.8s ease-in-out infinite}
+  @keyframes ring{0%{stroke-dashoffset:145;transform:scale(.85)}22%{stroke-dashoffset:0;transform:scale(1)}80%{stroke-dashoffset:0;opacity:1}92%,100%{opacity:0}}
+  @keyframes mk{0%,18%{stroke-dashoffset:40}40%{stroke-dashoffset:0}80%{stroke-dashoffset:0;opacity:1}92%,100%{opacity:0}}
+  .cspark{position:absolute;inset:0}
+  .cspark i{position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:99px;background:#16a34a;opacity:0;animation:cspk 2.8s ease-in-out infinite}
+  .cspark i:nth-child(1){--tx:0;--ty:-40px}.cspark i:nth-child(2){--tx:34px;--ty:-20px}.cspark i:nth-child(3){--tx:34px;--ty:20px}
+  .cspark i:nth-child(4){--tx:0;--ty:40px}.cspark i:nth-child(5){--tx:-34px;--ty:20px}.cspark i:nth-child(6){--tx:-34px;--ty:-20px}
+  @keyframes cspk{0%,30%{opacity:0;transform:translate(-50%,-50%) scale(.3)}42%{opacity:.95}58%{opacity:0;transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(1)}100%{opacity:0}}
+  .footnote{margin-top:46px;padding-top:18px;border-top:1px solid #e2e4e7;color:var(--text-faint);font-size:12px;line-height:1.75}
+  .hint{font-size:11.5px;color:var(--text-faint);margin-top:10px}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>My box — 폴더 열기 모션 &amp; 로티 전략</h1>
+  <p class="sub">"즐겁고 세련된"의 핵심은 <b>절제된 모션</b>. 일상 인터랙션은 CSS로 빠르고 부드럽게, 로티는 저빈도·고감성 '모먼트'에만. 클릭해서 직접 느껴보세요.</p>
+  <div class="chips">
+    <span class="chip"><b>빠름</b> 150–250ms</span>
+    <span class="chip"><b>이징</b> ease-out / 스프링</span>
+    <span class="chip"><b>절제</b> 무채색·작게</span>
+    <span class="chip"><b>CSS</b> 미세 인터랙션</span>
+    <span class="chip"><b>Lottie</b> 모먼트만</span>
+  </div>
+
+  <!-- 1. 폴더 열기 — 2가지 결 -->
+  <section class="sec">
+    <h2><span class="num">1</span>폴더 열기 애니메이션 — 두 가지 결</h2>
+    <p class="desc">셰브론 회전 + 폴더 아이콘 열림(morph) + 하위 폴더가 높이 전환과 함께 위에서 차례로(stagger) 등장. 같은 동작, 다른 성격.</p>
+    <div class="panels">
+      <div class="pcol">
+        <div class="ptag">A · 절제 <span class="k">220ms · ease-out · 정직</span></div>
+        <div class="panel" data-feel="a"></div>
+      </div>
+      <div class="pcol">
+        <div class="ptag">B · 스프링 <span class="k">360ms · overshoot · 생기</span></div>
+        <div class="panel" data-feel="b"></div>
+      </div>
+    </div>
+    <p class="hint">추천: <b>A 절제</b>가 vibox의 차분한 정체성에 맞음. B는 살짝 더 즐겁지만 자주 보면 과할 수 있어 '가끔 보는 곳'에 어울림.</p>
+  </section>
+
+  <!-- 2. 별 즐겨찾기 -->
+  <section class="sec">
+    <h2><span class="num">2</span>즐겨찾기 별 — 팝 + 반짝</h2>
+    <p class="desc">별을 누르면 톡 튀어오르며(spring scale) 작은 반짝임이 퍼짐. 0.4초·무채색. 이 정도 미세 모먼트는 CSS로 충분히 즐겁습니다.</p>
+    <div class="starrow">
+      <span class="ficon" id="favficon"></span>
+      <span class="nm">진행중_프로젝트</span>
+      <button class="starbtn" id="favstar" aria-label="즐겨찾기">
+        <span class="spark"><i></i><i></i><i></i><i></i><i></i></span>
+      </button>
+    </div>
+    <p class="hint">한 단계 더 화려하게 가려면 이 자리에 <b>Lottie 반짝 버스트</b>를 끼울 수도 있음(아래 3번).</p>
+  </section>
+
+  <!-- 3. 로티 모먼트 -->
+  <section class="sec">
+    <h2><span class="num">3</span>로티는 여기에 — '모먼트'</h2>
+    <p class="desc">폴더 열기 같은 매 순간이 아니라, <b>저빈도·감정적 순간</b>에 로티를 한 스푼. 일러스트 특유의 따뜻함이 살아납니다.</p>
+    <div class="moments">
+      <div class="mcard">
+        <span class="badge">LOTTIE 자리</span>
+        <div class="stage">
+          <div class="checkwrap">
+            <svg class="checkring" viewBox="0 0 52 52"><circle cx="26" cy="26" r="23"/></svg>
+            <svg class="checkmk" viewBox="0 0 52 52"><path d="M15 27l8 8 15-16"/></svg>
+            <span class="cspark"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+          </div>
+        </div>
+        <div class="mt">업로드 완료 · 승인</div>
+        <div class="md">체크마크 버스트 — 끝났다는 만족감 (예시 모션, 실제 = Lottie .json)</div>
+      </div>
+      <div class="mcard">
+        <div class="stage">
+          <div class="emptyfold">
+            <div class="lid"></div><div class="tab"></div><div class="body"></div>
+            <svg class="plus" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </div>
+        </div>
+        <div class="mt">빈 상태</div>
+        <div class="md">"폴더가 없습니다" 대신 친근한 일러스트 (이 자리 = Lottie)</div>
+      </div>
+      <div class="mcard">
+        <div class="stage"><div id="proc-stage"></div></div>
+        <div class="mt">처리 중</div>
+        <div class="md">인코딩 · AI 검수 진행 — 살아있는 로딩</div>
+      </div>
+    </div>
+    <p class="hint">위 3개는 <b>CSS 예시 모션</b>(실제론 해당 자리에 Lottie .json 에셋을 끼움). 로티 비용: 라이브러리 ~100–250KB + 에셋. 그래서 <b>전역 미세 인터랙션엔 부적합</b>, 이런 1~5곳 모먼트에만. 원하시면 실제 Lottie 에셋으로 바로 교체해 드립니다.</p>
+  </section>
+
+  <div class="footnote">
+    정리 — <b>모션 언어 = CSS 우선(빠름·이징·절제·무채색), Lottie는 모먼트 시즈닝.</b>
+    폴더 열기 = CSS(A 절제 추천). 즐겨찾기 = CSS 팝(+선택적 Lottie 반짝). Lottie 모먼트 후보 = 빈 상태·업로드 완료·승인 체크·인코딩/AI 검수 로딩.<br>
+    결(A/B) 고르시면 실제 앱(PartnerContextPanel 트리)에 CSS 전환을 넣고, 원하시는 모먼트만 Lottie 에셋을 끼웁니다.
+  </div>
+</div>
+
+<script>
+  // folder data
+  const FOLDERS = [
+    { n:"진행중_프로젝트", kids:["성수카페_브랜딩","그래놀라_광고"] },
+    { n:"촬영_원본", kids:["2026-06_현장","인터뷰"] },
+    { n:"편집_작업본", kids:[] },
+    { n:"레퍼런스", kids:["색보정_톤"] },
+    { n:"음원_효과음", kids:[] },
+  ];
+  const SVG = {
+    chev:'<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+    shut:'<svg class="shut-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>',
+    open:'<svg class="open-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg>',
+    fold:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>',
+    star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.8a.6.6 0 0 1 1 0l2.4 5 5.4.8a.6.6 0 0 1 .3 1l-3.9 3.8.9 5.4a.6.6 0 0 1-.86.63L12 17l-4.8 2.6a.6.6 0 0 1-.87-.63l.92-5.4-3.9-3.8a.6.6 0 0 1 .33-1l5.4-.8z"/></svg>',
+  };
+  function buildPanel(el, feel){
+    el.innerHTML = '<div class="phd">'+SVG.fold.replace('class','data-x class').replace('<svg','<svg style="width:16px;height:16px;color:#7a7a7a"')+'<span>My box</span></div><div class="seclbl">전체 폴더</div>';
+    FOLDERS.forEach(f=>{
+      const item=document.createElement('div');
+      item.className='item feel-'+feel;
+      const hasK=f.kids.length>0;
+      item.innerHTML =
+        '<div class="row">'+
+          (hasK?SVG.chev:'<span style="width:14px;flex:none"></span>')+
+          '<span class="ficon">'+SVG.shut+SVG.open+'</span>'+
+          '<span class="nm">'+f.n+'</span>'+
+          (hasK?'<span class="ct">'+f.kids.length+'</span>':'')+
+        '</div>'+
+        '<div class="kids"><div class="inner">'+
+          f.kids.map(k=>'<div class="ch">'+SVG.fold+'<span>'+k+'</span></div>').join('')+
+        '</div></div>';
+      const row=item.querySelector('.row');
+      row.addEventListener('click',()=>{ if(hasK) item.classList.toggle('open'); });
+      el.appendChild(item);
+    });
+  }
+  document.querySelectorAll('.panel').forEach(p=>buildPanel(p,p.dataset.feel));
+
+  // star
+  const star=document.getElementById('favstar');
+  document.getElementById('favficon').innerHTML=SVG.fold.replace('<svg','<svg style="width:18px;height:18px"');
+  const starSvg=document.createElement('span'); starSvg.innerHTML=SVG.star;
+  star.insertBefore(starSvg.firstChild, star.firstChild);
+  let on=false;
+  star.addEventListener('click',()=>{
+    on=!on; star.classList.toggle('on',on);
+    const s=star.querySelector('svg'); s.setAttribute('fill', on?'currentColor':'none');
+    star.classList.remove('pop'); void star.offsetWidth; if(on) star.classList.add('pop');
+  });
+  star.addEventListener('animationend',()=>star.classList.remove('pop'));
+
+  // processing spinner (CSS stand-in for Lottie loading)
+  document.getElementById('proc-stage').innerHTML =
+    '<div style="width:54px;height:54px;border-radius:99px;border:5px solid #ececec;border-top-color:#9ca3af;animation:spin 1s linear infinite"></div>';
+  const sx=document.createElement('style'); sx.textContent='@keyframes spin{to{transform:rotate(360deg)}}'; document.head.appendChild(sx);
+</script>
+</body>
+</html>

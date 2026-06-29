@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 컨트롤 바 — 디자인 시안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --accent:#e85008; --ai:#7c3aed; --praise:#db2777;
+    --s100:#f1f5f9; --s200:#e2e8f0; --s300:#cbd5e1; --s400:#94a3b8; --s500:#64748b; --s700:#334155; --s900:#0f172a;
+    --page:#e9eaec; --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif;
+    --sh2:0 12px 36px rgba(15,23,42,.16);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);background:var(--page);color:var(--s900);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h2,h3,p{margin:0} button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  svg.lucide{width:1em;height:1em;stroke-width:2;flex:none;vertical-align:-.14em}
+  .wrap{max-width:1120px;margin:0 auto;padding:30px 22px 120px}
+  .intro h1{font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .intro p{color:var(--s500);font-size:13px;margin-top:8px;line-height:1.65;max-width:880px}
+  .intro b{color:var(--s700)}
+
+  .jump{position:sticky;top:0;z-index:50;background:rgba(233,234,236,.9);backdrop-filter:blur(8px);margin:18px -22px 0;padding:11px 22px;border-bottom:1px solid var(--s200);display:flex;gap:7px;flex-wrap:wrap}
+  .jump a{font-size:12px;font-weight:700;color:var(--s500);text-decoration:none;padding:6px 12px;border-radius:8px}.jump a:hover{background:#fff}.jump a.on{background:var(--s900);color:#fff}
+  .jump a b{color:var(--s400);margin-right:5px}.jump a.on b{color:rgba(255,255,255,.5)}
+
+  .lbl{display:flex;align-items:baseline;gap:11px;margin:32px 0 12px}
+  .lbl .n{font-size:12px;font-weight:800;color:#fff;background:var(--accent);width:22px;height:22px;border-radius:7px;display:grid;place-items:center;flex:none;transform:translateY(3px)}
+  .lbl h2{font-size:16.5px;font-weight:800;letter-spacing:-.01em}
+  .lbl p{font-size:12.5px;color:var(--s400)}
+  .lbl .tag{font-size:10.5px;font-weight:800;border-radius:6px;padding:3px 8px;margin-left:auto;transform:translateY(2px);background:#fef0e8;color:#c2410c;border:1px solid #fbd9c4}
+
+  /* 영상 무대 */
+  .stage{position:relative;height:340px;border-radius:13px;overflow:hidden;box-shadow:var(--sh2);background:linear-gradient(125deg,#0d4d4a 0%,#1f6f5c 38%,#c2683a 78%,#e85008 100%)}
+  .stage .ph{position:absolute;inset:0;display:grid;place-items:center;z-index:1}
+  .stage .ph span{width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center;box-shadow:0 8px 26px rgba(0,0,0,.4)}
+  .stage .ph svg{width:22px;height:22px;color:#141414;fill:#141414;margin-left:3px}
+  .stage .anno{position:absolute;top:12px;right:12px;z-index:6;font-size:11px;font-weight:600;color:#fff;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:5px 10px;display:inline-flex;align-items:center;gap:5px}.stage .anno svg{width:12px;height:12px}
+
+  /* ===== 시크바 (공통 골격, 색은 시안별) ===== */
+  .seek{position:relative;height:5px;border-radius:3px;cursor:pointer}
+  .seek .trk{position:absolute;inset:0;border-radius:3px}
+  .seek .fil{position:absolute;left:0;top:0;bottom:0;width:34%;border-radius:3px;background:var(--accent)}
+  .seek .mk{position:absolute;top:50%;transform:translate(-50%,-50%);width:11px;height:11px;border-radius:50%;border:3px solid var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.45)}
+  .seek .mk.ai{border-color:var(--ai)}.seek .mk.pr{border-color:var(--praise)}
+  .seek .ph2{position:absolute;top:50%;transform:translate(-50%,-50%);width:13px;height:13px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.5);left:34%}
+
+  /* 버튼 공통 */
+  .ico{width:34px;height:34px;border-radius:9px;display:grid;place-items:center}.ico svg{width:18px;height:18px}
+  .play{width:38px;height:38px;border-radius:50%;display:grid;place-items:center}.play svg{width:15px;height:15px;fill:currentColor}
+  .tcode{font-family:ui-monospace,SFMono-Regular,monospace;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+  .pill{height:30px;padding:0 10px;border-radius:8px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px}.pill svg{width:13px;height:13px}
+  .jbtn{height:30px;min-width:38px;padding:0 8px;border-radius:8px;font-size:10.5px;font-weight:700;font-family:ui-monospace,monospace}
+
+  /* 다크 톤 (영상 위) */
+  .dark .grad{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:30px 16px 14px;background:linear-gradient(transparent,rgba(0,0,0,.7))}
+  .dark .trk{background:rgba(255,255,255,.26)} .dark .seek .mk{box-shadow:0 0 0 2px rgba(0,0,0,.35),0 1px 3px rgba(0,0,0,.5)}
+  .dark .tcode{color:#fff} .dark .tcode .mut{color:rgba(255,255,255,.5)}
+  .dark .ico{color:rgba(255,255,255,.92)} .dark .ico:hover{background:rgba(255,255,255,.14)}
+  .dark .play{background:#fff;color:#111} .dark .pill{color:rgba(255,255,255,.92)} .dark .pill:hover{background:rgba(255,255,255,.14)}
+  .dark .jbtn{color:rgba(255,255,255,.82)} .dark .jbtn:hover{background:rgba(255,255,255,.14)}
+  .dark .clip{display:inline-flex;align-items:center;background:rgba(255,255,255,.12);border-radius:99px;padding:2px}
+  .dark .sep{width:1px;height:20px;background:rgba(255,255,255,.22);margin:0 4px}
+  .dark .sp{flex:1}
+
+  /* ===== 시안 1: 미니멀 (유튜브식) ===== */
+  .c1 .seek{margin-bottom:11px}
+  .c1 .row{display:flex;align-items:center;gap:10px}
+  .c1 .row .play{margin-right:2px}
+
+  /* ===== 시안 2: 검수 특화 (피드백 중앙) ===== */
+  .c2 .seek{margin-bottom:12px}
+  .c2 .row{display:flex;align-items:center;gap:8px}
+  .c2 .center{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px}
+  .c2 .fbpill{height:32px;padding:0 12px;border-radius:9px;font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14)}.c2 .fbpill svg{width:14px;height:14px;fill:currentColor}
+  .c2 .fbpill:hover{background:rgba(255,255,255,.24)}
+
+  /* ===== 시안 3: 컴팩트 (한 줄) ===== */
+  .c3 .grad{padding:14px 16px 12px}
+  .c3 .row{display:flex;align-items:center;gap:11px}
+  .c3 .seek{flex:1;margin:0}
+  .c3 .ico{width:30px;height:30px}.c3 .play{width:32px;height:32px}
+  .c3 .tcode{font-size:11px}
+
+  /* ===== 시안 4: 라이트 정돈 (흰 카드 개선) ===== */
+  .c4-card{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:12px 14px}
+  .c4-card .inner{background:#fff;border:1px solid var(--s200);border-radius:13px;box-shadow:var(--sh2);padding:11px 14px}
+  .c4-card .trk{background:var(--s100)}.c4-card .fil{background:var(--s900)}.c4-card .ph2{background:#fff;border:2px solid var(--s900)}
+  .c4-card .seek{margin-bottom:11px}
+  .c4-card .tcode{color:var(--s900)}.c4-card .tcode.dur{color:var(--s400)}
+  .c4-card .row{display:flex;align-items:center;gap:9px}
+  .c4-card .clip{display:inline-flex;align-items:center;background:#f8fafc;border:1px solid var(--s200);border-radius:99px;padding:2px}
+  .c4-card .jbtn{color:var(--s500)}.c4-card .jbtn:hover{background:#fff;color:var(--s900)}
+  .c4-card .play{background:var(--s900);color:#fff;width:34px;height:34px;margin:0 2px}
+  .c4-card .pill{color:var(--s500)}.c4-card .pill:hover{background:var(--s100);color:var(--s900)}
+  .c4-card .ico{width:32px;height:32px;color:var(--s500)}.c4-card .ico:hover{background:var(--s100);color:var(--s900)}
+  .c4-card .sep{width:1px;height:20px;background:var(--s200);margin:0 4px}
+  .c4-card .sp{flex:1}
+
+  .note{font-size:12px;color:var(--s500);margin:9px 2px 0;line-height:1.55}.note b{color:var(--s700)}
+  .foot{margin-top:42px;font-size:12px;color:var(--s400);text-align:center;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="intro">
+    <h1>컨트롤 바 (TimelineStrip) — 디자인 시안</h1>
+    <p>영상 위 하단에 얹는 컨트롤 바만 집중했습니다. 기능은 그대로(재생·±10/3초 점프·<b>이전/다음 피드백</b>·속도·음소거·전체화면·시크바+코멘트 마커), 배치와 톤만 다릅니다. 영상 위라서 <b>1~3은 어두운 오버레이</b>(유튜브·Frame.io 표준), 4는 흰 카드를 다듬은 안입니다.</p>
+  </div>
+
+  <nav class="jump" id="jump">
+    <a href="#c1"><b>1</b>미니멀</a>
+    <a href="#c2"><b>2</b>검수 특화</a>
+    <a href="#c3"><b>3</b>컴팩트 한 줄</a>
+    <a href="#c4"><b>4</b>라이트 정돈</a>
+  </nav>
+
+  <!-- 1 미니멀 -->
+  <div class="lbl" id="c1"><span class="n">1</span><div><h2>미니멀 — 유튜브식</h2></div><p style="margin-top:5px">시크바 위, 컨트롤 한 줄. 좌=재생·시간 / 우=피드백·유틸. 점프는 시크바·단축키로</p></div>
+  <div class="stage dark c1">
+    <div class="ph"><span><svg data-lucide="play"></svg></span></div>
+    <span class="anno"><svg data-lucide="pen-line"></svg>주석</span>
+    <div class="grad">
+      <div class="seek"><div class="trk"></div><div class="fil"></div><span class="mk" style="left:7%"></span><span class="mk ai" style="left:39%"></span><span class="mk pr" style="left:69%"></span><span class="ph2"></span></div>
+      <div class="row">
+        <button class="play"><svg data-lucide="play"></svg></button>
+        <span class="tcode">0:36 <span class="mut">/ 1:48</span></span>
+        <span class="sp"></span>
+        <button class="ico" title="이전 피드백"><svg data-lucide="chevron-left"></svg></button>
+        <button class="pill" title="피드백"><svg data-lucide="message-square"></svg>피드백</button>
+        <button class="ico" title="다음 피드백"><svg data-lucide="chevron-right"></svg></button>
+        <span class="sep"></span>
+        <button class="pill"><span style="font-family:ui-monospace,monospace;font-weight:700">1x</span></button>
+        <button class="ico"><svg data-lucide="volume-2"></svg></button>
+        <button class="ico"><svg data-lucide="maximize"></svg></button>
+      </div>
+    </div>
+  </div>
+  <p class="note"><b>장점</b> 가장 조용하고 영상에 안 거슬림 · <b>트레이드오프</b> ±10/3초 점프 버튼이 사라짐(단축키·시크바로 대체)</p>
+
+  <!-- 2 검수 특화 -->
+  <div class="lbl" id="c2"><span class="n">2</span><div><h2>검수 특화 — 피드백 네비 중앙</h2></div><p style="margin-top:5px">검수의 핵심인 “이전/다음 피드백”을 가운데로. 좌=재생·점프 / 우=유틸</p></div>
+  <div class="stage dark c2">
+    <div class="ph"><span><svg data-lucide="play"></svg></span></div>
+    <span class="anno"><svg data-lucide="pen-line"></svg>주석</span>
+    <div class="grad">
+      <div class="seek"><div class="trk"></div><div class="fil"></div><span class="mk" style="left:7%"></span><span class="mk ai" style="left:39%"></span><span class="mk pr" style="left:69%"></span><span class="ph2"></span></div>
+      <div class="row" style="position:relative">
+        <button class="play"><svg data-lucide="play"></svg></button>
+        <span class="clip"><button class="jbtn">10초</button><button class="jbtn">3초</button></span>
+        <span class="tcode">0:36 <span class="mut">/ 1:48</span></span>
+        <div class="center">
+          <button class="fbpill"><svg data-lucide="chevron-left"></svg>이전 피드백</button>
+          <button class="fbpill">다음 피드백<svg data-lucide="chevron-right"></svg></button>
+        </div>
+        <span class="sp"></span>
+        <button class="pill"><span style="font-family:ui-monospace,monospace;font-weight:700">1x</span></button>
+        <button class="ico"><svg data-lucide="volume-2"></svg></button>
+        <button class="ico"><svg data-lucide="maximize"></svg></button>
+      </div>
+    </div>
+  </div>
+  <p class="note"><b>장점</b> 검수 동선(피드백 순회)이 중앙에 명확 · 점프도 유지 · <b>트레이드오프</b> 요소가 1번보다 많음</p>
+
+  <!-- 3 컴팩트 -->
+  <div class="lbl" id="c3"><span class="n">3</span><div><h2>컴팩트 — 한 줄</h2></div><p style="margin-top:5px">시크바와 컨트롤을 한 줄로. 높이 최소 → 영상이 가장 큼. 피드백은 시크바 마커로</p></div>
+  <div class="stage dark c3">
+    <div class="ph"><span><svg data-lucide="play"></svg></span></div>
+    <span class="anno"><svg data-lucide="pen-line"></svg>주석</span>
+    <div class="grad">
+      <div class="row">
+        <button class="play"><svg data-lucide="play"></svg></button>
+        <span class="tcode">0:36</span>
+        <div class="seek"><div class="trk"></div><div class="fil"></div><span class="mk" style="left:7%"></span><span class="mk ai" style="left:39%"></span><span class="mk pr" style="left:69%"></span><span class="ph2"></span></div>
+        <span class="tcode mut" style="color:rgba(255,255,255,.55)">1:48</span>
+        <button class="ico" title="이전 피드백"><svg data-lucide="chevron-left"></svg></button>
+        <button class="ico" title="다음 피드백"><svg data-lucide="chevron-right"></svg></button>
+        <button class="pill"><span style="font-family:ui-monospace,monospace;font-weight:700">1x</span></button>
+        <button class="ico"><svg data-lucide="volume-2"></svg></button>
+        <button class="ico"><svg data-lucide="maximize"></svg></button>
+      </div>
+    </div>
+  </div>
+  <p class="note"><b>장점</b> 영상이 가장 커짐(컨트롤이 얇음) · <b>트레이드오프</b> 한 줄이라 밀도 높음 · 점프 버튼 없음</p>
+
+  <!-- 4 라이트 정돈 -->
+  <div class="lbl" id="c4"><span class="n">4</span><div><h2>라이트 정돈 — 흰 카드 개선</h2></div><p style="margin-top:5px">지금 흰 카드를 유지하되 그룹·간격 정돈. 어두운 오버레이가 부담스러우면</p><span class="tag">현재 계열</span></div>
+  <div class="stage c4">
+    <div class="ph"><span><svg data-lucide="play"></svg></span></div>
+    <span class="anno"><svg data-lucide="pen-line"></svg>주석</span>
+    <div class="c4-card"><div class="inner">
+      <div class="seek"><div class="trk"></div><div class="fil"></div><span class="mk" style="left:7%"></span><span class="mk ai" style="left:39%"></span><span class="mk pr" style="left:69%"></span><span class="ph2"></span></div>
+      <div class="row">
+        <span class="clip"><button class="jbtn">10초</button><button class="jbtn">3초</button><button class="play"><svg data-lucide="play"></svg></button><button class="jbtn">3초</button><button class="jbtn">10초</button></span>
+        <span class="sep"></span>
+        <button class="pill"><svg data-lucide="chevron-left"></svg>이전 피드백</button>
+        <button class="pill">다음 피드백<svg data-lucide="chevron-right"></svg></button>
+        <span class="sp"></span>
+        <span class="tcode">0:36 <span style="color:var(--s400)">/ 1:48</span></span>
+        <span class="sep"></span>
+        <button class="pill"><span style="font-family:ui-monospace,monospace;font-weight:700">1x</span></button>
+        <button class="ico"><svg data-lucide="volume-2"></svg></button>
+        <button class="ico"><svg data-lucide="maximize"></svg></button>
+      </div>
+    </div></div>
+  </div>
+  <p class="note"><b>장점</b> 현재와 가장 가깝고 점프 5버튼 다 유지 · <b>트레이드오프</b> 흰 카드라 영상 위에서 다소 도드라짐</p>
+
+  <div class="foot">시크바·코멘트 마커·기능은 4개 동일 · 톤과 배치만 다름<br>마음에 드는 번호나 조합(예: “1의 톤 + 2의 피드백 중앙”)을 알려주세요 → 실제 TimelineStrip 코드로 구현</div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  if(window.lucide) lucide.createIcons();
+  const links=[...document.querySelectorAll('.jump a')];const map={};links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('on'));map[e.target.id]?.classList.add('on');}})},{rootMargin:'-40% 0px -55% 0px'});
+  ['c1','c2','c3','c4'].forEach(id=>{const el=document.getElementById(id);if(el)io.observe(el);});
+</script>
+</body>
+</html>

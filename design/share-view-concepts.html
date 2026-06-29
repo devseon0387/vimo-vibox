@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 — 비회원 영상 뷰 (라이트 · 영상 최대) 시안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --vimo:#e85008; --vimo-ink:#c2410c; --vimo-soft:#fef0e8; --vimo-line:#fbd9c4;
+    --text:#171717; --muted:#5f5f5f; --soft:#525252; --faint:#9a9a9a;
+    --page:#ececed; --surf:#fafafa; --line:#ececec; --line2:#e3e3e3; --hair:#f1f1f1;
+    --ok:#16a34a; --ok-bg:#f0fdf4; --danger:#dc2626;
+    --sh:0 1px 3px rgba(0,0,0,.06); --sh2:0 10px 34px rgba(0,0,0,.12); --sh3:0 20px 60px rgba(0,0,0,.18);
+    --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);background:var(--page);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h2,h3,h4,p{margin:0} button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  svg.lucide{width:1em;height:1em;stroke-width:1.9;flex:none;vertical-align:-.14em}
+  .vmk{display:inline-block;vertical-align:-2px}
+  img{display:block}
+
+  .wrap{max-width:1240px;margin:0 auto;padding:32px 22px 110px}
+  .intro h1{font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .intro p{color:var(--muted);font-size:13.5px;margin-top:9px;line-height:1.65;max-width:900px}
+  .intro .note{margin-top:13px;background:#fff;border:1px solid var(--line2);border-radius:12px;padding:13px 16px;font-size:12.5px;color:var(--soft);line-height:1.6}.intro .note b{color:var(--vimo-ink)}
+  .jump{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap;position:sticky;top:0;background:var(--page);padding:10px 0;z-index:5}
+  .jump a{font-size:12.5px;font-weight:700;color:var(--soft);background:#fff;border:1px solid var(--line2);border-radius:9px;padding:7px 13px;text-decoration:none}.jump a:hover{border-color:var(--vimo);color:var(--vimo-ink)}
+
+  .csec{margin-top:30px;scroll-margin-top:60px}
+  .chead{display:flex;align-items:baseline;gap:11px;margin-bottom:5px}
+  .chead .cn{font-size:17px;font-weight:800}.chead .ck{font-size:11px;font-weight:700;color:var(--vimo-ink);background:var(--vimo-soft);border:1px solid var(--vimo-line);border-radius:7px;padding:2px 9px}
+  .cdesc{font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:14px;max-width:900px}
+  .platlbl{font-size:10.5px;font-weight:800;color:var(--faint);letter-spacing:.06em;margin:14px 0 8px;display:flex;align-items:center;gap:6px}.platlbl svg{width:13px;height:13px}
+
+  /* 브라우저 프레임 */
+  .browser{border:1px solid var(--line2);border-radius:13px;overflow:hidden;background:#fff;box-shadow:var(--sh2)}
+  .bchrome{display:flex;align-items:center;gap:8px;padding:9px 13px;background:#f3f3f4;border-bottom:1px solid var(--line2)}
+  .bdots{display:flex;gap:6px}.bdots i{width:11px;height:11px;border-radius:50%;background:#d6d6d8;display:block}
+  .burl{flex:1;background:#fff;border:1px solid var(--line2);border-radius:7px;padding:5px 11px;font-size:11px;color:var(--faint);display:flex;align-items:center;gap:7px}.burl svg{width:12px;height:12px;color:#bdbdbd}
+
+  /* 상단바 */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 20px;background:#fff;border-bottom:1px solid var(--line)}
+  .tb-l{display:flex;align-items:center;gap:10px;min-width:0}
+  .tb-l .ttl{font-size:13.5px;font-weight:800;white-space:nowrap}
+  .tb-l .crumb{font-size:12px;color:var(--faint);display:flex;align-items:center;gap:6px}.tb-l .crumb b{color:var(--soft);font-weight:600}.tb-l .crumb svg{width:13px;height:13px;color:#ccc}
+  .tb-l .tag{font-size:10.5px;font-weight:700;color:var(--vimo-ink);background:var(--vimo-soft);border:1px solid var(--vimo-line);border-radius:6px;padding:2px 8px}
+  .tb-r{display:flex;align-items:center;gap:8px;flex:none}
+
+  /* 무대 + 영상 (크게) */
+  .stage{background:var(--surf);padding:26px 30px}
+  .vp{position:relative;max-width:1060px;margin:0 auto;aspect-ratio:16/9;background:#000;overflow:hidden;border-radius:14px;box-shadow:var(--sh2)}
+  .vp>img{width:100%;height:100%;object-fit:cover;opacity:.95}
+  .vp .pl{position:absolute;inset:0;display:grid;place-items:center}
+  .vp .pl span{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.94);display:grid;place-items:center;box-shadow:0 8px 26px rgba(0,0,0,.4)}
+  .vp .pl svg{width:30px;height:30px;color:#141414;fill:#141414;stroke:none;margin-left:4px}
+  .vp .ver{position:absolute;left:13px;top:13px;font-size:11px;font-weight:800;padding:3px 9px;border-radius:7px;background:rgba(255,255,255,.92);color:var(--vimo-ink)}
+  .vp .dur{position:absolute;right:13px;bottom:40px;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.6);padding:2px 8px;border-radius:5px}
+  .vp .bar{position:absolute;left:0;right:0;bottom:0;padding:16px 14px 13px;background:linear-gradient(transparent,rgba(0,0,0,.5))}
+  .vp .track{height:5px;border-radius:3px;background:rgba(255,255,255,.34);position:relative}
+  .vp .track i{position:absolute;left:0;top:0;bottom:0;width:38%;background:var(--vimo);border-radius:3px}
+  .vp .track .mk{position:absolute;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--vimo);box-shadow:0 1px 4px rgba(0,0,0,.4)}
+  .vp.sm .pl span{width:48px;height:48px}.vp.sm .pl svg{width:20px;height:20px}
+
+  /* 영상 아래 바 */
+  .under{max-width:1060px;margin:15px auto 0;display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .under .meta{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:10px;flex-wrap:wrap}.under .meta b{color:var(--text);font-weight:700}.under .meta .dot{color:#d0d0d0}
+  .under .ua{display:flex;gap:8px}
+
+  /* 버튼 */
+  .b{font-size:12.5px;font-weight:600;border-radius:10px;padding:9px 15px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}.b svg{width:15px;height:15px}
+  .b-pri{background:var(--vimo);color:#fff}.b-ok{background:var(--ok);color:#fff}
+  .b-out{background:#fff;border:1px solid var(--line2);color:var(--text)}.b-ghost{color:var(--soft)}
+  .ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:var(--soft);border:1px solid var(--line2);background:#fff}.ico svg{width:17px;height:17px}
+
+  /* 코멘트 섹션 (검수) */
+  .cmtsec{max-width:1060px;margin:20px auto 4px;border-top:1px solid var(--line);padding-top:18px}
+  .cmtsec .ch{font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:13px}.cmtsec .ch svg{width:16px;height:16px;color:var(--vimo)}
+  .cmtin{display:flex;align-items:center;gap:10px;border:1px solid var(--line2);border-radius:12px;padding:10px 13px;margin-bottom:14px}
+  .cmtin .tcc{font-size:11px;font-weight:700;color:var(--vimo-ink);background:var(--vimo-soft);border-radius:6px;padding:3px 8px;flex:none}
+  .cmtin input{flex:1;border:none;outline:none;font-family:inherit;font-size:13px;color:var(--text);background:transparent}
+  .cmtin input::placeholder{color:var(--faint)}
+  .cmtlist{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .cmt{display:flex;gap:11px;background:#fff;border:1px solid var(--line2);border-radius:12px;padding:12px 14px}
+  .cmt .av{width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700}
+  .cmt .cb{min-width:0;flex:1}.cmt .chh{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.cmt .who{font-size:12px;font-weight:700}.cmt .tc{font-size:10px;font-weight:700;color:var(--vimo-ink);background:var(--vimo-soft);border-radius:5px;padding:1px 6px}
+  .cmt .ct{font-size:12.5px;color:#333;margin-top:5px;line-height:1.5}
+
+  /* 폰 */
+  .phone{width:300px}
+  .pframe{border:9px solid #1c1c1f;border-radius:38px;overflow:hidden;background:#000;box-shadow:var(--sh3);position:relative}
+  .pscreen{height:600px;overflow:hidden;position:relative;background:#fff;display:flex;flex-direction:column}
+  .pnotch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:23px;background:#1c1c1f;border-radius:0 0 14px 14px;z-index:30}
+  .ptop{padding:30px 14px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+  .ptop .pt{font-size:12.5px;font-weight:800;display:flex;align-items:center;gap:6px;min-width:0}.ptop svg{width:18px;height:18px;color:var(--faint)}
+  .cap{font-size:11.5px;color:var(--faint);margin-top:11px;line-height:1.6}
+</style>
+</head>
+<body>
+<svg style="display:none"><symbol id="vmk" viewBox="0 0 491.75 396.19"><path d="M491.75,10.14v375.95c0,8.49-11.04,13.18-18.49,7.83l-79.1-57.24c-1.12-.78-2.05-1.74-2.71-2.83v-115.6c0-11.2-12.09-18.18-21.78-12.6l-81.95,47.33c-3.17,1.83-7.11,1.63-10.08-.52l-11.76-8.52c-4.46-3.18-4.46-9.77,0-12.98l20-14.49c12.56-9.07,12.56-27.67,0-36.74l-19.96-14.42c-4.42-3.22-4.42-9.8,0-13.02L473.26,2.31c7.44-5.43,18.49-.66,18.49,7.83Z" fill="#f9a87a"/><path d="M269.34,212.47l-55.32,40c-2.96,2.14-6.9,2.34-10.07.52l-81.96-47.34c-9.65-5.58-21.74,1.4-21.74,12.6v111.8c0,2.97-1.43,5.77-3.84,7.51l-68.01,49.19C16.59,395.31,0,386.94,0,372.41V23.82C0,9.28,16.59.91,28.41,9.48l240.94,174.28c9.78,7.07,9.78,21.64,0,28.72Z" fill="#e85008"/></symbol></svg>
+
+<div class="wrap">
+  <div class="intro">
+    <h1>비회원 영상 뷰 — 라이트 · 영상 최대</h1>
+    <p>PC에선 <b>영상을 최대한 크게</b> 보여주는 게 1순위. 라이트 테마 기준으로 다시 잡았습니다. (다크는 나중에 토글로) 영상이 항상 주인공이고, 코멘트·액션은 영상 크기를 깎지 않도록 위·아래에 배치합니다.</p>
+    <div class="note"><b>두 방향</b> — ① <b>몰입 뷰어</b>: 상단바(다운로드·공유) + 큰 영상. 감상·전달용. ② <b>검수 뷰어</b>: 큰 영상은 그대로 두고, 타임코드 코멘트를 영상 <b>아래</b>로. 수정요청/승인 상단바. 둘 다 영상이 화면을 꽉 채웁니다.</div>
+  </div>
+
+  <div class="jump">
+    <a href="#a">① 몰입 뷰어 (감상·전달)</a>
+    <a href="#b">② 검수 뷰어 (피드백)</a>
+  </div>
+
+  <!-- ① 몰입 뷰어 -->
+  <section class="csec" id="a">
+    <div class="chead"><span class="cn">① 몰입 뷰어</span><span class="ck">감상·전달 · 영상 최대</span></div>
+    <p class="cdesc">상단바는 슬림하게(브랜드·제목 / 다운로드·공유), 그 아래 영상이 화면을 꽉 채웁니다. 영상 아래엔 메타 한 줄만. 단순히 받아 보거나 전달할 때 가장 깔끔.</p>
+    <div class="platlbl"><svg data-lucide="monitor"></svg> 웹 (PC)</div>
+    <div class="browser">
+      <div class="bchrome"><span class="bdots"><i></i><i></i><i></i></span><span class="burl"><svg data-lucide="lock"></svg> share.vi-mo.kr/v/3kf9a2</span></div>
+      <div class="topbar">
+        <div class="tb-l"><svg class="vmk" width="21" height="17"><use href="#vmk"/></svg><span class="ttl">브랜드필름 v3</span><span class="tag">비모 전달</span></div>
+        <div class="tb-r"><button class="b b-pri"><svg data-lucide="download"></svg>다운로드</button><button class="b b-out"><svg data-lucide="share-2"></svg>공유</button><button class="ico"><svg data-lucide="more-horizontal"></svg></button></div>
+      </div>
+      <div class="stage">
+        <div class="vp"><img src="https://picsum.photos/seed/vibox-cafe-pour/1280/720"><span class="ver">v3</span><span class="dur">1:48</span><div class="pl"><span><svg data-lucide="play"></svg></span></div><div class="bar"><div class="track"><i></i></div></div></div>
+        <div class="under">
+          <div class="meta"><b>브랜드필름 v3</b><span class="dot">·</span>성수 카페<span class="dot">·</span>1:48<span class="dot">·</span>284MB<span class="dot">·</span>이선영 매니저가 전달</div>
+          <div class="ua"><button class="b b-ghost"><svg data-lucide="message-square"></svg>의견 남기기</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="platlbl"><svg data-lucide="smartphone"></svg> 모바일</div>
+    <div class="phone"><div class="pframe"><div class="pnotch"></div><div class="pscreen">
+      <div class="ptop"><span class="pt"><svg class="vmk" width="17" height="14"><use href="#vmk"/></svg> 브랜드필름 v3</span><svg data-lucide="share-2"></svg></div>
+      <div class="vp" style="border-radius:0;box-shadow:none;max-width:none;margin:0"><img src="https://picsum.photos/seed/vibox-cafe-pour/720/405"><span class="ver">v3</span><span class="dur">1:48</span><div class="pl"><span><svg data-lucide="play"></svg></span></div><div class="bar"><div class="track"><i></i></div></div></div>
+      <div style="padding:15px">
+        <div style="font-size:15px;font-weight:800">브랜드필름 v3</div>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:5px">성수 카페 · 1:48 · 284MB · 비모 전달</div>
+        <button class="b b-pri" style="width:100%;justify-content:center;margin-top:15px"><svg data-lucide="download"></svg>다운로드</button>
+        <button class="b b-out" style="width:100%;justify-content:center;margin-top:8px"><svg data-lucide="share-2"></svg>공유</button>
+      </div>
+    </div></div></div>
+  </section>
+
+  <!-- ② 검수 뷰어 -->
+  <section class="csec" id="b">
+    <div class="chead"><span class="cn">② 검수 뷰어</span><span class="ck">피드백 · 영상 최대 + 아래 코멘트</span></div>
+    <p class="cdesc">영상은 똑같이 크게. 대신 상단바에 <b>수정 요청·승인</b>, 영상 <b>아래</b>에 타임코드 코멘트(입력 + 목록). 코멘트를 옆에 두지 않아 영상이 안 줄어듭니다. 시크바엔 코멘트 위치 마커.</p>
+    <div class="platlbl"><svg data-lucide="monitor"></svg> 웹 (PC)</div>
+    <div class="browser">
+      <div class="bchrome"><span class="bdots"><i></i><i></i><i></i></span><span class="burl"><svg data-lucide="lock"></svg> share.vi-mo.kr/r/9m2x — 검수 요청</span></div>
+      <div class="topbar">
+        <div class="tb-l"><svg class="vmk" width="19" height="15"><use href="#vmk"/></svg><span class="crumb"><b>성수 카페</b><svg data-lucide="chevron-right"></svg><b style="color:var(--text);font-weight:700">브랜드필름 v3</b></span></div>
+        <div class="tb-r"><button class="b b-out"><svg data-lucide="pen-line"></svg>수정 요청</button><button class="b b-ok"><svg data-lucide="check"></svg>승인</button></div>
+      </div>
+      <div class="stage">
+        <div class="vp"><img src="https://picsum.photos/seed/vibox-cafe-pour/1280/720"><span class="ver">v3</span><span class="dur">1:48</span><div class="pl"><span><svg data-lucide="play"></svg></span></div><div class="bar"><div class="track"><i></i><span class="mk" style="left:42%"></span><span class="mk" style="left:71%"></span></div></div></div>
+        <div class="cmtsec">
+          <div class="ch"><svg data-lucide="messages-square"></svg> 코멘트 <span style="color:var(--faint);font-weight:600">3</span></div>
+          <div class="cmtin"><span class="tcc">0:53</span><input placeholder="이 장면에 코멘트 남기기…"><button class="b b-pri"><svg data-lucide="message-square-plus"></svg>코멘트</button></div>
+          <div class="cmtlist">
+            <div class="cmt"><span class="av" style="background:#0ea5e9">나</span><div class="cb"><div class="chh"><span class="who">나 (클라이언트)</span><span class="tc">0:42</span></div><div class="ct">로고가 조금 더 오래 보였으면 좋겠어요.</div></div></div>
+            <div class="cmt"><span class="av" style="background:#8a6fb0">박</span><div class="cb"><div class="chh"><span class="who">박PD · 비모</span><span class="tc">0:42</span></div><div class="ct">네, 2초 더 늘려서 v4에 반영하겠습니다.</div></div></div>
+            <div class="cmt"><span class="av" style="background:#0ea5e9">나</span><div class="cb"><div class="chh"><span class="who">나 (클라이언트)</span><span class="tc">1:15</span></div><div class="ct">이 전환 정말 좋네요. 이대로 좋습니다.</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="platlbl"><svg data-lucide="smartphone"></svg> 모바일</div>
+    <div class="phone"><div class="pframe"><div class="pnotch"></div><div class="pscreen">
+      <div class="ptop"><span class="pt"><svg class="vmk" width="16" height="13"><use href="#vmk"/></svg> 브랜드필름 v3</span><svg data-lucide="more-horizontal"></svg></div>
+      <div class="vp" style="border-radius:0;box-shadow:none;max-width:none;margin:0"><img src="https://picsum.photos/seed/vibox-cafe-pour/720/405"><span class="dur">1:48</span><div class="pl"><span><svg data-lucide="play"></svg></span></div><div class="bar"><div class="track"><i></i><span class="mk" style="left:42%"></span><span class="mk" style="left:71%"></span></div></div></div>
+      <div style="flex:1;overflow:hidden;padding:12px 14px">
+        <div style="font-size:12.5px;font-weight:800;display:flex;align-items:center;gap:7px;margin-bottom:10px"><svg data-lucide="messages-square" style="width:15px;height:15px;color:var(--vimo)"></svg> 코멘트 3</div>
+        <div class="cmt" style="border:none;padding:0 0 12px"><span class="av" style="background:#0ea5e9">나</span><div class="cb"><div class="chh"><span class="who">나</span><span class="tc">0:42</span></div><div class="ct">로고가 더 오래 보였으면.</div></div></div>
+        <div class="cmt" style="border:none;padding:0"><span class="av" style="background:#8a6fb0">박</span><div class="cb"><div class="chh"><span class="who">박PD · 비모</span><span class="tc">0:42</span></div><div class="ct">v4에 반영할게요.</div></div></div>
+      </div>
+      <div style="display:flex;gap:8px;padding:10px 13px;border-top:1px solid var(--line)"><button class="b b-out" style="flex:1;justify-content:center"><svg data-lucide="pen-line"></svg>수정 요청</button><button class="b b-ok" style="flex:1;justify-content:center"><svg data-lucide="check"></svg>승인</button></div>
+    </div></div></div>
+  </section>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>if(window.lucide) lucide.createIcons();</script>
+</body>
+</html>

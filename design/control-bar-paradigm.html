@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 컨트롤 바 — 검수 관점 (형태가 다른 시안)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --accent:#e85008; --acc-soft:#fef0e8; --acc-ink:#c2410c; --ai:#7c3aed; --praise:#db2777;
+    --s100:#f1f5f9; --s200:#e2e8f0; --s300:#cbd5e1; --s400:#94a3b8; --s500:#64748b; --s700:#334155; --s900:#0f172a;
+    --emerald:#059669;
+    --page:#e9eaec; --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif; --sh2:0 12px 36px rgba(15,23,42,.16);
+    --bar:#101317; --bar2:#15191f; --barline:rgba(255,255,255,.08);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);background:var(--page);color:var(--s900);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h2,h3,p{margin:0} button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  svg.lucide{width:1em;height:1em;stroke-width:2;flex:none;vertical-align:-.14em}
+  .wrap{max-width:1120px;margin:0 auto;padding:30px 22px 120px}
+  .intro h1{font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .intro p{color:var(--s500);font-size:13px;margin-top:8px;line-height:1.65;max-width:900px}
+  .intro b{color:var(--s700)}
+  .jump{position:sticky;top:0;z-index:50;background:rgba(233,234,236,.9);backdrop-filter:blur(8px);margin:18px -22px 0;padding:11px 22px;border-bottom:1px solid var(--s200);display:flex;gap:7px;flex-wrap:wrap}
+  .jump a{font-size:12px;font-weight:700;color:var(--s500);text-decoration:none;padding:6px 12px;border-radius:8px}.jump a:hover{background:#fff}.jump a.on{background:var(--s900);color:#fff}
+  .jump a b{color:var(--s400);margin-right:5px}.jump a.on b{color:rgba(255,255,255,.5)}
+  .lbl{display:flex;align-items:baseline;gap:11px;margin:32px 0 12px}
+  .lbl .n{font-size:12px;font-weight:800;color:#fff;background:var(--accent);width:22px;height:22px;border-radius:7px;display:grid;place-items:center;flex:none;transform:translateY(3px)}
+  .lbl h2{font-size:16.5px;font-weight:800;letter-spacing:-.01em}
+  .lbl p{font-size:12.5px;color:var(--s400)}
+  .lbl .tag{font-size:10.5px;font-weight:800;border-radius:6px;padding:3px 8px;margin-left:auto;transform:translateY(2px);background:var(--acc-soft);color:var(--acc-ink);border:1px solid #fbd9c4}
+
+  .stage{border-radius:13px;overflow:hidden;box-shadow:var(--sh2);background:#000;display:flex;flex-direction:column}
+  .video{position:relative;background:linear-gradient(125deg,#0d4d4a 0%,#1f6f5c 38%,#c2683a 78%,#e85008 100%)}
+  .video .play{position:absolute;inset:0;margin:auto;width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center;box-shadow:0 8px 26px rgba(0,0,0,.4)}
+  .video .play svg{width:20px;height:20px;color:#141414;fill:#141414;margin-left:3px}
+  .video .anno{position:absolute;top:12px;right:12px;font-size:11px;font-weight:600;color:#fff;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:5px 10px;display:inline-flex;align-items:center;gap:5px}.video .anno svg{width:12px;height:12px}
+  .video .sub{position:absolute;left:0;right:0;bottom:14px;text-align:center;color:#fff;font-size:16px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.85)}
+  .video .subtag{position:absolute;left:14px;bottom:14px;font-size:10.5px;font-weight:700;color:#a7f3d0;background:rgba(4,47,46,.7);border:1px solid rgba(167,243,208,.3);border-radius:6px;padding:3px 8px}
+
+  .tcode{font-family:ui-monospace,SFMono-Regular,monospace;font-weight:600;font-variant-numeric:tabular-nums;color:#fff}
+  .ico{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:rgba(255,255,255,.9)}.ico:hover{background:rgba(255,255,255,.13)}.ico svg{width:18px;height:18px}
+  .play2{border-radius:50%;display:grid;place-items:center;background:#fff;color:#111}.play2 svg{fill:currentColor}
+
+  /* ===== 1. 미니멀 극단 ===== */
+  .p1 .video{height:330px}
+  .p1 .seekwrap{position:relative;background:var(--bar);padding:0}
+  .p1 .seekrow{display:flex;align-items:center;gap:0}
+  .p1 .seek{position:relative;flex:1;height:32px;cursor:pointer}
+  .p1 .seek .trk{position:absolute;left:14px;right:0;top:50%;transform:translateY(-50%);height:3px;border-radius:3px;background:rgba(255,255,255,.18)}
+  .p1 .seek .fil{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:31%;height:3px;border-radius:3px;background:var(--accent)}
+  .p1 .seek .mk{position:absolute;top:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;border:2.5px solid var(--accent);background:var(--bar)}
+  .p1 .seek .mk.ai{border-color:var(--ai)}.p1 .seek .mk.pr{border-color:var(--praise)}
+  .p1 .seek .ph2{position:absolute;top:50%;left:31%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;background:#fff;margin-left:14px}
+  .p1 .util{display:flex;align-items:center;gap:2px;padding-right:8px}
+  .p1 .util .tcode{font-size:11px;margin-right:6px;color:rgba(255,255,255,.6)}
+  .p1 .util .ico{width:30px;height:30px}.p1 .util .ico svg{width:16px;height:16px}
+
+  /* ===== 2. 편집기식 타임라인 ===== */
+  .p2 .video{height:230px}
+  .p2 .tl{background:var(--bar);padding:10px 14px 12px}
+  .p2 .toprow{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .p2 .play2{width:32px;height:32px}.p2 .play2 svg{width:13px;height:13px}
+  .p2 .toprow .tcode{font-size:12px}
+  .p2 .toprow .ico{width:30px;height:30px}.p2 .toprow .ico svg{width:16px;height:16px}
+  .p2 .toprow .sp{flex:1}
+  .p2 .toprow .pill{height:28px;padding:0 9px;border-radius:7px;font-size:11px;font-weight:700;color:rgba(255,255,255,.85);display:inline-flex;align-items:center;gap:5px}.p2 .toprow .pill:hover{background:rgba(255,255,255,.12)}.p2 .toprow .pill svg{width:13px;height:13px;fill:currentColor}
+  .p2 .ruler{display:flex;gap:0;height:11px;margin-bottom:3px}
+  .p2 .ruler span{flex:1;border-left:1px solid rgba(255,255,255,.12);font-size:8px;color:rgba(255,255,255,.4);padding-left:3px;font-family:ui-monospace,monospace}
+  .p2 .thumbs{display:flex;gap:2px;height:42px;border-radius:6px;overflow:hidden;position:relative}
+  .p2 .thumbs i{flex:1;display:block}
+  .p2 .thumbs i:nth-child(odd){background:linear-gradient(135deg,#1f6f5c,#0d4d4a)}
+  .p2 .thumbs i:nth-child(even){background:linear-gradient(135deg,#c2683a,#7a3f24)}
+  .p2 .playhead{position:absolute;top:-13px;bottom:0;left:31%;width:2px;background:#fff;box-shadow:0 0 6px rgba(0,0,0,.6);z-index:5}.p2 .playhead:before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#fff}
+  .p2 .cmlane{position:relative;height:34px;margin-top:7px}
+  .p2 .cmcard{position:absolute;top:0;transform:translateX(-4px);display:flex;align-items:center;gap:5px;background:var(--bar2);border:1px solid rgba(255,255,255,.1);border-radius:7px;padding:4px 8px 4px 5px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+  .p2 .cmcard:before{content:"";position:absolute;top:-7px;left:9px;width:2px;height:7px;background:var(--accent)}
+  .p2 .cmcard.ai:before{background:var(--ai)}.p2 .cmcard.pr:before{background:var(--praise)}
+  .p2 .cmcard .av{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:9px;font-weight:700;color:#fff;flex:none}
+  .p2 .cmcard .tc{font-size:9px;font-family:ui-monospace,monospace;color:rgba(255,255,255,.55)}
+  .p2 .cmcard .tx{font-size:10.5px;color:rgba(255,255,255,.9);white-space:nowrap;max-width:130px;overflow:hidden;text-overflow:ellipsis}
+
+  /* ===== 3. 검수 워크플로 ===== */
+  .p3 .video{height:300px}
+  .p3 .wf{background:var(--bar);padding:0}
+  .p3 .seek{position:relative;height:5px;cursor:pointer}
+  .p3 .seek .trk{position:absolute;inset:0;background:rgba(255,255,255,.18)}
+  .p3 .seek .fil{position:absolute;left:0;top:0;bottom:0;width:31%;background:var(--accent)}
+  .p3 .seek .mk{position:absolute;top:50%;transform:translate(-50%,-50%);width:11px;height:11px;border-radius:50%;border:3px solid var(--accent);box-shadow:0 0 0 2px rgba(0,0,0,.4)}
+  .p3 .seek .mk.ai{border-color:var(--ai)}.p3 .seek .mk.pr{border-color:var(--praise)}.p3 .seek .mk.done{border-color:var(--emerald);background:var(--emerald)}
+  .p3 .seek .ph2{position:absolute;top:50%;left:31%;transform:translate(-50%,-50%);width:13px;height:13px;border-radius:50%;background:#fff}
+  .p3 .row{display:flex;align-items:center;gap:11px;padding:11px 15px 12px}
+  .p3 .play2{width:36px;height:36px}.p3 .play2 svg{width:14px;height:14px}
+  .p3 .tcode{font-size:12px}.p3 .tcode .mut{color:rgba(255,255,255,.5)}
+  .p3 .sp{flex:1}
+  .p3 .status{display:inline-flex;align-items:center;gap:8px;background:rgba(232,80,8,.16);border:1px solid rgba(232,80,8,.4);border-radius:10px;padding:6px 12px}
+  .p3 .status .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+  .p3 .status .t{font-size:12px;font-weight:700;color:#fdba74}.p3 .status .t b{color:#fff;font-weight:800}
+  .p3 .nextfb{height:36px;padding:0 14px;border-radius:10px;background:var(--accent);color:#fff;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:7px}.p3 .nextfb svg{width:15px;height:15px}
+  .p3 .ico{width:32px;height:32px}.p3 .ico svg{width:17px;height:17px}
+  .p3 .sep{width:1px;height:22px;background:rgba(255,255,255,.18)}
+
+  .note{font-size:12px;color:var(--s500);margin:9px 2px 0;line-height:1.55}.note b{color:var(--s700)}
+  .foot{margin-top:42px;font-size:12px;color:var(--s400);text-align:center;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="intro">
+    <h1>컨트롤 바 — "검수를 위한 바" 관점 (형태가 다름)</h1>
+    <p>앞 시안들이 다 비슷했던 건 전부 <b>일반 영상 플레이어를 변주</b>했기 때문입니다. 이번엔 비박스가 <b>검수 도구</b>라는 정체성에서 출발해, 형태 자체가 다른 3가지를 만들었습니다. 전부 영상 아래·안 가림 유지.</p>
+  </div>
+  <nav class="jump" id="jump">
+    <a href="#c1"><b>1</b>미니멀 극단</a>
+    <a href="#c2"><b>2</b>편집기 타임라인</a>
+    <a href="#c3"><b>3</b>검수 워크플로</a>
+  </nav>
+
+  <!-- 1 미니멀 극단 -->
+  <div class="lbl" id="c1"><span class="n">1</span><div><h2>미니멀 극단 — 영상이 전부</h2></div><p style="margin-top:5px">컨트롤을 거의 없앤다. 영상 아래는 시크바(마커) 한 줄 + 시간·전체화면만. 재생=영상 클릭, 점프·볼륨=단축키</p><span class="tag">영상 몰입</span></div>
+  <div class="stage p1">
+    <div class="video"><div class="play"><svg data-lucide="play"></svg></div><span class="anno"><svg data-lucide="pen-line"></svg>주석</span><span class="subtag">자막</span><div class="sub">우리의 하루는 한 잔의 커피에서 시작된다</div></div>
+    <div class="seekwrap"><div class="seekrow">
+      <div class="seek"><div class="trk"></div><div class="fil"></div><span class="mk" style="left:calc(14px + 7% * 0.95)"></span><span class="mk ai" style="left:39%"></span><span class="mk pr" style="left:69%"></span><span class="ph2"></span></div>
+      <div class="util"><span class="tcode">0:36 / 1:48</span><button class="ico"><svg data-lucide="maximize"></svg></button></div>
+    </div></div>
+  </div>
+  <p class="note"><b>발상</b> "검수자는 영상에 집중하고, 조작은 최소" · 마커 클릭으로 코멘트 이동 · <b>리스크</b> 점프·볼륨이 단축키로 숨어 처음엔 낯섦</p>
+
+  <!-- 2 편집기 타임라인 -->
+  <div class="lbl" id="c2"><span class="n">2</span><div><h2>편집기식 타임라인 — 검수를 '타임라인 작업'으로</h2></div><p style="margin-top:5px">영상 아래에 썸네일 스트립 + 코멘트가 시간 위에 카드로. 다빈치·프리미어처럼 구간과 피드백을 시각적으로</p><span class="tag">검수 강력</span></div>
+  <div class="stage p2">
+    <div class="video"><div class="play"><svg data-lucide="play"></svg></div><span class="anno"><svg data-lucide="pen-line"></svg>주석</span><span class="subtag">자막</span><div class="sub">우리의 하루는 한 잔의 커피에서 시작된다</div></div>
+    <div class="tl">
+      <div class="toprow">
+        <button class="play2"><svg data-lucide="play"></svg></button>
+        <span class="tcode">0:36 <span style="color:rgba(255,255,255,.5)">/ 1:48</span></span>
+        <span class="sp"></span>
+        <button class="pill"><svg data-lucide="chevron-left"></svg>이전 피드백</button>
+        <button class="pill">다음 피드백<svg data-lucide="chevron-right"></svg></button>
+        <button class="ico"><svg data-lucide="volume-2"></svg></button>
+        <button class="ico"><svg data-lucide="maximize"></svg></button>
+      </div>
+      <div class="ruler"><span>0:00</span><span>0:30</span><span>1:00</span><span>1:30</span></div>
+      <div style="position:relative">
+        <div class="thumbs"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="playhead"></div>
+      </div>
+      <div class="cmlane">
+        <div class="cmcard" style="left:7%"><span class="av" style="background:#8a6fb0">박</span><span class="tx">인트로 색감이 차가워요</span></div>
+        <div class="cmcard ai" style="left:39%"><span class="av" style="background:var(--ai)"><svg data-lucide="sparkles" style="width:10px;height:10px;color:#fff"></svg></span><span class="tx">자막 오타: 브랜대→브랜드</span></div>
+        <div class="cmcard pr" style="left:69%"><span class="av" style="background:#8a6fb0">박</span><span class="tx">이 전환 좋네요</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="note"><b>발상</b> "검수 = 타임라인 위에서 일한다" · 피드백이 어느 구간에 몰렸는지·무슨 내용인지 한눈에 · <b>리스크</b> 가장 두꺼움(영상이 그만큼 작아짐)</p>
+
+  <!-- 3 검수 워크플로 -->
+  <div class="lbl" id="c3"><span class="n">3</span><div><h2>검수 워크플로 — 재생기가 아니라 '진행기'</h2></div><p style="margin-top:5px">바의 주인공이 재생이 아니라 <b>검수 진행</b>. "미해결 2건 · 다음으로" 가 가장 크고, 끝나면 승인으로</p><span class="tag">검수 정체성</span></div>
+  <div class="stage p3">
+    <div class="video"><div class="play"><svg data-lucide="play"></svg></div><span class="anno"><svg data-lucide="pen-line"></svg>주석</span><span class="subtag">자막</span><div class="sub">우리의 하루는 한 잔의 커피에서 시작된다</div></div>
+    <div class="wf">
+      <div class="seek"><div class="trk"></div><div class="fil"></div><span class="mk" style="left:7%"></span><span class="mk ai" style="left:39%"></span><span class="mk pr done" style="left:69%"></span><span class="ph2"></span></div>
+      <div class="row">
+        <button class="play2"><svg data-lucide="play"></svg></button>
+        <span class="tcode">0:36 <span class="mut">/ 1:48</span></span>
+        <button class="ico"><svg data-lucide="volume-2"></svg></button>
+        <span class="sp"></span>
+        <span class="status"><span class="dot"></span><span class="t">미해결 <b>2건</b> 남음</span></span>
+        <button class="nextfb">다음 미해결로<svg data-lucide="arrow-right"></svg></button>
+        <span class="sep"></span>
+        <button class="ico"><svg data-lucide="maximize"></svg></button>
+      </div>
+    </div>
+  </div>
+  <p class="note"><b>발상</b> "이 바는 영상 재생기가 아니라 검수를 끝내게 돕는 도구" · 미해결을 0으로 만드는 동선이 중심 · <b>리스크</b> 재생 중심 습관과 달라 적응 필요</p>
+
+  <div class="foot">셋 다 일반 플레이어가 아니라 "검수"에서 출발 · 영상 아래·안 가림<br>끌리는 방향(또는 "2의 타임라인 + 3의 미해결 표시" 같은 결합)을 알려주세요</div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  if(window.lucide) lucide.createIcons();
+  const links=[...document.querySelectorAll('.jump a')];const map={};links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('on'));map[e.target.id]?.classList.add('on');}})},{rootMargin:'-40% 0px -55% 0px'});
+  ['c1','c2','c3'].forEach(id=>{const el=document.getElementById(id);if(el)io.observe(el);});
+</script>
+</body>
+</html>

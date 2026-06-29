@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>비박스 · 히어로 info (A 기반) — 수정 개수 4시안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{
+    --vimo:#e85008; --vimo-ink:#c2410c; --vimo-soft:#fef0e8; --vimo-line:#fbd9c4;
+    --text:#171717; --muted:#5f5f5f; --soft:#525252; --faint:#9a9a9a;
+    --page:#f5f5f5; --surf:#fafafa; --line:#ececec; --line2:#e3e3e3; --hair:#f1f1f1;
+    --danger:#dc2626; --warn:#c2410c;
+    --sh:0 1px 3px rgba(0,0,0,.06); --sh2:0 4px 14px rgba(0,0,0,.08);
+    --font:"Pretendard","Pretendard Variable",-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);background:#e9e9e9;color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h2,h3,h4,p{margin:0} svg.lucide{width:1em;height:1em;stroke-width:1.9;flex:none;vertical-align:-.14em}
+  .mono,.tnum{font-variant-numeric:tabular-nums}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:34px 24px 90px}
+  .intro h1{font-size:23px;font-weight:800;letter-spacing:-.02em}
+  .intro p{color:var(--muted);font-size:13.5px;margin-top:9px;line-height:1.65;max-width:840px}
+  .intro .diag{margin-top:13px;background:#fff;border:1px solid var(--line2);border-radius:12px;padding:13px 16px;font-size:12.5px;color:var(--soft);line-height:1.6}
+  .intro .diag b{color:var(--vimo-ink)}
+
+  .vhead{display:flex;align-items:flex-end;gap:12px;margin:36px 0 12px}
+  .vhead .tag{font-size:11px;font-weight:800;color:#fff;background:var(--text);border-radius:7px;padding:4px 10px}
+  .vhead .tag.rec{background:var(--vimo)}
+  .vhead .tag.base{background:#b3b3b3}
+  .vhead .ttl{font-size:16px;font-weight:800}.vhead .ttl em{font-style:normal;color:var(--vimo)}
+  .vhead .lede{font-size:12px;color:var(--faint);margin-top:2px}
+
+  /* 히어로 공통 */
+  .hero{display:grid;grid-template-columns:300px 1fr;background:#fff;border:1px solid var(--vimo-line);border-radius:16px;overflow:hidden;box-shadow:var(--sh)}
+  .hero.plain{border-color:var(--line2)}
+  .th{position:relative;min-height:212px;background:linear-gradient(135deg,#7c3a1d,#c2683a);overflow:hidden}
+  .th img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .th .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.02) 40%,rgba(0,0,0,.45))}
+  .th .pl{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.92)}.th .pl svg{width:24px;height:24px}
+  .th .bl{position:absolute;left:9px;bottom:9px;display:flex;gap:6px;align-items:center}
+  .vbadge{font-size:9.5px;font-weight:800;padding:1px 7px;border-radius:6px;background:var(--vimo-soft);color:#c8430a}
+  .dur{font-size:9.5px;font-weight:700;color:#fff;background:rgba(0,0,0,.6);padding:1px 6px;border-radius:4px}
+  .info{padding:18px 22px;display:flex;flex-direction:column}
+
+  .btn{font-size:12.5px;font-weight:600;border-radius:10px;padding:9px 14px;display:inline-flex;align-items:center;gap:7px;cursor:pointer;border:none;font-family:inherit}.btn svg{width:15px;height:15px}
+  .btn.pv{background:var(--vimo);color:#fff} .btn.g{background:#fff;border:1px solid var(--line2);color:var(--text)} .btn.t{background:none;color:var(--faint);font-weight:600;padding:9px 6px}
+
+  /* 공통 info 요소 (A 골격) */
+  .xcrumb{font-size:11px;color:var(--faint)}.xcrumb b{color:var(--soft);font-weight:600;margin:0 2px}
+  .xtitle{font-size:19px;font-weight:800;letter-spacing:-.01em;margin-top:6px}
+  .xact{margin-top:auto;padding-top:16px;display:flex;gap:9px}
+
+  /* === 기준: A 원본 (코멘트 문장 노출) === */
+  .cBASE .req{font-size:12.5px;color:#5a5a5a;margin-top:11px;line-height:1.55;padding-left:13px;position:relative}.cBASE .req::before{content:"\201C";position:absolute;left:0;top:-2px;font-size:18px;color:var(--vimo-line);font-weight:800}.cBASE .req .by{color:var(--faint);font-size:11px}
+  .cBASE .xtitle .s{font-size:12px;font-weight:700;color:var(--vimo);margin-left:9px}
+  .cBASE .meta{font-size:11px;color:var(--faint);margin-top:10px}.cBASE .meta .dl{color:var(--warn);font-weight:700}
+
+  /* === 1) 인라인 메타 — 한 줄로 흡수 === */
+  .c1 .row{font-size:12.5px;color:var(--muted);margin-top:11px}
+  .c1 .row b{color:var(--text);font-weight:700}
+  .c1 .row .dl{color:var(--warn);font-weight:700}
+  .c1 .row .sep{color:#d4d4d4;margin:0 8px}
+  .c1 .when{font-size:11px;color:var(--faint);margin-top:7px}
+
+  /* === 2) 카운트 칩 — 고스트 pill === */
+  .c2 .chips{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .c2 .chip{font-size:11.5px;font-weight:600;color:var(--soft);border:1px solid var(--line2);border-radius:999px;padding:5px 12px;display:inline-flex;align-items:center;gap:6px}
+  .c2 .chip svg{width:13px;height:13px;color:var(--faint)}
+  .c2 .chip b{color:var(--text);font-weight:700;margin-left:1px}
+  .c2 .chip.dl{color:var(--vimo-ink);border-color:var(--vimo-line);background:var(--vimo-soft)}
+  .c2 .chip.dl svg{color:var(--vimo)}
+
+  /* === 3) 미니 통계 — 숫자 우선 === */
+  .c3 .stats{display:flex;gap:30px;margin-top:14px}
+  .c3 .stat{display:flex;flex-direction:column;gap:3px}
+  .c3 .stat .n{font-size:20px;font-weight:800;letter-spacing:-.02em;line-height:1}
+  .c3 .stat .n .of{color:#c4c4c4;font-weight:700;font-size:14px}
+  .c3 .stat .l{font-size:10.5px;color:var(--faint);font-weight:600}
+  .c3 .stat.dl .n{color:var(--warn)}
+
+  /* === 4) 제목·마감 양분 + 구분선 카운트 === */
+  .c4 .head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  .c4 .head .dl{font-size:11.5px;font-weight:700;color:var(--warn);white-space:nowrap;display:inline-flex;align-items:center;gap:5px}.c4 .head .dl svg{width:13px;height:13px}
+  .c4 .counts{display:flex;align-items:center;margin-top:11px}
+  .c4 .counts .c{font-size:12.5px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+  .c4 .counts .c b{color:var(--text);font-weight:700}
+  .c4 .counts .c svg{width:13px;height:13px;color:var(--faint)}
+  .c4 .counts .div{width:1px;height:12px;background:var(--line2);margin:0 14px}
+
+  .note{font-size:11.5px;color:var(--faint);margin-top:9px;padding-left:2px}
+  .foot__card{background:#fff;border:1px solid var(--line2);border-radius:16px;padding:20px 24px;margin-top:40px;box-shadow:var(--sh)}
+  .foot__card h3{font-size:15px;font-weight:800}.foot__card p{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.6}
+  .foot__card b{color:var(--vimo-ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="intro">
+    <h1>히어로 info — A 기반 · 수정 개수 4시안</h1>
+    <p><b>A(위계 정리)</b>를 골격으로, 히어로에서 <b>실제 코멘트 문장은 빼고</b>(수정은 보통 여러 건이라 문장을 노출하면 지저분함) <b>수정 요청 "개수"만 요약</b>했습니다(미해결 카운트도 제외). 같은 데이터(성수 카페 · 브랜드필름 v3 · 수정 요청 2 · 마감 D-2). 코멘트 본문은 <b>검수 모달</b>에서 봅니다.</p>
+    <div class="diag">바뀐 점 — ① 따옴표 코멘트 줄(<b>.req</b>) 제거 → <b>수정 요청 개수</b>로 대체 ② <b>미해결 카운트 제외</b>(수정 요청 + 마감만) ③ 표현만 4가지로 변주(인라인 · 칩 · 숫자통계 · 양분) ④ 제목 크게 · 브레드크럼/메타 회색 · CTA 2개는 A 그대로 유지.</div>
+  </div>
+
+  <!-- 기준: A 원본 -->
+  <div class="vhead"><span class="tag base">기준</span><div><div class="ttl">A 원본 <em>— 코멘트 문장 노출(비교용)</em></div><div class="lede">지금은 따옴표로 실제 코멘트가 떠 있어, 수정이 많아지면 한 건만 보이고 지저분해짐.</div></div></div>
+  <div class="hero cBASE">
+    <div class="th"><img src="https://picsum.photos/seed/vibox-cafe-pour/600/360" onerror="this.style.display='none'"><div class="shade"></div><div class="pl"><svg data-lucide="play"></svg></div><div class="bl"><span class="vbadge">v3</span><span class="dur">1:48</span></div></div>
+    <div class="info">
+      <div class="xcrumb">성수 카페 <b>›</b> 브랜드필름</div>
+      <h3 class="xtitle">브랜드필름 v3<span class="s">수정 요청 2</span></h3>
+      <div class="req">0:42 자막 오타, 1:15 컷 전환 다듬기 <span class="by">— 박매니저</span></div>
+      <div class="meta"><span class="dl">D-2</span> 마감 · 미해결 2/5 · 12분 전</div>
+      <div class="xact"><button class="btn pv"><svg data-lucide="upload"></svg>수정본 전달</button><button class="btn g">코멘트 보기</button></div>
+    </div>
+  </div>
+
+  <!-- 1) 인라인 메타 -->
+  <div class="vhead" id="c1"><span class="tag rec">1 · 추천</span><div><div class="ttl">인라인 메타 <em>— 한 줄로</em></div><div class="lede">제목 아래 한 줄에 수정 요청·마감을 점(·)으로. 가장 적은 요소, 여백 최대.</div></div></div>
+  <div class="hero c1">
+    <div class="th"><img src="https://picsum.photos/seed/vibox-cafe-pour/600/360" onerror="this.style.display='none'"><div class="shade"></div><div class="pl"><svg data-lucide="play"></svg></div><div class="bl"><span class="vbadge">v3</span><span class="dur">1:48</span></div></div>
+    <div class="info">
+      <div class="xcrumb">성수 카페 <b>›</b> 브랜드필름</div>
+      <h3 class="xtitle">브랜드필름 v3</h3>
+      <div class="row tnum">수정 요청 <b>2</b><span class="sep">·</span><span class="dl">마감 D-2</span></div>
+      <div class="when">12분 전 업데이트</div>
+      <div class="xact"><button class="btn pv"><svg data-lucide="upload"></svg>수정본 전달</button><button class="btn g">코멘트 보기</button></div>
+    </div>
+  </div>
+  <div class="note">코멘트 문장이 사라지고 숫자만 남아 가장 깔끔. 굵게(검정)는 개수, 주황은 마감만.</div>
+
+  <!-- 2) 카운트 칩 -->
+  <div class="vhead" id="c2"><span class="tag rec">2 · 추천</span><div><div class="ttl">카운트 칩 <em>— 고스트 pill</em></div><div class="lede">수정 요청·마감을 가는 테두리 칩으로. 한눈에 스캔되고 마감 칩만 옅은 주황.</div></div></div>
+  <div class="hero c2">
+    <div class="th"><img src="https://picsum.photos/seed/vibox-cafe-pour/600/360" onerror="this.style.display='none'"><div class="shade"></div><div class="pl"><svg data-lucide="play"></svg></div><div class="bl"><span class="vbadge">v3</span><span class="dur">1:48</span></div></div>
+    <div class="info">
+      <div class="xcrumb">성수 카페 <b>›</b> 브랜드필름</div>
+      <h3 class="xtitle">브랜드필름 v3</h3>
+      <div class="chips tnum">
+        <span class="chip"><svg data-lucide="pen-line"></svg>수정 요청 <b>2</b></span>
+        <span class="chip dl"><svg data-lucide="clock"></svg>마감 D-2</span>
+      </div>
+      <div class="xact"><button class="btn pv"><svg data-lucide="upload"></svg>수정본 전달</button><button class="btn g">코멘트 보기</button></div>
+    </div>
+  </div>
+  <div class="note">칩이라 경계가 또렷해 스캔이 빠름. 수정 요청·마감 단 두 칩이라 가벼움.</div>
+
+  <!-- 3) 미니 통계 -->
+  <div class="vhead" id="c3"><span class="tag">3</span><div><div class="ttl">미니 통계 <em>— 숫자 우선</em></div><div class="lede">개수를 큰 숫자로, 라벨은 아래 작게. 에디토리얼하게 세련됨. 단 살짝 '지표' 느낌.</div></div></div>
+  <div class="hero c3">
+    <div class="th"><img src="https://picsum.photos/seed/vibox-cafe-pour/600/360" onerror="this.style.display='none'"><div class="shade"></div><div class="pl"><svg data-lucide="play"></svg></div><div class="bl"><span class="vbadge">v3</span><span class="dur">1:48</span></div></div>
+    <div class="info">
+      <div class="xcrumb">성수 카페 <b>›</b> 브랜드필름</div>
+      <h3 class="xtitle">브랜드필름 v3</h3>
+      <div class="stats tnum">
+        <div class="stat"><span class="n">2</span><span class="l">수정 요청</span></div>
+        <div class="stat dl"><span class="n">D-2</span><span class="l">마감</span></div>
+      </div>
+      <div class="xact"><button class="btn pv"><svg data-lucide="upload"></svg>수정본 전달</button><button class="btn g">코멘트 보기</button></div>
+    </div>
+  </div>
+  <div class="note">숫자가 주인공이라 가장 또렷하고 세련된 인상. 대신 대시보드/지표처럼 보일 수 있어 호불호 가능.</div>
+
+  <!-- 4) 제목·마감 양분 + 구분선 카운트 -->
+  <div class="vhead" id="c4"><span class="tag">4</span><div><div class="ttl">양분 <em>— 균형</em></div><div class="lede">제목은 왼쪽, 마감은 같은 줄 오른쪽. 그 아래 수정 요청 개수를 차분히 한 줄.</div></div></div>
+  <div class="hero c4">
+    <div class="th"><img src="https://picsum.photos/seed/vibox-cafe-pour/600/360" onerror="this.style.display='none'"><div class="shade"></div><div class="pl"><svg data-lucide="play"></svg></div><div class="bl"><span class="vbadge">v3</span><span class="dur">1:48</span></div></div>
+    <div class="info">
+      <div class="xcrumb">성수 카페 <b>›</b> 브랜드필름</div>
+      <div class="head"><h3 class="xtitle">브랜드필름 v3</h3><span class="dl"><svg data-lucide="clock"></svg>마감 D-2</span></div>
+      <div class="counts tnum">
+        <span class="c"><svg data-lucide="pen-line"></svg>수정 요청 <b>2</b></span>
+      </div>
+      <div class="xact"><button class="btn pv"><svg data-lucide="upload"></svg>수정본 전달</button><button class="btn g">코멘트 보기</button></div>
+    </div>
+  </div>
+  <div class="note">제목/마감을 같은 줄에 양분해 균형이 좋음. 수정 요청은 아래 한 줄로 차분히. 1번과는 마감 위치(제목 옆)가 다름.</div>
+
+  <div class="foot__card">
+    <h3>추천</h3>
+    <p><b>1번(인라인 메타)</b> 또는 <b>2번(카운트 칩)</b>입니다. 둘 다 코멘트 문장을 개수로 바꿔 가장 깔끔합니다. 1번은 요소가 최소라 여백이 살아 차분하고, 2번은 칩이라 한눈에 스캔돼 실용적입니다. 더 또렷한 인상을 원하면 3번(숫자 통계), 균형감을 원하면 4번. 고르시면 <b>vibox-prototype.html</b> 히어로에 바로 적용하겠습니다.</p>
+  </div>
+</div>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>if(window.lucide) lucide.createIcons();</script>
+</body>
+</html>

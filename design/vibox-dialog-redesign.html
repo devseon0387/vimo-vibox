@@ -1,0 +1,1153 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>vibox 다이얼로그 리디자인 시안</title>
+<style>
+:root{--bg:#fafafa;--card:#fff;--bd:#e7e7e7;--tx:#1a1a1a;--mut:#666;--faint:#999;--accent:#e85008;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo",sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 90px}
+.top{position:sticky;top:0;background:var(--bg);z-index:10;padding:8px 0;border-bottom:1px solid var(--bd);margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.top h1{font-size:18px;margin:0}
+.top .sub{font-size:12.5px;color:var(--mut)}
+.modal{margin-top:26px}
+.mh{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.mh h2{font-size:16px;margin:0;letter-spacing:-.01em}
+.allrow{border:1px solid var(--bd);background:#fff;border-radius:8px;padding:5px 12px;font-size:12.5px;font-weight:600;cursor:pointer;color:#333}
+.row{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 12px}
+.vcard{flex:0 0 380px;background:var(--card);border:1px solid var(--bd);border-radius:13px;padding:12px;display:flex;flex-direction:column}
+.vh{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.vbadge{font-size:11.5px;font-weight:800;color:#fff;background:var(--accent);border-radius:6px;padding:3px 9px}
+.vbadge.cur{background:#888}
+.vname{font-size:12.5px;color:#555;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp{flex:none;margin-left:auto;background:var(--accent);color:#fff;border:none;border-radius:7px;width:30px;height:26px;font-size:11px;cursor:pointer}
+.vh .vname{margin-left:0}
+.stage{position:relative;display:flex;align-items:center;justify-content:center;min-height:300px;max-height:520px;overflow:auto;border-radius:11px;
+ background:repeating-conic-gradient(#eee 0% 25%,#f4f4f4 0% 50%) 0/20px 20px;padding:22px}
+.bd{position:absolute;inset:0;background:rgba(0,0,0,.5);border-radius:11px}
+.panel{position:relative;z-index:2;max-width:100%}
+.rat{font-size:12.5px;color:#444;margin-top:11px;line-height:1.5}
+.chg{margin:8px 0 0;padding-left:16px}
+.chg li{font-size:12px;color:#666;margin:2px 0;line-height:1.45}
+@keyframes dialog-in{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes backdrop-in{from{opacity:0}to{opacity:1}}
+</style></head><body><div class="wrap">
+<div class="top"><h1>다이얼로그 리디자인 시안</h1><span class="sub">2026-06-29 · 모달별 [현재 + 미니멀·친근·구조화·프리미엄] · ▶ 로 dialog-in 애니메이션 · 가로 스크롤로 비교</span></div>
+<section class="modal">
+    <div class="mh"><h2>2 · 확인 다이얼로그 (ConfirmDialog)</h2><button class="allrow" onclick="replayRow(this)">이 줄 재생</button></div>
+    <div class="row"><div class="vcard">
+    <div class="vh"><span class="vbadge cur">현재</span><span class="vname">운영 디자인</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="position:relative;background:#ffffff;border-radius:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);max-width:400px;width:100%;overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;">
+  <div style="padding:24px;">
+    <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:12px;">
+      <div style="width:40px;height:40px;border-radius:9999px;background:#fef2f2;display:grid;place-items:center;flex-shrink:0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      </div>
+      <div style="flex:1;padding-top:2px;">
+        <h3 style="font-size:18px;line-height:1.3;font-weight:700;color:#111111;margin:0 0 6px;">파일을 삭제할까요?</h3>
+        <div style="font-size:16px;color:#555555;line-height:1.625;">삭제한 파일은 휴지통으로 이동하며, 30일 후 영구 삭제됩니다.</div>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;padding:12px 20px;background:#fafafa;border-top:1px solid #ececec;">
+    <button style="padding:8px 16px;font-size:16px;font-weight:500;color:#555555;background:transparent;border:none;border-radius:6px;cursor:pointer;">취소</button>
+    <button style="padding:8px 16px;font-size:16px;font-weight:600;color:#ffffff;background:#dc2626;border:none;border-radius:6px;cursor:pointer;">삭제</button>
+  </div>
+</div></div></div>
+    
+    
+  </div>
+<div class="vcard">
+    <div class="vh"><span class="vbadge">미니멀</span><span class="vname">Hairline Confirm</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:400px;background:#ffffff;border:1px solid #ececec;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,0.10);font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;overflow:hidden;">
+  <div style="padding:24px 24px 20px 24px;">
+    <h3 style="margin:0 0 8px 0;font-size:17px;font-weight:700;line-height:1.3;color:#111;letter-spacing:-0.01em;">파일을 삭제할까요?</h3>
+    <p style="margin:0;font-size:14px;line-height:1.6;color:#555;">
+      <span style="color:#111;font-weight:500;">2026_봄캠페인_최종본_v3.mp4</span> 파일이 영구히 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+    </p>
+  </div>
+  <div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;padding:12px 24px;border-top:1px solid #ececec;">
+    <button style="appearance:none;border:none;background:transparent;padding:8px 14px;font-size:14px;font-weight:500;color:#555;border-radius:7px;cursor:pointer;font-family:inherit;">취소</button>
+    <button style="appearance:none;border:none;background:#dc2626;padding:8px 16px;font-size:14px;font-weight:600;color:#ffffff;border-radius:7px;cursor:pointer;font-family:inherit;">삭제</button>
+  </div>
+</div></div></div>
+    <div class="rat">아이콘 배지를 없애고 텍스트와 버튼 색만으로 위험도를 전달, 헤어라인 한 줄로 본문과 액션을 구분한 즉시 읽힘 다이얼로그.</div>
+    <ul class="chg"><li>danger 아이콘 배지(danger-soft 원형) 제거 — 위험 신호는 확인 버튼의 danger 색과 본문 문구로만 전달</li><li>footer의 surface 배경 바 제거, border-top 헤어라인 1px(#ececec)만 남기고 패널 패딩을 24px로 타이트하게 통일</li><li>그림자를 무겁지 않게 줄이고 패널에 1px #ececec 경계만 — 텍스트(제목 #111 / 본문 #555) 중심 레이아웃</li><li>취소는 무테 텍스트 버튼, 확인만 솔리드로 시각 위계 단순화</li></ul>
+  </div>
+<div class="vcard">
+    <div class="vh"><span class="vbadge">친근</span><span class="vname">포근한 안내 카드</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="max-width:400px;width:100%;background:#ffffff;border-radius:28px;box-shadow:0 24px 60px -12px rgba(17,17,17,0.22),0 4px 12px rgba(17,17,17,0.06);padding:32px 28px 24px;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;box-sizing:border-box;text-align:center;">
+  <div style="display:flex;justify-content:center;margin-bottom:18px;">
+    <div style="width:88px;height:88px;border-radius:50%;background:#fef2f2;display:grid;place-items:center;">
+      <div style="width:64px;height:64px;border-radius:50%;background:#ffffff;display:grid;place-items:center;box-shadow:0 2px 8px rgba(220,38,38,0.12);">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="margin:0 0 10px;font-size:20px;font-weight:800;color:#111;letter-spacing:-0.01em;">정말 삭제할까요?</h3>
+
+  <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#555;">
+    아래 파일을 삭제하면 휴지통으로 옮겨져요.<br/>30일이 지나면 완전히 사라지니 한 번만 더 확인해 주세요.
+  </p>
+
+  <div style="display:inline-flex;align-items:center;gap:8px;max-width:100%;background:#fef2f2;border-radius:14px;padding:10px 14px;margin-bottom:24px;box-sizing:border-box;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M14 2v6h6"/></svg>
+    <span style="font-size:14px;font-weight:600;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">촬영_최종본_v3.mp4</span>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <button style="width:100%;padding:14px;font-size:15px;font-weight:700;color:#ffffff;background:#dc2626;border:none;border-radius:16px;cursor:pointer;box-shadow:0 4px 12px rgba(220,38,38,0.24);">삭제하기</button>
+    <button style="width:100%;padding:13px;font-size:15px;font-weight:600;color:#555;background:#fafafa;border:none;border-radius:16px;cursor:pointer;">취소</button>
+  </div>
+</div></div></div>
+    <div class="rat">큰 라운드 카드 + 중앙 대형 아이콘 + 맥락색(danger-soft) 부드러운 틴트로 경고를 위협이 아닌 친절한 안내처럼 풀어냈습니다.</div>
+    <ul class="chg"><li>좌상단 작은 아이콘 → 카드 상단 중앙 72px 대형 원형 아이콘(danger-soft 틴트, 동심원 후광)으로 키워 부드러운 첫인상</li><li>제목/메시지 중앙 정렬 + 따뜻한 존댓말 안내 문구로 톤 전환, 삭제 대상 파일명은 danger-soft 라운드 칩으로 분리 강조</li><li>footer 우측 정렬 작은 버튼 → 카드 전체 라운드 28px, 풀폭 스택형 둥근 버튼(pill 16px radius)으로 누르기 쉽고 친근하게</li><li>회색 구분선/surface footer 제거하고 여백·soft 배경으로 경계를 부드럽게 처리</li></ul>
+  </div>
+<div class="vcard">
+    <div class="vh"><span class="vbadge">구조화</span><span class="vname">Specsheet Confirm</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:440px;max-width:100%;background:#ffffff;border:1px solid #ececec;border-radius:14px;box-shadow:0 12px 40px rgba(17,17,17,0.16);overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;">
+
+  <!-- Context bar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:#f7f7f7;border-bottom:1px solid #ececec;">
+    <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;letter-spacing:0.02em;color:#dc2626;">
+      <span style="width:7px;height:7px;border-radius:50%;background:#dc2626;display:inline-block;"></span>
+      삭제 확인
+    </span>
+    <span style="font-size:12px;font-weight:500;color:#6b6b6b;">되돌릴 수 없는 작업</span>
+  </div>
+
+  <!-- Body -->
+  <div style="padding:22px 22px 18px;">
+
+    <!-- Header: icon + title + description -->
+    <div style="display:flex;align-items:flex-start;gap:13px;margin-bottom:16px;">
+      <div style="width:40px;height:40px;border-radius:10px;background:#fef2f2;display:grid;place-items:center;flex-shrink:0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      </div>
+      <div style="flex:1;padding-top:1px;">
+        <h3 style="margin:0 0 4px;font-size:17px;font-weight:700;line-height:1.35;color:#111;">파일을 삭제할까요?</h3>
+        <p style="margin:0;font-size:13.5px;line-height:1.5;color:#555;">선택한 파일이 프로젝트에서 즉시 제거됩니다. 계속하기 전에 대상을 확인하세요.</p>
+      </div>
+    </div>
+
+    <!-- Structured detail block -->
+    <div style="border:1px solid #ececec;border-radius:10px;background:#fafafa;overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;">
+        <span style="font-size:12px;font-weight:600;color:#6b6b6b;">대상 파일</span>
+        <span style="font-size:13px;font-weight:600;color:#111;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">최종_편집본_v3.mp4</span>
+      </div>
+      <div style="height:1px;background:#ececec;"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;">
+        <span style="font-size:12px;font-weight:600;color:#6b6b6b;">위치</span>
+        <span style="font-size:13px;font-weight:500;color:#555;">브랜드캠페인 / 0628</span>
+      </div>
+      <div style="height:1px;background:#ececec;"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;">
+        <span style="font-size:12px;font-weight:600;color:#6b6b6b;">용량</span>
+        <span style="font-size:13px;font-weight:500;color:#555;">1.24 GB</span>
+      </div>
+    </div>
+
+    <!-- Help text -->
+    <p style="margin:12px 2px 0;font-size:12px;line-height:1.5;color:#6b6b6b;">삭제 후에는 휴지통에서도 복구할 수 없으며, 공유 링크가 있다면 함께 만료됩니다.</p>
+  </div>
+
+  <!-- Footer / actions -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 12px 20px;background:#fafafa;border-top:1px solid #ececec;">
+    <span style="font-size:11.5px;color:#767676;letter-spacing:0.01em;">
+      <span style="font-weight:600;color:#555;">Enter</span> 확인 · <span style="font-weight:600;color:#555;">Esc</span> 취소
+    </span>
+    <div style="display:flex;gap:8px;">
+      <button style="padding:8px 15px;font-size:13.5px;font-weight:500;color:#555;background:transparent;border:1px solid #ececec;border-radius:8px;cursor:pointer;">취소</button>
+      <button style="padding:8px 16px;font-size:13.5px;font-weight:600;color:#ffffff;background:#dc2626;border:1px solid #dc2626;border-radius:8px;cursor:pointer;">삭제</button>
+    </div>
+  </div>
+
+</div></div></div>
+    <div class="rat">컨텍스트 바·라벨드 상세 블록·헬프텍스트·키보드 힌트로 제목/설명/대상정보/액션을 4단으로 분리해 위계를 명확히 함.</div>
+    <ul class="chg"><li>상단에 컨텍스트 바(상태 라벨 '삭제 확인' + '되돌릴 수 없음' 보조 표시) 추가로 모달 성격을 즉시 식별</li><li>대상 파일·위치·용량을 라벨:값 형태의 구조화된 상세 블록으로 분리해 무엇이 영향받는지 명료화</li><li>본문 아래 헬프텍스트로 결과(복구 불가)를 명시하고 구분선으로 액션 영역과 분리</li><li>푸터 좌측에 Enter/Esc 키보드 힌트, 우측에 취소/삭제 버튼을 배치해 작동·액션 위계 구분</li></ul>
+  </div>
+<div class="vcard">
+    <div class="vh"><span class="vbadge">프리미엄</span><span class="vname">Hairline Confirm</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:420px;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;background:#ffffff;border:1px solid #ececec;border-radius:14px;box-shadow:0 1px 2px rgba(17,17,17,0.04),0 10px 28px -8px rgba(17,17,17,0.14),0 28px 56px -16px rgba(17,17,17,0.10);overflow:hidden;">
+  <div style="padding:24px 24px 20px 24px;">
+    <div style="display:flex;align-items:flex-start;gap:14px;">
+      <div style="width:38px;height:38px;flex-shrink:0;border-radius:11px;background:#fef2f2;border:1px solid #fbd5d5;display:grid;place-items:center;box-shadow:inset 0 1px 0 rgba(255,255,255,0.6);">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      </div>
+      <div style="flex:1;padding-top:1px;">
+        <h3 style="margin:0 0 8px 0;font-size:16px;font-weight:600;letter-spacing:-0.01em;color:#111;line-height:1.35;">파일을 삭제할까요?</h3>
+        <p style="margin:0;font-size:13.5px;color:#555;line-height:1.65;">
+          <span style="display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:#111;background:#f7f7f7;border:1px solid #ececec;border-radius:6px;padding:1px 7px;letter-spacing:-0.01em;">2024_브랜드필름_최종.mp4</span> 파일이 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+        </p>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px 13px 20px;border-top:1px solid #ececec;background:#fafafa;">
+    <div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#6b6b6b;letter-spacing:-0.005em;">
+      <span style="display:inline-flex;align-items:center;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;font-weight:500;color:#6b6b6b;background:#ffffff;border:1px solid #ececec;border-radius:5px;padding:1px 5px;box-shadow:0 1px 0 rgba(17,17,17,0.03);">Esc</span>
+      <span>닫기</span>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button style="display:inline-flex;align-items:center;gap:7px;padding:8px 14px;font-size:13.5px;font-weight:500;color:#555;background:#ffffff;border:1px solid #ececec;border-radius:8px;cursor:pointer;line-height:1;">
+        취소
+      </button>
+      <button style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;font-size:13.5px;font-weight:600;color:#ffffff;background:#dc2626;border:1px solid #dc2626;border-radius:8px;cursor:pointer;line-height:1;box-shadow:0 1px 2px rgba(220,38,38,0.25);">
+        삭제
+        <span style="display:inline-flex;align-items:center;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;font-weight:500;color:rgba(255,255,255,0.9);background:rgba(255,255,255,0.18);border-radius:5px;padding:1px 5px;">Enter</span>
+      </button>
+    </div>
+  </div>
+</div></div></div>
+    <div class="rat">정제된 타이포 스케일과 헤어라인·레이어드 그림자, 그리고 실제 동작하는 Enter/Esc를 kbd 칩으로 노출해 Linear·Vercel풍 고급 확인창으로 재구성.</div>
+    <ul class="chg"><li>아이콘을 꽉 찬 원형에서 라운드 사각 컨테이너+은은한 danger 헤어라인 링으로 정제, 타이틀 16px/-0.01em·본문 13.5px/line-height 1.65로 타이포 스케일 정돈</li><li>삭제 대상 파일명을 surface-2 모노스페이스 토큰으로 인라인 강조해 '무엇이 사라지는지'를 시선에 고정</li><li>Enter/Esc 키보드 단축키를 푸터의 kbd 칩으로 시각화 — 실제 핸들러(Enter=확인, Esc=취소)와 1:1 매칭</li><li>1px 헤어라인 보더 + 3단 레이어드 그림자로 떠 있는 느낌, 푸터는 헤어라인으로만 분리하고 취소=화이트+보더 / 삭제=danger 솔리드로 위계 절제</li></ul>
+  </div></div>
+  </section>
+<section class="modal">
+    <div class="mh"><h2>3 · 입력 프롬프트 (PromptDialog)</h2><button class="allrow" onclick="replayRow(this)">이 줄 재생</button></div>
+    <div class="row"><div class="vcard">
+    <div class="vh"><span class="vbadge cur">현재</span><span class="vname">운영 디자인</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;background:#ffffff;border-radius:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);max-width:420px;width:100%;overflow:hidden;">
+  <div style="padding:24px;">
+    <h3 style="font-size:18px;line-height:1.3;font-weight:700;color:#111111;margin:0 0 6px;">폴더 이름 변경</h3>
+    <div style="font-size:16px;color:#555555;line-height:1.6;margin:0 0 16px;">새 폴더 이름을 입력하세요. 공유 링크는 그대로 유지됩니다.</div>
+    <input type="text" value="2026 브랜드필름 검수본" style="width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid #e85008;border-radius:6px;font-size:15px;color:#111111;outline:none;box-shadow:0 0 0 2px #fef0e8;font-family:inherit;" />
+    <div style="margin-top:8px;font-size:14px;color:#dc2626;">이미 같은 이름의 폴더가 있습니다</div>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;padding:12px 20px;background:#fafafa;border-top:1px solid #ececec;">
+    <button style="padding:8px 16px;font-size:16px;font-weight:500;color:#555555;background:transparent;border:none;border-radius:6px;cursor:pointer;font-family:inherit;">취소</button>
+    <button style="padding:8px 16px;font-size:16px;font-weight:600;color:#ffffff;background:#111111;border:none;border-radius:6px;cursor:pointer;font-family:inherit;">확인</button>
+  </div>
+</div></div></div>
+    
+    
+  </div>
+<div class="vcard">
+    <div class="vh"><span class="vbadge">미니멀</span><span class="vname">라인 미니멀</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;width:420px;max-width:100%;background:#ffffff;border:1px solid #ececec;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,0.12);overflow:hidden;">
+  <div style="padding:24px 24px 18px;">
+    <h3 style="margin:0 0 6px;font-size:15px;font-weight:600;color:#111;letter-spacing:-0.01em;">이름 변경</h3>
+    <p style="margin:0 0 18px;font-size:13px;line-height:1.55;color:#555;">2024_브랜드필름_최종.mp4 의 새 이름을 입력하세요.</p>
+    <input value="2024_브랜드필름_최종.mp4" style="width:100%;box-sizing:border-box;padding:8px 2px;border:none;border-bottom:1.5px solid #e85008;background:transparent;font-size:14px;color:#111;outline:none;" />
+  </div>
+  <div style="display:flex;justify-content:flex-end;align-items:center;gap:16px;padding:0 24px 20px;">
+    <button style="background:none;border:none;padding:6px 2px;font-size:13px;font-weight:500;color:#555;cursor:pointer;">취소</button>
+    <button style="background:#111;border:none;padding:8px 18px;border-radius:7px;font-size:13px;font-weight:600;color:#ffffff;cursor:pointer;">변경</button>
+  </div>
+</div></div></div>
+    <div class="rat">박스·구분선·배경을 걷어내고 언더라인 인풋과 한 평면 레이아웃으로 즉시 읽히게 정리.</div>
+    <ul class="chg"><li>푸터의 surface 배경·상단 보더 제거 — 콘텐츠와 액션을 한 평면에 두어 군더더기 제거</li><li>박스형 인풋을 하단 라인(언더라인) 인풋으로 교체, 포커스 시 accent 밑줄만 살림 — 텍스트 중심</li><li>제목 15px·메시지 13px로 위계를 낮추고 타이트한 여백 적용</li><li>취소=고스트 텍스트, 변경=슬림 #111 솔리드로 색·배경 최소화</li></ul>
+  </div>
+<div class="vcard">
+    <div class="vh"><span class="vbadge">친근</span><span class="vname">포근한 안내 카드</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><![CDATA[<div style="position:relative; width:100%; max-width:440px; background:#ffffff; border-radius:28px; box-shadow:0 24px 60px rgba(17,17,17,0.18), 0 4px 12px rgba(17,17,17,0.06); overflow:hidden; font-family:-apple-system, Pretendard, 'Apple SD Gothic Neo', sans-serif;">
+
+  <!-- soft tinted header with floating big icon -->
+  <div style="background:#fef0e8; padding:34px 32px 28px; text-align:center;">
+    <div style="width:66px; height:66px; border-radius:22px; background:#ffffff; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; box-shadow:0 6px 18px rgba(232,80,8,0.20);">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
+        <line x1="12" y1="10" x2="12" y2="16"/>
+        <line x1="9" y1="13" x2="15" y2="13"/>
+      </svg>
+    </div>
+    <h3 style="margin:0 0 7px; font-size:19px; font-weight:700; color:#111; letter-spacing:-0.01em;">새 폴더 만들기</h3>
+    <div style="font-size:14px; color:#666; line-height:1.65;">정리할 폴더 이름을 입력해 주세요.<br/>나중에 언제든 바꿀 수 있어요.</div>
+  </div>
+
+  <!-- body: input -->
+  <div style="padding:24px 32px 4px;">
+    <input value="2026 브랜드 캠페인" placeholder="폴더 이름" style="width:100%; box-sizing:border-box; padding:14px 16px; border:1.5px solid #e85008; border-radius:14px; background:#fafafa; font-size:15px; color:#111; outline:none; box-shadow:0 0 0 4px #fef0e8; font-family:inherit;" />
+    <!-- error slot (예시: 정상 입력이라 미표시)
+    <div style="margin-top:10px; font-size:13px; color:#dc2626;">값을 입력하세요</div>
+    -->
+  </div>
+
+  <!-- footer: full-width rounded pills -->
+  <div style="display:flex; gap:10px; padding:22px 32px 30px;">
+    <button style="flex:1; padding:14px 0; border:none; border-radius:14px; background:#f7f7f7; color:#555; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit;">취소</button>
+    <button style="flex:1; padding:14px 0; border:none; border-radius:14px; background:#e85008; color:#ffffff; font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 6px 16px rgba(232,80,8,0.28); font-family:inherit;">만들기</button>
+  </div>
+
+</div>]]></div></div>
+    <div class="rat">큰 라운드 카드와 맥락색(accent-soft) 틴트 헤더, 떠 있는 큰 아이콘 배지, 따뜻한 2줄 안내로 부담 없는 입력 경험을 만들었습니다.</div>
+    <ul class="chg"><li>모달 라운드를 28px로 키우고 상단을 accent-soft(#fef0e8) 틴트 헤더로 분리, 흰 배지에 떠 있는 큰 folder-plus 아이콘 배치</li><li>제목/안내문을 가운데 정렬 + '나중에 언제든 바꿀 수 있어요' 같은 안심 문구로 따뜻하게 변경</li><li>입력창을 둥근 14px·넉넉한 패딩의 soft surface로, 포커스 시 accent 링(#fef0e8)을 보여 부드러운 인상</li><li>하단 버튼을 동일 너비 라운드 필 2개로(취소=soft, 만들기=accent 채움), 좌측 액센트 띠 없이 배경 채움만 사용</li></ul>
+  </div>
+<div class="vcard">
+    <div class="vh"><span class="vbadge">구조화</span><span class="vname">레이어드 폼</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:440px;background:#ffffff;border-radius:14px;box-shadow:0 24px 60px -12px rgba(0,0,0,0.28),0 0 0 1px rgba(0,0,0,0.04);overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;">
+
+  <!-- 컨텍스트 바: 위치/브레드크럼 + 닫기 -->
+  <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:#f7f7f7;border-bottom:1px solid #ececec;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    <span style="font-size:12px;color:#6b6b6b;display:flex;align-items:center;gap:6px;letter-spacing:-0.01em;">
+      <span>My box</span>
+      <span style="color:#d4d4d4;">/</span>
+      <span style="color:#555;font-weight:500;">2026 브랜드 캠페인</span>
+    </span>
+    <span style="margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;cursor:pointer;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#767676" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </span>
+  </div>
+
+  <!-- 헤더: 분류 라벨 + 제목 + 설명 -->
+  <div style="padding:18px 24px 16px;">
+    <div style="display:inline-flex;align-items:center;height:20px;padding:0 8px;background:#fef0e8;border-radius:5px;font-size:11px;font-weight:600;color:#c8430a;letter-spacing:0.01em;margin-bottom:10px;">폴더 만들기</div>
+    <h3 style="margin:0;font-size:18px;font-weight:700;letter-spacing:-0.02em;color:#111;">새 폴더 만들기</h3>
+    <p style="margin:6px 0 0;font-size:13.5px;line-height:1.55;color:#666;">현재 위치 안에 새 하위 폴더를 만듭니다. 이름은 만든 뒤에도 언제든 변경할 수 있어요.</p>
+  </div>
+
+  <!-- 본문: 라벨드 입력 필드 + 헬프 -->
+  <div style="padding:0 24px 20px;">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px;">
+      <label style="font-size:12.5px;font-weight:600;color:#111;letter-spacing:-0.01em;">폴더 이름 <span style="color:#e85008;">*</span></label>
+      <span style="font-size:11.5px;color:#6b6b6b;font-variant-numeric:tabular-nums;">9 / 60</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;width:100%;box-sizing:border-box;padding:0 12px;height:42px;background:#ffffff;border:1.5px solid #e85008;border-radius:9px;box-shadow:0 0 0 3px #fef0e8;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#767676" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      <span style="font-size:14.5px;color:#111;flex:1;">2026 신제품 런칭</span>
+      <span style="width:1.5px;height:17px;background:#e85008;border-radius:1px;"></span>
+    </div>
+    <!-- 헬프텍스트 / 에러 슬롯 (고정 위치) -->
+    <div style="display:flex;align-items:flex-start;gap:6px;margin-top:8px;min-height:16px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <span style="font-size:12px;line-height:1.45;color:#6b6b6b;">같은 위치에 동일한 이름의 폴더가 있으면 만들 수 없습니다.</span>
+    </div>
+  </div>
+
+  <!-- 액션 푸터: 구분선 + 단축키 힌트 + 버튼 -->
+  <div style="display:flex;align-items:center;gap:8px;padding:12px 16px 12px 24px;background:#fafafa;border-top:1px solid #ececec;">
+    <span style="font-size:11.5px;color:#6b6b6b;display:flex;align-items:center;gap:5px;">
+      <kbd style="display:inline-flex;align-items:center;height:18px;padding:0 6px;background:#ffffff;border:1px solid #ececec;border-radius:4px;font-size:10.5px;font-weight:600;color:#555;font-family:inherit;">Enter</kbd>
+      <span>로 바로 만들기</span>
+    </span>
+    <div style="margin-left:auto;display:flex;gap:8px;">
+      <button style="padding:0 16px;height:38px;font-size:13.5px;font-weight:500;color:#555;background:transparent;border:1px solid #ececec;border-radius:9px;cursor:pointer;">취소</button>
+      <button style="padding:0 18px;height:38px;font-size:13.5px;font-weight:600;color:#ffffff;background:#e85008;border:none;border-radius:9px;cursor:pointer;box-shadow:0 1px 2px rgba(232,80,8,0.25);">만들기</button>
+    </div>
+  </div>
+
+</div></div></div>
+    <div class="rat">컨텍스트 바 → 제목/설명 → 라벨드 입력+헬프텍스트 → 구분된 액션 푸터로 4개 영역을 명확한 위계로 분리.</div>
+    <ul class="chg"><li>상단에 위치 컨텍스트 바(브레드크럼+닫기) 추가로 '어디에 만드는지' 명시</li><li>입력에 보조 라벨('폴더 이름'+필수표시)·헬프텍스트·실시간 글자수 추가, 에러 영역은 인라인 슬롯으로 고정</li><li>헤더/본문/푸터를 구분선과 배경 톤으로 구역화, 푸터에 단축키 힌트 배치</li><li>주액션 버튼을 accent(#e85008)로 승격해 위계 강조</li></ul>
+  </div>
+<div class="vcard">
+    <div class="vh"><span class="vbadge">프리미엄</span><span class="vname">Hairline Prompt</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="position:relative;width:420px;max-width:100%;background:#ffffff;border:1px solid #ececec;border-radius:14px;box-shadow:0 1px 2px rgba(17,17,17,0.04),0 12px 32px -8px rgba(17,17,17,0.12);overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;">
+  <div style="padding:26px 26px 22px 26px;">
+    <div style="display:flex;align-items:center;gap:7px;margin-bottom:14px;">
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border:1px solid #ececec;border-radius:7px;background:#fafafa;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      </span>
+      <span style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#767676;">이름 변경</span>
+    </div>
+
+    <h3 style="margin:0 0 6px 0;font-size:17px;font-weight:650;letter-spacing:-0.01em;line-height:1.3;color:#111;">파일 이름을 변경합니다</h3>
+    <p style="margin:0 0 18px 0;font-size:13px;line-height:1.55;color:#666;">새 이름을 입력하세요. 확장자는 유지하는 것을 권장합니다.</p>
+
+    <label style="display:block;font-size:11px;font-weight:600;letter-spacing:0.02em;color:#6b6b6b;margin-bottom:7px;">이름</label>
+    <div style="position:relative;display:flex;align-items:center;width:100%;box-sizing:border-box;padding:0 12px;height:42px;background:#ffffff;border:1px solid #d4d4d4;border-radius:9px;box-shadow:0 0 0 3px #fef0e8;transition:all .15s;">
+      <input value="촬영본_최종_v3.mp4" readonly style="flex:1;border:none;outline:none;background:transparent;font-size:14px;font-family:inherit;color:#111;letter-spacing:-0.005em;padding:0;" />
+      <span style="font-size:11px;color:#767676;font-variant-numeric:tabular-nums;white-space:nowrap;margin-left:8px;">16 / 80</span>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:6px;margin-top:10px;padding:7px 10px;background:#fef2f2;border:1px solid #fee2e2;border-radius:8px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span style="font-size:12px;color:#dc2626;font-weight:500;line-height:1.4;">같은 이름의 파일이 이미 있습니다</span>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 18px 13px 22px;background:#fafafa;border-top:1px solid #ececec;">
+    <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#767676;">
+      <kbd style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border:1px solid #ececec;border-bottom-width:2px;border-radius:5px;background:#ffffff;font-size:10px;font-weight:600;font-family:inherit;color:#6b6b6b;">&#9166;</kbd>
+      <span>저장 &middot;</span>
+      <kbd style="display:inline-flex;align-items:center;justify-content:center;height:18px;padding:0 6px;border:1px solid #ececec;border-bottom-width:2px;border-radius:5px;background:#ffffff;font-size:10px;font-weight:600;font-family:inherit;color:#6b6b6b;">Esc</kbd>
+      <span>취소</span>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button style="height:34px;padding:0 14px;font-size:13px;font-weight:500;font-family:inherit;color:#555;background:transparent;border:1px solid transparent;border-radius:8px;cursor:pointer;">취소</button>
+      <button style="height:34px;padding:0 16px;font-size:13px;font-weight:600;font-family:inherit;color:#ffffff;background:#111;border:1px solid #111;border-radius:8px;cursor:pointer;box-shadow:0 1px 2px rgba(17,17,17,0.18);">변경</button>
+    </div>
+  </div>
+</div></div></div>
+    <div class="rat">Linear/Vercel 풍 헤어라인·타이포 스케일·키보드 힌트로 단일 입력 프롬프트를 정제된 고급 경험으로 끌어올림.</div>
+    <ul class="chg"><li>상단 eyebrow 라벨 + 정제된 타이틀/서브카피 타이포 스케일과 넉넉한 여백으로 위계 정리</li><li>입력 위 마이크로 라벨 + 포커스 시 은은한 accent 헤어라인 링(2px 띠 아님, border 색만)으로 accent 절제</li><li>푸터에 ⏎/Esc 키캡 힌트와 헤어라인 구분선·미세 그림자, 확인 버튼만 중립 다크로 강조하고 취소는 고스트</li><li>에러를 danger-soft 배경의 인라인 칩으로 표현해 깜빡임 없이 부드럽게 노출</li></ul>
+  </div></div>
+  </section>
+<section class="modal">
+    <div class="mh"><h2>4 · 공유 링크 (ShareDialog)</h2><button class="allrow" onclick="replayRow(this)">이 줄 재생</button></div>
+    <div class="row"><div class="vcard">
+    <div class="vh"><span class="vbadge cur">현재</span><span class="vname">운영 디자인</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:448px;max-width:100%;background:#ffffff;border-radius:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);overflow:hidden;display:flex;flex-direction:column;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111111;">
+  <!-- header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #ececec;">
+    <div style="display:flex;align-items:center;gap:8px;font-size:14px;line-height:20px;font-weight:700;color:#111111;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      공유 링크 만들기
+    </div>
+    <button style="display:grid;place-items:center;padding:4px;border:none;background:transparent;border-radius:4px;color:#666666;cursor:pointer;" title="닫기 (Esc)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+  </div>
+
+  <!-- body -->
+  <div style="padding:24px;">
+    <div style="font-size:12px;line-height:16px;color:#6b6b6b;margin-bottom:4px;">파일</div>
+    <div style="font-size:14px;line-height:20px;font-weight:600;color:#111111;margin-bottom:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">브랜드필름_본편_v3_final.mp4</div>
+
+    <!-- 모드 선택 -->
+    <div style="margin-bottom:20px;">
+      <label style="display:block;font-size:12px;line-height:16px;font-weight:600;color:#666666;margin-bottom:8px;">모드</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <!-- preview (선택됨) -->
+        <button style="display:flex;align-items:flex-start;gap:8px;padding:10px;border-radius:6px;border:1px solid #111111;background:#fafafa;text-align:left;cursor:pointer;">
+          <svg style="margin-top:2px;flex-shrink:0;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+          <div>
+            <div style="font-size:12px;line-height:16px;font-weight:600;color:#111111;">보기 전용</div>
+            <div style="font-size:10px;line-height:14px;color:#555555;margin-top:2px;">클라가 영상만 시청. 댓글·피드백 없음</div>
+          </div>
+        </button>
+        <!-- full (미선택) -->
+        <button style="display:flex;align-items:flex-start;gap:8px;padding:10px;border-radius:6px;border:1px solid #ececec;background:#ffffff;text-align:left;cursor:pointer;">
+          <svg style="margin-top:2px;flex-shrink:0;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#555555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <div>
+            <div style="font-size:12px;line-height:16px;font-weight:600;color:#111111;">피드백 받기</div>
+            <div style="font-size:10px;line-height:14px;color:#555555;margin-top:2px;">클라가 시간 위에 댓글·주석 달 수 있음</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- 생성 CTA -->
+    <button style="width:100%;background:#111111;color:#ffffff;border:none;padding:10px;border-radius:6px;font-size:14px;line-height:20px;font-weight:600;cursor:pointer;">공유 링크 생성</button>
+  </div>
+</div></div></div>
+    
+    
+  </div>
+<div class="vcard">
+    <div class="vh"><span class="vbadge">미니멀</span><span class="vname">Quiet Link</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><![CDATA[<div style="width:448px;background:#ffffff;border:1px solid #ececec;border-radius:12px;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;overflow:hidden;">
+  <!-- header: title only, no icon badge -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0 24px;">
+    <div style="font-size:15px;font-weight:600;color:#111;letter-spacing:-0.01em;">공유 링크 만들기</div>
+    <button aria-label="닫기" style="border:0;background:transparent;color:#6b6b6b;cursor:pointer;padding:2px;line-height:0;border-radius:6px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div style="padding:18px 24px 24px 24px;">
+    <!-- target file: label + name, text-centric -->
+    <div style="font-size:12px;color:#6b6b6b;margin-bottom:2px;">파일</div>
+    <div style="font-size:15px;font-weight:600;color:#111;margin-bottom:22px;letter-spacing:-0.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">최종_브랜드필름_v3.mp4</div>
+
+    <!-- mode: minimal radio rows, no icon, selected = neutral fill -->
+    <div style="font-size:12px;font-weight:600;color:#555;margin-bottom:8px;">모드</div>
+    <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:18px;">
+      <!-- 보기 전용 (unselected) -->
+      <button style="display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;background:transparent;border:0;border-radius:8px;padding:10px 10px;cursor:pointer;">
+        <span style="margin-top:2px;width:14px;height:14px;border-radius:50%;border:1.5px solid #d4d4d4;flex-shrink:0;"></span>
+        <span>
+          <span style="display:block;font-size:14px;font-weight:600;color:#555;">보기 전용</span>
+          <span style="display:block;font-size:12px;color:#767676;margin-top:1px;">클라가 영상만 시청 · 댓글·피드백 없음</span>
+        </span>
+      </button>
+      <!-- 피드백 받기 (selected) -->
+      <button style="display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;background:#f4f4f5;border:0;border-radius:8px;padding:10px 10px;cursor:pointer;">
+        <span style="margin-top:2px;width:14px;height:14px;border-radius:50%;border:1.5px solid #111;flex-shrink:0;display:grid;place-items:center;">
+          <span style="width:6px;height:6px;border-radius:50%;background:#111;"></span>
+        </span>
+        <span>
+          <span style="display:block;font-size:14px;font-weight:600;color:#111;">피드백 받기</span>
+          <span style="display:block;font-size:12px;color:#555;margin-top:1px;">클라가 시간 위에 댓글·주석 달 수 있음</span>
+        </span>
+      </button>
+    </div>
+
+    <!-- include feedback: borderless text row, single accent on check -->
+    <button style="display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;background:transparent;border:0;padding:0 10px;margin-bottom:22px;cursor:pointer;">
+      <span style="margin-top:1px;width:16px;height:16px;border-radius:5px;background:#e85008;flex-shrink:0;display:grid;place-items:center;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      </span>
+      <span>
+        <span style="display:block;font-size:14px;font-weight:600;color:#111;">내가 남긴 피드백도 함께 보이기</span>
+        <span style="display:block;font-size:12px;color:#767676;margin-top:2px;line-height:1.45;">팀이 남긴 타임라인 피드백을 받는 사람도 봅니다 · 링크에서만 보이고 끄면 다시 숨겨져요</span>
+      </span>
+    </button>
+
+    <!-- primary action: calm dark, single focal -->
+    <button style="width:100%;background:#111;color:#ffffff;border:0;border-radius:8px;padding:11px 0;font-size:14px;font-weight:600;cursor:pointer;letter-spacing:-0.01em;">공유 링크 생성</button>
+  </div>
+</div>]]></div></div>
+    <div class="rat">아이콘 배지·카드 테두리를 걷어내고 텍스트와 여백만으로 모드 선택을 읽히게 한 차분한 공유 패널.</div>
+    <ul class="chg"><li>타이틀 링크 아이콘과 모드 카드의 Eye/MessageSquare 배지를 제거하고, 모드 선택을 좌측 라디오 점 + 텍스트 행으로 단순화(선택=중립 배경 채움, 좌측 띠 없음)</li><li>파일명 위에 라벨만 남기고 안내 박스·테두리를 최소화, 24px 타이트 여백으로 정보를 위→아래 한 흐름으로 정렬</li><li>체크박스는 보더 없는 텍스트 행으로 두고, 유일한 색 강조로 accent(#e85008) 체크 표식만 사용</li><li>ready 단계의 성공/URL 영역도 배경 없는 점선 한 줄·모노 URL·텍스트형 복사 버튼으로 정돈</li></ul>
+  </div>
+<div class="vcard">
+    <div class="vh"><span class="vbadge">친근</span><span class="vname">따뜻한 공유 카드</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><![CDATA[<div style="max-width:440px;margin:0 auto;background:#ffffff;border:1px solid #ececec;border-radius:24px;overflow:hidden;box-shadow:0 18px 48px rgba(17,17,17,0.12);font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;">
+
+  <!-- 따뜻한 헤더 밴드 -->
+  <div style="background:#fef0e8;padding:26px 26px 22px;display:flex;align-items:center;gap:14px;">
+    <div style="width:48px;height:48px;border-radius:16px;background:#e85008;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 16px rgba(232,80,8,0.32);">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+    </div>
+    <div style="min-width:0;">
+      <div style="font-size:17px;font-weight:700;letter-spacing:-0.02em;line-height:1.25;">공유 링크 만들기</div>
+      <div style="font-size:13px;color:#6b6b6b;margin-top:3px;line-height:1.4;">받는 분이 바로 열어볼 수 있는 링크예요</div>
+    </div>
+  </div>
+
+  <div style="padding:22px;">
+
+    <!-- 파일 칩 -->
+    <div style="display:flex;align-items:center;gap:12px;background:#fafafa;border:1px solid #ececec;border-radius:18px;padding:13px 15px;margin-bottom:22px;">
+      <div style="width:40px;height:40px;border-radius:13px;background:#e0f2fe;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+      </div>
+      <div style="min-width:0;">
+        <div style="font-size:11.5px;color:#6b6b6b;font-weight:600;">영상 파일</div>
+        <div style="font-size:14.5px;font-weight:700;letter-spacing:-0.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">2026_브랜드필름_최종본_v3.mp4</div>
+      </div>
+    </div>
+
+    <!-- 모드 선택 -->
+    <div style="font-size:13.5px;font-weight:700;color:#111;margin-bottom:11px;letter-spacing:-0.01em;">어떻게 공유할까요?</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px;">
+
+      <!-- 보기 전용 (미선택) -->
+      <div style="border:1.5px solid #ececec;background:#ffffff;border-radius:18px;padding:15px 14px;cursor:pointer;">
+        <div style="width:38px;height:38px;border-radius:12px;background:#e0f2fe;display:flex;align-items:center;justify-content:center;margin-bottom:11px;">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <div style="font-size:13.5px;font-weight:700;letter-spacing:-0.01em;">보기 전용</div>
+        <div style="font-size:11.5px;color:#666;margin-top:4px;line-height:1.45;">클라가 영상만 시청. 댓글·피드백 없음</div>
+      </div>
+
+      <!-- 피드백 받기 (선택됨 = accent-soft 배경채움) -->
+      <div style="border:1.5px solid #e85008;background:#fef0e8;border-radius:18px;padding:15px 14px;cursor:pointer;position:relative;">
+        <div style="position:absolute;top:12px;right:12px;width:20px;height:20px;border-radius:50%;background:#e85008;display:flex;align-items:center;justify-content:center;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <div style="width:38px;height:38px;border-radius:12px;background:#ffffff;display:flex;align-items:center;justify-content:center;margin-bottom:11px;border:1px solid #fad9c6;">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div style="font-size:13.5px;font-weight:700;letter-spacing:-0.01em;color:#111;">피드백 받기</div>
+        <div style="font-size:11.5px;color:#666;margin-top:4px;line-height:1.45;">클라가 시간 위에 댓글·주석 달 수 있음</div>
+      </div>
+    </div>
+
+    <!-- 내 피드백 함께 보이기 토글 (피드백 받기 선택 시 노출) -->
+    <div style="display:flex;align-items:flex-start;gap:12px;border:1.5px solid #ececec;background:#fafafa;border-radius:18px;padding:14px 15px;margin-bottom:22px;cursor:pointer;">
+      <span style="margin-top:1px;flex-shrink:0;width:22px;height:22px;border-radius:8px;border:1.5px solid #d4d4d4;background:#ffffff;display:flex;align-items:center;justify-content:center;"></span>
+      <div>
+        <div style="font-size:13.5px;font-weight:700;letter-spacing:-0.01em;">내가 남긴 피드백도 함께 보이기</div>
+        <div style="font-size:11.5px;color:#666;margin-top:4px;line-height:1.5;">이 파일에 팀이 남긴 타임라인 피드백을 받는 분도 봅니다 · 링크에서만 보이고 끄면 다시 숨겨져요</div>
+      </div>
+    </div>
+
+    <!-- 주액션 -->
+    <button style="width:100%;border:none;background:#e85008;color:#ffffff;padding:14px;border-radius:9999px;font-size:14.5px;font-weight:700;letter-spacing:-0.01em;cursor:pointer;box-shadow:0 8px 20px rgba(232,80,8,0.28);">공유 링크 생성</button>
+
+  </div>
+</div>]]></div></div>
+    <div class="rat">큰 라운드와 맥락색 soft 틴트, 둥근 아이콘 배지로 공유 설정을 부담 없이 고르게 만든 친근한 시안.</div>
+    <ul class="chg"><li>패널 24px·카드 18px 큰 라운드 + accent-soft 헤더 밴드와 원형 아이콘 배지로 부드러운 첫인상</li><li>모드 카드를 큰 둥근 카드로 키우고 보기 전용=sky-soft, 피드백=accent-soft 맥락색 틴트로 직관화(선택은 배경채움)</li><li>안내 문구를 '어떻게 공유할까요?' 등 따뜻한 말투로 다듬고 둥근 체크 토글 카드로 친절하게 배치</li><li>주액션 버튼은 풀라운드 pill에 주황(accent) 강조로 따뜻하게 마무리</li></ul>
+  </div>
+<div class="vcard">
+    <div class="vh"><span class="vbadge">구조화</span><span class="vname">Sectioned Brief (섹션형 명세)</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:448px;background:#ffffff;border:1px solid #ececec;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,0.10);overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:flex-start;gap:11px;padding:18px 20px 16px;border-bottom:1px solid #ececec;">
+    <div style="flex-shrink:0;width:32px;height:32px;border-radius:8px;background:#fef0e8;display:flex;align-items:center;justify-content:center;margin-top:1px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+    </div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:15px;font-weight:700;line-height:1.3;">공유 링크 만들기</div>
+      <div style="font-size:12px;color:#6b6b6b;margin-top:2px;line-height:1.4;">받는 사람에게 보낼 링크를 설정합니다</div>
+    </div>
+    <button style="flex-shrink:0;width:28px;height:28px;border:none;background:transparent;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#767676;margin:-3px -4px 0 0;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <!-- Context bar: 공유 대상 -->
+  <div style="display:flex;align-items:center;gap:12px;padding:13px 20px;background:#f7f7f7;border-bottom:1px solid #ececec;">
+    <div style="flex-shrink:0;width:38px;height:38px;border-radius:7px;background:#ffffff;border:1px solid #ececec;display:flex;align-items:center;justify-content:center;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m10 11 5 3-5 3v-6Z" fill="#555" stroke="none"/></svg>
+    </div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:10.5px;font-weight:700;letter-spacing:0.4px;color:#6b6b6b;text-transform:uppercase;margin-bottom:2px;">공유 대상</div>
+      <div style="font-size:13.5px;font-weight:600;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">2026_상반기_브랜드필름_v3.mp4</div>
+    </div>
+    <div style="flex-shrink:0;font-size:11px;font-weight:600;color:#555;background:#ffffff;border:1px solid #ececec;border-radius:5px;padding:3px 8px;">파일 · MP4</div>
+  </div>
+
+  <!-- Body -->
+  <div style="padding:18px 20px 20px;">
+
+    <!-- Section 1: 공유 모드 -->
+    <div style="margin-bottom:18px;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">
+        <span style="flex-shrink:0;width:17px;height:17px;border-radius:50%;background:#111;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;">1</span>
+        <span style="font-size:13px;font-weight:700;color:#111;">공유 모드</span>
+      </div>
+      <div style="font-size:11.5px;color:#6b6b6b;line-height:1.45;margin:0 0 10px 24px;">받는 사람이 가질 권한을 정합니다</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <!-- 보기 전용 (unselected) -->
+        <div style="position:relative;border:1px solid #ececec;background:#ffffff;border-radius:8px;padding:11px 11px 12px;cursor:pointer;">
+          <span style="position:absolute;top:10px;right:10px;width:14px;height:14px;border-radius:50%;border:1.5px solid #d4d4d4;background:#fff;"></span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:7px;"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          <div style="font-size:12.5px;font-weight:600;color:#111;">보기 전용</div>
+          <div style="font-size:11px;color:#555;margin-top:3px;line-height:1.4;">클라가 영상만 시청. 댓글·피드백 없음</div>
+        </div>
+        <!-- 피드백 받기 (selected) -->
+        <div style="position:relative;border:1px solid #111;background:#f7f7f7;border-radius:8px;padding:11px 11px 12px;cursor:pointer;">
+          <span style="position:absolute;top:10px;right:10px;width:14px;height:14px;border-radius:50%;border:1.5px solid #111;background:#111;display:flex;align-items:center;justify-content:center;"><span style="width:5px;height:5px;border-radius:50%;background:#fff;"></span></span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:7px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <div style="font-size:12.5px;font-weight:600;color:#111;">피드백 받기</div>
+          <div style="font-size:11px;color:#555;margin-top:3px;line-height:1.4;">클라가 시간 위에 댓글·주석 달 수 있음</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- divider -->
+    <div style="height:1px;background:#ececec;margin:0 0 16px;"></div>
+
+    <!-- Section 2: 추가 옵션 -->
+    <div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">
+        <span style="flex-shrink:0;width:17px;height:17px;border-radius:50%;background:#111;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;">2</span>
+        <span style="font-size:13px;font-weight:700;color:#111;">추가 옵션</span>
+      </div>
+      <div style="font-size:11.5px;color:#6b6b6b;line-height:1.45;margin:0 0 10px 24px;">피드백 받기 모드에서만 사용할 수 있어요</div>
+
+      <!-- 피드백 함께 보이기 (checked) -->
+      <div style="display:flex;align-items:flex-start;gap:10px;border:1px solid #e85008;background:#fef0e8;border-radius:8px;padding:12px 12px 13px;cursor:pointer;">
+        <span style="flex-shrink:0;width:17px;height:17px;border-radius:4px;background:#e85008;border:1px solid #e85008;display:flex;align-items:center;justify-content:center;margin-top:1px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12.5px;font-weight:600;color:#111;">내가 남긴 피드백도 함께 보이기</div>
+          <div style="font-size:11px;color:#555;margin-top:3px;line-height:1.45;">이 파일에 팀이 남긴 타임라인 피드백을 받는 사람도 봅니다 · 링크에서만 보이고 끄면 다시 숨겨져요</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer action bar -->
+  <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:13px 20px;border-top:1px solid #ececec;background:#fafafa;">
+    <button style="font-size:13px;font-weight:600;color:#555;background:#ffffff;border:1px solid #ececec;border-radius:7px;padding:9px 16px;cursor:pointer;">취소</button>
+    <button style="font-size:13px;font-weight:700;color:#ffffff;background:#e85008;border:none;border-radius:7px;padding:9px 18px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      공유 링크 생성
+    </button>
+  </div>
+
+</div></div></div>
+    <div class="rat">헤더·공유대상 컨텍스트바·번호 매긴 설정 섹션·고정 푸터 액션바로 정보 위계를 4단으로 분리해 "무엇을 누구에게 어떻게 공유하는지"가 한눈에 읽히도록 재구성.</div>
+    <ul class="chg"><li>상단 헤더(제목+보조설명)와 'surface-2' 컨텍스트 바를 분리 — 공유 대상 파일을 라벨/파일명/포맷으로 명확히 카드화</li><li>설정 영역을 번호 배지가 붙은 섹션('1 공유 모드', '2 추가 옵션')으로 묶고 각 섹션에 헬프텍스트를 추가해 위계 강화</li><li>옵션 카드에 라디오 인디케이터를 넣고 선택은 배경 채움(좌측 띠 없음)으로 표현, 선택 상태를 명시</li><li>하단에 border-top 구분선으로 고정 액션바(취소/공유 링크 생성)를 분리해 입력과 액션 영역을 시각적으로 구획</li></ul>
+  </div>
+<div class="vcard">
+    <div class="vh"><span class="vbadge">프리미엄</span><span class="vname">Hairline Studio</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:448px;background:#ffffff;border:1px solid #ececec;border-radius:14px;box-shadow:0 1px 2px rgba(0,0,0,0.04),0 12px 32px -8px rgba(0,0,0,0.12),0 0 0 0.5px rgba(0,0,0,0.02);overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #ececec;">
+    <div style="display:flex;align-items:center;gap:9px;">
+      <span style="display:grid;place-items:center;width:26px;height:26px;border-radius:7px;background:#f7f7f7;border:1px solid #ececec;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      </span>
+      <span style="font-size:14px;font-weight:600;letter-spacing:-0.01em;color:#111;">공유 링크 만들기</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:10px;font-weight:600;color:#6b6b6b;border:1px solid #ececec;background:#fafafa;border-radius:5px;padding:2px 6px;letter-spacing:0.02em;">Esc</span>
+      <button style="display:grid;place-items:center;width:28px;height:28px;border:none;background:transparent;border-radius:7px;cursor:pointer;color:#666;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div style="padding:20px;">
+
+    <!-- File context -->
+    <div style="display:flex;align-items:center;gap:11px;margin-bottom:22px;">
+      <span style="display:grid;place-items:center;width:38px;height:38px;border-radius:9px;background:#fafafa;border:1px solid #ececec;flex-shrink:0;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+      </span>
+      <div style="min-width:0;">
+        <div style="font-size:10px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:#6b6b6b;margin-bottom:3px;">파일</div>
+        <div style="font-size:15px;font-weight:600;letter-spacing:-0.01em;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">브랜드필름_2차편집_v3.mp4</div>
+      </div>
+    </div>
+
+    <!-- Mode label -->
+    <div style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#6b6b6b;margin-bottom:9px;">공유 모드</div>
+
+    <!-- Mode cards -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+      <!-- 보기 전용 (unselected) -->
+      <button style="position:relative;text-align:left;padding:13px 12px;border-radius:10px;border:1px solid #ececec;background:#ffffff;cursor:pointer;">
+        <span style="position:absolute;top:11px;right:11px;display:grid;place-items:center;width:15px;height:15px;border-radius:50%;border:1.5px solid #d4d4d4;background:#fff;"></span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px;"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        <div style="font-size:13px;font-weight:600;color:#111;letter-spacing:-0.01em;">보기 전용</div>
+        <div style="font-size:11px;color:#6b6b6b;margin-top:3px;line-height:1.45;">영상만 시청 · 댓글 없음</div>
+      </button>
+      <!-- 피드백 받기 (selected) -->
+      <button style="position:relative;text-align:left;padding:13px 12px;border-radius:10px;border:1px solid #111;background:#fafafa;cursor:pointer;box-shadow:0 0 0 1px #111;">
+        <span style="position:absolute;top:11px;right:11px;display:grid;place-items:center;width:15px;height:15px;border-radius:50%;border:1.5px solid #111;background:#111;"><span style="width:5px;height:5px;border-radius:50%;background:#fff;"></span></span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <div style="font-size:13px;font-weight:600;color:#111;letter-spacing:-0.01em;">피드백 받기</div>
+        <div style="font-size:11px;color:#555;margin-top:3px;line-height:1.45;">시간 위에 댓글·주석</div>
+      </button>
+    </div>
+
+    <!-- Include-feedback toggle (ON, accent) -->
+    <button style="width:100%;display:flex;align-items:flex-start;gap:11px;text-align:left;padding:13px;border-radius:10px;border:1px solid #e85008;background:#fef0e8;cursor:pointer;margin-bottom:20px;">
+      <span style="flex-shrink:0;margin-top:1px;display:grid;place-items:center;width:17px;height:17px;border-radius:5px;background:#e85008;border:1px solid #e85008;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </span>
+      <span style="min-width:0;">
+        <span style="display:block;font-size:13px;font-weight:600;color:#111;letter-spacing:-0.01em;">내가 남긴 피드백도 함께 보이기</span>
+        <span style="display:block;font-size:11px;color:#555;margin-top:3px;line-height:1.5;">팀이 남긴 타임라인 피드백을 받는 사람도 봅니다 · 끄면 다시 숨겨져요</span>
+      </span>
+    </button>
+
+    <!-- Primary action -->
+    <button style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:#111;color:#fff;border:none;padding:0 16px;height:42px;border-radius:10px;font-size:14px;font-weight:600;letter-spacing:-0.01em;cursor:pointer;">
+      <span>공유 링크 생성</span>
+      <span style="display:grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border-radius:5px;background:rgba(255,255,255,0.14);font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);">&#8629;</span>
+    </button>
+
+    <!-- Footer micro-hint -->
+    <div style="display:flex;align-items:center;gap:6px;margin-top:13px;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span style="font-size:11px;color:#6b6b6b;letter-spacing:-0.005em;">링크가 있으면 누구나 열람할 수 있어요 · 언제든 해제 가능</span>
+    </div>
+
+  </div>
+</div></div></div>
+    <div class="rat">Linear·Vercel식 헤어라인·모노크롬 절제·키보드 힌트로 공유 링크 다이얼로그를 정제된 프리미엄 톤으로 재구성.</div>
+    <ul class="chg"><li>타이포 스케일 정비: uppercase 트래킹 eyebrow + 음수 자간 타이틀, 헤어라인(#ececec) 분리선과 충분한 여백으로 정보 위계 재배치</li><li>모드 선택을 우상단 라디오 인디케이터가 있는 모노크롬 카드로 — 선택은 배경채움(#fafafa)+#111 테두리, 좌측 띠 없음</li><li>주황 accent는 '피드백 함께 보이기' 토글 ON 상태와 성공 체크에만 절제 사용, 주액션 버튼은 #111 다크</li><li>프리미엄 미세 디테일: 버튼 안 ↵ Enter / 헤더 Esc kbd 힌트, 레이어드 그림자, 모노스페이스 URL 슬롯</li></ul>
+  </div></div>
+  </section>
+<section class="modal">
+    <div class="mh"><h2>5 · 이동 다이얼로그 (MoveDialog)</h2><button class="allrow" onclick="replayRow(this)">이 줄 재생</button></div>
+    <div class="row"><div class="vcard">
+    <div class="vh"><span class="vbadge cur">현재</span><span class="vname">운영 디자인</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:448px;background:#ffffff;border-radius:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);overflow:hidden;display:flex;flex-direction:column;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111111;">
+  <!-- header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #ececec;">
+    <div style="display:flex;align-items:center;gap:8px;font-size:14px;line-height:20px;font-weight:700;color:#111111;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8L22 12L18 16"/><path d="M2 12H22"/></svg>
+      <span>&quot;기획안_최종.pdf&quot; 이동</span>
+    </div>
+    <button style="display:flex;padding:4px;border:none;background:transparent;border-radius:4px;color:#666666;cursor:pointer;" title="닫기 (Esc)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+  </div>
+
+  <!-- body -->
+  <div style="padding:20px;">
+    <div style="font-size:12px;line-height:16px;color:#6b6b6b;margin-bottom:8px;">대상 폴더</div>
+
+    <!-- breadcrumb -->
+    <div style="display:flex;align-items:center;gap:4px;font-size:13px;line-height:18px;margin-bottom:12px;flex-wrap:wrap;">
+      <button style="border:none;background:transparent;color:#555555;cursor:pointer;padding:0;">Vibox</button>
+      <span style="display:flex;align-items:center;gap:4px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        <span style="color:#111111;font-weight:600;">2026 프로젝트</span>
+      </span>
+    </div>
+
+    <!-- folder list -->
+    <div style="background:#fafafa;border:1px solid #ececec;border-radius:6px;max-height:260px;overflow-y:auto;margin-bottom:16px;">
+      <button style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;line-height:18px;color:#555555;background:transparent;border:none;border-bottom:1px solid #ececec;cursor:pointer;text-align:left;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        상위 폴더로
+      </button>
+      <button style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;line-height:18px;color:#111111;background:transparent;border:none;border-bottom:1px solid #f5f5f5;cursor:pointer;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+        <span style="flex:1;text-align:left;">촬영 원본</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+      <button style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;line-height:18px;color:#111111;background:transparent;border:none;border-bottom:1px solid #f5f5f5;cursor:pointer;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+        <span style="flex:1;text-align:left;">편집본 v2</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+      <button style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;line-height:18px;color:#111111;background:transparent;border:none;border-bottom:1px solid #f5f5f5;cursor:pointer;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+        <span style="flex:1;text-align:left;">납품 완료</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+    </div>
+
+    <!-- target line -->
+    <div style="font-size:12px;line-height:16px;color:#666666;margin-bottom:16px;">
+      이동 대상: <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#111111;">/2026 프로젝트</span>
+    </div>
+
+    <!-- actions -->
+    <div style="display:flex;gap:8px;">
+      <button style="flex:1;padding:8px 16px;font-size:13px;line-height:18px;font-weight:500;color:#555555;background:transparent;border:none;border-radius:6px;cursor:pointer;">취소</button>
+      <button style="flex:1;padding:8px 0;font-size:13px;line-height:18px;font-weight:600;color:#ffffff;background:#111111;border:none;border-radius:6px;cursor:pointer;">여기로 이동</button>
+    </div>
+  </div>
+</div></div></div>
+    
+    
+  </div>
+<div class="vcard">
+    <div class="vh"><span class="vbadge">미니멀</span><span class="vname">Quiet Path</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:440px;background:#ffffff;border:1px solid #ececec;border-radius:12px;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;box-shadow:0 12px 32px rgba(0,0,0,0.10);overflow:hidden;">
+
+  <!-- Header: title only, no icon badge -->
+  <div style="padding:20px 20px 0;">
+    <div style="font-size:15px;font-weight:600;color:#111;letter-spacing:-0.01em;line-height:1.4;">
+      &ldquo;분기 보고서 영상.mp4&rdquo; 이동
+    </div>
+  </div>
+
+  <div style="padding:18px 20px 20px;">
+
+    <!-- Label -->
+    <div style="font-size:12px;color:#6b6b6b;margin-bottom:8px;letter-spacing:0.01em;">대상 폴더</div>
+
+    <!-- Breadcrumb: text-centric, subtle chevrons -->
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px;font-size:14px;margin-bottom:14px;">
+      <span style="color:#555;cursor:pointer;">Vibox</span>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
+      <span style="color:#555;cursor:pointer;">프로젝트</span>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
+      <span style="color:#111;font-weight:600;">2026</span>
+    </div>
+
+    <!-- Folder list: hairlines only, no box bg, no folder icons -->
+    <div style="border-top:1px solid #ececec;border-bottom:1px solid #ececec;max-height:260px;overflow-y:auto;margin-bottom:16px;">
+
+      <!-- 상위 폴더로 -->
+      <div style="display:flex;align-items:center;gap:7px;padding:10px 4px;font-size:14px;color:#555;border-bottom:1px solid #f5f5f5;cursor:pointer;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        상위 폴더로
+      </div>
+
+      <!-- folder rows: text + subtle drill-in chevron, no icon -->
+      <div style="display:flex;align-items:center;padding:10px 4px;font-size:14px;color:#111;border-bottom:1px solid #f5f5f5;cursor:pointer;">
+        <span style="flex:1;">촬영 원본</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div style="display:flex;align-items:center;padding:10px 4px;font-size:14px;color:#111;border-bottom:1px solid #f5f5f5;cursor:pointer;background:#f0f0f0;">
+        <span style="flex:1;">편집본</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div style="display:flex;align-items:center;padding:10px 4px;font-size:14px;color:#111;cursor:pointer;">
+        <span style="flex:1;">납품</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+
+    </div>
+
+    <!-- 이동 대상 line -->
+    <div style="font-size:13px;color:#666;margin-bottom:18px;">
+      이동 대상&nbsp;
+      <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#111;">/프로젝트/2026</span>
+    </div>
+
+    <!-- Actions: right-aligned compact -->
+    <div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;">
+      <button style="padding:9px 14px;font-size:14px;font-weight:500;color:#555;background:transparent;border:none;border-radius:8px;cursor:pointer;">취소</button>
+      <button style="padding:9px 18px;font-size:14px;font-weight:600;color:#ffffff;background:#111;border:none;border-radius:8px;cursor:pointer;">여기로 이동</button>
+    </div>
+
+  </div>
+</div></div></div>
+    <div class="rat">아이콘 배지와 박스 테두리를 걷어내고 폴더 목록을 텍스트 행+헤어라인으로만 표현해, 경로 탐색이 즉시 읽히는 차분한 이동 모달.</div>
+    <ul class="chg"><li>제목의 MoveRight 아이콘과 폴더 행의 accent 폴더 아이콘 제거 — 텍스트 중심으로 전환, 드릴인은 우측 미세 셰브론만 유지</li><li>목록 컨테이너의 surface 배경·라운드 박스를 없애고 상/하 헤어라인과 행 구분선만 남겨 경계 최소화</li><li>브레드크럼·라벨·여백을 타이트하게 압축하고 '이동 대상' 경로를 모노 텍스트로 한 줄 정리</li><li>버튼을 50/50 풀폭에서 우측 정렬 컴팩트(취소=무지 텍스트, 여기로 이동=#111 솔리드)로 변경</li></ul>
+  </div>
+<div class="vcard">
+    <div class="vh"><span class="vbadge">친근</span><span class="vname">폭신한 보금자리 (Cozy Nest)</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:444px;background:#ffffff;border-radius:24px;box-shadow:0 24px 60px -16px rgba(17,17,17,0.22),0 4px 12px rgba(17,17,17,0.06);overflow:hidden;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111;">
+
+  <!-- Header -->
+  <div style="padding:28px 28px 18px;display:flex;align-items:flex-start;gap:14px;">
+    <div style="flex:none;width:48px;height:48px;border-radius:16px;background:#fef0e8;display:flex;align-items:center;justify-content:center;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h13"/><path d="m13 6 6 6-6 6"/><path d="M21 4v16"/></svg>
+    </div>
+    <div style="flex:1;padding-top:1px;">
+      <div style="font-size:18px;font-weight:700;letter-spacing:-0.01em;line-height:1.3;">"브랜드필름_최종_v3.mp4"<br/>어디로 옮겨드릴까요?</div>
+      <div style="font-size:13.5px;color:#666;margin-top:6px;line-height:1.5;">옮길 폴더를 골라주세요. 나중에 언제든 다시 옮길 수 있어요.</div>
+    </div>
+  </div>
+
+  <!-- Breadcrumb chips -->
+  <div style="padding:0 28px 14px;">
+    <div style="font-size:12.5px;color:#6b6b6b;font-weight:600;margin-bottom:9px;">지금 보고 있는 위치</div>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+      <span style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:999px;background:#f4f4f5;color:#555;font-size:13px;font-weight:600;cursor:pointer;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#52525b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/></svg>
+        My Box
+      </span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4d4d4" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      <span style="display:inline-flex;align-items:center;padding:5px 12px;border-radius:999px;background:#fef0e8;color:#c8430a;font-size:13px;font-weight:700;">2026 프로젝트</span>
+    </div>
+  </div>
+
+  <!-- Folder list -->
+  <div style="padding:0 20px;">
+    <div style="background:#fafafa;border:1px solid #ececec;border-radius:18px;padding:8px;max-height:248px;overflow-y:auto;">
+
+      <!-- 상위 폴더로 -->
+      <button style="width:100%;display:flex;align-items:center;gap:11px;padding:11px 12px;border:none;background:transparent;border-radius:13px;cursor:pointer;font-family:inherit;text-align:left;">
+        <span style="flex:none;width:34px;height:34px;border-radius:11px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        </span>
+        <span style="flex:1;font-size:14.5px;color:#555;font-weight:500;">상위 폴더로</span>
+      </button>
+
+      <!-- folder row (hover/active look) -->
+      <button style="width:100%;display:flex;align-items:center;gap:11px;padding:11px 12px;border:none;background:#fef0e8;border-radius:13px;cursor:pointer;font-family:inherit;text-align:left;margin-top:2px;">
+        <span style="flex:none;width:34px;height:34px;border-radius:11px;background:#ffffff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(232,80,8,0.12);">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+        </span>
+        <span style="flex:1;font-size:14.5px;color:#111;font-weight:600;">납품본</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c8430a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+
+      <button style="width:100%;display:flex;align-items:center;gap:11px;padding:11px 12px;border:none;background:transparent;border-radius:13px;cursor:pointer;font-family:inherit;text-align:left;margin-top:2px;">
+        <span style="flex:none;width:34px;height:34px;border-radius:11px;background:#fef0e8;display:flex;align-items:center;justify-content:center;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+        </span>
+        <span style="flex:1;font-size:14.5px;color:#111;font-weight:500;">촬영_원본</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+
+      <button style="width:100%;display:flex;align-items:center;gap:11px;padding:11px 12px;border:none;background:transparent;border-radius:13px;cursor:pointer;font-family:inherit;text-align:left;margin-top:2px;">
+        <span style="flex:none;width:34px;height:34px;border-radius:11px;background:#fef0e8;display:flex;align-items:center;justify-content:center;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+        </span>
+        <span style="flex:1;font-size:14.5px;color:#111;font-weight:500;">참고자료</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- Destination tint box -->
+  <div style="padding:16px 28px 4px;">
+    <div style="display:flex;align-items:center;gap:11px;padding:13px 15px;background:#fef0e8;border-radius:16px;">
+      <span style="flex:none;width:30px;height:30px;border-radius:10px;background:#ffffff;display:flex;align-items:center;justify-content:center;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+      </span>
+      <div style="flex:1;line-height:1.4;">
+        <div style="font-size:12px;color:#c8430a;font-weight:600;">여기로 옮길게요</div>
+        <div style="font-size:13.5px;color:#111;font-weight:700;margin-top:1px;">2026 프로젝트 / 납품본</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div style="display:flex;gap:10px;padding:18px 28px 26px;">
+    <button style="flex:1;padding:13px 0;border:none;background:#f7f7f7;color:#555;font-size:15px;font-weight:600;border-radius:14px;cursor:pointer;font-family:inherit;">취소</button>
+    <button style="flex:2;padding:13px 0;border:none;background:#e85008;color:#ffffff;font-size:15px;font-weight:700;border-radius:14px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 6px 16px -4px rgba(232,80,8,0.45);">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h13"/><path d="m13 6 6 6-6 6"/><path d="M21 4v16"/></svg>
+      여기로 이동
+    </button>
+  </div>
+
+</div></div></div>
+    <div class="rat">큰 라운드와 accent-soft 틴트, 원형 폴더 아이콘 배지, 따뜻한 안내 문구로 "옮길 곳을 골라주는" 부담 없는 경험으로 재구성.</div>
+    <ul class="chg"><li>헤더에 accent-soft 원형 아이콘 배지 + '어디로 옮겨드릴까요?' 친절 문구 도입, 패널 라운드 24px로 확대</li><li>브레드크럼을 부드러운 알약형 칩으로, 폴더 리스트를 큰 라운드 카드+원형 폴더 배지로 전환(2px 띠 없이 선택은 배경 채움)</li><li>'이동 대상'을 accent-soft 틴트 박스에 폴더 아이콘과 함께 친근하게 표시</li><li>주액션 '여기로 이동'을 주황(accent) 큰 라운드 버튼으로 강조, 취소는 부드러운 고스트 버튼</li></ul>
+  </div>
+<div class="vcard">
+    <div class="vh"><span class="vbadge">구조화</span><span class="vname">위계 분리형 이동 패널 (출발→도착 컨텍스트)</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:448px;font-family:-apple-system,Pretendard,'Apple SD Gothic Neo',sans-serif;background:#ffffff;border:1px solid #ececec;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,0.12);overflow:hidden;color:#111;">
+
+  <!-- 헤더 영역: 제목 + 설명 -->
+  <div style="padding:18px 20px 16px;border-bottom:1px solid #ececec;">
+    <div style="display:flex;align-items:center;gap:9px;">
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:#fef0e8;color:#e85008;flex-shrink:0;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8L22 12L18 16"/><path d="M2 12H22"/></svg>
+      </span>
+      <span style="font-size:16px;font-weight:700;letter-spacing:-0.2px;">파일 이동</span>
+    </div>
+    <p style="margin:9px 0 0 0;font-size:12.5px;line-height:1.5;color:#666;">선택한 항목을 옮길 대상 폴더를 지정하세요.</p>
+  </div>
+
+  <div style="padding:18px 20px 4px;">
+
+    <!-- 출발 컨텍스트 바: 이동할 항목 -->
+    <div style="margin-bottom:18px;">
+      <div style="font-size:11px;font-weight:600;letter-spacing:0.3px;text-transform:uppercase;color:#6b6b6b;margin-bottom:7px;">이동할 항목</div>
+      <div style="display:flex;align-items:center;gap:10px;background:#fafafa;border:1px solid #ececec;border-radius:9px;padding:11px 12px;">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;background:#ffffff;border:1px solid #ececec;color:#555;flex-shrink:0;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m10 11 5 3-5 3v-6Z"/></svg>
+        </span>
+        <div style="min-width:0;flex:1;">
+          <div style="font-size:13.5px;font-weight:600;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">브랜드영상_최종_v3.mp4</div>
+          <div style="font-size:11.5px;color:#6b6b6b;margin-top:1px;">현재 위치 · 클라이언트 / 2026</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 대상 폴더 선택 섹션 -->
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;">
+      <label style="font-size:11px;font-weight:600;letter-spacing:0.3px;text-transform:uppercase;color:#6b6b6b;">대상 폴더</label>
+      <span style="font-size:11.5px;color:#767676;">폴더를 눌러 안으로 이동</span>
+    </div>
+
+    <!-- 브레드크럼 네비게이션 바 -->
+    <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;background:#f7f7f7;border:1px solid #ececec;border-radius:8px 8px 0 0;padding:8px 11px;font-size:13px;">
+      <button style="background:none;border:none;padding:0;cursor:pointer;color:#555;font-size:13px;font-family:inherit;">Vibox</button>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      <button style="background:none;border:none;padding:0;cursor:pointer;color:#555;font-size:13px;font-family:inherit;">클라이언트</button>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      <span style="color:#111;font-weight:700;">2026</span>
+    </div>
+
+    <!-- 폴더 리스트 -->
+    <div style="background:#ffffff;border:1px solid #ececec;border-top:none;border-radius:0 0 8px 8px;max-height:204px;overflow-y:auto;">
+      <button style="width:100%;display:flex;align-items:center;gap:8px;padding:9px 12px;background:none;border:none;border-bottom:1px solid #ececec;cursor:pointer;font-size:13px;color:#555;font-family:inherit;text-align:left;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        상위 폴더로
+      </button>
+      <button style="width:100%;display:flex;align-items:center;gap:9px;padding:10px 12px;background:none;border:none;border-bottom:1px solid #f5f5f5;cursor:pointer;font-size:13.5px;color:#111;font-family:inherit;text-align:left;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+        <span style="flex:1;">01월_촬영원본</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+      <button style="width:100%;display:flex;align-items:center;gap:9px;padding:10px 12px;background:#f0f0f0;border:none;border-bottom:1px solid #f5f5f5;cursor:pointer;font-size:13.5px;color:#111;font-family:inherit;text-align:left;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+        <span style="flex:1;">02월_편집본</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+      <button style="width:100%;display:flex;align-items:center;gap:9px;padding:10px 12px;background:none;border:none;cursor:pointer;font-size:13.5px;color:#111;font-family:inherit;text-align:left;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+        <span style="flex:1;">레퍼런스</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+    </div>
+
+    <!-- 도착 요약 카드 -->
+    <div style="margin-top:16px;background:#fef0e8;border:1px solid #fbd9c6;border-radius:9px;padding:11px 13px;">
+      <div style="font-size:11px;font-weight:600;letter-spacing:0.3px;text-transform:uppercase;color:#c8430a;margin-bottom:5px;">도착 위치</div>
+      <div style="display:flex;align-items:center;gap:7px;font-size:13px;">
+        <span style="color:#555;font-family:ui-monospace,monospace;">클라이언트/2026</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        <span style="color:#111;font-weight:700;font-family:ui-monospace,monospace;">클라이언트/2026/02월_편집본</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 구분선 액션 풋터 -->
+  <div style="display:flex;gap:8px;padding:14px 20px 18px;margin-top:16px;border-top:1px solid #ececec;">
+    <button style="flex:1;padding:11px 0;font-size:13.5px;font-weight:600;color:#555;background:#ffffff;border:1px solid #ececec;border-radius:9px;cursor:pointer;font-family:inherit;">취소</button>
+    <button style="flex:1.6;padding:11px 0;font-size:13.5px;font-weight:700;color:#ffffff;background:#e85008;border:none;border-radius:9px;cursor:pointer;font-family:inherit;">여기로 이동</button>
+  </div>
+
+</div></div></div>
+    <div class="rat">헤더·출발 컨텍스트 바·대상 선택(라벨+헬프텍스트)·도착 요약 카드·구분선 액션 풋터로 영역을 명확히 분리해 "무엇을 어디로 옮기는지" 위계를 강화.</div>
+    <ul class="chg"><li>제목 아래 설명문과 출발 항목을 보여주는 상단 컨텍스트 바를 추가해 이동 주체를 명시</li><li>'대상 폴더' 영역에 보조 라벨+헬프텍스트를 붙이고 브레드크럼을 surface 네비게이션 바로 구획화</li><li>선택 결과를 '도착 위치' 요약 카드(출발→도착)로 분리 표시해 액션 전 최종 확인 위계 제공</li><li>구분선으로 분리된 풋터에 취소/여기로 이동 버튼 배치, 주액션만 주황 강조</li></ul>
+  </div>
+<div class="vcard">
+    <div class="vh"><span class="vbadge">프리미엄</span><span class="vname">Quiet Move</span><button class="rp" onclick="replayCard(this)" title="애니메이션 재생">▶</button></div>
+    <div class="stage"><div class="bd" data-anim="backdrop-in 200ms ease-out both"></div><div class="panel" data-anim="dialog-in 240ms cubic-bezier(.16,1,.3,1) both"><div style="width:452px;max-width:92vw;background:#ffffff;border:1px solid #ececec;border-radius:14px;box-shadow:0 1px 2px rgba(17,17,17,0.04),0 8px 24px rgba(17,17,17,0.08),0 24px 48px rgba(17,17,17,0.06);font-family:-apple-system,BlinkMacSystemFont,Pretendard,'Apple SD Gothic Neo',sans-serif;color:#111111;overflow:hidden;">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;gap:11px;padding:18px 20px 16px;border-bottom:1px solid #ececec;">
+    <div style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9px;background:#f7f7f7;border:1px solid #ececec;flex:none;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8L22 12L18 16"/><path d="M2 12H22"/></svg>
+    </div>
+    <div style="min-width:0;flex:1;">
+      <div style="font-size:10.5px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:#6b6b6b;line-height:1.2;margin-bottom:3px;">파일 이동</div>
+      <div style="font-size:15px;font-weight:600;letter-spacing:-0.01em;color:#111111;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">"프로젝트 기획안.pdf" 이동</div>
+    </div>
+    <button style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;border:none;background:transparent;color:#767676;cursor:pointer;flex:none;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div style="padding:18px 20px 4px;">
+
+    <!-- Eyebrow label -->
+    <div style="font-size:10.5px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:#6b6b6b;margin-bottom:9px;">대상 폴더</div>
+
+    <!-- Breadcrumb -->
+    <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;font-size:13px;margin-bottom:12px;">
+      <button style="border:none;background:transparent;color:#555555;cursor:pointer;padding:0;font-size:13px;font-weight:500;">My Box</button>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7;"><path d="M9 18l6-6-6-6"/></svg>
+      <button style="border:none;background:transparent;color:#555555;cursor:pointer;padding:0;font-size:13px;font-weight:500;">2026 작업</button>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7;"><path d="M9 18l6-6-6-6"/></svg>
+      <span style="color:#111111;font-weight:600;font-size:13px;">편집본</span>
+    </div>
+
+    <!-- Folder list -->
+    <div style="border:1px solid #ececec;border-radius:11px;background:#ffffff;overflow:hidden;box-shadow:0 1px 2px rgba(17,17,17,0.03);">
+
+      <!-- 상위 폴더로 -->
+      <button style="display:flex;align-items:center;gap:9px;width:100%;padding:0 14px;height:48px;border:none;border-bottom:1px solid #f4f4f5;background:#fafafa;color:#555555;font-size:13px;font-weight:500;cursor:pointer;text-align:left;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        상위 폴더로
+      </button>
+
+      <!-- folder rows -->
+      <button style="display:flex;align-items:center;gap:11px;width:100%;padding:0 14px;height:52px;border:none;border-bottom:1px solid #f4f4f5;background:#ffffff;color:#111111;font-size:14px;cursor:pointer;text-align:left;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+        <span style="flex:1;font-weight:500;letter-spacing:-0.01em;">촬영 원본</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.55;flex:none;"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
+      <!-- selected/hover row: 배경채움 (좌측 띠 금지) -->
+      <button style="display:flex;align-items:center;gap:11px;width:100%;padding:0 14px;height:52px;border:none;border-bottom:1px solid #f4f4f5;background:#f7f7f7;color:#111111;font-size:14px;cursor:pointer;text-align:left;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+        <span style="flex:1;font-weight:600;letter-spacing:-0.01em;">납품 최종</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7;flex:none;"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
+      <button style="display:flex;align-items:center;gap:11px;width:100%;padding:0 14px;height:52px;border:none;background:#ffffff;color:#111111;font-size:14px;cursor:pointer;text-align:left;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+        <span style="flex:1;font-weight:500;letter-spacing:-0.01em;">참고 자료</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.55;flex:none;"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+
+    <!-- Destination chip -->
+    <div style="display:flex;align-items:center;gap:9px;margin-top:14px;padding:11px 13px;background:#fafafa;border:1px solid #ececec;border-radius:10px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e85008" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"/></svg>
+      <span style="font-size:12px;color:#666666;font-weight:500;flex:none;">이동 대상</span>
+      <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:#111111;background:#ffffff;border:1px solid #ececec;border-radius:6px;padding:2px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">/2026 작업/편집본</span>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px 18px;margin-top:8px;border-top:1px solid #ececec;">
+    <div style="display:flex;align-items:center;gap:7px;font-size:11.5px;color:#767676;">
+      <span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border:1px solid #ececec;border-radius:5px;background:#fafafa;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#555555;">Esc</span>
+      <span>닫기</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button style="padding:0 16px;height:38px;border:1px solid #ececec;background:#ffffff;color:#555555;font-size:13.5px;font-weight:500;border-radius:9px;cursor:pointer;">취소</button>
+      <button style="display:inline-flex;align-items:center;gap:8px;padding:0 16px;height:38px;border:none;background:#111111;color:#ffffff;font-size:13.5px;font-weight:600;border-radius:9px;cursor:pointer;box-shadow:0 1px 2px rgba(17,17,17,0.2);">
+        여기로 이동
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:rgba(255,255,255,0.14);">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10l-5 5 5 5"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
+        </span>
+      </button>
+    </div>
+  </div>
+</div></div></div>
+    <div class="rat">정제된 타이포 스케일·헤어라인·은은한 다단 그림자에 키보드 힌트를 더해 Linear/Vercel 풍 고급 이동 패널로 재구성.</div>
+    <ul class="chg"><li>마이크로 이브로우 라벨(대상 폴더 · 트래킹 letter-spacing)과 13/15px 타이포 스케일로 정보 위계를 정돈, accent는 현재 위치 표시 한 곳에만 절제 사용</li><li>폴더 리스트를 헤어라인(#ececec) 구분·56px 행·중립 폴더 아이콘으로 차분하게 정리하고 선택 행은 배경채움(surface-2)으로 표현(좌측 띠 금지 준수)</li><li>이동 대상을 모노 경로 칩으로 카드화하고, 푸터에 ↵/Esc 키보드 힌트 pill을 배치해 파워유저 디테일 추가</li><li>패널에 14px 라운드 + 다단 소프트 섀도, 다크 프라이머리 버튼 안에 ↵ 글리프를 넣어 마감 고급화</li></ul>
+  </div></div>
+  </section>
+<footer style="margin-top:30px;color:var(--faint);font-size:12px;text-align:center">시안은 실제 기능·문구 유지 + 토큰 색 기반 재현. 채택 시 해당 컴포넌트에 반영.</footer>
+</div>
+<script>
+function play(el){const a=el.getAttribute('data-anim');if(!a)return;el.style.animation='none';void el.offsetWidth;el.style.animation=a;}
+function replayCard(btn){btn.closest('.vcard').querySelectorAll('[data-anim]').forEach(play);}
+function replayRow(btn){btn.closest('.modal').querySelectorAll('[data-anim]').forEach(play);}
+window.addEventListener('load',()=>{const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.querySelectorAll('[data-anim]').forEach(play);io.unobserve(e.target);}})},{threshold:.15});document.querySelectorAll('.vcard').forEach(s=>io.observe(s));});
+</script>
+</body></html>

@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>My box — 드롭박스식 폴더 사이드메뉴 시안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root{
+    --bg:#ffffff; --surface:#fafafa; --surface-2:#f7f7f7; --border:#ececec;
+    --border-hover:#d4d4d4; --text:#111111; --text-muted:#555; --text-soft:#666;
+    --text-faint:#999; --hover:#f0f0f0; --sel:#ececec; --vimo:#F94000;
+    --radius:10px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html,body{background:#eef0f2; color:var(--text);
+    font-family:Pretendard,-apple-system,system-ui,sans-serif; -webkit-font-smoothing:antialiased}
+  /* lucide: <i> → <svg> 치환 후 크기 안정화 (헤드리스 캡처 대비) */
+  .lucide{width:1em; height:1em; stroke-width:2; vertical-align:-0.125em; flex:none}
+  .page{max-width:1180px; margin:0 auto; padding:28px 24px 80px}
+  .intro h1{font-size:21px; font-weight:800; letter-spacing:-.02em}
+  .intro p{color:var(--text-soft); font-size:13.5px; margin-top:7px; line-height:1.6; max-width:780px}
+  .rule{display:inline-flex; gap:6px; align-items:center; margin-top:12px; flex-wrap:wrap}
+  .rule .tag{font-size:11px; font-weight:600; color:var(--text-soft); background:#fff;
+    border:1px solid var(--border); border-radius:999px; padding:4px 10px; display:inline-flex; gap:5px; align-items:center}
+  .dot{width:9px;height:9px;border-radius:99px;display:inline-block}
+
+  /* sticky jump nav */
+  .jump{position:sticky; top:0; z-index:50; background:rgba(238,240,242,.86);
+    backdrop-filter:blur(8px); margin:22px 0 8px; padding:9px 0; border-bottom:1px solid #e2e4e7;
+    display:flex; gap:6px; flex-wrap:wrap}
+  .jump a{font-size:12.5px; font-weight:600; color:var(--text-soft); text-decoration:none;
+    padding:6px 11px; border-radius:8px; border:1px solid transparent}
+  .jump a:hover{background:#fff}
+  .jump a.on{background:#111; color:#fff}
+
+  .concept{margin-top:34px; scroll-margin-top:64px}
+  .chead{display:flex; align-items:baseline; gap:11px; margin-bottom:13px; flex-wrap:wrap}
+  .chead .n{font-size:12px; font-weight:800; color:#fff; background:#111; width:24px;height:24px;
+    border-radius:7px; display:inline-flex; align-items:center; justify-content:center; flex:none}
+  .chead h2{font-size:16.5px; font-weight:800; letter-spacing:-.01em}
+  .chead .para{font-size:11.5px; font-weight:700; color:var(--vimo); background:#fff;
+    border:1px solid #f6d9cd; border-radius:999px; padding:3px 9px}
+  .chead .desc{font-size:13px; color:var(--text-soft); flex-basis:100%; line-height:1.55}
+
+  /* app frame */
+  .frame{height:548px; background:var(--bg); border:1px solid #e2e4e7; border-radius:14px;
+    overflow:hidden; display:flex; box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 28px rgba(0,0,0,.06)}
+
+  /* ---- main app sidebar (context, de-emphasized) ---- */
+  .nav{width:206px; flex:none; background:var(--surface); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; padding:11px 10px}
+  .prof{display:flex; align-items:center; gap:9px; padding:5px 6px 9px}
+  .prof .ava{width:30px;height:30px;border-radius:99px;background:#3a3a3a;color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:none}
+  .prof .nm{font-size:13px;font-weight:700;line-height:1.2}
+  .prof .rl{font-size:11px;color:var(--text-faint)}
+  .store{padding:8px 7px;border-top:1px solid var(--border)}
+  .store .lbl{font-size:11px;color:var(--text-faint);display:flex;justify-content:space-between;margin-bottom:6px}
+  .bar{height:5px;background:#e6e6e6;border-radius:99px;overflow:hidden}
+  .bar i{display:block;height:100%;width:42%;background:#9a9a9a;border-radius:99px}
+  .grp{font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--text-faint);
+    text-transform:uppercase;padding:13px 8px 5px}
+  .nrow{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:9px;
+    font-size:13px;color:var(--text-soft);font-weight:500;cursor:pointer}
+  .nrow:hover{background:var(--hover)}
+  .nrow.on{background:var(--sel);color:var(--text);font-weight:600}
+  .nrow .lucide{font-size:16px;color:#8a8a8a}
+  .nrow.on .lucide{color:#111}
+  .nrow.vimo .lucide{color:var(--vimo)}
+  .logo{margin-top:auto;border-top:1px solid var(--border);padding:11px 8px 3px;
+    font-size:14.5px;font-weight:800;letter-spacing:-.02em;color:var(--text)}
+  .logo .d{color:var(--vimo)}
+
+  /* ---- the NEW folder side menu (focus) ---- */
+  .fmenu{width:250px;flex:none;background:#fff;border-right:1px solid var(--border);
+    display:flex;flex-direction:column;min-height:0}
+  .fhead{display:flex;align-items:center;justify-content:space-between;padding:13px 14px 10px}
+  .fhead .t{font-size:13.5px;font-weight:800;display:flex;align-items:center;gap:7px}
+  .fhead .t .lucide{font-size:16px;color:#7a7a7a}
+  .iconbtn{width:26px;height:26px;border-radius:7px;border:1px solid var(--border);background:#fff;
+    display:flex;align-items:center;justify-content:center;color:var(--text-soft);cursor:pointer}
+  .iconbtn:hover{background:var(--hover)}
+  .iconbtn .lucide{font-size:14px}
+  .fscroll{flex:1;overflow-y:auto;padding:2px 8px 10px}
+  .sechd{font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--text-faint);
+    text-transform:uppercase;padding:11px 8px 5px;display:flex;align-items:center;gap:6px}
+
+  /* tree row */
+  .tr{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;
+    font-size:13px;color:var(--text-muted);cursor:pointer;font-weight:500;white-space:nowrap}
+  .tr:hover{background:var(--hover)}
+  .tr.on{background:var(--sel);color:var(--text);font-weight:600}
+  .tr .tw{width:15px;display:flex;justify-content:center;color:#b0b0b0;flex:none}
+  .tr .tw .lucide{font-size:13px}
+  .tr .fi{font-size:15px;color:#8a8a8a;flex:none}
+  .tr.on .fi{color:#5a5a5a}
+  .tr .ct{margin-left:auto;font-size:10.5px;color:var(--text-faint);font-weight:600}
+  .indent1{padding-left:22px}
+  .indent2{padding-left:40px}
+
+  /* content area (preview of selected folder) */
+  .body{flex:1;background:#fff;display:flex;flex-direction:column;min-width:0}
+  .crumb{display:flex;align-items:center;gap:6px;padding:13px 18px;border-bottom:1px solid var(--border);
+    font-size:13px;color:var(--text-soft);font-weight:500}
+  .crumb b{color:var(--text);font-weight:700}
+  .crumb .lucide{font-size:14px;color:#c4c4c4}
+  .ctools{margin-left:auto;display:flex;gap:7px}
+  .grid{flex:1;overflow-y:auto;padding:16px 18px;display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:13px;align-content:start}
+  .card{border:1px solid var(--border);border-radius:11px;overflow:hidden;background:#fff;cursor:pointer}
+  .card:hover{border-color:var(--border-hover)}
+  .thumb{aspect-ratio:16/10;background:#1a1a1a;position:relative;display:flex;align-items:center;justify-content:center}
+  .thumb .lucide{font-size:24px;color:#5a5a5a}
+  .thumb.fold{background:var(--surface-2)}
+  .thumb.fold .lucide{font-size:30px;color:#a9a9a9}
+  .thumb .tc{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.66);color:#fff;
+    font-size:10px;font-weight:600;border-radius:5px;padding:2px 5px;font-variant-numeric:tabular-nums}
+  .meta{padding:8px 10px}
+  .meta .fn{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .meta .sub{font-size:11px;color:var(--text-faint);margin-top:2px}
+
+  /* finder columns (concept 2) */
+  .cols{flex:1;display:flex;min-width:0}
+  .col{width:210px;flex:none;border-right:1px solid var(--border);overflow-y:auto;padding:6px}
+  .col:last-child{flex:1}
+  .colrow{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:8px;font-size:13px;
+    color:var(--text-muted);cursor:pointer;white-space:nowrap}
+  .colrow:hover{background:var(--hover)}
+  .colrow.on{background:var(--sel);color:var(--text);font-weight:600}
+  .colrow .lucide{font-size:15px;color:#8a8a8a;flex:none}
+  .colrow .ch{margin-left:auto;font-size:13px;color:#bbb}
+  .colrow.on .ch{color:#888}
+
+  /* drill (concept 4) */
+  .drillhd{display:flex;align-items:center;gap:8px;padding:11px 12px;border-bottom:1px solid var(--border)}
+  .backb{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;
+    color:var(--text-soft);cursor:pointer}
+  .backb:hover{background:var(--hover)}
+  .drillhd .here{font-size:13.5px;font-weight:800}
+  .drillrow{display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:9px;font-size:13.5px;
+    color:var(--text);cursor:pointer;font-weight:500}
+  .drillrow:hover{background:var(--hover)}
+  .drillrow .fi{font-size:18px;color:#8a8a8a}
+  .drillrow .ct{margin-left:auto;font-size:11px;color:var(--text-faint);font-weight:600}
+  .drillrow .ch{font-size:15px;color:#c4c4c4;margin-left:4px}
+
+  /* accordion (concept 5) */
+  .acc{border-radius:9px;overflow:hidden;margin-bottom:4px}
+  .acchd{display:flex;align-items:center;gap:8px;padding:9px 9px;font-size:12px;font-weight:700;
+    color:var(--text-soft);cursor:pointer;border-radius:8px}
+  .acchd:hover{background:var(--hover)}
+  .acchd .lucide{font-size:14px;color:#aaa}
+  .acchd .cnt{margin-left:auto;font-size:10.5px;color:var(--text-faint)}
+  .footnote{margin-top:46px;padding-top:18px;border-top:1px solid #e2e4e7;color:var(--text-faint);font-size:12px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="intro">
+    <h1>My box — 드롭박스식 폴더 사이드메뉴</h1>
+    <p>개인 공간(My box)에 <b>폴더 내비게이션 사이드메뉴를 하나 더</b> 붙여 드롭박스처럼 폴더를 탐색하는 5가지 방향.
+       메인 사이드바(좌)와 파일 영역(우) 사이에 들어가는 두 번째 패널입니다. 같은 데이터·같은 톤으로 공정 비교.</p>
+    <div class="rule">
+      <span class="tag"><span class="dot" style="background:var(--vimo)"></span>주황 = 비모 전용</span>
+      <span class="tag"><span class="dot" style="background:#9a9a9a"></span>My box = 무채색(중립)</span>
+      <span class="tag">좌측 강조 띠 금지 · 선택=배경 채움</span>
+      <span class="tag">lucide 아이콘 · 이모지 금지</span>
+    </div>
+  </div>
+
+  <nav class="jump" id="jump">
+    <a href="#c1">1 · 폴더 트리</a>
+    <a href="#c2">2 · 파인더 컬럼</a>
+    <a href="#c3">3 · 즐겨찾기+트리</a>
+    <a href="#c4">4 · 드릴인+브레드크럼</a>
+    <a href="#c5">5 · 아코디언 그룹</a>
+  </nav>
+
+  <!-- ============ CONCEPT 1 — 폴더 트리 ============ -->
+  <section class="concept" id="c1">
+    <div class="chead">
+      <span class="n">1</span><h2>폴더 트리</h2><span class="para">드롭박스 정석</span>
+      <span class="desc">중첩 폴더를 펼침/접힘(▸▾)으로 한 패널에서 탐색. 가장 익숙한 드롭박스 'All files' 트리. 깊은 구조를 한눈에.</span>
+    </div>
+    <div class="frame">
+      <!-- main sidebar -->
+      <aside class="nav">
+        <div class="prof"><div class="ava">서</div><div><div class="nm">서준</div><div class="rl">외부 편집자</div></div></div>
+        <div class="store"><div class="lbl"><span>저장공간</span><span>42.1 / 100GB</span></div><div class="bar"><i></i></div></div>
+        <div class="grp">클라우드</div>
+        <div class="nrow vimo"><i data-lucide="handshake"></i><span>비모와의 작업</span></div>
+        <div class="nrow on"><i data-lucide="hard-drive"></i><span>My box</span></div>
+        <div class="grp">라이브러리</div>
+        <div class="nrow"><i data-lucide="share-2"></i><span>공유</span></div>
+        <div class="nrow"><i data-lucide="clock"></i><span>최근</span></div>
+        <div class="logo">vi<span class="d">.</span>box</div>
+      </aside>
+      <!-- folder menu -->
+      <div class="fmenu">
+        <div class="fhead"><div class="t"><i data-lucide="hard-drive"></i>My box</div>
+          <button class="iconbtn" title="새 폴더"><i data-lucide="folder-plus"></i></button></div>
+        <div class="fscroll">
+          <div class="tr"><span class="tw"><i data-lucide="chevron-right"></i></span><i class="fi" data-lucide="folder"></i><span>진행 중 프로젝트</span><span class="ct">3</span></div>
+          <div class="tr on"><span class="tw"><i data-lucide="chevron-down"></i></span><i class="fi" data-lucide="folder-open"></i><span>촬영 원본</span></div>
+          <div class="tr indent1"><span class="tw"></span><i class="fi" data-lucide="folder"></i><span>2026-06 현장</span></div>
+          <div class="tr indent1"><span class="tw"></span><i class="fi" data-lucide="folder"></i><span>인터뷰</span></div>
+          <div class="tr"><span class="tw"></span><i class="fi" data-lucide="folder"></i><span>편집 작업본</span></div>
+          <div class="tr"><span class="tw"><i data-lucide="chevron-right"></i></span><i class="fi" data-lucide="folder"></i><span>레퍼런스</span><span class="ct">2</span></div>
+          <div class="tr"><span class="tw"></span><i class="fi" data-lucide="folder"></i><span>음원·효과음</span></div>
+        </div>
+      </div>
+      <!-- content -->
+      <div class="body">
+        <div class="crumb"><i data-lucide="hard-drive"></i><span>My box</span><i data-lucide="chevron-right"></i><b>촬영 원본</b>
+          <div class="ctools"><button class="iconbtn"><i data-lucide="search"></i></button><button class="iconbtn"><i data-lucide="layout-grid"></i></button></div></div>
+        <div class="grid">
+          <div class="card"><div class="thumb fold"><i data-lucide="folder"></i></div><div class="meta"><div class="fn">2026-06 현장</div><div class="sub">항목 8개</div></div></div>
+          <div class="card"><div class="thumb fold"><i data-lucide="folder"></i></div><div class="meta"><div class="fn">인터뷰</div><div class="sub">항목 4개</div></div></div>
+          <div class="card"><div class="thumb"><i data-lucide="play"></i><span class="tc">02:14</span></div><div class="meta"><div class="fn">현장스케치_0614.mp4</div><div class="sub">어제 · 1.2GB</div></div></div>
+          <div class="card"><div class="thumb"><i data-lucide="play"></i><span class="tc">00:48</span></div><div class="meta"><div class="fn">브이로그_0619.mp4</div><div class="sub">3일 전 · 740MB</div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONCEPT 2 — 파인더 컬럼 ============ -->
+  <section class="concept" id="c2">
+    <div class="chead">
+      <span class="n">2</span><h2>파인더 컬럼</h2><span class="para">macOS Miller columns</span>
+      <span class="desc">폴더를 누르면 오른쪽에 다음 단계 컬럼이 열림. 깊은 폴더도 경로가 통째로 보여 빠르게 오감. 파일 매니저에 가장 익숙.</span>
+    </div>
+    <div class="frame">
+      <aside class="nav">
+        <div class="prof"><div class="ava">서</div><div><div class="nm">서준</div><div class="rl">외부 편집자</div></div></div>
+        <div class="store"><div class="lbl"><span>저장공간</span><span>42.1 / 100GB</span></div><div class="bar"><i></i></div></div>
+        <div class="grp">클라우드</div>
+        <div class="nrow vimo"><i data-lucide="handshake"></i><span>비모와의 작업</span></div>
+        <div class="nrow on"><i data-lucide="hard-drive"></i><span>My box</span></div>
+        <div class="grp">라이브러리</div>
+        <div class="nrow"><i data-lucide="share-2"></i><span>공유</span></div>
+        <div class="nrow"><i data-lucide="clock"></i><span>최근</span></div>
+        <div class="logo">vi<span class="d">.</span>box</div>
+      </aside>
+      <div class="cols">
+        <div class="col">
+          <div class="colrow on"><i data-lucide="folder-open"></i><span>진행 중 프로젝트</span><span class="ch"><i data-lucide="chevron-right"></i></span></div>
+          <div class="colrow"><i data-lucide="folder"></i><span>촬영 원본</span><span class="ch"><i data-lucide="chevron-right"></i></span></div>
+          <div class="colrow"><i data-lucide="folder"></i><span>편집 작업본</span></div>
+          <div class="colrow"><i data-lucide="folder"></i><span>레퍼런스</span><span class="ch"><i data-lucide="chevron-right"></i></span></div>
+          <div class="colrow"><i data-lucide="folder"></i><span>음원·효과음</span></div>
+        </div>
+        <div class="col">
+          <div class="colrow on"><i data-lucide="folder-open"></i><span>성수카페 브랜딩</span><span class="ch"><i data-lucide="chevron-right"></i></span></div>
+          <div class="colrow"><i data-lucide="folder"></i><span>그래놀라 광고</span><span class="ch"><i data-lucide="chevron-right"></i></span></div>
+          <div class="colrow"><i data-lucide="folder"></i><span>뷰티브랜드 룩북</span><span class="ch"><i data-lucide="chevron-right"></i></span></div>
+        </div>
+        <div class="col">
+          <div class="colrow"><i data-lucide="folder"></i><span>완성본</span><span class="ch"><i data-lucide="chevron-right"></i></span></div>
+          <div class="colrow on"><i data-lucide="file-video"></i><span>메인편집_v3.mp4</span></div>
+          <div class="colrow"><i data-lucide="file-video"></i><span>티저_15s.mp4</span></div>
+          <div class="colrow"><i data-lucide="music"></i><span>배경음악.wav</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONCEPT 3 — 즐겨찾기 + 트리 ============ -->
+  <section class="concept" id="c3">
+    <div class="chead">
+      <span class="n">3</span><h2>즐겨찾기 + 트리</h2><span class="para">Dropbox Starred + All files</span>
+      <span class="desc">위에 자주 쓰는 폴더(핀) 빠른 접근, 아래에 전체 폴더 트리. 깊이 안 들어가도 핵심 폴더에 한 번에. 실사용 빈도 반영.</span>
+    </div>
+    <div class="frame">
+      <aside class="nav">
+        <div class="prof"><div class="ava">서</div><div><div class="nm">서준</div><div class="rl">외부 편집자</div></div></div>
+        <div class="store"><div class="lbl"><span>저장공간</span><span>42.1 / 100GB</span></div><div class="bar"><i></i></div></div>
+        <div class="grp">클라우드</div>
+        <div class="nrow vimo"><i data-lucide="handshake"></i><span>비모와의 작업</span></div>
+        <div class="nrow on"><i data-lucide="hard-drive"></i><span>My box</span></div>
+        <div class="grp">라이브러리</div>
+        <div class="nrow"><i data-lucide="share-2"></i><span>공유</span></div>
+        <div class="nrow"><i data-lucide="clock"></i><span>최근</span></div>
+        <div class="logo">vi<span class="d">.</span>box</div>
+      </aside>
+      <div class="fmenu">
+        <div class="fhead"><div class="t"><i data-lucide="hard-drive"></i>My box</div>
+          <button class="iconbtn" title="새 폴더"><i data-lucide="folder-plus"></i></button></div>
+        <div class="fscroll">
+          <div class="sechd"><i data-lucide="star" style="font-size:12px;color:#8a8a8a"></i>즐겨찾기</div>
+          <div class="tr on"><span class="tw"></span><i class="fi" data-lucide="folder"></i><span>성수카페 브랜딩</span></div>
+          <div class="tr"><span class="tw"></span><i class="fi" data-lucide="folder"></i><span>편집 작업본</span></div>
+          <div class="sechd"><i data-lucide="folder-tree" style="font-size:12px;color:#8a8a8a"></i>전체 폴더</div>
+          <div class="tr"><span class="tw"><i data-lucide="chevron-right"></i></span><i class="fi" data-lucide="folder"></i><span>진행 중 프로젝트</span><span class="ct">3</span></div>
+          <div class="tr"><span class="tw"><i data-lucide="chevron-right"></i></span><i class="fi" data-lucide="folder"></i><span>촬영 원본</span><span class="ct">2</span></div>
+          <div class="tr"><span class="tw"></span><i class="fi" data-lucide="folder"></i><span>편집 작업본</span></div>
+          <div class="tr"><span class="tw"><i data-lucide="chevron-right"></i></span><i class="fi" data-lucide="folder"></i><span>레퍼런스</span><span class="ct">2</span></div>
+          <div class="tr"><span class="tw"></span><i class="fi" data-lucide="folder"></i><span>음원·효과음</span></div>
+        </div>
+      </div>
+      <div class="body">
+        <div class="crumb"><i data-lucide="hard-drive"></i><span>My box</span><i data-lucide="chevron-right"></i><b>성수카페 브랜딩</b>
+          <div class="ctools"><button class="iconbtn"><i data-lucide="search"></i></button><button class="iconbtn"><i data-lucide="layout-grid"></i></button></div></div>
+        <div class="grid">
+          <div class="card"><div class="thumb fold"><i data-lucide="folder"></i></div><div class="meta"><div class="fn">완성본</div><div class="sub">항목 3개</div></div></div>
+          <div class="card"><div class="thumb"><i data-lucide="play"></i><span class="tc">01:02</span></div><div class="meta"><div class="fn">메인편집_v3.mp4</div><div class="sub">오늘 · 2.1GB</div></div></div>
+          <div class="card"><div class="thumb"><i data-lucide="play"></i><span class="tc">00:15</span></div><div class="meta"><div class="fn">티저_15s.mp4</div><div class="sub">오늘 · 320MB</div></div></div>
+          <div class="card"><div class="thumb" style="background:#222"><i data-lucide="music"></i></div><div class="meta"><div class="fn">배경음악.wav</div><div class="sub">어제 · 48MB</div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONCEPT 4 — 드릴인 + 브레드크럼 ============ -->
+  <section class="concept" id="c4">
+    <div class="chead">
+      <span class="n">4</span><h2>드릴인 + 브레드크럼</h2><span class="para">단일 레벨 · 모바일 친화</span>
+      <span class="desc">한 번에 한 단계만. 현재 폴더의 하위만 큰 리스트로, 누르면 들어가고 ← 또는 브레드크럼으로 나옴. 가장 차분·단순.</span>
+    </div>
+    <div class="frame">
+      <aside class="nav">
+        <div class="prof"><div class="ava">서</div><div><div class="nm">서준</div><div class="rl">외부 편집자</div></div></div>
+        <div class="store"><div class="lbl"><span>저장공간</span><span>42.1 / 100GB</span></div><div class="bar"><i></i></div></div>
+        <div class="grp">클라우드</div>
+        <div class="nrow vimo"><i data-lucide="handshake"></i><span>비모와의 작업</span></div>
+        <div class="nrow on"><i data-lucide="hard-drive"></i><span>My box</span></div>
+        <div class="grp">라이브러리</div>
+        <div class="nrow"><i data-lucide="share-2"></i><span>공유</span></div>
+        <div class="nrow"><i data-lucide="clock"></i><span>최근</span></div>
+        <div class="logo">vi<span class="d">.</span>box</div>
+      </aside>
+      <div class="fmenu">
+        <div class="drillhd"><div class="backb"><i data-lucide="chevron-left"></i></div><div class="here">진행 중 프로젝트</div></div>
+        <div class="fscroll" style="padding:8px">
+          <div class="drillrow"><i class="fi" data-lucide="folder"></i><span>성수카페 브랜딩</span><span class="ct">24</span><span class="ch"><i data-lucide="chevron-right"></i></span></div>
+          <div class="drillrow"><i class="fi" data-lucide="folder"></i><span>그래놀라 광고</span><span class="ct">11</span><span class="ch"><i data-lucide="chevron-right"></i></span></div>
+          <div class="drillrow"><i class="fi" data-lucide="folder"></i><span>뷰티브랜드 룩북</span><span class="ct">7</span><span class="ch"><i data-lucide="chevron-right"></i></span></div>
+        </div>
+      </div>
+      <div class="body">
+        <div class="crumb"><i data-lucide="hard-drive"></i><span>My box</span><i data-lucide="chevron-right"></i><b>진행 중 프로젝트</b>
+          <div class="ctools"><button class="iconbtn"><i data-lucide="search"></i></button><button class="iconbtn"><i data-lucide="layout-grid"></i></button></div></div>
+        <div class="grid">
+          <div class="card"><div class="thumb fold"><i data-lucide="folder"></i></div><div class="meta"><div class="fn">성수카페 브랜딩</div><div class="sub">항목 24개</div></div></div>
+          <div class="card"><div class="thumb fold"><i data-lucide="folder"></i></div><div class="meta"><div class="fn">그래놀라 광고</div><div class="sub">항목 11개</div></div></div>
+          <div class="card"><div class="thumb fold"><i data-lucide="folder"></i></div><div class="meta"><div class="fn">뷰티브랜드 룩북</div><div class="sub">항목 7개</div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONCEPT 5 — 아코디언 그룹 ============ -->
+  <section class="concept" id="c5">
+    <div class="chead">
+      <span class="n">5</span><h2>아코디언 그룹</h2><span class="para">상태별 섹션 접기</span>
+      <span class="desc">폴더를 '즐겨찾기 / 진행 중 / 보관' 그룹으로 묶어 섹션별 접고 펴기. 폴더가 많아질 때 시야를 좁혀 정리감. 트리보다 덜 깊음.</span>
+    </div>
+    <div class="frame">
+      <aside class="nav">
+        <div class="prof"><div class="ava">서</div><div><div class="nm">서준</div><div class="rl">외부 편집자</div></div></div>
+        <div class="store"><div class="lbl"><span>저장공간</span><span>42.1 / 100GB</span></div><div class="bar"><i></i></div></div>
+        <div class="grp">클라우드</div>
+        <div class="nrow vimo"><i data-lucide="handshake"></i><span>비모와의 작업</span></div>
+        <div class="nrow on"><i data-lucide="hard-drive"></i><span>My box</span></div>
+        <div class="grp">라이브러리</div>
+        <div class="nrow"><i data-lucide="share-2"></i><span>공유</span></div>
+        <div class="nrow"><i data-lucide="clock"></i><span>최근</span></div>
+        <div class="logo">vi<span class="d">.</span>box</div>
+      </aside>
+      <div class="fmenu">
+        <div class="fhead"><div class="t"><i data-lucide="hard-drive"></i>My box</div>
+          <button class="iconbtn" title="새 폴더"><i data-lucide="folder-plus"></i></button></div>
+        <div class="fscroll">
+          <div class="acc">
+            <div class="acchd"><i data-lucide="chevron-down"></i><i data-lucide="star" style="font-size:13px;color:#8a8a8a"></i><span>즐겨찾기</span><span class="cnt">2</span></div>
+            <div class="tr indent1 on"><span class="tw"></span><i class="fi" data-lucide="folder"></i><span>성수카페 브랜딩</span></div>
+            <div class="tr indent1"><span class="tw"></span><i class="fi" data-lucide="folder"></i><span>편집 작업본</span></div>
+          </div>
+          <div class="acc">
+            <div class="acchd"><i data-lucide="chevron-down"></i><i data-lucide="loader" style="font-size:13px;color:#8a8a8a"></i><span>진행 중</span><span class="cnt">3</span></div>
+            <div class="tr indent1"><span class="tw"></span><i class="fi" data-lucide="folder"></i><span>진행 중 프로젝트</span></div>
+            <div class="tr indent1"><span class="tw"></span><i class="fi" data-lucide="folder"></i><span>촬영 원본</span></div>
+            <div class="tr indent1"><span class="tw"></span><i class="fi" data-lucide="folder"></i><span>레퍼런스</span></div>
+          </div>
+          <div class="acc">
+            <div class="acchd"><i data-lucide="chevron-right"></i><i data-lucide="archive" style="font-size:13px;color:#8a8a8a"></i><span>보관</span><span class="cnt">5</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="body">
+        <div class="crumb"><i data-lucide="hard-drive"></i><span>My box</span><i data-lucide="chevron-right"></i><b>성수카페 브랜딩</b>
+          <div class="ctools"><button class="iconbtn"><i data-lucide="search"></i></button><button class="iconbtn"><i data-lucide="layout-grid"></i></button></div></div>
+        <div class="grid">
+          <div class="card"><div class="thumb fold"><i data-lucide="folder"></i></div><div class="meta"><div class="fn">완성본</div><div class="sub">항목 3개</div></div></div>
+          <div class="card"><div class="thumb"><i data-lucide="play"></i><span class="tc">01:02</span></div><div class="meta"><div class="fn">메인편집_v3.mp4</div><div class="sub">오늘 · 2.1GB</div></div></div>
+          <div class="card"><div class="thumb"><i data-lucide="play"></i><span class="tc">00:15</span></div><div class="meta"><div class="fn">티저_15s.mp4</div><div class="sub">오늘 · 320MB</div></div></div>
+          <div class="card"><div class="thumb fold"><i data-lucide="folder"></i></div><div class="meta"><div class="fn">레퍼런스</div><div class="sub">항목 5개</div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footnote">
+    5개 모두 같은 메인 사이드바·파일 영역 컨텍스트에 <b>두 번째 폴더 패널</b>만 다르게. 톤=무채색 중립(주황은 비모 전용), 선택=배경 채움(좌측 띠 없음), lucide 아이콘.<br>
+    추천: <b>1 폴더 트리</b>(가장 드롭박스다움) 또는 <b>3 즐겨찾기+트리</b>(빈도 반영). 깊은 구조 자주 오가면 <b>2 컬럼</b>, 단순·모바일이면 <b>4 드릴인</b>.
+  </div>
+</div>
+<script>
+  lucide.createIcons();
+  // jump nav active marker
+  const links=[...document.querySelectorAll('.jump a')];
+  const map=Object.fromEntries(links.map(a=>[a.getAttribute('href').slice(1),a]));
+  const io=new IntersectionObserver((es)=>{
+    es.forEach(e=>{ if(e.isIntersecting){ links.forEach(l=>l.classList.remove('on')); map[e.target.id]?.classList.add('on'); }});
+  },{rootMargin:'-45% 0px -50% 0px',threshold:0});
+  document.querySelectorAll('.concept').forEach(s=>io.observe(s));
+</script>
+</body>
+</html>

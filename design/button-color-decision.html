@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>버튼 색 결정 — 현재 vs A(검정) vs B(주황)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root{
+    --surface:#fafafa;--surface-2:#f5f5f5;--border:#ececec;--border-hover:#d4d4d4;
+    --text:#111;--text-soft:#666;--text-faint:#999;--ink:#27272a;
+    --accent:#e85008;--accent-hover:#c8430a;--accent-soft:#fef0e8;
+    --personal:#0ea5e9;--personal-dark:#0369a1;--danger:#dc2626;--danger-soft:#fef2f2;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#eceef1;color:var(--text);font-family:Pretendard,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .lucide{width:1em;height:1em;stroke-width:2;flex:none}
+  .wrap{max-width:1000px;margin:0 auto;padding:32px 24px 80px}
+  h1{font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .lead{color:var(--text-soft);font-size:13.5px;margin-top:8px;line-height:1.6;max-width:780px}
+  .lead b{color:var(--text)}
+
+  .opt{background:#fff;border:1px solid var(--border);border-radius:14px;margin-top:22px;overflow:hidden}
+  .opt.reco{border-color:#f4c9b3;box-shadow:0 0 0 3px var(--accent-soft)}
+  .ohead{display:flex;align-items:center;gap:10px;padding:15px 18px 13px;border-bottom:1px solid var(--border)}
+  .ohead .tag{width:26px;height:26px;border-radius:8px;background:var(--text);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800}
+  .opt.reco .ohead .tag{background:var(--accent)}
+  .ohead h2{font-size:15px;font-weight:800}
+  .ohead .reco{margin-left:auto;font-size:11px;font-weight:800;color:var(--accent);background:var(--accent-soft);padding:3px 10px;border-radius:999px}
+  .obody{padding:18px}
+  .desc{font-size:12.5px;color:var(--text-soft);line-height:1.6;margin-bottom:14px}
+  .desc b{color:var(--text)}
+
+  /* 버튼 (실제 토큰) */
+  .btn{font-family:Pretendard;font-weight:700;border:1px solid transparent;border-radius:8px;height:36px;padding:0 14px;font-size:13px;display:inline-flex;align-items:center;gap:6px;cursor:default}
+  .btn .lucide{font-size:16px}
+  .b-dark{background:var(--text);color:#fff}
+  .b-accent{background:var(--accent);color:#fff}
+  .b-blue{background:var(--personal);color:#fff}
+  .b-sec{background:#fff;color:var(--text);border-color:var(--border)}
+  .b-ghost{background:transparent;color:var(--text-soft)}
+  .b-danger{background:var(--danger-soft);color:var(--danger)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .gl{font-size:10.5px;font-weight:800;color:var(--text-faint);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+
+  /* 미니 앱 맥락 (주황 면적 체감) */
+  .ctx{margin-top:16px;border:1px solid var(--border);border-radius:11px;overflow:hidden;display:flex;height:188px}
+  .ctx .sb{width:168px;background:var(--surface);border-right:1px solid var(--border);padding:12px 11px;display:flex;flex-direction:column;gap:6px}
+  .ctx .sb .logo{display:flex;align-items:center;gap:6px;font-weight:800;font-size:13px;margin-bottom:6px}
+  .ctx .sb .logo .m{width:18px;height:18px;border-radius:5px;background:conic-gradient(from 200deg,#e85008,#f9a87a,#e85008)}
+  .ctx .sb .up{height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;font-weight:700;color:#fff}
+  .ctx .sb .it{height:26px;border-radius:6px;display:flex;align-items:center;gap:7px;padding:0 8px;font-size:12px;color:var(--text-soft)}
+  .ctx .sb .it.on{background:#f0f0f0;color:var(--text);font-weight:600}
+  .ctx .sb .it .lucide{font-size:14px}
+  .ctx .main{flex:1;padding:14px 16px}
+  .ctx .main .h{font-size:14px;font-weight:800;margin-bottom:11px}
+  .ctx .toolbar{display:flex;gap:8px}
+  .ctx .tb{height:32px;border-radius:7px;padding:0 11px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:5px}
+  .ctx .tb .lucide{font-size:14px}
+  .ctx .tbg{background:#fff;border:1px solid var(--border);color:var(--text-soft)}
+
+  .note{font-size:12px;border-radius:8px;padding:9px 12px;margin-top:14px;line-height:1.5}
+  .note.good{color:#15803d;background:#f0fdf4;border:1px solid #c8ecd2}
+  .note.warn{color:var(--accent);background:var(--accent-soft);border:1px solid #f6d9cd}
+  .foot{margin-top:34px;color:var(--text-faint);font-size:12px;line-height:1.7;border-top:1px solid #d9dce0;padding-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>주요 버튼 색 결정</h1>
+  <p class="lead"><code>&lt;Button&gt;</code> 채택 전에 "주요(primary) 버튼 색"을 하나로 정해야 합니다. 현재 제각각인 상태와 두 방향을 실제 버튼·툴바 맥락으로 비교 — 특히 <b>주황 면적</b>이 어떻게 달라지는지 보세요.</p>
+
+  <!-- 현재 -->
+  <div class="opt">
+    <div class="ohead"><span class="tag" style="background:var(--text-faint)">現</span><h2>현재 — 제각각 (zoo)</h2></div>
+    <div class="obody">
+      <div class="desc">같은 "주요 액션"인데 화면마다 색이 다릅니다. 통일 안 됨.</div>
+      <div class="row">
+        <button class="btn b-dark"><i data-lucide="upload"></i>업로드</button>
+        <span style="font-size:11px;color:var(--text-faint)">← 검정 (툴바)</span>
+        <button class="btn b-blue"><i data-lucide="upload"></i>My box에 올리기</button>
+        <span style="font-size:11px;color:var(--text-faint)">← 파랑 (사이드바)</span>
+        <button class="btn b-accent"><i data-lucide="link"></i>링크 복사</button>
+        <span style="font-size:11px;color:var(--text-faint)">← 주황 (일부 CTA)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- A 검정 (추천) -->
+  <div class="opt reco">
+    <div class="ohead"><span class="tag">A</span><h2>검정 primary</h2><span class="reco">추천</span></div>
+    <div class="obody">
+      <div class="desc"><b>주요 버튼 = 검정(<code>bg-text</code>)</b>. 주황은 특별 CTA·강조에만. 세온님 <b>"주황 면적 최소"</b> 방침과 맞고, 현재 다수 버튼과도 일치(변화 최소).</div>
+      <div class="gl">버튼 세트</div>
+      <div class="row">
+        <button class="btn b-dark"><i data-lucide="upload"></i>업로드</button>
+        <button class="btn b-sec"><i data-lucide="folder-plus"></i>새 폴더</button>
+        <button class="btn b-ghost">취소</button>
+        <button class="btn b-danger"><i data-lucide="trash-2"></i>삭제</button>
+        <button class="btn b-accent"><i data-lucide="link"></i>공유 (강조 CTA)</button>
+      </div>
+      <div class="ctx">
+        <div class="sb">
+          <div class="logo"><span class="m"></span>vi<span style="color:var(--accent)">.</span>box</div>
+          <div class="up b-dark"><i data-lucide="upload" class="lucide"></i>올리기</div>
+          <div class="it on"><i data-lucide="hard-drive"></i>My box</div>
+          <div class="it"><i data-lucide="handshake"></i>비모</div>
+        </div>
+        <div class="main"><div class="h">My box</div>
+          <div class="toolbar">
+            <span class="tb b-dark"><i data-lucide="upload"></i>업로드</span>
+            <span class="tb tbg"><i data-lucide="folder-plus"></i>새 폴더</span>
+            <span class="tb tbg"><i data-lucide="folder-up"></i>폴더 업로드</span>
+          </div>
+        </div>
+      </div>
+      <div class="note good">주황은 로고 점·강조 CTA에만 → 차분하고 군더더기 없음. 면적 최소 ✓</div>
+    </div>
+  </div>
+
+  <!-- B 주황 -->
+  <div class="opt">
+    <div class="ohead"><span class="tag" style="background:var(--accent)">B</span><h2>주황 primary</h2></div>
+    <div class="obody">
+      <div class="desc"><b>주요 버튼 = 주황(<code>bg-accent</code>)</b>. 브랜드가 강조되지만 버튼마다 주황이라 <b>면적이 커집니다</b>(이전에 "쨍하다"고 하신 방향).</div>
+      <div class="gl">버튼 세트</div>
+      <div class="row">
+        <button class="btn b-accent"><i data-lucide="upload"></i>업로드</button>
+        <button class="btn b-sec"><i data-lucide="folder-plus"></i>새 폴더</button>
+        <button class="btn b-ghost">취소</button>
+        <button class="btn b-danger"><i data-lucide="trash-2"></i>삭제</button>
+      </div>
+      <div class="ctx">
+        <div class="sb">
+          <div class="logo"><span class="m"></span>vi<span style="color:var(--accent)">.</span>box</div>
+          <div class="up b-accent"><i data-lucide="upload" class="lucide"></i>올리기</div>
+          <div class="it on"><i data-lucide="hard-drive"></i>My box</div>
+          <div class="it"><i data-lucide="handshake"></i>비모</div>
+        </div>
+        <div class="main"><div class="h">My box</div>
+          <div class="toolbar">
+            <span class="tb b-accent"><i data-lucide="upload"></i>업로드</span>
+            <span class="tb tbg"><i data-lucide="folder-plus"></i>새 폴더</span>
+            <span class="tb tbg"><i data-lucide="folder-up"></i>폴더 업로드</span>
+          </div>
+        </div>
+      </div>
+      <div class="note warn">올리기·업로드 등 곳곳이 주황 → 면적 큼. 브랜드는 강하지만 "주황 최소" 방침과 충돌</div>
+    </div>
+  </div>
+
+  <!-- C -->
+  <div class="opt">
+    <div class="ohead"><span class="tag" style="background:var(--text-faint)">C</span><h2>지금 색 그대로 보존</h2></div>
+    <div class="obody">
+      <div class="desc"><code>&lt;Button&gt;</code>로 감싸되 각 버튼 색은 현재대로 유지. <b>통일 효과는 약함</b>(검정/파랑/주황 zoo가 남음) — 리팩터만 되고 일관성 문제는 그대로.</div>
+      <div class="row">
+        <button class="btn b-dark"><i data-lucide="upload"></i>업로드</button>
+        <button class="btn b-blue">My box에 올리기</button>
+        <button class="btn b-accent"><i data-lucide="link"></i>링크</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    제 추천 = <b>A(검정 primary)</b>. "주황 면적 최소" 방침 유지 + 현재 다수 버튼과 일치해 변화·회귀 최소 + 통일 달성. 파랑 "My box에 올리기"만 검정으로 맞추면 됨. 주황은 로고·강조 CTA(공유 등)에 의미 있게 남김. 정하시면 Button 기본 variant를 그 색으로 맞추고 앱 전체 채택을 진행합니다.
+  </div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>
