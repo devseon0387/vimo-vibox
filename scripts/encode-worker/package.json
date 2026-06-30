@@ -1,0 +1,13 @@
+{
+  "name": "vibox-encode-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "vibox 원격 인코딩 워커 — 공유 DB 큐(encoding_jobs)를 맥미니 앱과 함께 처리. 원본을 rsync로 가져와 로컬 ffmpeg(VideoToolbox)로 HLS 인코딩 후 맥미니로 되쓴다.",
+  "scripts": {
+    "start": "node worker.mjs"
+  },
+  "dependencies": {
+    "postgres": "^3.4.5"
+  }
+}

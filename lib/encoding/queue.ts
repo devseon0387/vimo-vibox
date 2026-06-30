@@ -20,7 +20,9 @@ import { resolveSafePath } from "@/lib/fs/storage";
  *  - 서버 시작 시 hydrate() 로 미완료 큐 재시작
  */
 
-const MAX_WORKERS = 2;
+// 인앱 인코딩 워커 수. 0 이면 enqueue-only (외부 워커=망루 NVENC 가 처리).
+// SFF(Linux)는 ffmpeg/videotoolbox 부재로 인앱 인코딩 불가 → VIBOX_INAPP_ENCODE_WORKERS=0.
+const MAX_WORKERS = Number(process.env.VIBOX_INAPP_ENCODE_WORKERS ?? 2);
 const MAX_AUTO_RETRIES = 3; // 자동 재시도 한도 (수동은 별개)
 const RETRY_BACKOFF_MS = [10_000, 30_000, 60_000]; // 1차 10s, 2차 30s, 3차 60s
 
@@ -248,16 +250,20 @@ export async function hydrate(): Promise<void> {
   if (initialized) return;
   initialized = true;
 
-  // running 상태 → queued 로 되돌림 (재시도)
-  const stuck = await db
-    .select()
-    .from(encodingJobs)
-    .where(eq(encodingJobs.status, "running"));
-  if (stuck.length > 0) {
-    await db
-      .update(encodingJobs)
-      .set({ status: "queued", progress: 0, startedAt: null })
+  // running 상태 → queued 로 되돌림 (이전 인앱 워커가 인코딩 중 죽었을 가능성).
+  // ★단 enqueue-only(MAX_WORKERS=0)면 인코딩은 외부 워커(망루) 소유 → 여기서 되돌리면
+  //   외부 워커가 처리 중인 잡을 이중처리함. 외부 워커의 자체 stale-reclaim 에 맡긴다.
+  if (MAX_WORKERS > 0) {
+    const stuck = await db
+      .select()
+      .from(encodingJobs)
       .where(eq(encodingJobs.status, "running"));
+    if (stuck.length > 0) {
+      await db
+        .update(encodingJobs)
+        .set({ status: "queued", progress: 0, startedAt: null })
+        .where(eq(encodingJobs.status, "running"));
+    }
   }
 
   void tryStart();
