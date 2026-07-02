@@ -362,10 +362,8 @@ export function ShareDialog({
               >
                 {copied ? "복사됨" : "링크 복사"}
               </button>
-              <a
-                href={shareUrl}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                onClick={onClose}
                 className="transition-colors hover:bg-[#f0f0f0]"
                 style={{
                   width: "100%",
@@ -377,12 +375,10 @@ export function ShareDialog({
                   border: "none",
                   borderRadius: 15,
                   cursor: "pointer",
-                  textDecoration: "none",
-                  display: "block",
                 }}
               >
-                열기
-              </a>
+                닫기
+              </button>
             </div>
           </>
         )}
